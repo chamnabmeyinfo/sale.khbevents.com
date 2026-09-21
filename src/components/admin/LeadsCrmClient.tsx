@@ -38,6 +38,17 @@ export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientPr
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [newNoteText, setNewNoteText] = useState('');
 
+  // Sync status filter with URL search param
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlStatus = params.get('status');
+      if (urlStatus && ['ALL', 'NEW', 'CONTACTED', 'PROPOSAL_SENT', 'NEGOTIATING', 'WON', 'LOST'].includes(urlStatus)) {
+        setSelectedStatus(urlStatus);
+      }
+    }
+  }, []);
+
   const filteredLeads = leads.filter((lead) => {
     const matchesSearch =
       lead.fullName.toLowerCase().includes(search.toLowerCase()) ||
@@ -179,42 +190,61 @@ export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientPr
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="relative">
-          <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-3.5" />
+      {/* Sub Menu Tabs: Status Filter */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-emerald-900/40 pb-3">
+        {[
+          { id: 'ALL', label: 'All Inquiries', count: leads.length },
+          { id: 'NEW', label: '🔥 NEW Requests', count: leads.filter(l => l.status === 'NEW').length, badge: 'bg-amber-400 text-black' },
+          { id: 'CONTACTED', label: '📞 Contacted', count: leads.filter(l => l.status === 'CONTACTED').length, badge: 'bg-blue-500/20 text-blue-300' },
+          { id: 'PROPOSAL_SENT', label: '📝 Proposals', count: leads.filter(l => l.status === 'PROPOSAL_SENT').length, badge: 'bg-purple-500/20 text-purple-300' },
+          { id: 'NEGOTIATING', label: '💼 In Negotiation', count: leads.filter(l => l.status === 'NEGOTIATING').length, badge: 'bg-orange-500/20 text-orange-300' },
+          { id: 'WON', label: '🏆 Won Deals', count: leads.filter(l => l.status === 'WON').length, badge: 'bg-emerald-500 text-black' },
+          { id: 'LOST', label: '📁 Closed / Lost', count: leads.filter(l => l.status === 'LOST').length, badge: 'bg-zinc-800 text-zinc-400' }
+        ].map((tab) => {
+          const isActive = selectedStatus === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setSelectedStatus(tab.id)}
+              className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                isActive
+                  ? 'bg-amber-400 text-black shadow-md'
+                  : 'bg-[#0A1610] text-zinc-400 hover:text-white hover:bg-emerald-950/60 border border-emerald-900/40'
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span className={`text-[10px] px-2 py-0.2 rounded-full font-extrabold ${
+                isActive ? 'bg-black/20 text-black' : (tab.badge || 'bg-emerald-950 text-emerald-300 border border-emerald-800')
+              }`}>
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Sub Filter Bar: Search, Campaign, CSV */}
+      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+        <div className="relative sm:col-span-7">
+          <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-3" />
           <input
             type="text"
-            placeholder="Search name, phone, company, message..."
+            placeholder="Search by client name, phone, company, inquiry message..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0A1811] border border-emerald-900/60 text-white placeholder-gray-500 text-xs focus:outline-none focus:border-amber-400"
+            className="w-full pl-10 pr-4 py-2 rounded-xl bg-[#0A1811] border border-emerald-900/60 text-white placeholder-gray-500 text-xs focus:outline-none focus:border-amber-400"
           />
         </div>
 
-        <div>
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl bg-[#0A1811] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="NEW">NEW (Requires Initial Contact)</option>
-            <option value="CONTACTED">CONTACTED (Chat/Call in progress)</option>
-            <option value="PROPOSAL_SENT">PROPOSAL_SENT (Deck / Quote Sent)</option>
-            <option value="NEGOTIATING">NEGOTIATING (Contract / Date lock)</option>
-            <option value="WON">WON (Closed / Deposit Paid)</option>
-            <option value="LOST">LOST (Cancelled / Postponed)</option>
-          </select>
-        </div>
-
-        <div>
+        <div className="sm:col-span-5">
           <select
             value={selectedPage}
             onChange={(e) => setSelectedPage(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl bg-[#0A1811] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400"
+            className="w-full px-4 py-2 rounded-xl bg-[#0A1811] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400"
           >
-            <option value="ALL">All Campaigns / Landing Pages</option>
-            <option value="main-sales">Main Sales Portal</option>
+            <option value="ALL">All Campaigns ({pages.length + 1} Sources)</option>
+            <option value="main-sales">Main Portal (sale.khbevents.com)</option>
             {pages.map((p) => (
               <option key={p.id} value={p.slug}>
                 {p.title}

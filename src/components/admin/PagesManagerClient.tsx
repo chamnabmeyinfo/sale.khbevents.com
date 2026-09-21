@@ -27,12 +27,26 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const filteredPages = pages.filter(
-    (p) =>
+  const [activeTab, setActiveTab] = useState<string>('ALL');
+
+  const publishedCount = pages.filter(p => p.status === 'published').length;
+  const draftCount = pages.filter(p => p.status === 'draft').length;
+  const corporateCount = pages.filter(p => p.category?.toLowerCase().includes('corporate')).length;
+  const delegationCount = pages.filter(p => p.category?.toLowerCase().includes('delegation') || p.category?.toLowerCase().includes('trade')).length;
+
+  const filteredPages = pages.filter((p) => {
+    const matchesSearch =
       p.title.toLowerCase().includes(search.toLowerCase()) ||
       p.slug.toLowerCase().includes(search.toLowerCase()) ||
-      p.category.toLowerCase().includes(search.toLowerCase())
-  );
+      p.category.toLowerCase().includes(search.toLowerCase());
+
+    if (activeTab === 'ALL') return matchesSearch;
+    if (activeTab === 'published') return matchesSearch && p.status === 'published';
+    if (activeTab === 'draft') return matchesSearch && p.status === 'draft';
+    if (activeTab === 'corporate') return matchesSearch && p.category?.toLowerCase().includes('corporate');
+    if (activeTab === 'delegations') return matchesSearch && (p.category?.toLowerCase().includes('delegation') || p.category?.toLowerCase().includes('trade'));
+    return matchesSearch;
+  });
 
   const handleCopyLink = (slug: string, id: string) => {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sale.khbevents.com';
@@ -101,33 +115,61 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
             <span>Landing Pages CMS</span>
           </h1>
           <p className="text-xs text-gray-400 mt-1">
-            Create and edit dynamic campaign pages hosted at sale.khbevents.com/[slug]
+            Build, publish, and track campaign pages at sale.khbevents.com/[slug]
           </p>
         </div>
 
         <Link
           href="/admin/pages/new"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition-all"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
         >
-          <Plus className="w-4 h-4 text-black" />
-          <span>Create New Landing Page</span>
+          <Plus className="w-4 h-4 text-black stroke-[3]" />
+          <span>+ Create New Landing Page</span>
         </Link>
       </div>
 
-      {/* Search and stats filter */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="relative max-w-md w-full">
-          <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-3.5" />
+      {/* Sub Menu Tabs */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-900/40 pb-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { id: 'ALL', label: 'All Campaigns', count: pages.length },
+            { id: 'published', label: 'Published (Live)', count: publishedCount, badge: 'bg-emerald-500 text-black' },
+            { id: 'draft', label: 'Drafts', count: draftCount, badge: 'bg-zinc-800 text-zinc-300' },
+            { id: 'corporate', label: 'Corporate Events', count: corporateCount },
+            { id: 'delegations', label: 'Trade & Delegations', count: delegationCount }
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-amber-400 text-black shadow-md'
+                    : 'bg-[#0A1610] text-zinc-400 hover:text-white hover:bg-emerald-950/60 border border-emerald-900/40'
+                }`}
+              >
+                <span>{tab.label}</span>
+                <span className={`text-[10px] px-2 py-0.2 rounded-full font-extrabold ${
+                  isActive ? 'bg-black/20 text-black' : (tab.badge || 'bg-emerald-950 text-emerald-300 border border-emerald-800')
+                }`}>
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Search Input */}
+        <div className="relative w-full sm:w-64">
+          <Search className="w-3.5 h-3.5 text-gray-500 absolute left-3 top-3" />
           <input
             type="text"
-            placeholder="Search landing pages by title, slug, category..."
+            placeholder="Search pages by title, slug..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0A1811] border border-emerald-900/60 text-white placeholder-gray-500 text-xs focus:outline-none focus:border-amber-400"
+            className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-[#08150E] border border-emerald-900/60 text-white placeholder-gray-500 text-xs focus:outline-none focus:border-amber-400"
           />
-        </div>
-        <div className="text-xs text-gray-400">
-          Showing <strong className="text-white">{filteredPages.length}</strong> of {pages.length} pages
         </div>
       </div>
 
