@@ -158,7 +158,7 @@
       "metaTitle": "Vietnam B2B Business Delegation 2026 | KHB EVENTS",
       "metaDescription": "Join KHB EVENTS for an exclusive business delegation to Vietnam. 1-on-1 business matching, smart city tech, high-end tea & cafe investments.",
       "viewsCount": 342,
-      "leadsCount": 18,
+      "leadsCount": 19,
       "createdAt": "2026-09-21T04:22:10.310Z",
       "updatedAt": "2026-09-21T04:22:10.311Z"
     },
@@ -261,6 +261,25 @@
     }
   ],
   "leads": [
+    {
+      "id": "lead-1789966937792-pfwx",
+      "landingPageId": "page-smart-city",
+      "landingPageSlug": "smart-city-tea-cafe",
+      "landingPageTitle": "Vietnam B2B Business Delegation: Smart City, Tea & Cafe",
+      "fullName": "Live Test Lead via Supabase Cloud",
+      "email": "livetest@khbevents.com",
+      "phone": "+855 12 999 888",
+      "company": "Royal Group Partner",
+      "eventType": "Trade Delegation",
+      "budgetRange": ",000 - ,000",
+      "message": "Automated end-to-end Supabase persistence test",
+      "status": "NEW",
+      "notes": [],
+      "ip": "::1",
+      "userAgent": "node",
+      "createdAt": "2026-09-21T05:02:17.792Z",
+      "updatedAt": "2026-09-21T05:02:17.792Z"
+    },
     {
       "id": "lead-1789964530526-zoak",
       "landingPageId": "page-corporate-gala",

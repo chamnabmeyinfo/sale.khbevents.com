@@ -359,15 +359,25 @@ export async function getDatabase(): Promise<DatabaseSchema> {
       settings: defaultSettings,
       pageViews: []
     };
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    await fs.writeFile(DB_FILE, JSON.stringify(initialDb, null, 2), 'utf-8');
+    try {
+      await fs.mkdir(DATA_DIR, { recursive: true });
+      await fs.writeFile(DB_FILE, JSON.stringify(initialDb, null, 2), 'utf-8');
+    } catch {
+      // Ignore write errors in read-only serverless environments
+    }
     return initialDb;
   }
 }
 
 export async function saveDatabase(data: DatabaseSchema): Promise<void> {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    await fs.writeFile(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (err) {
+    // In read-only serverless environments (like Vercel), local disk writes are ignored
+    // because Supabase PostgreSQL provides cloud persistence.
+    console.warn('Local DB write bypassed in serverless mode:', (err as Error).message);
+  }
 }
 
 export async function getPages(): Promise<LandingPage[]> {
