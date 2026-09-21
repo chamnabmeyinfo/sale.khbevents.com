@@ -133,11 +133,56 @@ export interface SectionVisibility {
   itinerary?: boolean;
   valueStack?: boolean;
   packages?: boolean;
+  expoBooths?: boolean;
+  artists?: boolean;
+  speakers?: boolean;
   gallery?: boolean;
   testimonials?: boolean;
   faqs?: boolean;
   guarantee?: boolean;
   form?: boolean;
+}
+
+export type PageTemplateType = 
+  | "b2b-delegation" 
+  | "trade-expo" 
+  | "concert-festival" 
+  | "corporate-summit" 
+  | "custom";
+
+export interface ExpoBoothTier {
+  id: string;
+  name: string;
+  size: string;
+  price: string;
+  location?: string;
+  availableCount?: number;
+  totalCount?: number;
+  popular?: boolean;
+  features: string[];
+  ctaText?: string;
+}
+
+export interface ArtistItem {
+  id: string;
+  name: string;
+  role: string;
+  genre?: string;
+  image?: string;
+  stageName?: string;
+  stageTime?: string;
+  bio?: string;
+}
+
+export interface SpeakerItem {
+  id: string;
+  name: string;
+  title: string;
+  organization: string;
+  avatar?: string;
+  topic?: string;
+  track?: string;
+  sessionTime?: string;
 }
 
 export interface LandingPage {
@@ -148,6 +193,7 @@ export interface LandingPage {
   description: string;
   category: string;
   badge?: string;
+  template?: PageTemplateType;
   status: PageStatus;
   
   // Hero section
@@ -183,6 +229,9 @@ export interface LandingPage {
   testimonials: TestimonialItem[];
   faqs: FaqItem[];
   guarantee?: GuaranteeConfig;
+  expoBooths?: ExpoBoothTier[];
+  artists?: ArtistItem[];
+  speakers?: SpeakerItem[];
   formConfig: FormConfig;
 
   // SEO & Social

@@ -28,7 +28,11 @@ import {
   AlertTriangle,
   Award,
   Layers,
-  HeartHandshake
+  HeartHandshake,
+  Store,
+  Music,
+  Mic,
+  Briefcase
 } from 'lucide-react';
 import { 
   LandingPage, 
@@ -42,7 +46,11 @@ import {
   ItineraryDay, 
   InclusionItem, 
   FormField,
-  SectionVisibility
+  SectionVisibility,
+  PageTemplateType,
+  ExpoBoothTier,
+  ArtistItem,
+  SpeakerItem
 } from '@/lib/types';
 
 interface PageEditorProps {
@@ -64,6 +72,187 @@ const PRESET_PHOTOS = [
   '/photos/photo_2026-09-16_22-01-09.jpg',
 ];
 
+const TEMPLATE_OPTIONS: {
+  id: PageTemplateType;
+  label: string;
+  category: string;
+  badge: string;
+  description: string;
+  icon: any;
+  recommendedSections: string[];
+}[] = [
+  {
+    id: 'b2b-delegation',
+    label: 'B2B Trade Delegation',
+    category: 'Trade Delegation',
+    badge: 'Exclusive B2B Mission',
+    description: 'Bilateral business matching, factory & plantation tours, 4D3N itinerary, 9-in-1 turnkey value stack & VIP delegate passes.',
+    icon: HeartHandshake,
+    recommendedSections: ['hero', 'urgency', 'coreValues', 'problems', 'audiences', 'itinerary', 'valueStack', 'packages', 'guarantee', 'form']
+  },
+  {
+    id: 'trade-expo',
+    label: 'Trade Expo & Exhibition',
+    category: 'Exhibition & Trade Fair',
+    badge: 'Exhibitor Spaces',
+    description: 'Interactive exhibition booth tiers (Shell Scheme, Corner, Island Pavilion), floor specs, passes & exhibitor lead capture.',
+    icon: Store,
+    recommendedSections: ['hero', 'urgency', 'highlights', 'expoBooths', 'packages', 'gallery', 'testimonials', 'faqs', 'form']
+  },
+  {
+    id: 'concert-festival',
+    label: 'Concert & Music Festival',
+    category: 'Concert & Entertainment',
+    badge: 'Live Mega Stage',
+    description: 'Artist & DJ lineup, performance set times, stage zones, VIP pit access passes, festival gallery & party reservations.',
+    icon: Music,
+    recommendedSections: ['hero', 'urgency', 'artists', 'packages', 'gallery', 'faqs', 'form']
+  },
+  {
+    id: 'corporate-summit',
+    label: 'Corporate Summit & Conference',
+    category: 'Corporate Summit',
+    badge: 'Executive Leadership',
+    description: 'Keynote speakers & executive panelists, presentation tracks, plenary schedule, corporate delegate & table packages.',
+    icon: Mic,
+    recommendedSections: ['hero', 'highlights', 'speakers', 'itinerary', 'packages', 'testimonials', 'faqs', 'form']
+  },
+  {
+    id: 'custom',
+    label: 'Custom Campaign',
+    category: 'Special Campaign',
+    badge: 'Modular Campaign',
+    description: 'Fully customizable modular sections tailored for custom brand activations, product reveals, or specialized events.',
+    icon: Sparkles,
+    recommendedSections: ['hero', 'highlights', 'packages', 'gallery', 'testimonials', 'form']
+  }
+];
+
+const DEFAULT_EXPO_BOOTHS: ExpoBoothTier[] = [
+  {
+    id: 'booth-std',
+    name: 'Standard Shell Scheme',
+    size: '3m x 3m (9 sqm)',
+    price: '$1,200',
+    location: 'Exhibition Hall - Zone B',
+    availableCount: 8,
+    totalCount: 15,
+    popular: false,
+    features: [
+      'Standard Fascia Name Board with Company Logo',
+      '1x 13A Single Phase Power Socket',
+      '2x 100W Spotlights',
+      '1x Lockable Information Counter',
+      '2x Standard Exhibition Chairs',
+      'Needle-punch Floor Carpeting'
+    ],
+    ctaText: 'Reserve Shell Scheme'
+  },
+  {
+    id: 'booth-corner',
+    name: 'Prime Corner Dual-Open',
+    size: '6m x 3m (18 sqm)',
+    price: '$2,800',
+    location: 'Main Aisle Intersection (Hall A)',
+    availableCount: 3,
+    totalCount: 6,
+    popular: true,
+    features: [
+      'Dual Open Frontage on High-Footfall Intersection',
+      'Enhanced Overhead Fascia Truss Branding',
+      '2x 13A Power Sockets & High-Speed WiFi',
+      '4x LED Directional Track Lights',
+      '2x Glass Discussion Tables & 6x Leather Chairs',
+      'Complimentary Digital Directory Listing & 4 Exhibitor Badges'
+    ],
+    ctaText: 'Reserve Prime Corner'
+  },
+  {
+    id: 'booth-island',
+    name: 'VIP Island Pavilion (Raw Space)',
+    size: '6m x 6m (36 sqm)',
+    price: '$5,500',
+    location: 'Central Entrance Atrium',
+    availableCount: 1,
+    totalCount: 2,
+    popular: false,
+    features: [
+      '360-Degree Four-Side Open Island Footprint',
+      'Raw Space for Custom Architectural Staging & LED Pillars',
+      'Heavy 3-Phase 32A Industrial Power Supply Hookup',
+      'Unlimited VIP Exhibitor Badges & 100 Client Invitation Cards',
+      'KHB Events AV & LED Wall Fabrication Discount (20% Off)'
+    ],
+    ctaText: 'Inquire Island Pavilion'
+  }
+];
+
+const DEFAULT_FESTIVAL_ARTISTS: ArtistItem[] = [
+  {
+    id: 'art-1',
+    name: 'ElectroPulse Collective',
+    role: 'Headliner DJ & Audio-Visual Experience',
+    genre: 'EDM / Progressive House',
+    stageName: 'Main Stage Arena',
+    stageTime: '22:00 - 23:30',
+    image: '/photos/photo_2026-09-16_22-01-09 (6).jpg',
+    bio: 'Chart-topping electronic dance music act featuring synchronized LED stage visuals, pyrotechnics, and bass drops.'
+  },
+  {
+    id: 'art-2',
+    name: 'Khmer Rhythm Syndicate',
+    role: 'Featured Live Band',
+    genre: 'Indie Fusion & Modern Rock',
+    stageName: 'Main Stage Arena',
+    stageTime: '20:15 - 21:45',
+    image: '/photos/photo_2026-09-16_22-01-09 (11).jpg',
+    bio: 'High-octane fusion ensemble blending traditional instruments with modern festival basslines and rock anthems.'
+  },
+  {
+    id: 'art-3',
+    name: 'DJ Solara',
+    role: 'Sunset Session DJ',
+    genre: 'Melodic Deep House & Chillout',
+    stageName: 'Skyline Sunset Stage',
+    stageTime: '17:30 - 19:30',
+    image: '/photos/photo_2026-09-16_22-01-09 (9).jpg',
+    bio: 'Atmospheric sunset melodies and deep rhythms designed for VIP terrace lounges and cocktail hours.'
+  }
+];
+
+const DEFAULT_SUMMIT_SPEAKERS: SpeakerItem[] = [
+  {
+    id: 'spk-1',
+    name: 'Oknha Bunthan Seng',
+    title: 'Chairman & Group CEO',
+    organization: 'Apex Trading Corp Cambodia',
+    avatar: '/photos/photo_2026-09-16_22-01-09 (2).jpg',
+    topic: 'Cross-Border Supply Chain Resilience & Regional Integration',
+    track: 'Plenary Keynote',
+    sessionTime: '09:30 - 10:15'
+  },
+  {
+    id: 'spk-2',
+    name: 'Dr. Minh Nguyen',
+    title: 'Managing Director, Smart City Solutions',
+    organization: 'Vietnam High-Tech Industry Consortium',
+    avatar: '/photos/photo_2026-09-16_22-01-09 (3).jpg',
+    topic: 'Automated Factory Infrastructures & IoT in Modern Manufacturing',
+    track: 'Industry & Tech Track',
+    sessionTime: '11:00 - 11:45'
+  },
+  {
+    id: 'spk-3',
+    name: 'Sophea Pich',
+    title: 'Vice President of Business Development',
+    organization: 'ASEAN Venture Partners',
+    avatar: '/photos/photo_2026-09-16_22-01-09 (5).jpg',
+    topic: 'Unlocking Bilateral Capital: Investment Vehicles & JV Structuring',
+    track: 'Investment & Finance Track',
+    sessionTime: '14:30 - 15:15'
+  }
+];
+
 export default function PageEditor({ initialData, isNew = false }: PageEditorProps) {
   const router = useRouter();
 
@@ -75,6 +264,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     description: initialData?.description || '',
     category: initialData?.category || 'Trade Delegation',
     badge: initialData?.badge || '',
+    template: initialData?.template || 'b2b-delegation',
     status: initialData?.status || 'published',
     heroHeadline: initialData?.heroHeadline || '',
     heroSubheadline: initialData?.heroSubheadline || '',
@@ -106,12 +296,18 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
       itinerary: true,
       valueStack: true,
       packages: true,
+      expoBooths: true,
+      artists: true,
+      speakers: true,
       gallery: true,
       testimonials: true,
       faqs: true,
       guarantee: true,
       form: true
     },
+    expoBooths: initialData?.expoBooths || [],
+    artists: initialData?.artists || [],
+    speakers: initialData?.speakers || [],
     highlights: initialData?.highlights || [
       { id: 'h1', title: '2 International Trade Expos', description: 'VIP Passes to Cafe Show & Smart City Expo.', icon: 'Building2' }
     ],
@@ -208,6 +404,9 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     | 'problems' 
     | 'audiences' 
     | 'valueStack' 
+    | 'expoBooths'
+    | 'artists'
+    | 'speakers'
     | 'testimonials' 
     | 'gallery' 
     | 'faqs' 
@@ -260,6 +459,49 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     } finally {
       setSaving(false);
     }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // TEMPLATE SELECTION
+  // ─────────────────────────────────────────────────────────────────────────────
+  const handleSelectTemplate = (tmpl: typeof TEMPLATE_OPTIONS[0]) => {
+    const isDefaultOrEmptyCategory = !formData.category || TEMPLATE_OPTIONS.some(t => t.category === formData.category);
+    const isDefaultOrEmptyBadge = !formData.badge || TEMPLATE_OPTIONS.some(t => t.badge === formData.badge);
+
+    const updated: Partial<LandingPage> = {
+      ...formData,
+      template: tmpl.id,
+      category: isDefaultOrEmptyCategory ? tmpl.category : formData.category,
+      badge: isDefaultOrEmptyBadge ? tmpl.badge : formData.badge,
+    };
+
+    if (tmpl.id === 'trade-expo') {
+      if (!updated.expoBooths || updated.expoBooths.length === 0) {
+        updated.expoBooths = DEFAULT_EXPO_BOOTHS;
+      }
+      updated.sectionVisibility = {
+        ...(updated.sectionVisibility || {}),
+        expoBooths: true
+      };
+    } else if (tmpl.id === 'concert-festival') {
+      if (!updated.artists || updated.artists.length === 0) {
+        updated.artists = DEFAULT_FESTIVAL_ARTISTS;
+      }
+      updated.sectionVisibility = {
+        ...(updated.sectionVisibility || {}),
+        artists: true
+      };
+    } else if (tmpl.id === 'corporate-summit') {
+      if (!updated.speakers || updated.speakers.length === 0) {
+        updated.speakers = DEFAULT_SUMMIT_SPEAKERS;
+      }
+      updated.sectionVisibility = {
+        ...(updated.sectionVisibility || {}),
+        speakers: true
+      };
+    }
+
+    setFormData(updated);
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -663,25 +905,192 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // TAB DEFINITIONS
+  // EXPO BOOTHS CRUD
   // ─────────────────────────────────────────────────────────────────────────────
-  const tabs: { id: TabType; label: string; count?: number }[] = [
-    { id: 'general', label: 'General & Toggles' },
+  const [newBoothFeatureText, setNewBoothFeatureText] = useState<{ [boothIdx: number]: string }>({});
+
+  const addExpoBooth = () => {
+    const newBooth: ExpoBoothTier = {
+      id: `booth-${Date.now()}`,
+      name: 'Standard Shell Scheme',
+      size: '3m x 3m (9 sqm)',
+      price: '$1,200',
+      location: 'Exhibition Hall - Zone B',
+      availableCount: 8,
+      totalCount: 15,
+      popular: false,
+      features: [
+        'Standard Fascia Name Board with Logo',
+        '1x 13A Single Phase Power Socket',
+        '2x Spotlights',
+        '1x Information Counter & 2x Chairs',
+        'Needle-punch Floor Carpet'
+      ],
+      ctaText: 'Reserve This Booth'
+    };
+    setFormData({
+      ...formData,
+      expoBooths: [...(formData.expoBooths || []), newBooth]
+    });
+  };
+
+  const updateExpoBooth = (idx: number, field: keyof ExpoBoothTier, value: any) => {
+    const arr = [...(formData.expoBooths || [])];
+    arr[idx] = { ...arr[idx], [field]: value };
+    setFormData({ ...formData, expoBooths: arr });
+  };
+
+  const removeExpoBooth = (idx: number) => {
+    const arr = (formData.expoBooths || []).filter((_, i) => i !== idx);
+    setFormData({ ...formData, expoBooths: arr });
+  };
+
+  const addBoothFeature = (boothIdx: number) => {
+    const text = (newBoothFeatureText[boothIdx] || '').trim();
+    if (!text) return;
+    const arr = [...(formData.expoBooths || [])];
+    arr[boothIdx].features = [...(arr[boothIdx].features || []), text];
+    setFormData({ ...formData, expoBooths: arr });
+    setNewBoothFeatureText({ ...newBoothFeatureText, [boothIdx]: '' });
+  };
+
+  const removeBoothFeature = (boothIdx: number, fIdx: number) => {
+    const arr = [...(formData.expoBooths || [])];
+    arr[boothIdx].features = (arr[boothIdx].features || []).filter((_, i) => i !== fIdx);
+    setFormData({ ...formData, expoBooths: arr });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // ARTISTS CRUD
+  // ─────────────────────────────────────────────────────────────────────────────
+  const addArtist = () => {
+    const newArtist: ArtistItem = {
+      id: `artist-${Date.now()}`,
+      name: 'Artist / DJ Name',
+      role: 'Headlining Act',
+      genre: 'EDM / Dance Pop',
+      stageName: 'Main Stage',
+      stageTime: '21:30 - 23:00',
+      image: '/photos/photo_2026-09-16_22-01-09 (6).jpg',
+      bio: 'Renowned international performer delivering festival soundscapes and lighting shows.'
+    };
+    setFormData({
+      ...formData,
+      artists: [...(formData.artists || []), newArtist]
+    });
+  };
+
+  const updateArtist = (idx: number, field: keyof ArtistItem, value: any) => {
+    const arr = [...(formData.artists || [])];
+    arr[idx] = { ...arr[idx], [field]: value };
+    setFormData({ ...formData, artists: arr });
+  };
+
+  const removeArtist = (idx: number) => {
+    const arr = (formData.artists || []).filter((_, i) => i !== idx);
+    setFormData({ ...formData, artists: arr });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SPEAKERS CRUD
+  // ─────────────────────────────────────────────────────────────────────────────
+  const addSpeaker = () => {
+    const newSpeaker: SpeakerItem = {
+      id: `speaker-${Date.now()}`,
+      name: 'Speaker Full Name',
+      title: 'Managing Director / CEO',
+      organization: 'Enterprise Group Cambodia',
+      avatar: '/photos/photo_2026-09-16_22-01-09 (2).jpg',
+      topic: 'Future of Regional Business & Cross-Border Growth',
+      track: 'Plenary Keynote',
+      sessionTime: '09:30 - 10:15'
+    };
+    setFormData({
+      ...formData,
+      speakers: [...(formData.speakers || []), newSpeaker]
+    });
+  };
+
+  const updateSpeaker = (idx: number, field: keyof SpeakerItem, value: any) => {
+    const arr = [...(formData.speakers || [])];
+    arr[idx] = { ...arr[idx], [field]: value };
+    setFormData({ ...formData, speakers: arr });
+  };
+
+  const removeSpeaker = (idx: number) => {
+    const arr = (formData.speakers || []).filter((_, i) => i !== idx);
+    setFormData({ ...formData, speakers: arr });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // TAB DEFINITIONS (Dynamically tuned to the selected template)
+  // ─────────────────────────────────────────────────────────────────────────────
+  const currentTemplate = formData.template || 'b2b-delegation';
+
+  const baseTabs: { id: TabType; label: string; count?: number; highlight?: boolean }[] = [
+    { id: 'general', label: 'General & Template' },
     { id: 'hero', label: 'Hero Section' },
-    { id: 'event', label: 'Date & Urgency' },
-    { id: 'packages', label: 'Pricing Tiers', count: formData.packages?.length },
-    { id: 'itinerary', label: 'Itinerary / Days', count: formData.itinerary?.length },
-    { id: 'values', label: 'Core Values', count: (formData.coreValues?.length || 0) + (formData.highlights?.length || 0) },
-    { id: 'problems', label: 'Problem vs Solution', count: formData.problems?.length },
-    { id: 'audiences', label: 'Target Audience', count: formData.audiences?.length },
-    { id: 'valueStack', label: 'Value Stack', count: formData.valueStack?.inclusions?.length },
-    { id: 'testimonials', label: 'Testimonials', count: formData.testimonials?.length },
+    { id: 'event', label: 'Date & Venue' }
+  ];
+
+  const templateTabs: { id: TabType; label: string; count?: number; highlight?: boolean }[] = [];
+
+  if (currentTemplate === 'trade-expo') {
+    templateTabs.push({ 
+      id: 'expoBooths', 
+      label: '🎪 Exhibition Booth Tiers', 
+      count: formData.expoBooths?.length,
+      highlight: true 
+    });
+  } else if (currentTemplate === 'concert-festival') {
+    templateTabs.push({ 
+      id: 'artists', 
+      label: '🎵 Artist Lineup & Stages', 
+      count: formData.artists?.length,
+      highlight: true 
+    });
+  } else if (currentTemplate === 'corporate-summit') {
+    templateTabs.push({ 
+      id: 'speakers', 
+      label: '🎤 Keynote Speakers', 
+      count: formData.speakers?.length,
+      highlight: true 
+    });
+  } else if (currentTemplate === 'b2b-delegation') {
+    templateTabs.push(
+      { id: 'itinerary', label: '📅 Itinerary (4D3N)', count: formData.itinerary?.length, highlight: true },
+      { id: 'valueStack', label: '💎 9-in-1 Value Stack', count: formData.valueStack?.inclusions?.length, highlight: true },
+      { id: 'values', label: 'Core Values', count: (formData.coreValues?.length || 0) + (formData.highlights?.length || 0) },
+      { id: 'problems', label: 'Problem vs Solution', count: formData.problems?.length },
+      { id: 'audiences', label: 'Target Audience', count: formData.audiences?.length }
+    );
+  }
+
+  // Allow editing template sections if they have items even under other templates
+  if (currentTemplate !== 'b2b-delegation' && (formData.itinerary?.length || 0) > 0) {
+    templateTabs.push({ id: 'itinerary', label: 'Itinerary / Schedule', count: formData.itinerary?.length });
+  }
+  if (currentTemplate !== 'trade-expo' && (formData.expoBooths?.length || 0) > 0) {
+    templateTabs.push({ id: 'expoBooths', label: 'Booth Tiers', count: formData.expoBooths?.length });
+  }
+  if (currentTemplate !== 'concert-festival' && (formData.artists?.length || 0) > 0) {
+    templateTabs.push({ id: 'artists', label: 'Artists', count: formData.artists?.length });
+  }
+  if (currentTemplate !== 'corporate-summit' && (formData.speakers?.length || 0) > 0) {
+    templateTabs.push({ id: 'speakers', label: 'Speakers', count: formData.speakers?.length });
+  }
+
+  const commonTabs: { id: TabType; label: string; count?: number; highlight?: boolean }[] = [
+    { id: 'packages', label: 'Pricing Packages', count: formData.packages?.length },
     { id: 'gallery', label: 'Visual Gallery', count: formData.gallery?.length },
+    { id: 'testimonials', label: 'Testimonials', count: formData.testimonials?.length },
     { id: 'faqs', label: 'FAQs', count: formData.faqs?.length },
-    { id: 'guarantee', label: 'Guarantee & Trust', count: formData.guarantee?.points?.length },
+    { id: 'guarantee', label: 'Guarantee', count: formData.guarantee?.points?.length },
     { id: 'form', label: 'Lead Form', count: formData.formConfig?.fields?.length },
     { id: 'seo', label: 'SEO & Social' }
   ];
+
+  const tabs = [...baseTabs, ...templateTabs, ...commonTabs];
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-24">
@@ -789,6 +1198,64 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
         {/* 1. GENERAL & TOGGLES */}
         {activeTab === 'general' && (
           <div className="space-y-6">
+            {/* BUSINESS TYPE & TEMPLATE ARCHITECTURE */}
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-amber-500/5 dark:from-[#07130D] dark:to-[#0C1F15] border border-slate-200 dark:border-emerald-800/60 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5 uppercase tracking-wider">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <span>Business Type &amp; Landing Page Template</span>
+                  </label>
+                  <p className="text-[11px] text-slate-500 dark:text-gray-400">
+                    Each business type has its own unique layout, sections, and conversion architecture.
+                  </p>
+                </div>
+                <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-amber-400 text-black font-extrabold self-start sm:self-auto">
+                  Active: {TEMPLATE_OPTIONS.find(t => t.id === (formData.template || 'b2b-delegation'))?.label}
+                </span>
+              </div>
+
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
+                {TEMPLATE_OPTIONS.map((tmpl) => {
+                  const isSelected = (formData.template || 'b2b-delegation') === tmpl.id;
+                  const Icon = tmpl.icon;
+                  return (
+                    <button
+                      key={tmpl.id}
+                      type="button"
+                      onClick={() => handleSelectTemplate(tmpl)}
+                      className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative flex flex-col justify-between gap-2.5 ${
+                        isSelected
+                          ? 'bg-amber-400/10 border-amber-500 dark:border-amber-400 ring-1 ring-amber-400 shadow-md'
+                          : 'bg-white dark:bg-[#060F0A] border-slate-200 dark:border-emerald-950 hover:border-emerald-700/60 text-slate-700 dark:text-gray-300'
+                      }`}
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                            isSelected ? 'bg-amber-400 text-black' : 'bg-slate-100 dark:bg-emerald-950 text-slate-700 dark:text-emerald-400'
+                          }`}>
+                            <Icon className="w-4 h-4" />
+                          </span>
+                          {isSelected && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/80 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-700">
+                              Selected
+                            </span>
+                          )}
+                        </div>
+                        <div className="font-bold text-xs text-slate-900 dark:text-white pt-1">
+                          {tmpl.label}
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                          {tmpl.description}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
@@ -894,6 +1361,9 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   { key: 'audiences', label: 'Target Audience' },
                   { key: 'itinerary', label: 'Itinerary / Timetable' },
                   { key: 'valueStack', label: 'Value Stack (9-in-1)' },
+                  { key: 'expoBooths', label: '🎪 Exhibition Booths' },
+                  { key: 'artists', label: '🎵 Artist Lineup' },
+                  { key: 'speakers', label: '🎤 Keynote Speakers' },
                   { key: 'packages', label: 'Pricing Passes' },
                   { key: 'gallery', label: 'Photo Gallery' },
                   { key: 'testimonials', label: 'Testimonials' },
@@ -1338,6 +1808,461 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                         className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
                       />
                     </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* EXPO BOOTHS TAB */}
+        {activeTab === 'expoBooths' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Store className="w-4 h-4 text-emerald-500" />
+                  <span>Exhibition Booth Tiers &amp; Floor Space ({formData.expoBooths?.length || 0})</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">
+                  Dedicated for Trade Expo landing pages. Manage booth sizes, pricing, footfall zones, inventory and inclusions.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={addExpoBooth}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200 dark:hover:bg-emerald-800 text-xs font-bold cursor-pointer transition-colors shadow-sm"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Booth Tier</span>
+              </button>
+            </div>
+
+            {(!formData.expoBooths || formData.expoBooths.length === 0) && (
+              <div className="p-8 rounded-2xl bg-slate-50 dark:bg-[#07130D] border border-dashed border-slate-300 dark:border-emerald-900/60 text-center space-y-3">
+                <Store className="w-8 h-8 text-emerald-500 mx-auto" />
+                <p className="text-xs text-slate-600 dark:text-gray-400">No booth tiers added yet.</p>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, expoBooths: DEFAULT_EXPO_BOOTHS })}
+                  className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-bold text-xs cursor-pointer shadow-md"
+                >
+                  Load 3 Turnkey Expo Booth Presets
+                </button>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {(formData.expoBooths || []).map((booth, idx) => (
+                <div key={booth.id || idx} className="p-5 rounded-2xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/70 space-y-4 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-emerald-900/40 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                        Booth #{idx + 1}: {booth.name}
+                      </span>
+                      {booth.popular && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400 text-black">
+                          Popular
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeExpoBooth(idx)}
+                      className="text-rose-600 hover:text-rose-700 dark:text-rose-400 text-xs flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete Booth</span>
+                    </button>
+                  </div>
+
+                  <div className="grid sm:grid-cols-4 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Booth Tier Name</label>
+                      <input
+                        type="text"
+                        value={booth.name}
+                        onChange={(e) => updateExpoBooth(idx, 'name', e.target.value)}
+                        placeholder="e.g. Standard Shell Scheme"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Dimensions &amp; Area</label>
+                      <input
+                        type="text"
+                        value={booth.size}
+                        onChange={(e) => updateExpoBooth(idx, 'size', e.target.value)}
+                        placeholder="e.g. 3m x 3m (9 sqm)"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Booth Price</label>
+                      <input
+                        type="text"
+                        value={booth.price}
+                        onChange={(e) => updateExpoBooth(idx, 'price', e.target.value)}
+                        placeholder="e.g. $1,200"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-amber-600 dark:text-amber-400 font-black text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Floor Location / Hall Zone</label>
+                      <input
+                        type="text"
+                        value={booth.location || ''}
+                        onChange={(e) => updateExpoBooth(idx, 'location', e.target.value)}
+                        placeholder="e.g. Zone A - Main Walkway"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Available Count</label>
+                      <input
+                        type="number"
+                        value={booth.availableCount ?? 5}
+                        onChange={(e) => updateExpoBooth(idx, 'availableCount', Number(e.target.value))}
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Total Count in Hall</label>
+                      <input
+                        type="number"
+                        value={booth.totalCount ?? 10}
+                        onChange={(e) => updateExpoBooth(idx, 'totalCount', Number(e.target.value))}
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div className="flex items-center pt-5">
+                      <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-gray-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={booth.popular || false}
+                          onChange={(e) => updateExpoBooth(idx, 'popular', e.target.checked)}
+                          className="w-4 h-4 rounded text-amber-500"
+                        />
+                        <span className="font-semibold">Highlight as Prime Footfall / Popular</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Booth features */}
+                  <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-emerald-950">
+                    <div className="text-[11px] font-bold text-slate-700 dark:text-gray-300">
+                      Standard Booth Inclusions &amp; Fit-Out:
+                    </div>
+                    <div className="space-y-1.5">
+                      {(booth.features || []).map((feat, fIdx) => (
+                        <div key={fIdx} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/40 text-xs">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                            <span className="text-slate-800 dark:text-gray-200">{feat}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeBoothFeature(idx, fIdx)}
+                            className="text-slate-400 hover:text-rose-500 p-1 cursor-pointer"
+                          >
+                            &times;
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <input
+                        type="text"
+                        value={newBoothFeatureText[idx] || ''}
+                        onChange={(e) => setNewBoothFeatureText({ ...newBoothFeatureText, [idx]: e.target.value })}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addBoothFeature(idx); } }}
+                        placeholder="Add included item (e.g. 2x Spotlights, 1x Counter, Fascia board)..."
+                        className="flex-1 px-3 py-1.5 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => addBoothFeature(idx)}
+                        className="px-3 py-1.5 rounded-lg bg-amber-400 text-black font-bold text-xs cursor-pointer hover:bg-amber-300"
+                      >
+                        + Add Inclusion
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ARTISTS TAB */}
+        {activeTab === 'artists' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Music className="w-4 h-4 text-purple-400" />
+                  <span>Artist &amp; Performer Lineup ({formData.artists?.length || 0})</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">
+                  Dedicated for Concert &amp; Festival landing pages. Manage performers, set times, stage zones, and artist photos.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={addArtist}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200 hover:bg-purple-200 text-xs font-bold cursor-pointer transition-colors shadow-sm"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Performer</span>
+              </button>
+            </div>
+
+            {(!formData.artists || formData.artists.length === 0) && (
+              <div className="p-8 rounded-2xl bg-slate-50 dark:bg-[#07130D] border border-dashed border-slate-300 dark:border-emerald-900/60 text-center space-y-3">
+                <Music className="w-8 h-8 text-purple-400 mx-auto" />
+                <p className="text-xs text-slate-600 dark:text-gray-400">No performers added yet.</p>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, artists: DEFAULT_FESTIVAL_ARTISTS })}
+                  className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-bold text-xs cursor-pointer shadow-md"
+                >
+                  Load 3 Sample Headliners &amp; DJs
+                </button>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {(formData.artists || []).map((artist, idx) => (
+                <div key={artist.id || idx} className="p-5 rounded-2xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/70 space-y-4 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-emerald-900/40 pb-3">
+                    <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
+                      Artist #{idx + 1}: {artist.name || 'Unnamed Performer'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeArtist(idx)}
+                      className="text-rose-600 hover:text-rose-700 dark:text-rose-400 text-xs flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete Artist</span>
+                    </button>
+                  </div>
+
+                  <div className="grid sm:grid-cols-4 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Artist / DJ Name</label>
+                      <input
+                        type="text"
+                        value={artist.name}
+                        onChange={(e) => updateArtist(idx, 'name', e.target.value)}
+                        placeholder="e.g. ElectroPulse"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Role / Billing</label>
+                      <input
+                        type="text"
+                        value={artist.role}
+                        onChange={(e) => updateArtist(idx, 'role', e.target.value)}
+                        placeholder="e.g. Headliner DJ, Live Band"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Stage Name</label>
+                      <input
+                        type="text"
+                        value={artist.stageName || ''}
+                        onChange={(e) => updateArtist(idx, 'stageName', e.target.value)}
+                        placeholder="e.g. Main Stage Arena"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Performance Set Time</label>
+                      <input
+                        type="text"
+                        value={artist.stageTime || ''}
+                        onChange={(e) => updateArtist(idx, 'stageTime', e.target.value)}
+                        placeholder="e.g. 21:30 - 23:00"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-amber-600 dark:text-amber-400 font-mono text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Music Genre</label>
+                      <input
+                        type="text"
+                        value={artist.genre || ''}
+                        onChange={(e) => updateArtist(idx, 'genre', e.target.value)}
+                        placeholder="e.g. EDM / Progressive House"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Photo Image URL</label>
+                      <input
+                        type="text"
+                        value={artist.image || ''}
+                        onChange={(e) => updateArtist(idx, 'image', e.target.value)}
+                        placeholder="/photos/photo_2026-09-16_22-01-09 (6).jpg"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Short Bio</label>
+                    <textarea
+                      rows={2}
+                      value={artist.bio || ''}
+                      onChange={(e) => updateArtist(idx, 'bio', e.target.value)}
+                      placeholder="Brief bio or performance description..."
+                      className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs resize-none"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* SPEAKERS TAB */}
+        {activeTab === 'speakers' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Mic className="w-4 h-4 text-amber-500" />
+                  <span>Keynote Speakers &amp; Panelists ({formData.speakers?.length || 0})</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">
+                  Dedicated for Corporate Summit landing pages. Manage VIP speakers, keynote titles, tracks, and credentials.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={addSpeaker}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 hover:bg-amber-200 text-xs font-bold cursor-pointer transition-colors shadow-sm"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Speaker</span>
+              </button>
+            </div>
+
+            {(!formData.speakers || formData.speakers.length === 0) && (
+              <div className="p-8 rounded-2xl bg-slate-50 dark:bg-[#07130D] border border-dashed border-slate-300 dark:border-emerald-900/60 text-center space-y-3">
+                <Mic className="w-8 h-8 text-amber-500 mx-auto" />
+                <p className="text-xs text-slate-600 dark:text-gray-400">No keynote speakers added yet.</p>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, speakers: DEFAULT_SUMMIT_SPEAKERS })}
+                  className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-bold text-xs cursor-pointer shadow-md"
+                >
+                  Load 3 Sample Keynote Speakers
+                </button>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {(formData.speakers || []).map((speaker, idx) => (
+                <div key={speaker.id || idx} className="p-5 rounded-2xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/70 space-y-4 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-emerald-900/40 pb-3">
+                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                      Speaker #{idx + 1}: {speaker.name || 'Unnamed Speaker'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeSpeaker(idx)}
+                      className="text-rose-600 hover:text-rose-700 dark:text-rose-400 text-xs flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete Speaker</span>
+                    </button>
+                  </div>
+
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Speaker Full Name</label>
+                      <input
+                        type="text"
+                        value={speaker.name}
+                        onChange={(e) => updateSpeaker(idx, 'name', e.target.value)}
+                        placeholder="e.g. Oknha Sokha Meng"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Professional Title</label>
+                      <input
+                        type="text"
+                        value={speaker.title}
+                        onChange={(e) => updateSpeaker(idx, 'title', e.target.value)}
+                        placeholder="e.g. Chairman &amp; Group CEO"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Organization / Company</label>
+                      <input
+                        type="text"
+                        value={speaker.organization}
+                        onChange={(e) => updateSpeaker(idx, 'organization', e.target.value)}
+                        placeholder="e.g. Apex Trading Corp"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Conference Track</label>
+                      <input
+                        type="text"
+                        value={speaker.track || ''}
+                        onChange={(e) => updateSpeaker(idx, 'track', e.target.value)}
+                        placeholder="e.g. Plenary Keynote, Smart City Track"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Session Presentation Time</label>
+                      <input
+                        type="text"
+                        value={speaker.sessionTime || ''}
+                        onChange={(e) => updateSpeaker(idx, 'sessionTime', e.target.value)}
+                        placeholder="e.g. 09:30 - 10:15"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-amber-600 dark:text-amber-400 font-mono text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Avatar Photo URL</label>
+                      <input
+                        type="text"
+                        value={speaker.avatar || ''}
+                        onChange={(e) => updateSpeaker(idx, 'avatar', e.target.value)}
+                        placeholder="/photos/photo_2026-09-16_22-01-09 (2).jpg"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Presentation / Keynote Topic</label>
+                    <input
+                      type="text"
+                      value={speaker.topic || ''}
+                      onChange={(e) => updateSpeaker(idx, 'topic', e.target.value)}
+                      placeholder="e.g. Cross-Border Supply Chain Resilience &amp; Automation"
+                      className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs italic"
+                    />
                   </div>
                 </div>
               ))}

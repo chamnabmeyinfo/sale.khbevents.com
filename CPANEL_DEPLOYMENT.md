@@ -81,7 +81,7 @@ Once deployed:
 | Feature | URL | Description |
 |---|---|---|
 | **Public Landing Page** | `https://sale.khbevents.com/` | Flagship sales portal with instant cost estimator |
-| **Campaign Pages** | `https://sale.khbevents.com/[slug]` | e.g. `/smart-city-tea-cafe`, `/corporate-gala-production` |
+| **Campaign Pages** | `https://sale.khbevents.com/[slug]` | e.g. `/smart-city-tea-cafe` (B2B Delegation, Expos, Festivals) |
 | **Admin CMS & CRM** | `https://sale.khbevents.com/admin` | Page builder, leads pipeline & Telegram settings |
 
 - **Default Admin Email:** `admin@khbevents.com`

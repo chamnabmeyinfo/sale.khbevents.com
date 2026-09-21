@@ -97,8 +97,7 @@ export default function AdminSidebar() {
       subItems: [
         { label: 'All Campaign Pages', href: '/admin/pages', icon: Layers },
         { label: '+ Create New Page', href: '/admin/pages/new', icon: PlusCircle, isHighlight: true },
-        { label: 'Smart City Trade Expo', href: '/admin/pages/page-smart-city', icon: Sparkles },
-        { label: 'Corporate Gala Staging', href: '/admin/pages/page-corporate-gala', icon: Sparkles },
+        { label: 'Smart City B2B Delegation', href: '/admin/pages/page-smart-city', icon: Sparkles },
       ]
     },
     {
@@ -290,15 +289,7 @@ export default function AdminSidebar() {
             target="_blank"
             className="flex items-center justify-between px-3 py-1.5 rounded-lg text-[11px] text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-emerald-950/30 transition-all"
           >
-            <span className="truncate">Delegation Page</span>
-            <span className="text-[10px] text-slate-400 dark:text-zinc-500">↗</span>
-          </Link>
-          <Link
-            href="/corporate-gala-production"
-            target="_blank"
-            className="flex items-center justify-between px-3 py-1.5 rounded-lg text-[11px] text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-emerald-950/30 transition-all"
-          >
-            <span className="truncate">Gala Staging Page</span>
+            <span className="truncate">Smart City B2B</span>
             <span className="text-[10px] text-slate-400 dark:text-zinc-500">↗</span>
           </Link>
         </div>

@@ -49,6 +49,7 @@ const defaultPages: LandingPage[] = [
     category: 'Trade Delegation',
     badge: 'Exclusive 30 VIP Seats Only',
     status: 'published',
+    template: 'b2b-delegation',
     heroHeadline: 'Vietnam Smart City, Tea & Cafe B2B Business Delegation 2026',
     heroSubheadline: 'Connect with 100+ vetted enterprise partners, unlock high-margin import/export distribution agreements, and experience private factory tours across Vietnam.',
     heroCtaText: 'Secure Your VIP Seat',
@@ -183,103 +184,6 @@ const defaultPages: LandingPage[] = [
     leadsCount: 18,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'page-corporate-gala',
-    slug: 'corporate-gala-production',
-    title: 'Corporate Gala Dinners, Annual Awards & Product Launches',
-    subtitle: 'Transform your brand milestones into breathtaking, unforgettable productions',
-    description: 'Full-service corporate event management, from cinematic LED staging and 3D projection mapping to VIP celebrity guest management and protocol choreography.',
-    category: 'Corporate Events',
-    badge: 'KHB Enterprise Production',
-    status: 'published',
-    heroHeadline: 'World-Class Corporate Gala Dinners & High-Impact Brand Launches',
-    heroSubheadline: 'From Koh Pich Grand Ballroom to luxury 5-star hotel ballrooms across Phnom Penh, we engineer immersive experiences that elevate your brand prestige.',
-    heroCtaText: 'Request VIP Proposal & Deck',
-    heroCtaLink: '#booking-form',
-    heroImage: '/images/events/photo_2026-09-16_22-01-09 (6).jpg',
-    venue: 'Premier Ballrooms & Event Centers across Cambodia',
-    countdownEnabled: false,
-    highlights: [
-      {
-        id: 'cg-1',
-        title: 'Cinematic LED & Audio-Visual Engineering',
-        description: 'Curved 4K LED walls, precision line-array sound systems, moving-head concert lighting, and atmospheric special effects.',
-        icon: 'MonitorPlay'
-      },
-      {
-        id: 'cg-2',
-        title: 'VIP Protocol & Dignitary Management',
-        description: 'Flawless red carpet coordination, high-level diplomatic seating protocol, and seamless stage presentation flow.',
-        icon: 'ShieldCheck'
-      }
-    ],
-    packages: [
-      {
-        id: 'corp-silver',
-        name: 'Prestige Corporate Package',
-        price: 'From $4,500',
-        description: 'For corporate gatherings of 100 - 300 guests.',
-        popular: false,
-        features: [
-          'High-resolution P2.6 / P3.9 LED screen (up to 24 sqm)',
-          'Line-array audio system with digital mixing console',
-          'Full stage intelligent moving lights & ambient wash',
-          'Themed red carpet backdrop & 3D photo zone',
-          'Professional stage manager & technical crew'
-        ],
-        ctaText: 'Inquire Prestige Package'
-      },
-      {
-        id: 'corp-gold',
-        name: 'Grand Signature Gala',
-        price: 'From $9,500',
-        description: 'Designed for major annual dinners of 300 - 1,000+ guests.',
-        popular: true,
-        features: [
-          'Panoramic curved main LED stage (up to 60+ sqm)',
-          'Concert-grade audio system + delay towers',
-          'Immersive beam lighting show & synchronized haze/sparklers',
-          'Full event run-down script & stage choreography',
-          '4-Camera live broadcast feed with crane & drone'
-        ],
-        ctaText: 'Inquire Signature Gala'
-      }
-    ],
-    gallery: [
-      '/images/events/photo_2026-09-16_22-01-09 (7).jpg',
-      '/images/events/photo_2026-09-16_22-01-09 (8).jpg'
-    ],
-    testimonials: [
-      {
-        id: 'tc-1',
-        name: 'Chhaya Rath',
-        role: 'Brand & Communications Director',
-        company: 'Leading Commercial Bank',
-        quote: 'KHB Events took complete ownership of our annual dinner at Koh Pich. The stage visuals and sound were stadium quality!',
-        rating: 5
-      }
-    ],
-    faqs: [
-      {
-        id: 'fc-1',
-        question: 'How early should we book KHB for an annual dinner?',
-        answer: 'We recommend booking 4 to 8 weeks in advance, though our agile production crew can accommodate fast-track timelines.'
-      }
-    ],
-    formConfig: {
-      headline: 'Get an Instant Proposal & 3D Stage Concept',
-      subheadline: 'Tell us about your event vision and our production team will prepare a tailored deck within 24 hours.',
-      submitButtonText: 'Request Tailored Proposal',
-      successMessage: 'Thank you! Your event inquiry has been logged. Our Senior Event Producer will follow up shortly.',
-      fields: []
-    },
-    metaTitle: 'Corporate Gala Dinners & Event Production | KHB EVENTS Cambodia',
-    metaDescription: 'Cambodia\'s premier corporate event management and production partner. LED staging, sound, lighting, decor & VIP coordination.',
-    viewsCount: 520,
-    leadsCount: 31,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
   }
 ];
 
@@ -303,48 +207,6 @@ const defaultLeads: Lead[] = [
     utmCampaign: 'vietnam_delegation_sep',
     createdAt: '2026-09-17T14:20:00Z',
     updatedAt: '2026-09-18T09:00:00Z'
-  },
-  {
-    id: 'lead-102',
-    landingPageSlug: 'corporate-gala-production',
-    landingPageTitle: 'Corporate Gala Dinners, Annual Awards & Product Launches',
-    fullName: 'Visal Kem',
-    email: 'visal.k@telecom-plus.com.kh',
-    phone: '+855 98 555 333',
-    company: 'Telecom Plus Cambodia',
-    eventType: 'Annual Corporate Dinner / Gala',
-    guestCount: '600 - 1,500 guests',
-    budgetRange: '$12,000 - $25,000',
-    packageInterest: 'Grand Signature Gala',
-    message: 'Planning our 15th anniversary gala for December at Koh Pich. Need full staging.',
-    status: 'PROPOSAL_SENT',
-    notes: [
-      { id: 'n2', text: 'Sent proposal deck and 3D visual mockups.', author: 'Admin', createdAt: '2026-09-19T11:30:00Z' }
-    ],
-    utmSource: 'telegram',
-    utmCampaign: 'corporate_q4',
-    createdAt: '2026-09-19T10:15:00Z',
-    updatedAt: '2026-09-19T11:30:00Z'
-  },
-  {
-    id: 'lead-103',
-    landingPageSlug: 'corporate-gala-production',
-    landingPageTitle: 'Corporate Gala Dinners, Annual Awards & Product Launches',
-    fullName: 'Sophea Pich',
-    email: 'sophea@luxurybrand.kh',
-    phone: '+855 10 442 889',
-    company: 'Mondial Luxury Imports',
-    eventType: 'Product Launch / Brand Reveal',
-    guestCount: '150 - 300 guests',
-    budgetRange: '$6,000 - $12,000',
-    packageInterest: 'Prestige Corporate Package',
-    message: 'New flagship boutique opening gala in November.',
-    status: 'NEW',
-    notes: [],
-    utmSource: 'google',
-    utmCampaign: 'brand_launch_cambodia',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
   }
 ];
 

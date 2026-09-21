@@ -19,8 +19,8 @@ A high-performance, conversion-optimized Landing Page System and Lead Management
 ### 2. Dynamic Campaign Landing Pages (`/[slug]`)
 - Host unlimited specialized landing pages under `sale.khbevents.com/[slug]`.
 - Pre-seeded high-impact campaigns:
-  - `/smart-city-tea-cafe`: Vietnam Smart City, Tea & Cafe B2B Business Delegation 2026.
-  - `/corporate-gala-production`: High-End Corporate Gala Dinners & Annual Awards Staging.
+  - `/smart-city-tea-cafe`: Flagship Vietnam Smart City, Tea & Cafe B2B Business Delegation 2026.
+- **Dedicated Business Type Templates:** Unique landing page templates for B2B Delegations, Trade Expos, Concerts/Festivals, Corporate Summits, and Custom Campaigns.
 - Dynamic Countdown Timer for events with registration deadlines.
 - Interactive Package Tier Cards with "Select Pass" triggers that prefill the inquiry form.
 - Dedicated FAQ accordion and gallery.

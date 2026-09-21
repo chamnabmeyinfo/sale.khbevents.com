@@ -23,7 +23,11 @@ import {
   Coffee,
   Check,
   Building2,
-  Tag
+  Tag,
+  Mic,
+  Music,
+  Store,
+  Layers
 } from 'lucide-react';
 
 interface DynamicLandingPageViewProps {
@@ -393,6 +397,151 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
           </section>
         )}
 
+        {/* 6B. KEYNOTE SPEAKERS & PANELISTS (Corporate Summit) */}
+        {isVisible('speakers') && page.speakers && page.speakers.length > 0 && (
+          <section className="py-20 bg-white dark:bg-[#07130D] border-b border-slate-200 dark:border-emerald-900/30 transition-colors">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
+                <span className="text-xs font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 px-3 py-1 rounded-full shadow-sm inline-flex items-center gap-1.5">
+                  <Mic className="w-3.5 h-3.5" />
+                  Distinguished Keynotes
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  Featured Speakers &amp; Panelists
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-400">
+                  Hear directly from premier industry leaders, policy shapers, and corporate enterprise decision-makers.
+                </p>
+              </div>
+
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {page.speakers.map((speaker, i) => (
+                  <div
+                    key={speaker.id || i}
+                    className="rounded-3xl bg-slate-50 dark:bg-[#0B1A12] border border-slate-200 dark:border-emerald-900/50 p-6 flex flex-col justify-between hover:border-amber-400/50 transition-all shadow-sm group"
+                  >
+                    <div>
+                      <div className="relative rounded-2xl overflow-hidden aspect-square mb-4 bg-slate-200 dark:bg-black/40 border border-slate-200 dark:border-emerald-950">
+                        <img
+                          src={speaker.avatar || '/photos/photo_2026-09-16_22-01-09 (2).jpg'}
+                          alt={speaker.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        {speaker.track && (
+                          <span className="absolute top-3 left-3 text-[10px] font-extrabold uppercase tracking-wider bg-black/75 backdrop-blur-md text-amber-400 px-2.5 py-1 rounded-full border border-amber-400/30">
+                            {speaker.track}
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-amber-500 transition-colors">
+                        {speaker.name}
+                      </h3>
+                      <p className="text-xs text-amber-600 dark:text-amber-300 font-medium mt-0.5">
+                        {speaker.title}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
+                        {speaker.organization}
+                      </p>
+                      {speaker.topic && (
+                        <div className="mt-4 p-3 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/40 text-xs">
+                          <span className="font-bold text-slate-800 dark:text-gray-200 block mb-0.5">Session Topic:</span>
+                          <span className="text-slate-600 dark:text-gray-400 italic">&ldquo;{speaker.topic}&rdquo;</span>
+                        </div>
+                      )}
+                    </div>
+                    {speaker.sessionTime && (
+                      <div className="mt-4 pt-3 border-t border-slate-200 dark:border-emerald-950/60 flex items-center gap-1.5 text-xs text-slate-500 dark:text-gray-400">
+                        <Clock className="w-3.5 h-3.5 text-amber-500" />
+                        <span>{speaker.sessionTime}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* 6C. ARTIST & PERFORMER LINEUP (Concerts & Festivals) */}
+        {isVisible('artists') && page.artists && page.artists.length > 0 && (
+          <section className="py-20 bg-slate-900 text-white relative overflow-hidden border-b border-emerald-900/40">
+            <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-black to-emerald-950/40 pointer-events-none" />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+              <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
+                <span className="text-xs font-bold uppercase tracking-widest text-amber-400 bg-amber-400/10 border border-amber-400/30 px-3 py-1 rounded-full shadow-sm inline-flex items-center gap-1.5">
+                  <Music className="w-3.5 h-3.5" />
+                  Live Entertainment
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                  Official Artist &amp; Performer Lineup
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-300">
+                  World-class sound staging, festival lighting, and electric live performances.
+                </p>
+              </div>
+
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {page.artists.map((artist, i) => (
+                  <div
+                    key={artist.id || i}
+                    className="rounded-3xl bg-black/60 backdrop-blur-md border border-white/10 overflow-hidden hover:border-amber-400/60 transition-all shadow-xl group flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="relative aspect-[4/3] overflow-hidden">
+                        <img
+                          src={artist.image || '/photos/photo_2026-09-16_22-01-09 (6).jpg'}
+                          alt={artist.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                        {artist.stageName && (
+                          <span className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider bg-amber-400 text-black px-2.5 py-0.5 rounded-full shadow">
+                            {artist.stageName}
+                          </span>
+                        )}
+                        {artist.stageTime && (
+                          <span className="absolute bottom-3 left-3 text-[11px] font-mono font-bold bg-black/80 backdrop-blur-md text-amber-300 px-2.5 py-1 rounded-lg border border-white/10 flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-amber-400" />
+                            {artist.stageTime}
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-5 space-y-2">
+                        <h3 className="text-xl font-black text-white group-hover:text-amber-400 transition-colors">
+                          {artist.name}
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-amber-400">{artist.role}</span>
+                          {artist.genre && (
+                            <>
+                              <span className="text-gray-500">•</span>
+                              <span className="text-xs text-gray-400">{artist.genre}</span>
+                            </>
+                          )}
+                        </div>
+                        {artist.bio && (
+                          <p className="text-xs text-gray-300 line-clamp-3 leading-relaxed pt-1">
+                            {artist.bio}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="p-5 pt-0">
+                      <a
+                        href="#booking-form"
+                        className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-amber-400 hover:text-black text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <span>Get VIP Access</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* 7. ITINERARY & AGENDA */}
         {isVisible('itinerary') && page.itinerary && page.itinerary.length > 0 && (
           <section className="py-20 bg-white dark:bg-[#08130E] border-b border-slate-200 dark:border-emerald-900/30 transition-colors">
@@ -513,6 +662,112 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
                   </a>
                 </div>
               )}
+            </div>
+          </section>
+        )}
+
+        {/* 8B. EXHIBITION BOOTHS (Trade Expo) */}
+        {isVisible('expoBooths') && page.expoBooths && page.expoBooths.length > 0 && (
+          <section id="expo-booths" className="py-20 bg-white dark:bg-[#07110C] border-b border-slate-200 dark:border-emerald-900/30 transition-colors">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
+                <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800/60 px-3 py-1 rounded-full shadow-sm inline-flex items-center gap-1.5">
+                  <Store className="w-3.5 h-3.5" />
+                  Exhibitor Space Selection
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  Exhibition Booth Tiers &amp; Floor Packages
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-400">
+                  Turnkey shell scheme and raw space options engineered for maximum commercial foot traffic.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-8">
+                {page.expoBooths.map((booth) => {
+                  const avail = booth.availableCount !== undefined ? booth.availableCount : 5;
+                  const total = booth.totalCount || 10;
+                  return (
+                    <div
+                      key={booth.id}
+                      className={`rounded-3xl p-7 flex flex-col justify-between transition-all relative shadow-sm ${
+                        booth.popular
+                          ? 'bg-gradient-to-b from-amber-500/10 to-amber-500/5 dark:from-[#112D1F] dark:to-[#0A1A12] border-2 border-amber-500 dark:border-amber-400 shadow-xl scale-105 z-10'
+                          : 'bg-white dark:bg-[#0B1711] border border-slate-200 dark:border-emerald-900/50 hover:border-emerald-500/50'
+                      }`}
+                    >
+                      {booth.popular && (
+                        <div className="absolute -top-3.5 inset-x-0 flex justify-center">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider text-black bg-gradient-to-r from-amber-400 to-amber-300 px-4 py-1 rounded-full shadow-lg">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            High Footfall Corner
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="space-y-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="text-xl font-bold text-slate-900 dark:text-white">{booth.name}</h3>
+                          <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-emerald-950 border border-slate-200 dark:border-emerald-800 text-slate-700 dark:text-emerald-300">
+                            {booth.size}
+                          </span>
+                        </div>
+
+                        {booth.location && (
+                          <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-medium">
+                            <MapPin className="w-3.5 h-3.5" />
+                            <span>{booth.location}</span>
+                          </div>
+                        )}
+
+                        <div className="pt-2 pb-4 border-b border-slate-100 dark:border-emerald-950">
+                          <div className="text-3xl font-black text-amber-600 dark:text-amber-400">
+                            {booth.price}
+                          </div>
+                          <div className="text-xs text-slate-500 dark:text-gray-400 mt-1 flex items-center justify-between">
+                            <span>Availability:</span>
+                            <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                              {avail} / {total} booths remaining
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-emerald-950/80 rounded-full h-1.5 mt-2 overflow-hidden">
+                            <div
+                              className="bg-emerald-500 h-full rounded-full transition-all"
+                              style={{ width: `${Math.max(10, Math.min(100, (avail / total) * 100))}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2.5 pt-2">
+                          <div className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                            Booth Inclusions &amp; Fit-Out:
+                          </div>
+                          {booth.features.map((f, fi) => (
+                            <div key={fi} className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-gray-300">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                              <span>{f}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="pt-8">
+                        <button
+                          type="button"
+                          onClick={() => handleSelectTier(booth.name, `${booth.size} - ${booth.price}`)}
+                          className={`w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                            booth.popular
+                              ? 'bg-amber-400 hover:bg-amber-300 text-black shadow-lg shadow-amber-500/20'
+                              : 'bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/80 dark:hover:bg-emerald-800 text-emerald-900 dark:text-emerald-100 border border-emerald-300 dark:border-emerald-700/50 shadow-sm'
+                          }`}
+                        >
+                          {booth.ctaText || 'Reserve This Booth'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </section>
         )}
