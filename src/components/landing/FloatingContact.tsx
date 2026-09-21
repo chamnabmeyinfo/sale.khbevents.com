@@ -17,7 +17,7 @@ export default function FloatingContact({
 }: FloatingContactProps) {
   const [showTooltip, setShowTooltip] = useState(true);
 
-  const telegramHref = `/api/round-robin/route?page=${encodeURIComponent(pageSlug)}&redirect=true`;
+  const telegramHref = `/api/round-robin?page=${encodeURIComponent(pageSlug)}&redirect=true`;
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">

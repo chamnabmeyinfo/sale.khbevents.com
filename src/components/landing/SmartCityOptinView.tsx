@@ -27,7 +27,7 @@ export default function SmartCityOptinView({ page, settings, initialLang }: { pa
 
   const effTotalSeats = page?.urgency?.totalSeats ?? 30;
   const effEarlyBirdPrice = page?.urgency?.earlyBirdPrice ? (Number(page.urgency.earlyBirdPrice) || 499) : 499;
-  const effTgUrl = page?.isolatedSettings?.telegramUrl || `/api/round-robin/route?page=${encodeURIComponent(page?.slug || 'smart-city-tea-cafe')}&redirect=true`;
+  const effTgUrl = `/api/round-robin?page=${encodeURIComponent(page?.slug || 'smart-city-tea-cafe')}&redirect=true`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

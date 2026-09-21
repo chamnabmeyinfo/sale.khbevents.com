@@ -308,7 +308,7 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
   const effEarlyBirdDeadline = page?.urgency?.earlyBirdDeadline || GENERAL.earlyBirdDeadline;
   const effTgUsername = page?.isolatedSettings?.telegramUsername || settings?.telegramUsername || GENERAL.contactTelegramUsername;
   const effPhone = page?.isolatedSettings?.phone || settings?.phone || GENERAL.contactPhone;
-  const effTgUrl = `/api/round-robin/route?page=${encodeURIComponent(page?.slug || 'smart-city-tea-cafe')}&redirect=true`;
+  const effTgUrl = `/api/round-robin?page=${encodeURIComponent(page?.slug || 'smart-city-tea-cafe')}&redirect=true`;
 
   const [claimedSeats, setClaimedSeats] = useState(effClaimedSeats);
 

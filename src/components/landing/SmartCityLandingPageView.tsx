@@ -653,7 +653,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
   const effRegistrationDeadline = page?.urgency?.registrationDeadline || GENERAL.registrationDeadline;
   const effPhone = page?.isolatedSettings?.phone || settings?.phone || GENERAL.contactPhone;
   const effTgUsername = page?.isolatedSettings?.telegramUsername || settings?.telegramUsername || GENERAL.contactTelegramUsername;
-  const effTgUrl = `/api/round-robin/route?page=${encodeURIComponent(page?.slug || 'smart-city-tea-cafe')}&redirect=true`;
+  const effTgUrl = `/api/round-robin?page=${encodeURIComponent(page?.slug || 'smart-city-tea-cafe')}&redirect=true`;
   const effWhatsApp = page?.isolatedSettings?.whatsapp || settings?.whatsappNumber;
 
   const [localClaimed, setLocalClaimed] = useState(effClaimedSeats);
