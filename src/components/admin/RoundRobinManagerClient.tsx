@@ -241,6 +241,7 @@ export default function RoundRobinManagerClient({
       percentage: 0,
       isActive: true,
       phone: '',
+      preferredLanguage: 'km',
       totalLeadsRouted: 0,
       totalDirectClicks: 0,
       successfulDeliveries: 0,
@@ -321,7 +322,8 @@ export default function RoundRobinManagerClient({
           chatId: staff.telegramChatId,
           staffName: staff.name,
           username: staff.telegramUsername,
-          botToken
+          botToken,
+          preferredLanguage: staff.preferredLanguage
         })
       });
 
@@ -521,7 +523,8 @@ export default function RoundRobinManagerClient({
           staffName: currentTestStaff.name,
           username: currentTestStaff.telegramUsername,
           botToken,
-          customTemplate: customTemplate
+          customTemplate: customTemplate,
+          preferredLanguage: currentTestStaff.preferredLanguage
         })
       });
 
@@ -1065,7 +1068,7 @@ export default function RoundRobinManagerClient({
                     )}
 
                     {/* Editable fields */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-4 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mt-4 text-xs">
                       <div>
                         <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-gray-400 mb-1">
                           Staff Full Name
@@ -1117,6 +1120,22 @@ export default function RoundRobinManagerClient({
                           onChange={(e) => handleStaffChange(staff.id, { telegramChatId: e.target.value })}
                           className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white font-mono focus:border-amber-400 focus:outline-none"
                         />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-gray-400 mb-1">
+                          🌐 Alert Language
+                        </label>
+                        <select
+                          value={staff.preferredLanguage || ''}
+                          onChange={(e) => handleStaffChange(staff.id, { preferredLanguage: (e.target.value || undefined) as RoundRobinStaff['preferredLanguage'] })}
+                          className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white font-medium focus:border-amber-400 focus:outline-none cursor-pointer"
+                        >
+                          <option value="">📋 Use Global Template</option>
+                          <option value="km">🇰🇭 ខ្មែរ (Khmer)</option>
+                          <option value="en">🇬🇧 English</option>
+                          <option value="compact">⚡ Compact / Quick</option>
+                        </select>
                       </div>
                     </div>
 

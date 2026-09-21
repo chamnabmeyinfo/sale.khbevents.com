@@ -5,7 +5,7 @@ import { testStaffTelegramConnection } from '@/lib/round-robin';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { chatId, staffName, username, botToken: customToken } = body;
+    const { chatId, staffName, username, botToken: customToken, preferredLanguage } = body;
 
     if (!chatId) {
       return NextResponse.json(
@@ -33,7 +33,8 @@ export async function POST(req: NextRequest) {
       String(chatId).trim(),
       staffName || 'Staff Member',
       username,
-      body.customTemplate
+      body.customTemplate,
+      preferredLanguage
     );
 
     return NextResponse.json(result);

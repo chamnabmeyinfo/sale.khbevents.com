@@ -156,6 +156,32 @@ export const defaultRoundRobinSettings: RoundRobinSettings = {
 };
 
 /**
+ * Resolves the correct Telegram alert template for a staff member
+ * based on their individual preferred language, falling back to the global custom template.
+ */
+export function getTemplateForStaff(
+  staff: RoundRobinStaff,
+  globalCustomTemplate?: string
+): string {
+  // Per-staff language preference takes priority
+  if (staff.preferredLanguage) {
+    switch (staff.preferredLanguage) {
+      case 'en':
+        return DEFAULT_ENGLISH_TELEGRAM_TEMPLATE;
+      case 'compact':
+        return DEFAULT_COMPACT_TELEGRAM_TEMPLATE;
+      case 'km':
+        return DEFAULT_KHMER_TELEGRAM_TEMPLATE;
+    }
+  }
+
+  // Fall back to global custom template, then default Khmer
+  return (globalCustomTemplate && globalCustomTemplate.trim())
+    ? globalCustomTemplate
+    : DEFAULT_KHMER_TELEGRAM_TEMPLATE;
+}
+
+/**
  * Select the next staff member based on configured percentage weights or round robin
  */
 export function selectNextStaff(
@@ -329,8 +355,9 @@ export async function sendLeadToStaffTelegram(
   );
   const whatsappUrl = `https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(whatsappGreeting)}`;
 
+  const staffTemplate = getTemplateForStaff(staff, options?.customTemplate);
   const text = renderLeadTemplate(
-    options?.customTemplate || '',
+    staffTemplate,
     lead,
     staff,
     { leadUrl, whatsappUrl }
@@ -440,7 +467,8 @@ export async function testStaffTelegramConnection(
   chatId: string,
   staffName: string,
   username?: string,
-  customTemplate?: string
+  customTemplate?: string,
+  preferredLanguage?: 'km' | 'en' | 'compact'
 ): Promise<{
   success: boolean;
   messageId?: number;
@@ -494,12 +522,14 @@ export async function testStaffTelegramConnection(
       telegramChatId: chatId,
       percentage: 20,
       isActive: true,
+      preferredLanguage,
       totalLeadsRouted: 0,
       totalDirectClicks: 0,
       successfulDeliveries: 0,
       failedDeliveries: 0
     };
-    text = renderLeadTemplate(customTemplate, sampleLead, sampleStaff);
+    const resolvedTemplate = getTemplateForStaff(sampleStaff, customTemplate);
+    text = renderLeadTemplate(resolvedTemplate, sampleLead, sampleStaff);
   } else {
     text = `🔔 <b>KHB EVENTS - តេស្តប្រព័ន្ធតភ្ជាប់ TELEGRAM</b>
 ━━━━━━━━━━━━━━━━━━━━

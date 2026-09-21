@@ -521,6 +521,7 @@ export interface RoundRobinStaff {
   email?: string;
   avatar?: string;
   notes?: string;
+  preferredLanguage?: 'km' | 'en' | 'compact'; // Preferred alert language for this staff member
   
   // Real-time tracking counters
   totalLeadsRouted: number;
