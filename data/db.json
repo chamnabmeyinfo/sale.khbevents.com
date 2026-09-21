@@ -175,7 +175,7 @@
       "metaTitle": "Smart City, Tea & Cafe Business Delegation 2026 | KHB EVENTS",
       "metaDescription": "Join the exclusive B2B Business Delegation to Hanoi and Halong Bay, Vietnam. Explore Cafe Show Vietnam & Smart City Expo, direct factory visits, and business matchmaking. Organized by KHB EVENTS.",
       "viewsCount": 342,
-      "leadsCount": 21,
+      "leadsCount": 22,
       "createdAt": "2026-09-21T04:22:10.310Z",
       "updatedAt": "2026-09-21T04:22:10.311Z"
     },
@@ -278,6 +278,23 @@
     }
   ],
   "leads": [
+    {
+      "id": "lead-1789975428884-hm4z",
+      "landingPageId": "page-smart-city",
+      "landingPageSlug": "smart-city-tea-cafe",
+      "landingPageTitle": "Smart City, Tea & Cafe Business Delegation 2026",
+      "fullName": "Optin Tester",
+      "email": "",
+      "phone": "012777666",
+      "eventType": "General Inquiry",
+      "message": "Direct Opt-in Lead",
+      "status": "NEW",
+      "notes": [],
+      "ip": "::1",
+      "userAgent": "node",
+      "createdAt": "2026-09-21T07:23:48.884Z",
+      "updatedAt": "2026-09-21T07:23:48.884Z"
+    },
     {
       "id": "lead-1789974532021-gvq6",
       "landingPageId": "page-smart-city",
