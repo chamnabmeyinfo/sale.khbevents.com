@@ -12,18 +12,23 @@ import {
   ShieldCheck,
   Crown,
   Key,
-  Smartphone
+  Smartphone,
+  Sun,
+  Moon,
+  Laptop
 } from 'lucide-react';
 import { SystemSettings } from '@/lib/types';
+import { useTheme } from '@/context/ThemeContext';
 
 interface SettingsClientProps {
   initialSettings: SystemSettings;
 }
 
-type SettingsTab = 'profile' | 'social' | 'telegram' | 'security';
+type SettingsTab = 'profile' | 'social' | 'telegram' | 'appearance' | 'security';
 
 export default function SettingsClient({ initialSettings }: SettingsClientProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+  const { theme, setTheme } = useTheme();
 
   const [formData, setFormData] = useState({
     companyName: initialSettings.companyName || 'KHB EVENTS',
@@ -50,7 +55,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '');
-      if (['profile', 'social', 'telegram', 'security'].includes(hash)) {
+      if (['profile', 'social', 'telegram', 'appearance', 'security'].includes(hash)) {
         setActiveTab(hash as SettingsTab);
       }
     };
@@ -127,6 +132,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
           { id: 'profile', label: '🏢 Company Profile & Contact', icon: Building },
           { id: 'social', label: '📢 Social & Media Channels', icon: Share2 },
           { id: 'telegram', label: '🤖 Instant Telegram Alerts', icon: Bell },
+          { id: 'appearance', label: '🎨 Theme & Display', icon: Sun },
           { id: 'security', label: '🛡️ Roles & Security', icon: ShieldCheck }
         ].map((tab) => {
           const TabIcon = tab.icon;
@@ -370,7 +376,84 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
           </div>
         )}
 
-        {/* TAB 4: Roles & Security */}
+        {/* TAB 4: Theme & Display Mode */}
+        {activeTab === 'appearance' && (
+          <div className="rounded-2xl bg-[#0A1610] border border-emerald-900/50 p-6 sm:p-8 space-y-6 shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-emerald-950">
+              <div className="flex items-center gap-2">
+                <Sun className="w-5 h-5 text-amber-400" />
+                <h2 className="text-base font-bold text-white">Portal Display & Theme Preferences</h2>
+              </div>
+              <span className="text-[10px] text-amber-400 bg-amber-950/70 px-2.5 py-0.5 rounded-full border border-amber-800 font-bold uppercase">
+                Active: {theme}
+              </span>
+            </div>
+
+            <p className="text-xs text-gray-400">
+              Customize your portal viewing experience. Choose between crisp daylight white, executive obsidian dark, or let the portal automatically match your device OS settings.
+            </p>
+
+            <div className="grid sm:grid-cols-3 gap-4">
+              {[
+                {
+                  id: 'light' as const,
+                  title: 'Light Mode',
+                  desc: 'Crisp ivory white theme with clean contrast and emerald accents, perfect for daytime sales operations.',
+                  icon: Sun,
+                  iconBg: 'bg-amber-100 text-amber-700'
+                },
+                {
+                  id: 'dark' as const,
+                  title: 'Dark Mode',
+                  desc: 'Signature KHB obsidian & emerald luxury theme, designed for eye comfort and focused evening workflow.',
+                  icon: Moon,
+                  iconBg: 'bg-emerald-950 text-emerald-300'
+                },
+                {
+                  id: 'system' as const,
+                  title: 'Automatic Follow System',
+                  desc: 'Automatically switches between Light and Dark mode based on your device system settings in real time.',
+                  icon: Laptop,
+                  iconBg: 'bg-blue-950 text-blue-300'
+                }
+              ].map((item) => {
+                const ItemIcon = item.icon;
+                const isSelected = theme === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setTheme(item.id)}
+                    className={`p-5 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-amber-400/15 border-amber-400 ring-2 ring-amber-400/30 shadow-lg'
+                        : 'bg-[#06100B] border-emerald-900/50 hover:border-emerald-700/60'
+                    }`}
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${item.iconBg}`}>
+                          <ItemIcon className="w-5 h-5" />
+                        </div>
+                        {isSelected && (
+                          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-400 text-black">
+                            Selected
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-white">{item.title}</h3>
+                        <p className="text-xs text-gray-400 mt-1 leading-relaxed">{item.desc}</p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: Roles & Security */}
         {activeTab === 'security' && (
           <div className="space-y-6">
             {/* Roles Matrix Card */}

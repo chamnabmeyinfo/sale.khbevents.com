@@ -6,6 +6,7 @@ import AdminSidebar from './AdminSidebar';
 import Link from 'next/link';
 import { ExternalLink } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -53,7 +54,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* Theme Switcher: Light / Dark / Auto */}
+            <ThemeSwitcher />
+
             <Link
               href="/"
               target="_blank"

@@ -23,9 +23,11 @@ import {
   ShieldCheck,
   Building,
   Menu,
-  X
+  X,
+  Sun
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 
 interface SubItem {
   label: string;
@@ -120,6 +122,7 @@ export default function AdminSidebar() {
       isActive: pathname.startsWith('/admin/settings'),
       subItems: [
         { label: 'Company Profile & Contact', href: '/admin/settings#profile', icon: Building },
+        { label: 'Theme & Appearance', href: '/admin/settings#appearance', icon: Sun },
         { label: 'Telegram Alert Bot', href: '/admin/settings#telegram', icon: Bell },
         { label: 'Owner & Super Admin', href: '/admin/settings#security', icon: ShieldCheck },
       ]
@@ -301,9 +304,14 @@ export default function AdminSidebar() {
         </div>
       </div>
 
-      {/* 3. Aside Footer: Profile & Logout */}
-      <div className="p-4 border-t border-emerald-950 bg-[#06120B]">
-        <div className="flex items-center justify-between gap-3">
+      {/* 3. Aside Footer: Appearance, Profile & Logout */}
+      <div className="p-4 border-t border-emerald-950 bg-[#06120B] space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[11px] font-bold text-zinc-400">Theme</span>
+          <ThemeSwitcher compact={true} />
+        </div>
+
+        <div className="flex items-center justify-between gap-3 pt-2 border-t border-emerald-950/60">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 text-zinc-950 flex items-center justify-center font-extrabold text-xs shrink-0 shadow-md">
               CM
@@ -351,12 +359,15 @@ export default function AdminSidebar() {
           </span>
         </Link>
 
-        <button
-          onClick={handleLogout}
-          className="p-2 text-zinc-400 hover:text-red-400"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <ThemeSwitcher compact={true} />
+          <button
+            onClick={handleLogout}
+            className="p-2 text-zinc-400 hover:text-red-400"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Mobile Drawer */}

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Phone, MessageCircle, Menu, X, ArrowRight, Sparkles } from 'lucide-react';
 import { UserNavButton } from '@/components/auth/UserNavButton';
+import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 
 interface NavbarProps {
   phone?: string;
@@ -72,6 +73,7 @@ export default function Navbar({
           </nav>
 
           <div className="hidden lg:flex items-center gap-3">
+            <ThemeSwitcher compact={true} />
             <UserNavButton />
 
             <a
@@ -97,6 +99,7 @@ export default function Navbar({
           </div>
 
           <div className="flex md:hidden items-center gap-2">
+            <ThemeSwitcher compact={true} />
             <UserNavButton />
             <a
               href={`https://wa.me/${whatsapp}`}
