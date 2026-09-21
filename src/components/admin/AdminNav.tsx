@@ -84,6 +84,10 @@ export default function AdminNav() {
             <ExternalLink className="w-3.5 h-3.5" />
           </Link>
 
+          <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-400 text-zinc-950 uppercase tracking-wider">
+            👑 OWNER: chamnabmey.info@gmail.com
+          </span>
+
           <button
             onClick={handleLogout}
             className="inline-flex items-center gap-1.5 text-xs text-rose-300 bg-rose-950/50 hover:bg-rose-900/60 border border-rose-800/40 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"

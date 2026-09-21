@@ -49,7 +49,25 @@ export function UserNavButton() {
     'Client';
 
   const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
-  const isAdmin = user.email === 'admin@khbevents.com' || user.email?.endsWith('@khbevents.com');
+  const cleanEmail = (user.email || '').toLowerCase().trim();
+  const isOwner = cleanEmail === 'chamnabmey.info@gmail.com';
+  const isSuperAdmin = cleanEmail === 'admin@khbevents.com';
+  const isStaff = cleanEmail.endsWith('@khbevents.com');
+  const hasAdminAccess = isOwner || isSuperAdmin || isStaff;
+
+  const roleBadge = isOwner ? (
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-amber-400 text-zinc-950 uppercase tracking-wider">
+      👑 OWNER
+    </span>
+  ) : isSuperAdmin ? (
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-emerald-400 text-zinc-950 uppercase tracking-wider">
+      🛡️ SUPER ADMIN
+    </span>
+  ) : isStaff ? (
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase tracking-wider">
+      KHB STAFF
+    </span>
+  ) : null;
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -70,27 +88,31 @@ export function UserNavButton() {
           </div>
         )}
         <span className="max-w-[100px] truncate">{displayName}</span>
+        {roleBadge}
         <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
       </button>
 
       {dropdownOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-xs">
+        <div className="absolute right-0 mt-2 w-60 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-xs">
           <div className="p-2.5 border-b border-zinc-800">
-            <p className="font-bold text-white truncate">{displayName}</p>
+            <div className="flex items-center justify-between gap-1 mb-1">
+              <p className="font-bold text-white truncate">{displayName}</p>
+              {roleBadge}
+            </div>
             <p className="text-zinc-400 text-[11px] truncate">{user.email || user.phone}</p>
-            <div className="mt-1 flex items-center gap-1 text-[10px] text-emerald-400 font-semibold">
+            <div className="mt-1.5 flex items-center gap-1 text-[10px] text-emerald-400 font-semibold">
               <CheckCircle2 className="w-3 h-3" /> Signed in via {user.app_metadata.provider || 'Supabase'}
             </div>
           </div>
 
-          {isAdmin && (
+          {hasAdminAccess && (
             <Link
               href="/admin"
               onClick={() => setDropdownOpen(false)}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-amber-300 hover:bg-amber-500/10 font-semibold transition-all mt-1"
+              className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-amber-300 hover:bg-amber-500/10 font-bold transition-all mt-1"
             >
-              <Shield className="w-4 h-4" />
-              <span>Admin CRM Portal</span>
+              <Shield className="w-4 h-4 text-amber-400" />
+              <span>Admin & Leads CRM Portal</span>
             </Link>
           )}
 

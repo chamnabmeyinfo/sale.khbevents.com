@@ -34,6 +34,7 @@ const defaultSettings: SystemSettings = {
   facebookUrl: 'https://facebook.com/khbevents',
   tiktokUrl: 'https://tiktok.com/@khbevents',
   enableTelegramAlerts: false,
+  ownerEmail: 'chamnabmey.info@gmail.com',
   adminEmail: 'admin@khbevents.com',
   adminPasswordHash: crypto.createHash('sha256').update('khbevents2026').digest('hex')
 };

@@ -384,6 +384,7 @@
     "facebookUrl": "https://facebook.com/khbevents",
     "tiktokUrl": "https://tiktok.com/@khbevents",
     "enableTelegramAlerts": false,
+    "ownerEmail": "chamnabmey.info@gmail.com",
     "adminEmail": "admin@khbevents.com",
     "adminPasswordHash": "83229271a10d3b01457d7210debcc3b53feb79b862dc5fa52a2d982483ae8194"
   },

@@ -142,6 +142,8 @@ export interface Lead {
   updatedAt: string;
 }
 
+export type UserRole = "owner" | "super_admin" | "admin" | "client";
+
 export interface SystemSettings {
   companyName: string;
   brandTagline: string;
@@ -160,7 +162,8 @@ export interface SystemSettings {
   telegramChatId?: string;
   enableTelegramAlerts: boolean;
 
-  // Admin auth
+  // Admin & Owner auth
+  ownerEmail?: string;
   adminEmail: string;
   adminPasswordHash: string;
 }

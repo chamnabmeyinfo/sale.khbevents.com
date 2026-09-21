@@ -129,6 +129,7 @@ function rowToSettings(row: any): SystemSettings {
     telegramBotToken: row.telegram_bot_token || undefined,
     telegramChatId: row.telegram_chat_id || undefined,
     enableTelegramAlerts: Boolean(row.enable_telegram_alerts),
+    ownerEmail: row.owner_email || 'chamnabmey.info@gmail.com',
     adminEmail: row.admin_email || 'admin@khbevents.com',
     adminPasswordHash: row.admin_password_hash || 'a1b7e411516f86b472e391306eb5538e1467472099f4d7b278dfcb74272183e8',
   };
