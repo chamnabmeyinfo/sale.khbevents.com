@@ -154,6 +154,14 @@ export function selectNextStaff(
   };
 }
 
+function escapeHtml(str: string): string {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 /**
  * Dispatches a rich Lead alert card to a staff member's Telegram chat ID, verifying delivery
  */
@@ -189,29 +197,29 @@ export async function sendLeadToStaffTelegram(
     `Hello ${lead.fullName}, this is ${staff.name} from KHB Events regarding your inquiry for ${lead.landingPageTitle}.`
   )}`;
 
-  const text = `🎯 *NEW PROSPECT ASSIGNED TO YOU!*
+  const text = `🎯 <b>NEW PROSPECT ASSIGNED TO YOU!</b>
 ━━━━━━━━━━━━━━━━━━━━
-👤 *Assigned Rep:* *${staff.name}* (${staffTag})
-📊 *Allocation Weight:* ${staff.percentage}%
-🏷️ *Lead ID:* \`#${lead.id}\`
-📌 *Campaign:* *${lead.landingPageTitle}*
+👤 <b>Assigned Rep:</b> <b>${escapeHtml(staff.name)}</b> (${escapeHtml(staffTag)})
+📊 <b>Allocation Weight:</b> ${staff.percentage}%
+🏷️ <b>Lead ID:</b> <code>#${escapeHtml(lead.id)}</code>
+📌 <b>Campaign:</b> <b>${escapeHtml(lead.landingPageTitle)}</b>
 
-📋 *PROSPECT DETAILS:*
-• *Client Name:* *${lead.fullName}*
-• *Phone:* \`${lead.phone}\`
-• *Email:* ${lead.email || 'N/A'}
-• *Company:* ${lead.company || 'Private Individual'}
-• *Event Type:* ${lead.eventType}
-• *Target Date:* ${lead.estimatedDate || 'TBD'}
-• *Scale:* ${lead.guestCount || 'TBD'}
-• *Budget / Interest:* ${lead.budgetRange || lead.packageInterest || 'TBD'}
-${lead.message ? `• *Client Note:* _${lead.message.replace(/([_*[\]()~`>#+=|{}.!-])/g, '\\$1')}_\n` : ''}${lead.tags && lead.tags.length > 0 ? `🏷️ *Tags:* ${lead.tags.map(t => `#${t}`).join(' ')}\n` : ''}
-🌐 *Source:* ${lead.utmSource || 'Direct'} ${lead.utmCampaign ? `(${lead.utmCampaign})` : ''}
-⏰ *Routed At:* ${new Date().toLocaleString()}
+📋 <b>PROSPECT DETAILS:</b>
+• <b>Client Name:</b> <b>${escapeHtml(lead.fullName)}</b>
+• <b>Phone:</b> <code>${escapeHtml(lead.phone)}</code>
+• <b>Email:</b> ${escapeHtml(lead.email || 'N/A')}
+• <b>Company:</b> ${escapeHtml(lead.company || 'Private Individual')}
+• <b>Event Type:</b> ${escapeHtml(lead.eventType)}
+• <b>Target Date:</b> ${escapeHtml(lead.estimatedDate || 'TBD')}
+• <b>Scale:</b> ${escapeHtml(lead.guestCount || 'TBD')}
+• <b>Budget / Interest:</b> ${escapeHtml(lead.budgetRange || lead.packageInterest || 'TBD')}
+${lead.message ? `• <b>Client Note:</b> <i>${escapeHtml(lead.message)}</i>\n` : ''}${lead.tags && lead.tags.length > 0 ? `🏷️ <b>Tags:</b> ${lead.tags.map(t => `#${escapeHtml(t)}`).join(' ')}\n` : ''}
+🌐 <b>Source:</b> ${escapeHtml(lead.utmSource || 'Direct')} ${lead.utmCampaign ? `(${escapeHtml(lead.utmCampaign)})` : ''}
+⏰ <b>Routed At:</b> ${new Date().toLocaleString()}
 ━━━━━━━━━━━━━━━━━━━━
-⚡ *QUICK ACTIONS:*
-👉 [Open WhatsApp Chat](${whatsappUrl})
-👉 [Open in KHB Leads CRM](${leadUrl})`;
+⚡ <b>QUICK ACTIONS:</b>
+👉 <a href="${whatsappUrl}">Open WhatsApp Chat</a>
+👉 <a href="${leadUrl}">Open in KHB Leads CRM</a>`;
 
   const telegramApiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
@@ -222,7 +230,7 @@ ${lead.message ? `• *Client Note:* _${lead.message.replace(/([_*[\]()~`>#+=|{}
       body: JSON.stringify({
         chat_id: staff.telegramChatId,
         text,
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
         disable_web_page_preview: true
       })
     });
@@ -232,11 +240,11 @@ ${lead.message ? `• *Client Note:* _${lead.message.replace(/([_*[\]()~`>#+=|{}
     if (res.ok && data.ok) {
       // Send CC to Manager if enabled
       if (options?.enableManagerNotification && options?.managerChatId) {
-        const managerText = `🔔 *LEAD DISPATCH NOTIFICATION (CC)*
+        const managerText = `🔔 <b>LEAD DISPATCH NOTIFICATION (CC)</b>
 ━━━━━━━━━━━━━━━━━━━━
-Lead *#${lead.id}* from *${lead.landingPageTitle}* has been successfully routed to:
-👤 *${staff.name}* (${staffTag})
-📞 Client: *${lead.fullName}* (${lead.phone})
+Lead <b>#${escapeHtml(lead.id)}</b> from <b>${escapeHtml(lead.landingPageTitle)}</b> has been successfully routed to:
+👤 <b>${escapeHtml(staff.name)}</b> (${escapeHtml(staffTag)})
+📞 Client: <b>${escapeHtml(lead.fullName)}</b> (${escapeHtml(lead.phone)})
 📊 Weight: ${staff.percentage}%`;
 
         fetch(telegramApiUrl, {
@@ -245,7 +253,7 @@ Lead *#${lead.id}* from *${lead.landingPageTitle}* has been successfully routed 
           body: JSON.stringify({
             chat_id: options.managerChatId,
             text: managerText,
-            parse_mode: 'Markdown',
+            parse_mode: 'HTML',
             disable_web_page_preview: true
           })
         }).catch((err) => console.error('Manager CC error:', err));
@@ -263,19 +271,19 @@ Lead *#${lead.id}* from *${lead.landingPageTitle}* has been successfully routed 
 
     if (options?.fallbackChatId) {
       try {
-        const fallbackText = `⚠️ *ROUTING DELIVERY FAILED - FALLBACK DISPATCH*
+        const fallbackText = `⚠️ <b>ROUTING DELIVERY FAILED - FALLBACK DISPATCH</b>
 ━━━━━━━━━━━━━━━━━━━━
 Could not deliver lead to staff:
-👤 *${staff.name}* (Chat ID: \`${staff.telegramChatId}\`)
-❌ *Reason:* ${errorDesc}
+👤 <b>${escapeHtml(staff.name)}</b> (Chat ID: <code>${escapeHtml(staff.telegramChatId)}</code>)
+❌ <b>Reason:</b> ${escapeHtml(errorDesc)}
 
-📋 *LEAD DETAILS:*
-• *Client:* *${lead.fullName}* (${lead.phone})
-• *Campaign:* ${lead.landingPageTitle}
-• *Event:* ${lead.eventType}
-• *Budget:* ${lead.budgetRange || 'N/A'}
+📋 <b>LEAD DETAILS:</b>
+• <b>Client:</b> <b>${escapeHtml(lead.fullName)}</b> (${escapeHtml(lead.phone)})
+• <b>Campaign:</b> ${escapeHtml(lead.landingPageTitle)}
+• <b>Event:</b> ${escapeHtml(lead.eventType)}
+• <b>Budget:</b> ${escapeHtml(lead.budgetRange || 'N/A')}
 ━━━━━━━━━━━━━━━━━━━━
-⚠️ *Action Required:* Please assign an alternate staff representative.`;
+⚠️ <b>Action Required:</b> Please assign an alternate staff representative.`;
 
         const fallbackRes = await fetch(telegramApiUrl, {
           method: 'POST',
@@ -283,7 +291,7 @@ Could not deliver lead to staff:
           body: JSON.stringify({
             chat_id: options.fallbackChatId,
             text: fallbackText,
-            parse_mode: 'Markdown'
+            parse_mode: 'HTML'
           })
         });
         const fallbackData = await fallbackRes.json();
@@ -299,9 +307,10 @@ Could not deliver lead to staff:
       fallbackSent
     };
   } catch (err: any) {
+    console.error('Round Robin Telegram dispatch error:', err);
     return {
       status: 'FAILED',
-      error: err?.message || 'Network error connecting to Telegram Bot API'
+      error: err?.message || 'Network error connecting to Telegram'
     };
   }
 }
@@ -336,16 +345,16 @@ export async function testStaffTelegramConnection(
 
   const cleanUser = (username || '').replace(/^@/, '');
   const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-  const text = `🔔 *KHB EVENTS - TELEGRAM ROUTING TEST*
+  const text = `🔔 <b>KHB EVENTS - TELEGRAM ROUTING TEST</b>
 ━━━━━━━━━━━━━━━━━━━━
-Hello *${staffName}* ${cleanUser ? `(@${cleanUser})` : ''}!
+Hello <b>${escapeHtml(staffName)}</b> ${cleanUser ? `(@${escapeHtml(cleanUser)})` : ''}!
 
-✅ *Connection Verified Successfully!*
-Your Telegram account is active and connected to the *KHB Lead Distribution System*. You are ready to receive real-time visitor inquiries.
+✅ <b>Connection Verified Successfully!</b>
+Your Telegram account is active and connected to the <b>KHB Lead Distribution System</b>. You are ready to receive real-time visitor inquiries.
 
-⏱️ *Verification Time:* ${new Date().toLocaleString()}
+⏱️ <b>Verification Time:</b> ${new Date().toLocaleString()}
 ━━━━━━━━━━━━━━━━━━━━
-_KHB Events • Cambodia's Premier Event Production_`;
+<i>KHB Events • Cambodia's Premier Event Production</i>`;
 
   try {
     const res = await fetch(url, {
@@ -354,7 +363,7 @@ _KHB Events • Cambodia's Premier Event Production_`;
       body: JSON.stringify({
         chat_id: chatId,
         text,
-        parse_mode: 'Markdown'
+        parse_mode: 'HTML'
       })
     });
 
