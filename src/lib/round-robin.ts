@@ -295,6 +295,7 @@ export function renderLeadTemplate(
     .replace(/\{crmUrl\}/gi, leadUrl)
     .replace(/\{source\}/gi, escapeHtml(lead.utmSource || 'Direct'))
     .replace(/\{campaign\}/gi, escapeHtml(lead.utmCampaign || 'N/A'))
+    .replace(/\{location\}/gi, escapeHtml([lead.customFields?.visitorCity, lead.customFields?.visitorCountry].filter(Boolean).join(', ') || 'N/A'))
     .replace(/\{time\}/gi, timeFormatted);
 }
 

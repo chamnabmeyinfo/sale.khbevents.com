@@ -32,6 +32,14 @@ export async function POST(req: NextRequest) {
 
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
     const userAgent = req.headers.get('user-agent') || '';
+    const country = req.headers.get('x-vercel-ip-country') || req.headers.get('cf-ipcountry') || '';
+    const city = req.headers.get('x-vercel-ip-city') ? decodeURIComponent(req.headers.get('x-vercel-ip-city')!) : '';
+    const region = req.headers.get('x-vercel-ip-country-region') || '';
+
+    const customFields = { ...(body.customFields || {}) };
+    if (country) customFields.visitorCountry = country;
+    if (city) customFields.visitorCity = city;
+    if (region) customFields.visitorRegion = region;
 
     const newLead = await createLead({
       landingPageSlug: body.landingPageSlug || 'general',
@@ -46,7 +54,7 @@ export async function POST(req: NextRequest) {
       budgetRange: body.budgetRange,
       packageInterest: body.packageInterest,
       message: body.message,
-      customFields: body.customFields,
+      customFields,
       utmSource: body.utmSource,
       utmMedium: body.utmMedium,
       utmCampaign: body.utmCampaign,
