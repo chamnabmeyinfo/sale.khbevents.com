@@ -133,16 +133,19 @@ export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientPr
   };
 
   const handleDeleteLead = async (leadId: string) => {
-    if (!confirm('Are you sure you want to delete this lead?')) return;
+    if (!confirm('Are you sure you want to delete this lead? This action cannot be undone.')) return;
 
     try {
-      const res = await fetch(`/api/leads/${leadId}`, { method: 'DELETE' });
-      if (res.ok) {
-        setLeads(leads.filter((l) => l.id !== leadId));
+      const res = await fetch(`/api/leads/${encodeURIComponent(leadId)}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        setLeads((prev) => prev.filter((l) => l.id !== leadId));
         if (selectedLead?.id === leadId) setSelectedLead(null);
+      } else {
+        alert(data.error || `Failed to delete lead (Status ${res.status})`);
       }
-    } catch {
-      alert('Failed to delete lead');
+    } catch (err: any) {
+      alert(`Network error deleting lead: ${err?.message || err}`);
     }
   };
 
@@ -492,13 +495,23 @@ export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientPr
                   <span className="text-[10px] font-mono text-slate-400 dark:text-gray-400 uppercase">Lead #{selectedLead.id}</span>
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">{selectedLead.fullName}</h2>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedLead(null)}
-                  className="p-2 rounded-lg text-slate-600 dark:text-gray-400 hover:text-black dark:hover:text-white bg-slate-100 dark:bg-emerald-950 border border-slate-200 dark:border-emerald-800/60 cursor-pointer transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteLead(selectedLead.id)}
+                    className="p-2 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 border border-slate-200 dark:border-rose-900/60 cursor-pointer transition-colors"
+                    title="Delete Lead"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedLead(null)}
+                    className="p-2 rounded-lg text-slate-600 dark:text-gray-400 hover:text-black dark:hover:text-white bg-slate-100 dark:bg-emerald-950 border border-slate-200 dark:border-emerald-800/60 cursor-pointer transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0C1B13] border border-slate-200 dark:border-emerald-900/60 flex items-center justify-between">

@@ -236,7 +236,11 @@ export async function supabaseDeletePage(id: string): Promise<boolean> {
     .from('landing_pages')
     .delete()
     .eq('id', id);
-  return !error;
+  if (error) {
+    console.error('Supabase deletePage error details:', error);
+    return false;
+  }
+  return true;
 }
 
 export async function supabaseGetLeads(filter?: {
@@ -388,7 +392,11 @@ export async function supabaseDeleteLead(id: string): Promise<boolean> {
   const supabase = getSupabase();
   if (!supabase) return false;
   const { error } = await supabase.from('leads').delete().eq('id', id);
-  return !error;
+  if (error) {
+    console.error('Supabase deleteLead error details:', error);
+    return false;
+  }
+  return true;
 }
 
 export async function supabaseGetSettings(): Promise<SystemSettings | null> {

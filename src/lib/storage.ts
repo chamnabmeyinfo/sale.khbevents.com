@@ -42,8 +42,13 @@ import {
   supabaseSaveRoundRobinLog,
 } from './supabase-store';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
+const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const BUNDLED_DB_FILE = path.join(process.cwd(), 'data', 'db.json');
+const DATA_DIR = IS_SERVERLESS ? '/tmp' : path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
+
+// Global in-memory cache to ensure consistency across serverless invocations
+let memoryDb: DatabaseSchema | null = null;
 
 const defaultSettings: SystemSettings = {
   companyName: 'KHB EVENTS',
@@ -234,9 +239,25 @@ const defaultLeads: Lead[] = [
 ];
 
 export async function getDatabase(): Promise<DatabaseSchema> {
+  if (memoryDb) {
+    return memoryDb;
+  }
   try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    const content = await fs.readFile(DB_FILE, 'utf-8');
+    let content = '';
+    try {
+      content = await fs.readFile(DB_FILE, 'utf-8');
+    } catch {
+      if (IS_SERVERLESS) {
+        try {
+          content = await fs.readFile(BUNDLED_DB_FILE, 'utf-8');
+          await fs.mkdir(DATA_DIR, { recursive: true });
+          await fs.writeFile(DB_FILE, content, 'utf-8').catch(() => {});
+        } catch {}
+      }
+    }
+    if (!content) {
+      throw new Error('Database file empty or not found');
+    }
     const db = JSON.parse(content) as DatabaseSchema;
     if (!db.settings.roundRobinSettings) {
       db.settings.roundRobinSettings = defaultRoundRobinSettings;
@@ -244,6 +265,7 @@ export async function getDatabase(): Promise<DatabaseSchema> {
     if (!db.roundRobinLogs) {
       db.roundRobinLogs = [];
     }
+    memoryDb = db;
     return db;
   } catch {
     const initialDb: DatabaseSchema = {
@@ -259,11 +281,13 @@ export async function getDatabase(): Promise<DatabaseSchema> {
     } catch {
       // Ignore write errors in read-only serverless environments
     }
+    memoryDb = initialDb;
     return initialDb;
   }
 }
 
 export async function saveDatabase(data: DatabaseSchema): Promise<void> {
+  memoryDb = data;
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
     await fs.writeFile(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
@@ -402,9 +426,10 @@ export async function savePage(pageData: Partial<LandingPage> & { title: string;
 }
 
 export async function deletePage(id: string): Promise<boolean> {
+  let supabaseDeleted = false;
   if (isSupabaseConfigured()) {
     try {
-      await supabaseDeletePage(id);
+      supabaseDeleted = await supabaseDeletePage(id);
     } catch (err) {
       console.error('Supabase deletePage error:', err);
     }
@@ -412,11 +437,11 @@ export async function deletePage(id: string): Promise<boolean> {
   const db = await getDatabase();
   const initialLen = db.pages.length;
   db.pages = db.pages.filter((p) => p.id !== id);
-  if (db.pages.length !== initialLen) {
+  const localDeleted = db.pages.length !== initialLen;
+  if (localDeleted) {
     await saveDatabase(db);
-    return true;
   }
-  return false;
+  return supabaseDeleted || localDeleted;
 }
 
 export async function getLeads(filter?: {
@@ -736,9 +761,10 @@ export async function addLeadNote(
 }
 
 export async function deleteLead(id: string): Promise<boolean> {
+  let supabaseDeleted = false;
   if (isSupabaseConfigured()) {
     try {
-      await supabaseDeleteLead(id);
+      supabaseDeleted = await supabaseDeleteLead(id);
     } catch (err) {
       console.error('Supabase deleteLead error:', err);
     }
@@ -746,11 +772,11 @@ export async function deleteLead(id: string): Promise<boolean> {
   const db = await getDatabase();
   const initialLen = db.leads.length;
   db.leads = db.leads.filter((l) => l.id !== id);
-  if (db.leads.length !== initialLen) {
+  const localDeleted = db.leads.length !== initialLen;
+  if (localDeleted) {
     await saveDatabase(db);
-    return true;
   }
-  return false;
+  return supabaseDeleted || localDeleted;
 }
 
 export async function getSettings(): Promise<SystemSettings> {

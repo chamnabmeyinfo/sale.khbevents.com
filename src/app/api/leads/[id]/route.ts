@@ -42,11 +42,12 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
 export async function DELETE(req: NextRequest, context: RouteContext) {
   const authed = await isAuthenticated();
-  if (!authed) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!authed) return NextResponse.json({ error: 'Unauthorized. Please login again.' }, { status: 401 });
 
   const { id } = await context.params;
-  const deleted = await deleteLead(id);
-  if (!deleted) return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
+  const cleanId = decodeURIComponent(id || '').trim();
+  const deleted = await deleteLead(cleanId);
+  if (!deleted) return NextResponse.json({ error: 'Lead not found or already deleted' }, { status: 404 });
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, message: 'Lead deleted successfully' });
 }
