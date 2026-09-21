@@ -337,6 +337,7 @@ export async function savePage(pageData: Partial<LandingPage> & { title: string;
       testimonials: pageData.testimonials || [],
       faqs: pageData.faqs || [],
       guarantee: pageData.guarantee,
+      translations: pageData.translations,
       formConfig: pageData.formConfig || {
         headline: 'Inquire or Register',
         subheadline: 'Fill in your details below and our team will get in touch.',

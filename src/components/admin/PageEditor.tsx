@@ -32,8 +32,10 @@ import {
   Store,
   Music,
   Mic,
-  Briefcase
+  Briefcase,
+  Globe
 } from 'lucide-react';
+import KhmerTranslationEditor from './KhmerTranslationEditor';
 import { 
   LandingPage, 
   PackageTier, 
@@ -415,6 +417,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     | 'seo';
 
   const [activeTab, setActiveTab] = useState<TabType>('general');
+  const [langTab, setLangTab] = useState<'en' | 'kh'>('en');
   const [newGalleryUrl, setNewGalleryUrl] = useState('');
   const [newFeatureText, setNewFeatureText] = useState<{ [pkgIdx: number]: string }>({});
 
@@ -1164,8 +1167,57 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
         </div>
       )}
 
-      {/* Tabs list with counters */}
-      <div className="flex flex-wrap gap-1.5 border-b border-slate-200 dark:border-emerald-900/40 pb-2">
+      {/* LANGUAGE SELECTOR BAR */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-slate-100 via-amber-50/50 to-emerald-50/30 dark:from-[#06120B] dark:via-[#08170F] dark:to-[#0A1D13] border border-slate-200 dark:border-emerald-800/60 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-emerald-300">
+            <Globe className="w-4 h-4 text-amber-500" />
+            <span>Editing Language:</span>
+          </div>
+          <div className="flex items-center gap-1.5 bg-white dark:bg-[#040C07] p-1 rounded-xl border border-slate-200 dark:border-emerald-900/60 shadow-inner">
+            <button
+              type="button"
+              onClick={() => setLangTab('en')}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                langTab === 'en'
+                  ? 'bg-amber-400 text-black shadow-md'
+                  : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <span className="text-sm">🇬🇧</span>
+              <span>English (Default)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setLangTab('kh')}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                langTab === 'kh'
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <span className="text-sm">🇰🇭</span>
+              <span>ភាសាខ្មែរ (Khmer)</span>
+              {Boolean(formData.translations?.kh?.heroHeadline || formData.translations?.kh?.title) && (
+                <span className="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-emerald-200" title="Khmer translations configured" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div className="text-[11px] text-slate-500 dark:text-gray-400">
+          {langTab === 'en' ? (
+            <span>Editing primary English copy &bull; numbers (prices, dates, seats) sync across all languages.</span>
+          ) : (
+            <span>Editing Khmer version &bull; visitors who click <b>ខ្មែរ</b> will see this content.</span>
+          )}
+        </div>
+      </div>
+
+      {langTab === 'en' ? (
+        <>
+          {/* Tabs list with counters */}
+          <div className="flex flex-wrap gap-1.5 border-b border-slate-200 dark:border-emerald-900/40 pb-2">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -3259,6 +3311,28 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
           </button>
         </div>
       </div>
+    </>
+  ) : (
+        <div className="rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 p-6 sm:p-8 space-y-6 shadow-sm dark:shadow-xl transition-colors">
+          <KhmerTranslationEditor formData={formData} setFormData={setFormData} />
+
+          {/* Bottom Save bar */}
+          <div className="pt-6 border-t border-slate-200 dark:border-emerald-950 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-xs text-slate-500 dark:text-gray-400">
+              Editing Khmer translations for <strong>{formData.title || 'Landing Page'}</strong> &bull; All changes save to real-time storage.
+            </div>
+            <button
+              type="button"
+              onClick={() => handleSave()}
+              disabled={saving}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer transition-all hover:scale-102"
+            >
+              <Save className="w-4 h-4 text-black" />
+              <span>{saving ? 'Saving...' : 'Save & Publish All Changes'}</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

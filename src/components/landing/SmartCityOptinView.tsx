@@ -1,15 +1,27 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { LandingPage, SystemSettings } from '@/lib/types';
 
-export default function SmartCityOptinView({ page, settings }: { page?: LandingPage; settings?: SystemSettings } = {}) {
-  const [lang, setLang] = useState<'en' | 'kh'>('en');
+export default function SmartCityOptinView({ page, settings, initialLang }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh' } = {}) {
+  const [lang, setLang] = useState<'en' | 'kh'>(initialLang || 'en');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlLang = params.get('lang');
+      if (urlLang === 'kh' || urlLang === 'en') {
+        setLang(urlLang);
+      } else if (initialLang) {
+        setLang(initialLang);
+      }
+    } catch {}
+  }, []);
 
   const effTotalSeats = page?.urgency?.totalSeats ?? 30;
   const effEarlyBirdPrice = page?.urgency?.earlyBirdPrice ? (Number(page.urgency.earlyBirdPrice) || 499) : 499;
@@ -93,7 +105,7 @@ export default function SmartCityOptinView({ page, settings }: { page?: LandingP
                 letterSpacing: '-0.02em',
                 marginBottom: '10px'
               }}>
-                {isKh ? 'កក់កៅអីរបស់លោកអ្នក' : 'Reserve Your Seat'}
+                {isKh ? (page?.translations?.kh?.title || 'កក់កៅអីរបស់លោកអ្នក') : (page?.title || 'Reserve Your Seat')}
               </h1>
 
               <p style={{
@@ -103,8 +115,8 @@ export default function SmartCityOptinView({ page, settings }: { page?: LandingP
                 marginBottom: '16px'
               }}>
                 {isKh
-                  ? 'បញ្ចូលឈ្មោះ និងលេខទូរស័ព្ទរបស់អ្នក។ អ្នកសម្របសម្រួលយើងនឹងទូរស័ព្ទមកក្នុងរយៈពេល ១៥ នាទីដើម្បីបញ្ជាក់កៅអី។ មិនត្រូវបង់ប្រាក់ថ្ងៃនេះទេ។'
-                  : 'Enter your name and phone number. Our coordinator will call you within 15 minutes to confirm your seat. No payment today.'}
+                  ? (page?.translations?.kh?.urgencyRiskNote || 'បញ្ចូលឈ្មោះ និងលេខទូរស័ព្ទរបស់អ្នក។ អ្នកសម្របសម្រួលយើងនឹងទូរស័ព្ទមកក្នុងរយៈពេល ១៥ នាទីដើម្បីបញ្ជាក់កៅអី។ មិនត្រូវបង់ប្រាក់ថ្ងៃនេះទេ។')
+                  : (page?.urgency?.riskNote || 'Enter your name and phone number. Our coordinator will call you within 15 minutes to confirm your seat. No payment today.')}
               </p>
 
               <div style={{

@@ -10,9 +10,9 @@
       "badge": "Exclusive 30 VIP Seats Only",
       "template": "b2b-delegation",
       "status": "published",
-      "heroHeadline": "Smart City, Tea & Cafe Business Trip to Vietnam 2026",
+      "heroHeadline": "Smart City, Tea & Cafe Business Trip to Vietnam 2026.",
       "heroSubheadline": "Come Home With Suppliers, Not Just Photos. Connect with leading manufacturers, explore Smart City Expo & Cafe Show Vietnam, and uncover high-value wholesale partnerships in Hanoi & Halong Bay.",
-      "heroCtaText": "Reserve Your Seat ($499)",
+      "heroCtaText": "Reserve Your Seat ($550)",
       "heroCtaLink": "#register",
       "heroImage": "/photos/photo_2026-09-16_22-01-09 (2).jpg",
       "eventDate": "2026-10-08",
@@ -25,8 +25,8 @@
         "noticeText": "Early Bird Special: Save $51 before Sept 8, 2026 | Strictly limited to 30 seats",
         "totalSeats": 30,
         "claimedSeats": 19,
-        "regularPrice": 550,
-        "earlyBirdPrice": 499,
+        "regularPrice": "650",
+        "earlyBirdPrice": "550",
         "earlyBirdDeadline": "2026-09-08T23:59:59",
         "registrationDeadline": "2026-09-20T23:59:59"
       },
@@ -483,7 +483,12 @@
       "viewsCount": 342,
       "leadsCount": 22,
       "createdAt": "2026-09-21T04:22:10.31+00:00",
-      "updatedAt": "2026-09-21T08:43:11.694Z"
+      "updatedAt": "2026-09-21T09:03:33.364Z",
+      "translations": {
+        "kh": {
+          "heroHeadline": "ដំណើរទស្សនកិច្ចពាណិជ្ជកម្ម Smart City ២០២៦ (តេស្តផ្ទាល់)"
+        }
+      }
     }
   ],
   "leads": [

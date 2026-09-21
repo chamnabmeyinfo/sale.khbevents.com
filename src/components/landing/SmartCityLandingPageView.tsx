@@ -625,8 +625,8 @@ const TG_ICON = (size = 30) => (
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-export default function SmartCityLandingPageView({ page, settings }: { page?: LandingPage; settings?: SystemSettings } = {}) {
-  const [lang, setLang] = useState<'en' | 'kh'>('en');
+export default function SmartCityLandingPageView({ page, settings, initialLang }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh' } = {}) {
+  const [lang, setLang] = useState<'en' | 'kh'>(initialLang || 'en');
   const [heroSlide, setHeroSlide] = useState(0);
   const [activeItinTab, setActiveItinTab] = useState(0);
   const [activeMatchProfile, setActiveMatchProfile] = useState<'cafe' | 'tech' | 'distributor'>('cafe');
@@ -699,11 +699,18 @@ export default function SmartCityLandingPageView({ page, settings }: { page?: La
   // ── Restore saved language & capture UTMs on mount
   useEffect(() => {
     try {
-      const savedLang = localStorage.getItem('khb_lang');
-      if (savedLang === 'kh' || savedLang === 'en') {
-        setLang(savedLang);
-      }
       const params = new URLSearchParams(window.location.search);
+      const urlLang = params.get('lang');
+      if (urlLang === 'kh' || urlLang === 'en') {
+        setLang(urlLang);
+      } else if (initialLang) {
+        setLang(initialLang);
+      } else {
+        const savedLang = localStorage.getItem('khb_lang');
+        if (savedLang === 'kh' || savedLang === 'en') {
+          setLang(savedLang);
+        }
+      }
       const utm: Record<string, string> = {};
       ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid', 'ttclid'].forEach(k => {
         const v = params.get(k);
@@ -718,64 +725,78 @@ export default function SmartCityLandingPageView({ page, settings }: { page?: La
   const savings = Math.max(0, effRegularPrice - effEarlyBirdPrice);
   const formattedDeadline = formatDeadlineText(effEarlyBirdDeadline);
 
+  const isKh = lang === 'kh';
+  const khTrans = page?.translations?.kh;
+
   const c = {
     ...baseContent,
-    badge: page?.badge || baseContent.badge,
-    heroTitle: page?.heroHeadline || page?.title || baseContent.heroTitle,
-    heroHeadlineHighlight: page?.heroSubheadline && !page?.subtitle ? '' : (page?.subtitle || baseContent.heroHeadlineHighlight),
-    heroSubtitle: page?.heroSubheadline || page?.description || baseContent.heroSubtitle,
-    heroCtaDiscover: page?.heroCtaText || baseContent.heroCtaDiscover,
-    heroRiskNote: page?.urgency?.riskNote || baseContent.heroRiskNote,
-    earlyBirdNotice: page?.urgency?.noticeText || (lang === 'kh'
-      ? `ការផ្តល់ជូន Early Bird: ចំណេញ $${savings} មុន ${formattedDeadline} | កម្រិតត្រឹម ${effTotalSeats} កៅអីប៉ុណ្ណោះ`
-      : `Early Bird Special: Save $${savings} before ${formattedDeadline} | Strictly limited to ${effTotalSeats} seats`),
-    heroPriceAnchorNote: lang === 'kh'
+    badge: isKh ? (khTrans?.badge || baseContent.badge) : (page?.badge || baseContent.badge),
+    heroTitle: isKh ? (khTrans?.heroHeadline || khTrans?.title || baseContent.heroTitle) : (page?.heroHeadline || page?.title || baseContent.heroTitle),
+    heroHeadlineHighlight: isKh ? (khTrans?.subtitle || baseContent.heroHeadlineHighlight) : (page?.heroSubheadline && !page?.subtitle ? '' : (page?.subtitle || baseContent.heroHeadlineHighlight)),
+    heroSubtitle: isKh ? (khTrans?.heroSubheadline || khTrans?.description || baseContent.heroSubtitle) : (page?.heroSubheadline || page?.description || baseContent.heroSubtitle),
+    heroCtaDiscover: isKh ? (khTrans?.heroCtaText || baseContent.heroCtaDiscover) : (page?.heroCtaText || baseContent.heroCtaDiscover),
+    heroRiskNote: isKh ? (khTrans?.urgencyRiskNote || page?.urgency?.riskNote || baseContent.heroRiskNote) : (page?.urgency?.riskNote || baseContent.heroRiskNote),
+    earlyBirdNotice: isKh
+      ? (khTrans?.urgencyNotice || (page?.urgency?.noticeText && page.urgency.noticeText.includes('ចំណេញ') ? page.urgency.noticeText : `ការផ្តល់ជូន Early Bird: ចំណេញ $${savings} មុន ${formattedDeadline} | កម្រិតត្រឹម ${effTotalSeats} កៅអីប៉ុណ្ណោះ`))
+      : (page?.urgency?.noticeText || `Early Bird Special: Save $${savings} before ${formattedDeadline} | Strictly limited to ${effTotalSeats} seats`),
+    heroPriceAnchorNote: isKh
       ? `តម្លៃ Early Bird — ពីមុន $${effRegularPrice}. អ្នកចំណេញ $${savings}.`
       : `Early Bird rate — was $${effRegularPrice}. You save $${savings}.`,
-    pillDate: page?.eventDate ? `${page.eventDate} (${page.eventTime || '4D / 3N'})` : baseContent.pillDate,
-    pillDest: page?.venue || baseContent.pillDest,
-    pillSeats: `Strictly ${effTotalSeats} Seats Cohort`,
-    navCta: lang === 'kh' ? `កក់ $${effEarlyBirdPrice}` : `Reserve $${effEarlyBirdPrice}`,
-    navCtaMobile: lang === 'kh' ? `ចុះឈ្មោះ ($${effEarlyBirdPrice})` : `Reserve Your Seat ($${effEarlyBirdPrice})`,
-    coreValues: (page?.coreValues && page.coreValues.length > 0) ? page.coreValues : baseContent.coreValues,
-    problems: (page?.problems && page.problems.length > 0) ? page.problems : baseContent.problems,
-    audiences: (page?.audiences && page.audiences.length > 0) ? page.audiences : baseContent.audiences,
-    itinerary: (page?.itinerary && page.itinerary.length > 0) ? page.itinerary : baseContent.itinerary,
+    pillDate: page?.eventDate ? `${page.eventDate} (${page.eventTime || (isKh ? '៤ថ្ងៃ / ៣យប់' : '4D / 3N')})` : baseContent.pillDate,
+    pillDest: isKh ? (khTrans?.venue || baseContent.pillDest) : (page?.venue || baseContent.pillDest),
+    pillSeats: isKh ? `កៅអីត្រឹម ${effTotalSeats} នាក់` : `Strictly ${effTotalSeats} Seats Cohort`,
+    navCta: isKh ? `កក់ $${effEarlyBirdPrice}` : `Reserve $${effEarlyBirdPrice}`,
+    navCtaMobile: isKh ? `ចុះឈ្មោះ ($${effEarlyBirdPrice})` : `Reserve Your Seat ($${effEarlyBirdPrice})`,
+    coreValues: isKh
+      ? (khTrans?.coreValues && khTrans.coreValues.length > 0 ? khTrans.coreValues : baseContent.coreValues)
+      : (page?.coreValues && page.coreValues.length > 0 ? page.coreValues : baseContent.coreValues),
+    problems: isKh
+      ? (khTrans?.problems && khTrans.problems.length > 0 ? khTrans.problems : baseContent.problems)
+      : (page?.problems && page.problems.length > 0 ? page.problems : baseContent.problems),
+    audiences: isKh
+      ? (khTrans?.audiences && khTrans.audiences.length > 0 ? khTrans.audiences : baseContent.audiences)
+      : (page?.audiences && page.audiences.length > 0 ? page.audiences : baseContent.audiences),
+    itinerary: isKh
+      ? (khTrans?.itinerary && khTrans.itinerary.length > 0 ? khTrans.itinerary : baseContent.itinerary)
+      : (page?.itinerary && page.itinerary.length > 0 ? page.itinerary : baseContent.itinerary),
     testimonials: (page?.testimonials && page.testimonials.length > 0) ? page.testimonials : baseContent.testimonials,
-    faqs: (page?.faqs && page.faqs.length > 0) ? page.faqs.map(f => ({ q: f.question, a: f.answer })) : baseContent.faqs,
-    guaranteeTitle: page?.guarantee?.title || baseContent.guaranteeTitle,
-    guaranteeText: page?.guarantee?.subtitle || baseContent.guaranteeText,
-    guaranteePoints: (page?.guarantee?.points && page.guarantee.points.length > 0) ? page.guarantee.points : baseContent.guaranteePoints,
-    valueStackTag: page?.valueStack?.tag || baseContent.valueStackTag,
-    valueStackTitle: page?.valueStack?.title || baseContent.valueStackTitle,
-    valueStackSubtitle: page?.valueStack?.subtitle || baseContent.valueStackSubtitle,
-    valueStackTotalLabel: page?.valueStack?.totalLabel || baseContent.valueStackTotalLabel,
+    faqs: isKh
+      ? (khTrans?.faqs && khTrans.faqs.length > 0 ? khTrans.faqs.map(f => ({ q: f.question, a: f.answer })) : baseContent.faqs)
+      : (page?.faqs && page.faqs.length > 0 ? page.faqs.map(f => ({ q: f.question, a: f.answer })) : baseContent.faqs),
+    guaranteeTitle: isKh ? (khTrans?.guarantee?.title || baseContent.guaranteeTitle) : (page?.guarantee?.title || baseContent.guaranteeTitle),
+    guaranteeText: isKh ? (khTrans?.guarantee?.subtitle || baseContent.guaranteeText) : (page?.guarantee?.subtitle || baseContent.guaranteeText),
+    guaranteePoints: isKh
+      ? (khTrans?.guarantee?.points && khTrans.guarantee.points.length > 0 ? khTrans.guarantee.points : baseContent.guaranteePoints)
+      : ((page?.guarantee?.points && page.guarantee.points.length > 0) ? page.guarantee.points : baseContent.guaranteePoints),
+    valueStackTag: isKh ? (khTrans?.valueStack?.tag || baseContent.valueStackTag) : (page?.valueStack?.tag || baseContent.valueStackTag),
+    valueStackTitle: isKh ? (khTrans?.valueStack?.title || baseContent.valueStackTitle) : (page?.valueStack?.title || baseContent.valueStackTitle),
+    valueStackSubtitle: isKh ? (khTrans?.valueStack?.subtitle || baseContent.valueStackSubtitle) : (page?.valueStack?.subtitle || baseContent.valueStackSubtitle),
+    valueStackTotalLabel: isKh ? (khTrans?.valueStack?.totalLabel || baseContent.valueStackTotalLabel) : (page?.valueStack?.totalLabel || baseContent.valueStackTotalLabel),
     valueStackTotalValue: page?.valueStack?.totalValue || baseContent.valueStackTotalValue,
-    valueStackPayLabel: page?.valueStack?.payLabel || baseContent.valueStackPayLabel,
-    valueCtaBtn: lang === 'kh' ? `ចាក់សោ $${effEarlyBirdPrice} — កក់ឥឡូវ` : `Lock In $${effEarlyBirdPrice} — Reserve Now`,
+    valueStackPayLabel: isKh ? (khTrans?.valueStack?.payLabel || baseContent.valueStackPayLabel) : (page?.valueStack?.payLabel || baseContent.valueStackPayLabel),
+    valueCtaBtn: isKh ? `ចាក់សោ $${effEarlyBirdPrice} — កក់ឥឡូវ` : `Lock In $${effEarlyBirdPrice} — Reserve Now`,
     passRateValue: `$${effEarlyBirdPrice} EARLY BIRD`,
-    seatTitle: `${effTotalSeats}-Seat Delegation Roster`,
-    earlyBirdPlanName: lang === 'kh' ? 'សំបុត្រ Early Bird' : 'Early Bird Admission',
-    regularPlanName: lang === 'kh' ? 'សំបុត្រធម្មតា' : 'Standard Admission',
-    registrationSectionTitle: page?.formConfig?.headline || baseContent.registrationSectionTitle,
-    registrationSectionSubtitle: page?.formConfig?.subheadline || baseContent.registrationSectionSubtitle,
-    formSubmitBtn: page?.formConfig?.submitButtonText || baseContent.formSubmitBtn,
-    formSuccessDesc: page?.formConfig?.successMessage || baseContent.formSuccessDesc,
+    seatTitle: isKh ? `បញ្ជីកៅអីប្រតិភូ ${effTotalSeats} នាក់` : `${effTotalSeats}-Seat Delegation Roster`,
+    earlyBirdPlanName: isKh ? 'សំបុត្រ Early Bird' : 'Early Bird Admission',
+    regularPlanName: isKh ? 'សំបុត្រធម្មតា' : 'Standard Admission',
+    registrationSectionTitle: isKh ? 'កក់កៅអីប្រតិភូ VIP' : (page?.formConfig?.headline || baseContent.registrationSectionTitle),
+    registrationSectionSubtitle: isKh ? 'កំណត់ត្រឹម ៣០ នាក់ក្នុងមួយជំនាន់។ ក្រុមការងារយើងនឹងទាក់ទងមកក្នុងរយៈពេល ១៥ នាទី។' : (page?.formConfig?.subheadline || baseContent.registrationSectionSubtitle),
+    formSubmitBtn: isKh ? 'ចុះឈ្មោះ & ស្នើសុំវិក្កយបត្រ' : (page?.formConfig?.submitButtonText || baseContent.formSubmitBtn),
+    formSuccessDesc: isKh ? 'សូមអរគុណ! ការកក់កៅអីរបស់អ្នកត្រូវបានកត់ត្រា។ អ្នកសម្របសម្រួលយើងនឹងទាក់ទងមកក្នុងពេលបន្តិចទៀតនេះ។' : (page?.formConfig?.successMessage || baseContent.formSuccessDesc),
   };
   const tgUrl = effTgUrl;
 
   // Inclusions for Value Stack
-  const inclusionsList = (page?.valueStack?.inclusions && page.valueStack.inclusions.length > 0)
-    ? page.valueStack.inclusions.map((item, idx) => ({
-        id: idx + 1,
-        title: item.title,
-        desc: item.desc,
-        price: item.standalonePrice ? `$${item.standalonePrice}` : (CONTENT.en.valueStackPrices[idx] ? `$${CONTENT.en.valueStackPrices[idx]}` : '')
-      }))
-    : c.inclusions.map((item, idx) => ({
-        ...item,
-        price: `$${CONTENT.en.valueStackPrices[idx] || 50}`
-      }));
+  const inclusionsSource = isKh
+    ? (khTrans?.valueStack?.inclusions && khTrans.valueStack.inclusions.length > 0 ? khTrans.valueStack.inclusions : c.inclusions)
+    : (page?.valueStack?.inclusions && page.valueStack.inclusions.length > 0 ? page.valueStack.inclusions : c.inclusions);
+
+  const inclusionsList = inclusionsSource.map((item: any, idx: number) => ({
+    id: idx + 1,
+    title: item.title,
+    desc: item.desc,
+    price: item.standalonePrice ? `$${item.standalonePrice}` : (CONTENT.en.valueStackPrices[idx] ? `$${CONTENT.en.valueStackPrices[idx]}` : '')
+  }));
 
   // ── Hero slider
   useEffect(() => {

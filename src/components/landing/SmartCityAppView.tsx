@@ -290,8 +290,8 @@ const HERO_SLIDES = [
   '/photos/photo_2026-09-16_22-01-09 (6).jpg',
 ];
 
-export default function SmartCityAppView({ page, settings }: { page?: LandingPage; settings?: SystemSettings } = {}) {
-  const [lang, setLang] = useState<'en' | 'kh'>('en');
+export default function SmartCityAppView({ page, settings, initialLang }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh' } = {}) {
+  const [lang, setLang] = useState<'en' | 'kh'>(initialLang || 'en');
   const [activeTab, setActiveTab] = useState<'home' | 'trip' | 'seats'>('home');
   const [heroSlide, setHeroSlide] = useState(0);
   const [activeProfile, setActiveProfile] = useState<'cafe' | 'tech' | 'distributor'>('cafe');
@@ -318,6 +318,21 @@ export default function SmartCityAppView({ page, settings }: { page?: LandingPag
       setClaimedSeats(page.urgency.claimedSeats);
     }
   }, [page?.urgency?.claimedSeats]);
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlLang = params.get('lang');
+      if (urlLang === 'kh' || urlLang === 'en') {
+        setLang(urlLang);
+      } else if (initialLang) {
+        setLang(initialLang);
+      } else {
+        const saved = localStorage.getItem('khb_lang');
+        if (saved === 'kh' || saved === 'en') setLang(saved);
+      }
+    } catch {}
+  }, []);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
@@ -457,10 +472,10 @@ export default function SmartCityAppView({ page, settings }: { page?: LandingPag
                 <div className="app-hero-body">
                   <span className="app-hero-badge">
                     <i className="dot" />
-                    <span>{page?.badge || s.heroBadge}</span>
+                    <span>{lang === 'kh' ? (page?.translations?.kh?.badge || s.heroBadge) : (page?.badge || s.heroBadge)}</span>
                   </span>
-                  <h1>{page?.heroHeadline || page?.title || s.heroTitle}</h1>
-                  <p className="app-hero-sub">{page?.heroSubheadline || page?.description || s.heroSub}</p>
+                  <h1>{lang === 'kh' ? (page?.translations?.kh?.heroHeadline || page?.translations?.kh?.title || s.heroTitle) : (page?.heroHeadline || page?.title || s.heroTitle)}</h1>
+                  <p className="app-hero-sub">{lang === 'kh' ? (page?.translations?.kh?.heroSubheadline || page?.translations?.kh?.description || s.heroSub) : (page?.heroSubheadline || page?.description || s.heroSub)}</p>
                   <div className="app-price-chip">
                     <s>${effRegularPrice}</s>
                     <b>${effEarlyBirdPrice}</b>

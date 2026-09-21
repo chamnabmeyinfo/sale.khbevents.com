@@ -185,6 +185,28 @@ export interface SpeakerItem {
   sessionTime?: string;
 }
 
+export interface LandingPageTranslation {
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  badge?: string;
+  heroHeadline?: string;
+  heroSubheadline?: string;
+  heroCtaText?: string;
+  venue?: string;
+  urgencyNotice?: string;
+  urgencyRiskNote?: string;
+  coreValues?: CoreValueItem[];
+  problems?: ProblemItem[];
+  audiences?: AudienceItem[];
+  itinerary?: ItineraryDay[];
+  valueStack?: ValueStackConfig;
+  guarantee?: GuaranteeConfig;
+  faqs?: FaqItem[];
+  metaTitle?: string;
+  metaDescription?: string;
+}
+
 export interface LandingPage {
   id: string;
   slug: string;
@@ -195,6 +217,12 @@ export interface LandingPage {
   badge?: string;
   template?: PageTemplateType;
   status: PageStatus;
+  
+  // Multilingual translations (e.g. kh for Khmer)
+  translations?: {
+    kh?: LandingPageTranslation;
+    [langCode: string]: LandingPageTranslation | undefined;
+  };
   
   // Hero section
   heroHeadline: string;
