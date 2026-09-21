@@ -275,6 +275,65 @@ export interface PageAnalyticsSummary {
   recentEvents: TrackingEvent[];
 }
 
+export interface IsolatedPageSettings {
+  // 1. Dedicated Communications & Support
+  phone?: string;
+  whatsapp?: string;
+  whatsappNumber?: string;
+  telegramUsername?: string;
+  telegramUrl?: string;
+  coordinatorName?: string;
+  coordinatorAvatar?: string;
+  coordinatorRole?: string;
+  email?: string;
+
+  // 2. Lead Routing & Notifications
+  telegramBotToken?: string;
+  telegramChatId?: string;
+  enableTelegramAlerts?: boolean;
+  webhookUrl?: string;
+  webhookSecret?: string;
+  leadTags?: string[];
+
+  // 3. Post-Conversion & Form Actions
+  postSubmitAction?: 'inline' | 'redirect';
+  redirectUrl?: string;
+  customSuccessHeadline?: string;
+  customSuccessMessage?: string;
+  customThankYouMessage?: string;
+  isSoldOut?: boolean;
+  soldOutMessage?: string;
+  soldOutAction?: 'waitlist' | 'sold_out_badge' | 'redirect';
+  soldOutRedirectUrl?: string;
+
+  // 4. Branding, Theming & Sponsorship
+  accentColor?: string;
+  partnerName?: string;
+  partnerLogo?: string;
+  coBrandingText?: string;
+  customNavbarCtaText?: string;
+  customNavbarCtaLink?: string;
+  customFooterText?: string;
+  customCtaText?: string;
+
+  // 5. Access Control & Privacy
+  accessProtection?: 'public' | 'password';
+  accessPassword?: string;
+  passwordPin?: string;
+  searchEngineIndexing?: 'index' | 'noindex' | boolean;
+
+  // 6. Payment & Invoicing
+  paymentMethods?: Array<'khqr' | 'bank_transfer' | 'invoice' | 'cash' | 'card'>;
+  acceptedPaymentMethods?: Array<'khqr' | 'bank_transfer' | 'cash' | 'card'>;
+  paymentInstructions?: string;
+  khqrQrImage?: string;
+  khqrImageUrl?: string;
+  bankAccountDetails?: string;
+  bankName?: string;
+  bankAccountName?: string;
+  bankAccountNumber?: string;
+}
+
 export interface LandingPage {
   id: string;
   slug: string;
@@ -294,6 +353,9 @@ export interface LandingPage {
   
   // Third-Party and Internal Tracking Configuration
   tracking?: ExternalTrackingConfig;
+
+  // Isolated Campaign Settings
+  isolatedSettings?: IsolatedPageSettings;
   
   // Hero section
   heroHeadline: string;
@@ -384,7 +446,7 @@ export interface Lead {
   utmCampaign?: string;
   utmContent?: string;
   referrer?: string;
-
+  tags?: string[];
   ip?: string;
   userAgent?: string;
   createdAt: string;

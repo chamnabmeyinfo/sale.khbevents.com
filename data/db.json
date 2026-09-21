@@ -25,7 +25,7 @@
         "noticeText": "Early Bird Special: Save $51 before Sept 8, 2026 | Strictly limited to 30 seats",
         "totalSeats": 30,
         "claimedSeats": 19,
-        "regularPrice": "650",
+        "regularPrice": "599",
         "earlyBirdPrice": "550",
         "earlyBirdDeadline": "2026-09-08T23:59:59",
         "registrationDeadline": "2026-09-20T23:59:59"
@@ -73,6 +73,20 @@
           "desc": "Two international expos in one trip — see next year's products, packaging, and smart-retail tech first.",
           "icon": "zap",
           "title": "2026 Trends Before Competitors"
+        },
+        {
+          "id": "cv-1790000295513",
+          "num": "05",
+          "desc": "The journey that offer you both business opportunities and relax which you never feel losing money. ",
+          "icon": "chart",
+          "title": "Business and leisure together in a journey"
+        },
+        {
+          "id": "cv-1790000373866",
+          "num": "06",
+          "desc": "By attend overseas market, you gain wider view and insights on your market so that you will know how to strengthen your current business in Cambodia. ",
+          "icon": "chart",
+          "title": "Gain outside views on your industry "
         }
       ],
       "problems": [
@@ -123,6 +137,13 @@
           "desc": "Explore top Vietnamese and international franchise brands, trendsetting beverage concepts, and lucrative retail models.",
           "icon": "users",
           "title": "F&B Entrepreneurs & Investors"
+        },
+        {
+          "id": "aud-1790000576737",
+          "tag": "F&B and IOT",
+          "desc": "Any persons that are looking for business ideas and opportunities in the area of IoT and Coffee and Tea are highly recommended to attend this event. ",
+          "icon": "users",
+          "title": "People interesting on Smart City and Tea, Coffee businesses "
         }
       ],
       "itinerary": [
@@ -310,6 +331,12 @@
             "desc": "Sightseeing at Halong Bay UNESCO World Heritage Site with onboard lunch.",
             "title": "Halong Bay Cruise & Hanoi Tour",
             "standalonePrice": 65
+          },
+          {
+            "id": "inc-1789982722248",
+            "desc": "Details of this inclusion provided to delegates.",
+            "title": "Included Item / Service",
+            "standalonePrice": 100
           }
         ],
         "totalLabel": "Total standalone value",
@@ -353,11 +380,11 @@
       ],
       "packages": [
         {
-          "id": "pkg-early-bird",
-          "name": "Early Bird Admission",
-          "price": "$499",
-          "period": "per delegate (save $51 before Sept 8)",
-          "ctaText": "Lock In $499 Early Bird Rate",
+          "id": "pkg-standard",
+          "name": "Standard Admission",
+          "price": "$550",
+          "period": "per delegate (after Sept 8)",
+          "ctaText": "Register Standard Seat ($550)",
           "popular": true,
           "features": [
             "Roundtrip Flight Tickets (Phnom Penh - Hanoi)",
@@ -365,30 +392,10 @@
             "Daily Hotel Buffet Breakfast",
             "Private Air-Conditioned Coach in Vietnam",
             "Trilingual Professional Guide (Khmer/Eng/Viet)",
-            "VIP All-Access Passes to 2 International Expos",
             "Border & Customs Facilitation Assistance",
             "Direct Factory & Wholesale Market Visits",
-            "UNESCO Halong Bay Cruise & Seafood Lunch"
-          ],
-          "description": "Most popular choice for founders, importers, and F&B entrepreneurs."
-        },
-        {
-          "id": "pkg-standard",
-          "name": "Standard Admission",
-          "price": "$550",
-          "period": "per delegate (after Sept 8)",
-          "ctaText": "Register Standard Seat ($550)",
-          "popular": false,
-          "features": [
-            "Roundtrip Flight Tickets (Phnom Penh - Hanoi)",
-            "Hotel Stay (3 Nights / 4 Days, Twin Sharing)",
-            "Daily Hotel Buffet Breakfast",
-            "Private Air-Conditioned Coach in Vietnam",
-            "Trilingual Professional Guide (Khmer/Eng/Viet)",
-            "VIP All-Access Passes to 2 International Expos",
-            "Border & Customs Facilitation Assistance",
-            "Direct Factory & Wholesale Market Visits",
-            "UNESCO Halong Bay Cruise & Seafood Lunch"
+            "UNESCO Halong Bay Cruise & Seafood Lunch",
+            "Visit Coffee and Tea Wholesale factory"
           ],
           "description": "Standard registration subject to remaining seat availability."
         }
@@ -481,28 +488,121 @@
       "metaTitle": "Smart City, Tea & Cafe Business Delegation 2026 | KHB EVENTS",
       "metaDescription": "Join the exclusive B2B Business Delegation to Hanoi and Halong Bay, Vietnam. Explore Cafe Show Vietnam & Smart City Expo, direct factory visits, and business matchmaking. Organized by KHB EVENTS.",
       "viewsCount": 342,
-      "leadsCount": 22,
+      "leadsCount": 24,
       "createdAt": "2026-09-21T04:22:10.31+00:00",
-      "updatedAt": "2026-09-21T09:23:09.535Z",
+      "updatedAt": "2026-09-21T14:38:42.929Z",
       "translations": {
         "kh": {
-          "heroHeadline": "ដំណើរទស្សនកិច្ចពាណិជ្ជកម្ម Smart City ២០២៦ (តេស្តផ្ទាល់)"
+          "heroHeadline": "ដំណើរទស្សនកិ�្�ពាណិជ្ជកម្ម Smart City ២០២៦ (តេស្តផ្ទាល់)"
         }
       },
       "tracking": {
-        "facebookPixelId": "102938475610293",
-        "facebookPixelEnabled": true,
-        "ga4MeasurementId": "G-KHB2026TEST",
         "ga4Enabled": true,
-        "gtmContainerId": "GTM-KHB2026",
         "gtmEnabled": true,
         "tiktokPixelId": "C1029384756",
+        "gtmContainerId": "GTM-KHB2026",
+        "facebookPixelId": "102938475610293",
+        "customHeadScript": "console.log(\"KHB Custom Head Tracking Loaded\");",
+        "ga4MeasurementId": "G-KHB2026TEST",
         "tiktokPixelEnabled": true,
-        "customHeadScript": "console.log(\"KHB Custom Head Tracking Loaded\");"
+        "facebookPixelEnabled": true
+      },
+      "isolatedSettings": {
+        "whatsapp": "+855 12 999 888",
+        "telegramUrl": "https://t.me/khb_vietnam_b2b",
+        "bankAccountName": "KHB EVENTS CO., LTD",
+        "coordinatorName": "Sovann Meas",
+        "searchEngineIndexing": "index",
+        "acceptedPaymentMethods": [
+          "khqr",
+          "bank_transfer"
+        ],
+        "accentColor": "#10B981",
+        "partnerName": "Vietnam Tea Association & Smart City Alliance",
+        "customCtaText": "Claim VIP Delegation Pass",
+        "customThankYouMessage": "Thank you! Your seat reservation request has been received. Our coordinator Sovann Meas will contact you within 15 minutes.",
+        "telegramUsername": "@khb_vietnam_b2b",
+        "postSubmitAction": "inline",
+        "leadTags": [
+          "b2b-vietnam",
+          "tea-cafe-buyer",
+          "vip-delegation"
+        ],
+        "bankAccountNumber": "000 123 456",
+        "coordinatorRole": "Senior B2B Mission Director",
+        "enableTelegramAlerts": true,
+        "accessProtection": "public",
+        "phone": "+855 12 999 888",
+        "bankName": "ABA Bank"
       }
     }
   ],
   "leads": [
+    {
+      "id": "lead-1790001702549-5iot",
+      "landingPageId": "page-smart-city",
+      "landingPageSlug": "smart-city-tea-cafe",
+      "landingPageTitle": "Smart City, Tea & Cafe Business Delegation 2026",
+      "fullName": "Test VIP Buyer",
+      "email": "buyer@cambodiabusiness.com",
+      "phone": "+855 99 123 456",
+      "eventType": "General Inquiry",
+      "message": "Testing automated isolated lead routing and CRM tags",
+      "customFields": {
+        "campaignTags": "b2b-vietnam, tea-cafe-buyer, vip-delegation"
+      },
+      "tags": [
+        "b2b-vietnam",
+        "tea-cafe-buyer",
+        "vip-delegation"
+      ],
+      "status": "NEW",
+      "notes": [],
+      "utmSource": "facebook_ads",
+      "utmCampaign": "b2b_trade_mission",
+      "ip": "::1",
+      "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9444",
+      "createdAt": "2026-09-21T14:41:42.333Z",
+      "updatedAt": "2026-09-21T14:41:42.333Z"
+    },
+    {
+      "id": "lead-1790001615797-l8mj",
+      "landingPageId": "page-smart-city",
+      "landingPageSlug": "smart-city-tea-cafe",
+      "landingPageTitle": "Smart City, Tea & Cafe Business Delegation 2026",
+      "fullName": "Test VIP Buyer",
+      "email": "buyer@cambodiabusiness.com",
+      "phone": "+855 99 123 456",
+      "eventType": "General Inquiry",
+      "message": "Testing automated isolated lead routing and CRM tags",
+      "status": "NEW",
+      "notes": [],
+      "utmSource": "facebook_ads",
+      "utmCampaign": "b2b_trade_mission",
+      "ip": "::1",
+      "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9444",
+      "createdAt": "2026-09-21T14:40:15.797Z",
+      "updatedAt": "2026-09-21T14:40:15.797Z"
+    },
+    {
+      "id": "lead-1790001540808-dqcj",
+      "landingPageId": "page-smart-city",
+      "landingPageSlug": "smart-city-tea-cafe",
+      "landingPageTitle": "Smart City, Tea & Cafe Business Delegation 2026",
+      "fullName": "Test VIP Buyer",
+      "email": "buyer@cambodiabusiness.com",
+      "phone": "+855 99 123 456",
+      "eventType": "General Inquiry",
+      "message": "Testing automated isolated lead routing and CRM tags",
+      "status": "NEW",
+      "notes": [],
+      "utmSource": "facebook_ads",
+      "utmCampaign": "b2b_trade_mission",
+      "ip": "::1",
+      "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9444",
+      "createdAt": "2026-09-21T14:39:00.808Z",
+      "updatedAt": "2026-09-21T14:39:00.808Z"
+    },
     {
       "id": "lead-1789975428884-hm4z",
       "landingPageId": "page-smart-city",

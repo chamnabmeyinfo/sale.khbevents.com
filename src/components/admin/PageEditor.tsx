@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import KhmerTranslationEditor from './KhmerTranslationEditor';
 import TrackingAndPixelsEditor from './TrackingAndPixelsEditor';
+import IsolatedSettingsEditor from './IsolatedSettingsEditor';
 import { 
   LandingPage, 
   PackageTier, 
@@ -390,7 +391,8 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     },
     metaTitle: initialData?.metaTitle || '',
     metaDescription: initialData?.metaDescription || '',
-    ogImage: initialData?.ogImage || ''
+    ogImage: initialData?.ogImage || '',
+    isolatedSettings: initialData?.isolatedSettings || {}
   });
 
   const [saving, setSaving] = useState(false);
@@ -416,7 +418,8 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     | 'guarantee' 
     | 'form' 
     | 'seo'
-    | 'tracking';
+    | 'tracking'
+    | 'isolatedSettings';
 
   const [activeTab, setActiveTab] = useState<TabType>('general');
   const [langTab, setLangTab] = useState<'en' | 'kh'>('en');
@@ -428,7 +431,9 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
       const sp = new URLSearchParams(window.location.search);
       const t = sp.get('tab');
       if (t === 'tracking') setActiveTab('tracking');
+      else if (t === 'settings' || t === 'isolatedSettings') setActiveTab('isolatedSettings');
       else if (window.location.hash === '#tracking') setActiveTab('tracking');
+      else if (window.location.hash === '#settings' || window.location.hash === '#isolatedSettings') setActiveTab('isolatedSettings');
     } catch {}
   }, []);
 
@@ -1102,7 +1107,8 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     { id: 'guarantee', label: 'Guarantee', count: formData.guarantee?.points?.length },
     { id: 'form', label: 'Lead Form', count: formData.formConfig?.fields?.length },
     { id: 'seo', label: 'SEO & Social' },
-    { id: 'tracking', label: '📊 Tracking & Pixels', highlight: true }
+    { id: 'tracking', label: '📊 Tracking & Pixels', highlight: true },
+    { id: 'isolatedSettings', label: '⚙️ Dedicated Settings', highlight: true }
   ];
 
   const tabs = [...baseTabs, ...templateTabs, ...commonTabs];
@@ -3310,6 +3316,11 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
         {/* 16. TRACKING & PIXELS */}
         {activeTab === 'tracking' && (
           <TrackingAndPixelsEditor formData={formData} setFormData={setFormData} />
+        )}
+
+        {/* 17. DEDICATED CAMPAIGN SETTINGS */}
+        {activeTab === 'isolatedSettings' && (
+          <IsolatedSettingsEditor formData={formData} setFormData={setFormData} />
         )}
 
         {/* Bottom Save bar */}

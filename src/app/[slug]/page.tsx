@@ -48,9 +48,12 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const title = (khTrans?.metaTitle || khTrans?.title) || page.metaTitle || `${page.title} | ${settings.companyName}`;
   const description = (khTrans?.metaDescription || khTrans?.description) || page.metaDescription || page.description;
 
+  const isNoIndex = page?.isolatedSettings?.searchEngineIndexing === 'noindex';
+
   return {
     title,
     description,
+    robots: isNoIndex ? { index: false, follow: false } : undefined,
     openGraph: {
       title,
       description,

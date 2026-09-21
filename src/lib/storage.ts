@@ -339,6 +339,7 @@ export async function savePage(pageData: Partial<LandingPage> & { title: string;
       guarantee: pageData.guarantee,
       translations: pageData.translations,
       tracking: pageData.tracking,
+      isolatedSettings: pageData.isolatedSettings,
       formConfig: pageData.formConfig || {
         headline: 'Inquire or Register',
         subheadline: 'Fill in your details below and our team will get in touch.',
@@ -464,18 +465,26 @@ export async function createLead(leadData: {
   userAgent?: string;
 }): Promise<Lead> {
   const db = await getDatabase();
+  let pageTitle = leadData.landingPageTitle || leadData.landingPageSlug;
   const now = new Date().toISOString();
 
-  let pageTitle = leadData.landingPageTitle || leadData.landingPageSlug;
-  const targetPage = db.pages.find((p) => p.slug === leadData.landingPageSlug);
-  if (targetPage) {
-    pageTitle = targetPage.title;
-    targetPage.leadsCount = (targetPage.leadsCount || 0) + 1;
+  // Find associated landing page to check isolated settings
+  const page = (await getPageBySlug(leadData.landingPageSlug)) || db.pages.find((p) => p.slug === leadData.landingPageSlug);
+  if (page) {
+    pageTitle = page.title;
+    page.leadsCount = (page.leadsCount || 0) + 1;
+  }
+
+  // Apply isolated tags if configured
+  const leadTags = page?.isolatedSettings?.leadTags || [];
+  const customFields = { ...(leadData.customFields || {}) };
+  if (leadTags.length > 0) {
+    customFields.campaignTags = leadTags.join(', ');
   }
 
   const newLead: Lead = {
     id: `lead-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-    landingPageId: targetPage?.id,
+    landingPageId: page?.id,
     landingPageSlug: leadData.landingPageSlug,
     landingPageTitle: pageTitle,
     fullName: leadData.fullName.trim(),
@@ -488,7 +497,8 @@ export async function createLead(leadData: {
     budgetRange: leadData.budgetRange,
     packageInterest: leadData.packageInterest,
     message: leadData.message?.trim(),
-    customFields: leadData.customFields,
+    customFields,
+    tags: leadTags,
     status: 'NEW',
     notes: [],
     utmSource: leadData.utmSource,
@@ -513,9 +523,23 @@ export async function createLead(leadData: {
   db.leads.unshift(newLead);
   await saveDatabase(db);
 
-  if (db.settings.enableTelegramAlerts && db.settings.telegramBotToken && db.settings.telegramChatId) {
-    sendTelegramAlert(newLead, db.settings).catch((err) => {
+  // Telegram alert routing (isolated page group vs global system settings)
+  const enableAlerts = page?.isolatedSettings?.enableTelegramAlerts !== undefined 
+    ? page.isolatedSettings.enableTelegramAlerts 
+    : db.settings.enableTelegramAlerts;
+  const token = page?.isolatedSettings?.telegramBotToken || db.settings.telegramBotToken;
+  const chatId = page?.isolatedSettings?.telegramChatId || db.settings.telegramChatId;
+
+  if (enableAlerts && token && chatId) {
+    sendTelegramAlert(newLead, db.settings, token, chatId).catch((err) => {
       console.error('Telegram error:', err);
+    });
+  }
+
+  // Real-time Webhook dispatching (Zapier / Make / HubSpot / Google Sheets)
+  if (page?.isolatedSettings?.webhookUrl) {
+    dispatchLeadWebhook(newLead, page.isolatedSettings.webhookUrl, page.isolatedSettings.webhookSecret).catch((err) => {
+      console.error('Webhook dispatch error:', err);
     });
   }
 
@@ -815,9 +839,14 @@ export async function getPageAnalytics(slug: string): Promise<PageAnalyticsSumma
   };
 }
 
-async function sendTelegramAlert(lead: Lead, settings: SystemSettings) {
-  const token = settings.telegramBotToken;
-  const chatId = settings.telegramChatId;
+async function sendTelegramAlert(
+  lead: Lead, 
+  settings: SystemSettings, 
+  tokenOverride?: string, 
+  chatIdOverride?: string
+) {
+  const token = tokenOverride || settings.telegramBotToken;
+  const chatId = chatIdOverride || settings.telegramChatId;
   if (!token || !chatId) return;
 
   const text = `🎉 *NEW KHB LEAD INQUIRY!*
@@ -843,4 +872,29 @@ async function sendTelegramAlert(lead: Lead, settings: SystemSettings) {
       parse_mode: 'Markdown'
     })
   });
+}
+
+async function dispatchLeadWebhook(lead: Lead, webhookUrl: string, secret?: string) {
+  try {
+    const payload = JSON.stringify({
+      event: 'lead.created',
+      timestamp: new Date().toISOString(),
+      lead,
+    });
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'User-Agent': 'KHB-Events-Webhook/1.0',
+    };
+    if (secret) {
+      const hmac = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+      headers['X-KHB-Signature'] = hmac;
+    }
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers,
+      body: payload,
+    });
+  } catch (err) {
+    console.error('Failed to dispatch lead webhook:', err);
+  }
 }

@@ -7,6 +7,7 @@ import Footer from './Footer';
 import LeadForm from './LeadForm';
 import { LandingPage, SystemSettings } from '@/lib/types';
 import LandingPageTracking from '@/components/common/LandingPageTracking';
+import PagePasswordGate from '@/components/common/PagePasswordGate';
 import { 
   Calendar, 
   MapPin, 
@@ -87,10 +88,15 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
   const claimedSeats = page.urgency?.claimedSeats || 19;
   const seatsRemaining = Math.max(0, totalSeats - claimedSeats);
 
+  const effPhone = page?.isolatedSettings?.phone || settings?.phone;
+  const effWhatsapp = page?.isolatedSettings?.whatsapp || settings?.whatsappNumber;
+  const effTelegramUsername = page?.isolatedSettings?.telegramUsername || settings?.telegramUsername;
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070D0A] text-slate-900 dark:text-gray-100 flex flex-col selection:bg-amber-400 selection:text-black transition-colors">
-      <LandingPageTracking page={page} />
-      <Navbar phone={settings.phone} whatsapp={settings.whatsappNumber} />
+    <PagePasswordGate page={page}>
+      <div className="min-h-screen bg-slate-50 dark:bg-[#070D0A] text-slate-900 dark:text-gray-100 flex flex-col selection:bg-amber-400 selection:text-black transition-colors">
+        <LandingPageTracking page={page} />
+        <Navbar phone={effPhone} whatsapp={effWhatsapp} />
 
       <main className="flex-1">
         {/* 1. HERO SECTION */}
@@ -953,8 +959,9 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
               landingPageTitle={page.title}
               headline={page.formConfig?.headline || 'Reserve Your Registration / Inquire'}
               subheadline={page.formConfig?.subheadline || 'Submit your information below and our team will get in touch.'}
-              submitButtonText={page.formConfig?.submitButtonText || 'Submit Reservation'}
+              submitButtonText={page.isolatedSettings?.customCtaText || page.formConfig?.submitButtonText || 'Submit Reservation'}
               successMessage={page.formConfig?.successMessage || 'Thank you! Your registration has been received.'}
+              isolatedSettings={page.isolatedSettings}
               prefillData={{
                 packageInterest: selectedPackage
               }}
@@ -1003,16 +1010,17 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
       </main>
 
       <FloatingContact
-        whatsappNumber={settings.whatsappNumber}
-        telegramUsername={settings.telegramUsername}
-        phone={settings.phone}
+        whatsappNumber={effWhatsapp}
+        telegramUsername={effTelegramUsername}
+        phone={effPhone}
       />
 
       <Footer
-        phone={settings.phone}
+        phone={effPhone}
         email={settings.email}
         address={settings.address}
       />
     </div>
+    </PagePasswordGate>
   );
 }

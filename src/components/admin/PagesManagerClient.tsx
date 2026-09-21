@@ -14,7 +14,8 @@ import {
   Eye, 
   Users, 
   FileText,
-  Activity
+  Activity,
+  Sliders
 } from 'lucide-react';
 import { LandingPage } from '@/lib/types';
 
@@ -272,6 +273,14 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
                     title="View Tracking & Pixels"
                   >
                     <Activity className="w-3.5 h-3.5" />
+                  </Link>
+
+                  <Link
+                    href={`/admin/pages/${page.id}?tab=isolatedSettings`}
+                    className="p-1.5 rounded-lg bg-slate-100 dark:bg-emerald-950/60 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-slate-200 dark:hover:bg-emerald-900 border border-slate-200 dark:border-emerald-800 text-xs font-semibold flex items-center transition-colors"
+                    title="Dedicated Page Settings"
+                  >
+                    <Sliders className="w-3.5 h-3.5" />
                   </Link>
 
                   <Link

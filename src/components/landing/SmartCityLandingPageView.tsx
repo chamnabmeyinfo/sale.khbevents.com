@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { LandingPage, SystemSettings } from '@/lib/types';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
+import PagePasswordGate from '@/components/common/PagePasswordGate';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BILINGUAL CONTENT — exactly from old project content.json + app.js STR obj
@@ -650,11 +651,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
   const effRegularPrice = page?.urgency?.regularPrice ? (Number(page.urgency.regularPrice) || GENERAL.regularPrice) : GENERAL.regularPrice;
   const effEarlyBirdDeadline = page?.urgency?.earlyBirdDeadline || GENERAL.earlyBirdDeadline;
   const effRegistrationDeadline = page?.urgency?.registrationDeadline || GENERAL.registrationDeadline;
-  const effPhone = settings?.phone || GENERAL.contactPhone;
-  const effTgUsername = settings?.telegramUsername || GENERAL.contactTelegramUsername;
-  const effTgUrl = settings?.telegramUsername 
-    ? `https://t.me/${settings.telegramUsername.replace('@', '')}` 
-    : GENERAL.contactTelegramUrl;
+  const effPhone = page?.isolatedSettings?.phone || settings?.phone || GENERAL.contactPhone;
+  const effTgUsername = page?.isolatedSettings?.telegramUsername || settings?.telegramUsername || GENERAL.contactTelegramUsername;
+  const effTgUrl = page?.isolatedSettings?.telegramUrl || (effTgUsername 
+    ? `https://t.me/${effTgUsername.replace('@', '')}` 
+    : GENERAL.contactTelegramUrl);
+  const effWhatsApp = page?.isolatedSettings?.whatsapp || settings?.whatsappNumber;
 
   const [localClaimed, setLocalClaimed] = useState(effClaimedSeats);
   const [utmParams, setUtmParams] = useState<Record<string, string>>({});
@@ -899,6 +901,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
           profile: regProfile,
           value: isEarlyBird ? effEarlyBirdPrice : effRegularPrice,
         }, lang);
+
+        if (page?.isolatedSettings?.postSubmitAction === 'redirect' && page?.isolatedSettings?.redirectUrl) {
+          setTimeout(() => {
+            window.location.href = page.isolatedSettings!.redirectUrl!;
+          }, 1500);
+        }
       } else {
         alert(result.error || 'Submission failed. Please try again.');
       }
@@ -920,9 +928,10 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
   const tgConciergeUrl = `${tgUrl}?text=${tgMsg}`;
 
   return (
-    <div className={`smart-city-landing${lang === 'kh' ? ' lang-kh' : ''}`}>
-      {/* ── Tracking Engine (Internal Analytics & External Pixels) ── */}
-      <LandingPageTracking page={page} lang={lang} />
+    <PagePasswordGate page={page}>
+      <div className={`smart-city-landing${lang === 'kh' ? ' lang-kh' : ''}`}>
+        {/* ── Tracking Engine (Internal Analytics & External Pixels) ── */}
+        <LandingPageTracking page={page} lang={lang} />
 
       {/* ═══════════════════════════════════════════════
           STICKY URGENCY BAR
@@ -1662,7 +1671,15 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                   <h3 className="reg-form-title">{c.option2Title}</h3>
                   <p className="reg-form-desc">{c.option2Desc}</p>
 
-                  {!submitted ? (
+                  {page?.isolatedSettings?.isSoldOut ? (
+                    <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center space-y-3 my-4">
+                      <div className="text-3xl">🔒</div>
+                      <h4 className="text-base font-bold text-amber-400">Registration Currently Closed</h4>
+                      <p className="text-xs text-gray-300">
+                        {page.isolatedSettings.soldOutMessage || 'All delegate seats for this cohort have been fully booked. Please contact our coordinator for waitlist inquiries.'}
+                      </p>
+                    </div>
+                  ) : !submitted ? (
                     <form className="fast-reg-form" onSubmit={handleSubmit}>
                       <div className="form-group">
                         <label className="form-label">{c.formNameLabel}</label>
@@ -1702,7 +1719,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                       </div>
                       <button type="submit" className="btn-submit-form" disabled={submitting}>
                         {ICONS.arrow}
-                        <span>{submitting ? c.formSubmitting : c.formSubmitBtn}</span>
+                        <span>{submitting ? c.formSubmitting : (page?.isolatedSettings?.customCtaText || c.formSubmitBtn)}</span>
                       </button>
                       <div className="form-secure-note">
                         {ICONS.lock}
@@ -1713,11 +1730,11 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                     <div className="form-success-state" style={{ display: 'block' }}>
                       <div className="success-icon-circle">✓</div>
                       <h4 className="success-title">{c.formSuccessTitle}</h4>
-                      <p className="success-desc"><span>{c.formSuccessDesc}</span></p>
+                      <p className="success-desc"><span>{page?.isolatedSettings?.customThankYouMessage || c.formSuccessDesc}</span></p>
                       <div className="success-pass-badge">Seat #{successSeat} Held</div>
                       <p style={{ fontSize: '0.9rem', marginBottom: '16px' }}>{c.formSuccessTelegramPrompt}</p>
                       <a href={tgUrl} target="_blank" rel="noreferrer" className="btn-secondary-telegram">
-                        {TG_ICON(18)}<span>Confirm VIP Pass with Trip Coordinator</span>
+                        {TG_ICON(18)}<span>Confirm VIP Pass with {page?.isolatedSettings?.coordinatorName || 'Trip Coordinator'}</span>
                       </a>
                     </div>
                   )}
@@ -1849,6 +1866,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
           </a>
         </div>
       </div>
-    </div>
+      </div>
+    </PagePasswordGate>
   );
 }

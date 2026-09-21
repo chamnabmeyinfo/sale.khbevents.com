@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { Send, CheckCircle2, ShieldCheck, Sparkles, MessageCircle } from 'lucide-react';
+import { Send, CheckCircle2, ShieldCheck, Sparkles, MessageCircle, Lock } from 'lucide-react';
 import { trackClientEvent } from '@/components/common/LandingPageTracking';
+import { IsolatedPageSettings } from '@/lib/types';
 
 interface LeadFormProps {
   landingPageSlug?: string;
@@ -17,6 +18,7 @@ interface LeadFormProps {
   subheadline?: string;
   submitButtonText?: string;
   successMessage?: string;
+  isolatedSettings?: IsolatedPageSettings;
 }
 
 function LeadFormInner({
@@ -26,7 +28,8 @@ function LeadFormInner({
   headline = 'Request Your Tailored Event Proposal',
   subheadline = 'Receive custom 3D visual concepts, equipment itemization, and pricing within 24 hours.',
   submitButtonText = 'Submit Inquiry & Lock In Rates',
-  successMessage = 'Thank you! Your event inquiry has been received. A KHB Senior Producer will contact you within 2 hours.'
+  successMessage = 'Thank you! Your event inquiry has been received. A KHB Senior Producer will contact you within 2 hours.',
+  isolatedSettings
 }: LeadFormProps) {
   const [formData, setFormData] = useState({
     fullName: '',
@@ -101,6 +104,12 @@ function LeadFormInner({
         eventType: formData.eventType,
         client: formData.fullName,
       });
+
+      if (isolatedSettings?.postSubmitAction === 'redirect' && isolatedSettings.redirectUrl) {
+        setTimeout(() => {
+          window.location.href = isolatedSettings.redirectUrl!;
+        }, 1500);
+      }
     } catch (err: any) {
       setErrorMessage(err.message || 'Something went wrong. Please call or WhatsApp us.');
     } finally {
@@ -108,7 +117,28 @@ function LeadFormInner({
     }
   };
 
+  if (isolatedSettings?.isSoldOut) {
+    return (
+      <div id="booking-form" className="py-16 scroll-mt-20">
+        <div className="max-w-2xl mx-auto rounded-3xl bg-amber-50 dark:bg-[#1A1508] border border-amber-300 dark:border-amber-600/50 p-8 sm:p-12 text-center space-y-4 shadow-xl">
+          <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center mx-auto border border-amber-300 dark:border-amber-500/40">
+            <Lock className="w-8 h-8" />
+          </div>
+          <h3 className="text-2xl font-black text-slate-900 dark:text-white">
+            Registration Currently Closed
+          </h3>
+          <p className="text-sm text-slate-700 dark:text-gray-300 max-w-lg mx-auto">
+            {isolatedSettings.soldOutMessage || 'This campaign or delegation has reached capacity. Please contact our team directly for waitlist availability.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (submitted) {
+    const effectiveSuccessMessage = isolatedSettings?.customThankYouMessage || successMessage;
+    const cleanWaNumber = (isolatedSettings?.whatsapp || isolatedSettings?.phone || '85512888999').replace(/[^0-9]/g, '');
+
     return (
       <div id="inquiry-form" className="py-16 scroll-mt-20">
         <div className="max-w-2xl mx-auto rounded-3xl bg-white dark:bg-[#0B1A13] border border-emerald-500/60 p-8 sm:p-12 text-center space-y-6 shadow-xl dark:shadow-2xl">
@@ -121,7 +151,7 @@ function LeadFormInner({
               Inquiry Received!
             </h3>
             <p className="text-sm text-slate-600 dark:text-gray-300 leading-relaxed">
-              {successMessage}
+              {effectiveSuccessMessage}
             </p>
           </div>
 
@@ -133,7 +163,7 @@ function LeadFormInner({
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <a
-              href={`https://wa.me/85512888999?text=Hello%20KHB%20Events,%20I%20just%20submitted%20an%20inquiry%20for%20${encodeURIComponent(formData.eventType)}.%20My%20name%20is%20${encodeURIComponent(formData.fullName)}.`}
+              href={`https://wa.me/${cleanWaNumber}?text=Hello%20KHB%20Events,%20I%20just%20submitted%20an%20inquiry%20for%20${encodeURIComponent(formData.eventType)}.%20My%20name%20is%20${encodeURIComponent(formData.fullName)}.`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md"

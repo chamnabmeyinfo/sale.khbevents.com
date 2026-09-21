@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { LandingPage, SystemSettings } from '@/lib/types';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
+import PagePasswordGate from '@/components/common/PagePasswordGate';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GENERAL CONSTANTS
@@ -305,12 +306,11 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
   const effEarlyBirdPrice = page?.urgency?.earlyBirdPrice ? (Number(page.urgency.earlyBirdPrice) || GENERAL.earlyBirdPrice) : GENERAL.earlyBirdPrice;
   const effRegularPrice = page?.urgency?.regularPrice ? (Number(page.urgency.regularPrice) || GENERAL.regularPrice) : GENERAL.regularPrice;
   const effEarlyBirdDeadline = page?.urgency?.earlyBirdDeadline || GENERAL.earlyBirdDeadline;
-  const effRegistrationDeadline = page?.urgency?.registrationDeadline || GENERAL.registrationDeadline;
-  const effTgUsername = settings?.telegramUsername || GENERAL.contactTelegramUsername;
-  const effPhone = settings?.phone || GENERAL.contactPhone;
-  const effTgUrl = settings?.telegramUsername 
-    ? `https://t.me/${settings.telegramUsername.replace('@', '')}` 
-    : GENERAL.contactTelegramUrl;
+  const effTgUsername = page?.isolatedSettings?.telegramUsername || settings?.telegramUsername || GENERAL.contactTelegramUsername;
+  const effPhone = page?.isolatedSettings?.phone || settings?.phone || GENERAL.contactPhone;
+  const effTgUrl = page?.isolatedSettings?.telegramUrl || (effTgUsername 
+    ? `https://t.me/${effTgUsername.replace('@', '')}` 
+    : GENERAL.contactTelegramUrl);
 
   const [claimedSeats, setClaimedSeats] = useState(effClaimedSeats);
 
@@ -414,6 +414,12 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
         setSubmitted(true);
         setClaimedSeats(prev => Math.min(prev + 1, effTotalSeats));
         trackLandingEvent(page, 'form_submit', { seat: selectedSeat, profile: regProfile, value: effEarlyBirdPrice }, lang);
+
+        if (page?.isolatedSettings?.postSubmitAction === 'redirect' && page?.isolatedSettings?.redirectUrl) {
+          setTimeout(() => {
+            window.location.href = page.isolatedSettings!.redirectUrl!;
+          }, 1500);
+        }
       } else {
         alert(data.error || 'Submission failed. Please try again.');
       }
@@ -428,9 +434,10 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
   const availableSeats = Array.from({ length: effTotalSeats }, (_, i) => i + 1).filter(n => n > claimedSeats);
 
   return (
-    <div className={`app-shell-root${lang === 'kh' ? ' lang-kh' : ''}`}>
-      {/* ── Tracking Engine (Internal Analytics & External Pixels) ── */}
-      <LandingPageTracking page={page} lang={lang} />
+    <PagePasswordGate page={page}>
+      <div className={`app-shell-root${lang === 'kh' ? ' lang-kh' : ''}`}>
+        {/* ── Tracking Engine (Internal Analytics & External Pixels) ── */}
+        <LandingPageTracking page={page} lang={lang} />
 
       {/* Fake Mobile Device Container */}
       <div className="mobile-frame">
@@ -960,5 +967,6 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
 
       </div>
     </div>
+    </PagePasswordGate>
   );
 }

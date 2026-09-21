@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { LandingPage, SystemSettings } from '@/lib/types';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
+import PagePasswordGate from '@/components/common/PagePasswordGate';
 
 export default function SmartCityOptinView({ page, settings, initialLang }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh' } = {}) {
   const [lang, setLang] = useState<'en' | 'kh'>(initialLang || 'en');
@@ -26,9 +27,9 @@ export default function SmartCityOptinView({ page, settings, initialLang }: { pa
 
   const effTotalSeats = page?.urgency?.totalSeats ?? 30;
   const effEarlyBirdPrice = page?.urgency?.earlyBirdPrice ? (Number(page.urgency.earlyBirdPrice) || 499) : 499;
-  const effTgUrl = settings?.telegramUsername
-    ? `https://t.me/${settings.telegramUsername.replace('@', '')}`
-    : 'https://t.me/khbevents';
+  const effTgUrl = page?.isolatedSettings?.telegramUrl || (page?.isolatedSettings?.telegramUsername 
+    ? `https://t.me/${page.isolatedSettings.telegramUsername.replace('@', '')}` 
+    : (settings?.telegramUsername ? `https://t.me/${settings.telegramUsername.replace('@', '')}` : 'https://t.me/khbevents'));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +53,12 @@ export default function SmartCityOptinView({ page, settings, initialLang }: { pa
       if (res.ok && data.success) {
         setSubmitted(true);
         trackLandingEvent(page, 'form_submit', { profile: 'Fast Opt-in', value: effEarlyBirdPrice }, lang);
+
+        if (page?.isolatedSettings?.postSubmitAction === 'redirect' && page?.isolatedSettings?.redirectUrl) {
+          setTimeout(() => {
+            window.location.href = page.isolatedSettings!.redirectUrl!;
+          }, 1500);
+        }
       } else {
         alert(data.error || 'Submission failed. Please try again.');
       }
@@ -65,16 +72,17 @@ export default function SmartCityOptinView({ page, settings, initialLang }: { pa
   const isKh = lang === 'kh';
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      background: 'linear-gradient(160deg, #0F2E20 0%, #091E14 70%)',
-      fontFamily: isKh ? "'Hanuman', 'Kantumruy Pro', sans-serif" : "'Plus Jakarta Sans', sans-serif"
-    }}>
-      <LandingPageTracking page={page} lang={lang} />
+    <PagePasswordGate page={page}>
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        background: 'linear-gradient(160deg, #0F2E20 0%, #091E14 70%)',
+        fontFamily: isKh ? "'Hanuman', 'Kantumruy Pro', sans-serif" : "'Plus Jakarta Sans', sans-serif"
+      }}>
+        <LandingPageTracking page={page} lang={lang} />
       <div style={{ width: '100%', maxWidth: '440px' }}>
         <div style={{
           background: '#FFFFFF',
@@ -306,5 +314,6 @@ export default function SmartCityOptinView({ page, settings, initialLang }: { pa
         </div>
       </div>
     </div>
+    </PagePasswordGate>
   );
 }

@@ -44,6 +44,7 @@ function rowToLandingPage(row: any): LandingPage {
     guarantee: row.guarantee || extra.guarantee || undefined,
     translations: row.translations || extra.translations || undefined,
     tracking: row.tracking || extra.tracking || undefined,
+    isolatedSettings: row.isolatedSettings || row.isolated_settings || extra.isolatedSettings || undefined,
     formConfig: {
       headline: row.form_config?.headline || 'Inquire or Register',
       subheadline: row.form_config?.subheadline || 'Fill in your details below and our team will get in touch.',
@@ -83,6 +84,7 @@ function landingPageToRow(page: LandingPage) {
       guarantee: page.guarantee,
       translations: page.translations,
       tracking: page.tracking,
+      isolatedSettings: page.isolatedSettings,
     }
   };
 
@@ -141,6 +143,7 @@ function rowToLead(row: any): Lead {
     packageInterest: row.package_interest || undefined,
     message: row.message || undefined,
     customFields: row.custom_fields || undefined,
+    tags: Array.isArray(row.tags) ? row.tags : (Array.isArray(row.custom_fields?._tags) ? row.custom_fields._tags : []),
     status: row.status || 'NEW',
     notes: Array.isArray(row.notes) ? row.notes : [],
     utmSource: row.utm_source || undefined,
@@ -300,7 +303,10 @@ export async function supabaseCreateLead(lead: Lead): Promise<Lead> {
       utm_source: lead.utmSource,
       utm_medium: lead.utmMedium,
       utm_campaign: lead.utmCampaign,
-      custom_fields: lead.customFields,
+      custom_fields: {
+        ...(lead.customFields || {}),
+        _tags: lead.tags || []
+      },
       created_at: lead.createdAt,
       updated_at: lead.updatedAt,
     });
