@@ -9,14 +9,60 @@ import {
   ExternalLink, 
   Plus, 
   Trash2, 
-  CheckCircle2
+  CheckCircle2,
+  Calendar,
+  DollarSign,
+  Clock,
+  Star,
+  Image as ImageIcon,
+  HelpCircle,
+  ShieldCheck,
+  Users,
+  Sparkles,
+  Eye,
+  EyeOff,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  Tag,
+  AlertTriangle,
+  Award,
+  Layers,
+  HeartHandshake
 } from 'lucide-react';
-import { LandingPage, PackageTier, HighlightItem, FaqItem } from '@/lib/types';
+import { 
+  LandingPage, 
+  PackageTier, 
+  HighlightItem, 
+  FaqItem, 
+  TestimonialItem, 
+  CoreValueItem, 
+  ProblemItem, 
+  AudienceItem, 
+  ItineraryDay, 
+  InclusionItem, 
+  FormField,
+  SectionVisibility
+} from '@/lib/types';
 
 interface PageEditorProps {
   initialData?: Partial<LandingPage>;
   isNew?: boolean;
 }
+
+const PRESET_PHOTOS = [
+  '/photos/photo_2026-09-16_22-01-09 (2).jpg',
+  '/photos/photo_2026-09-16_22-01-09 (7).jpg',
+  '/photos/photo_2026-09-16_22-01-09 (4).jpg',
+  '/photos/photo_2026-09-16_22-01-09 (6).jpg',
+  '/photos/photo_2026-09-16_22-01-09 (11).jpg',
+  '/photos/photo_2026-09-16_22-01-09 (9).jpg',
+  '/photos/photo_2026-09-16_22-01-09 (3).jpg',
+  '/photos/photo_2026-09-16_22-01-09 (8).jpg',
+  '/photos/photo_2026-09-16_22-01-09 (5).jpg',
+  '/photos/photo_2026-09-16_22-01-09 (10).jpg',
+  '/photos/photo_2026-09-16_22-01-09.jpg',
+];
 
 export default function PageEditor({ initialData, isNew = false }: PageEditorProps) {
   const router = useRouter();
@@ -27,126 +73,163 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     slug: initialData?.slug || '',
     subtitle: initialData?.subtitle || '',
     description: initialData?.description || '',
-    category: initialData?.category || 'Corporate Events',
+    category: initialData?.category || 'Trade Delegation',
     badge: initialData?.badge || '',
     status: initialData?.status || 'published',
     heroHeadline: initialData?.heroHeadline || '',
     heroSubheadline: initialData?.heroSubheadline || '',
-    heroCtaText: initialData?.heroCtaText || 'Register Now',
+    heroCtaText: initialData?.heroCtaText || 'Reserve Your Seat ($499)',
     heroCtaLink: initialData?.heroCtaLink || '#booking-form',
-    heroImage: initialData?.heroImage || '/images/events/photo_2026-09-16_22-01-09.jpg',
-    eventDate: initialData?.eventDate || '',
-    eventTime: initialData?.eventTime || '',
-    venue: initialData?.venue || '',
-    venueAddress: initialData?.venueAddress || '',
+    heroImage: initialData?.heroImage || '/photos/photo_2026-09-16_22-01-09 (2).jpg',
+    videoUrl: initialData?.videoUrl || '',
+    eventDate: initialData?.eventDate || '2026-10-08',
+    eventTime: initialData?.eventTime || '4 Days / 3 Nights',
+    venue: initialData?.venue || 'Hanoi & Halong Bay, Vietnam',
+    venueAddress: initialData?.venueAddress || 'Vietnam Exhibition Center & Halong Bay UNESCO World Heritage Site',
     countdownEnabled: initialData?.countdownEnabled ?? true,
+    urgency: initialData?.urgency || {
+      totalSeats: 30,
+      claimedSeats: 19,
+      earlyBirdPrice: 499,
+      regularPrice: 550,
+      earlyBirdDeadline: '2026-09-08T23:59:59',
+      registrationDeadline: '2026-09-20T23:59:59',
+      noticeText: 'Early Bird Special: Save $51 before Sept 8, 2026 | Strictly limited to 30 seats',
+      riskNote: 'No payment today • Seat held instantly • Reply within 15 mins'
+    },
+    sectionVisibility: initialData?.sectionVisibility || {
+      hero: true,
+      urgency: true,
+      coreValues: true,
+      problems: true,
+      audiences: true,
+      itinerary: true,
+      valueStack: true,
+      packages: true,
+      gallery: true,
+      testimonials: true,
+      faqs: true,
+      guarantee: true,
+      form: true
+    },
     highlights: initialData?.highlights || [
-      { id: 'h1', title: 'Curated 1-on-1 Business Matching', description: 'Pre-arranged bilateral commercial meetings.' }
+      { id: 'h1', title: '2 International Trade Expos', description: 'VIP Passes to Cafe Show & Smart City Expo.', icon: 'Building2' }
     ],
+    coreValues: initialData?.coreValues || [
+      { id: 'cv-1', num: '01', icon: 'chart', title: 'Factory-Direct Pricing Power', desc: 'Buy at the source and cut 25% - 35% off what middlemen charge.' }
+    ],
+    problems: initialData?.problems || [
+      { id: 'p1', icon: 'trending-down', title: 'Middleman Markups', desc: 'Buying through brokers adds 25% - 35% to every order.' }
+    ],
+    audiences: initialData?.audiences || [
+      { id: 'a1', icon: 'coffee', title: 'Cafe & Tea Brand Owners', tag: 'F&B Roasters', desc: 'Discover premium Vietnamese tea, coffee beans, and commercial espresso machinery.' }
+    ],
+    itinerary: initialData?.itinerary || [
+      {
+        id: 'itin-1',
+        day: 1,
+        date: 'Oct 8, 2026',
+        title: 'Phnom Penh to Hanoi & Welcome Night',
+        events: [
+          { time: '17:45 - 21:35', activity: 'Flight from Phnom Penh to Hanoi (Noi Bai International Airport)' }
+        ]
+      }
+    ],
+    valueStack: initialData?.valueStack || {
+      tag: 'Value Stack',
+      title: 'One Price. Nine Things Fully Handled.',
+      subtitle: 'Everything below is included in your seat. Arrange each of these yourself and the same trip would cost you far more.',
+      totalLabel: 'Total standalone value',
+      totalValue: '$910+',
+      payLabel: 'Your Early Bird investment',
+      inclusions: [
+        { id: 'inc-1', title: 'Roundtrip Flight Tickets', desc: 'Phnom Penh - Hanoi roundtrip flights included.', standalonePrice: 220 }
+      ]
+    },
     packages: initialData?.packages || [
       {
         id: 'pkg-1',
-        name: 'VIP Delegate Pass',
-        price: '$1,500',
-        period: 'per person',
-        description: 'Full all-inclusive access',
+        name: 'Early Bird Admission',
+        price: '$499',
+        period: 'per delegate (save $51)',
+        description: 'Most popular choice for founders, importers, and F&B entrepreneurs.',
         popular: true,
-        features: ['5-Star Hotel Stay', 'VIP Seating', 'Networking Dinners'],
-        ctaText: 'Select Pass'
+        features: ['Roundtrip Flights', 'Hotel 4D/3N Stay', 'VIP Expo Passes', 'Halong Bay Cruise'],
+        ctaText: 'Lock In $499 Early Bird Rate'
       }
     ],
-    faqs: initialData?.faqs || [
-      { id: 'f1', question: 'How do I confirm my registration?', answer: 'Our team will contact you to finalize billing.' }
+    gallery: initialData?.gallery || [
+      '/photos/photo_2026-09-16_22-01-09 (2).jpg',
+      '/photos/photo_2026-09-16_22-01-09 (7).jpg',
+      '/photos/photo_2026-09-16_22-01-09 (4).jpg'
     ],
+    testimonials: initialData?.testimonials || [
+      { id: 't1', name: 'Dara S.', role: 'Cafe Chain CEO', company: 'Phnom Penh Roastery', quote: 'I met five roasters in one day and cut my bean sourcing cost by 30%.', rating: 5 }
+    ],
+    faqs: initialData?.faqs || [
+      { id: 'f1', question: 'Do I need a visa for Vietnam?', answer: 'Cambodian passport holders can enter Vietnam visa-free for up to 30 days.' }
+    ],
+    guarantee: initialData?.guarantee || {
+      title: 'Your Reservation is 100% Risk-Free',
+      subtitle: 'You pay nothing today until you have spoken with our team and decided this delegation is right for your business.',
+      badge: '100% Risk Reversal Guarantee',
+      points: [
+        'No payment today — reserve with just your name & phone number',
+        'Official corporate tax invoice & complete itinerary sent via Telegram',
+        'Full refund if the organizer cancels the delegation'
+      ]
+    },
     formConfig: initialData?.formConfig || {
-      headline: 'Reserve Your Registration',
-      subheadline: 'Fill in your details below and our team will get in touch.',
-      submitButtonText: 'Submit Registration',
-      successMessage: 'Thank you! Your registration has been received.',
-      fields: []
+      headline: 'Reserve Your Delegation Seat',
+      subheadline: 'Strictly limited to 30 seats cohort. Our trip coordinator responds in under 15 minutes.',
+      submitButtonText: 'Reserve My Seat Now',
+      successMessage: 'Thank you! Your seat reservation request has been received.',
+      fields: [
+        { id: 'fullName', label: 'Full Name', type: 'text', placeholder: 'e.g. Sok Sovann', required: true },
+        { id: 'phone', label: 'Phone / Telegram', type: 'tel', placeholder: 'e.g. 012 345 678', required: true }
+      ]
     },
     metaTitle: initialData?.metaTitle || '',
-    metaDescription: initialData?.metaDescription || ''
+    metaDescription: initialData?.metaDescription || '',
+    ogImage: initialData?.ogImage || ''
   });
 
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<'general' | 'hero' | 'event' | 'packages' | 'highlights' | 'faqs' | 'seo'>('general');
+  
+  type TabType = 
+    | 'general' 
+    | 'hero' 
+    | 'event' 
+    | 'packages' 
+    | 'itinerary' 
+    | 'values' 
+    | 'problems' 
+    | 'audiences' 
+    | 'valueStack' 
+    | 'testimonials' 
+    | 'gallery' 
+    | 'faqs' 
+    | 'guarantee' 
+    | 'form' 
+    | 'seo';
 
-  const addHighlight = () => {
-    const newH: HighlightItem = {
-      id: `h-${Date.now()}`,
-      title: 'New Highlight',
-      description: 'Description of key feature or selling point.'
-    };
-    setFormData({ ...formData, highlights: [...(formData.highlights || []), newH] });
-  };
+  const [activeTab, setActiveTab] = useState<TabType>('general');
+  const [newGalleryUrl, setNewGalleryUrl] = useState('');
+  const [newFeatureText, setNewFeatureText] = useState<{ [pkgIdx: number]: string }>({});
 
-  const updateHighlight = (index: number, field: string, value: string) => {
-    const arr = [...(formData.highlights || [])];
-    arr[index] = { ...arr[index], [field]: value };
-    setFormData({ ...formData, highlights: arr });
-  };
-
-  const removeHighlight = (index: number) => {
-    const arr = (formData.highlights || []).filter((_, i) => i !== index);
-    setFormData({ ...formData, highlights: arr });
-  };
-
-  const addPackage = () => {
-    const newPkg: PackageTier = {
-      id: `pkg-${Date.now()}`,
-      name: 'Standard Package',
-      price: '$1,000',
-      period: 'per delegate',
-      description: 'Standard event participation',
-      popular: false,
-      features: ['Event access', 'Lunch & refreshments'],
-      ctaText: 'Choose Standard'
-    };
-    setFormData({ ...formData, packages: [...(formData.packages || []), newPkg] });
-  };
-
-  const updatePackage = (index: number, field: string, value: any) => {
-    const arr = [...(formData.packages || [])];
-    arr[index] = { ...arr[index], [field]: value };
-    setFormData({ ...formData, packages: arr });
-  };
-
-  const removePackage = (index: number) => {
-    const arr = (formData.packages || []).filter((_, i) => i !== index);
-    setFormData({ ...formData, packages: arr });
-  };
-
-  const addFaq = () => {
-    const newF: FaqItem = {
-      id: `f-${Date.now()}`,
-      question: 'New Question?',
-      answer: 'Answer to this common inquiry.'
-    };
-    setFormData({ ...formData, faqs: [...(formData.faqs || []), newF] });
-  };
-
-  const updateFaq = (index: number, field: string, value: string) => {
-    const arr = [...(formData.faqs || [])];
-    arr[index] = { ...arr[index], [field]: value };
-    setFormData({ ...formData, faqs: arr });
-  };
-
-  const removeFaq = (index: number) => {
-    const arr = (formData.faqs || []).filter((_, i) => i !== index);
-    setFormData({ ...formData, faqs: arr });
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SAVE HANDLER
+  // ─────────────────────────────────────────────────────────────────────────────
+  const handleSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setSaving(true);
     setError('');
     setSaveSuccess(false);
 
     if (!formData.title || !formData.slug) {
-      setError('Title and Slug are required');
+      setError('Title and Slug are required to publish the landing page.');
       setSaving(false);
       return;
     }
@@ -167,7 +250,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
       }
 
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      setTimeout(() => setSaveSuccess(false), 3500);
 
       if (isNew && data.page?.id) {
         router.push(`/admin/pages/${data.page.id}`);
@@ -179,23 +262,455 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     }
   };
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SECTION VISIBILITY TOGGLES
+  // ─────────────────────────────────────────────────────────────────────────────
+  const toggleSection = (sectionKey: keyof SectionVisibility) => {
+    const current = formData.sectionVisibility || {};
+    const updated = {
+      ...current,
+      [sectionKey]: current[sectionKey] === false ? true : false
+    };
+    setFormData({ ...formData, sectionVisibility: updated });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PACKAGES CRUD
+  // ─────────────────────────────────────────────────────────────────────────────
+  const addPackage = () => {
+    const newPkg: PackageTier = {
+      id: `pkg-${Date.now()}`,
+      name: 'New Package Tier',
+      price: '$500',
+      period: 'per delegate',
+      description: 'Full all-inclusive access to expos and business meetings.',
+      popular: false,
+      features: ['Roundtrip Flights', 'Hotel 4D/3N Stay', 'VIP Expo Passes'],
+      ctaText: 'Select Pass'
+    };
+    setFormData({ ...formData, packages: [...(formData.packages || []), newPkg] });
+  };
+
+  const updatePackage = (index: number, field: keyof PackageTier, value: any) => {
+    const arr = [...(formData.packages || [])];
+    arr[index] = { ...arr[index], [field]: value };
+    setFormData({ ...formData, packages: arr });
+  };
+
+  const removePackage = (index: number) => {
+    const arr = (formData.packages || []).filter((_, i) => i !== index);
+    setFormData({ ...formData, packages: arr });
+  };
+
+  const addPackageFeature = (pkgIdx: number) => {
+    const text = (newFeatureText[pkgIdx] || '').trim();
+    if (!text) return;
+    const arr = [...(formData.packages || [])];
+    arr[pkgIdx].features = [...(arr[pkgIdx].features || []), text];
+    setFormData({ ...formData, packages: arr });
+    setNewFeatureText({ ...newFeatureText, [pkgIdx]: '' });
+  };
+
+  const removePackageFeature = (pkgIdx: number, fIdx: number) => {
+    const arr = [...(formData.packages || [])];
+    arr[pkgIdx].features = (arr[pkgIdx].features || []).filter((_, i) => i !== fIdx);
+    setFormData({ ...formData, packages: arr });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // ITINERARY CRUD
+  // ─────────────────────────────────────────────────────────────────────────────
+  const addDay = () => {
+    const nextDayNum = (formData.itinerary?.length || 0) + 1;
+    const newDay: ItineraryDay = {
+      id: `itin-${Date.now()}`,
+      day: nextDayNum,
+      date: `Day ${nextDayNum} Date`,
+      title: `Day ${nextDayNum} Agenda Title`,
+      events: [
+        { time: '08:00 - 09:00', activity: 'Buffet breakfast at hotel', desc: '' },
+        { time: '09:30 - 12:00', activity: 'Morning Expo / Factory Session', desc: '' }
+      ]
+    };
+    setFormData({ ...formData, itinerary: [...(formData.itinerary || []), newDay] });
+  };
+
+  const updateDay = (dayIdx: number, field: keyof ItineraryDay, value: any) => {
+    const arr = [...(formData.itinerary || [])];
+    arr[dayIdx] = { ...arr[dayIdx], [field]: value };
+    setFormData({ ...formData, itinerary: arr });
+  };
+
+  const removeDay = (dayIdx: number) => {
+    const arr = (formData.itinerary || []).filter((_, i) => i !== dayIdx);
+    setFormData({ ...formData, itinerary: arr });
+  };
+
+  const addEventToDay = (dayIdx: number) => {
+    const arr = [...(formData.itinerary || [])];
+    arr[dayIdx].events = [
+      ...(arr[dayIdx].events || []),
+      { time: '14:00 - 16:00', activity: 'New Itinerary Session / Meeting', desc: '' }
+    ];
+    setFormData({ ...formData, itinerary: arr });
+  };
+
+  const updateEventInDay = (dayIdx: number, eventIdx: number, field: string, value: string) => {
+    const arr = [...(formData.itinerary || [])];
+    arr[dayIdx].events[eventIdx] = { ...arr[dayIdx].events[eventIdx], [field]: value };
+    setFormData({ ...formData, itinerary: arr });
+  };
+
+  const removeEventFromDay = (dayIdx: number, eventIdx: number) => {
+    const arr = [...(formData.itinerary || [])];
+    arr[dayIdx].events = arr[dayIdx].events.filter((_, i) => i !== eventIdx);
+    setFormData({ ...formData, itinerary: arr });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // CORE VALUES & HIGHLIGHTS CRUD
+  // ─────────────────────────────────────────────────────────────────────────────
+  const addCoreValue = () => {
+    const nextNum = String((formData.coreValues?.length || 0) + 1).padStart(2, '0');
+    const newCV: CoreValueItem = {
+      id: `cv-${Date.now()}`,
+      num: nextNum,
+      icon: 'chart',
+      title: 'New Core Outcome',
+      desc: 'Explain the tangible business outcome the client gets.'
+    };
+    setFormData({ ...formData, coreValues: [...(formData.coreValues || []), newCV] });
+  };
+
+  const updateCoreValue = (idx: number, field: keyof CoreValueItem, value: string) => {
+    const arr = [...(formData.coreValues || [])];
+    arr[idx] = { ...arr[idx], [field]: value };
+    setFormData({ ...formData, coreValues: arr });
+  };
+
+  const removeCoreValue = (idx: number) => {
+    const arr = (formData.coreValues || []).filter((_, i) => i !== idx);
+    setFormData({ ...formData, coreValues: arr });
+  };
+
+  const addHighlight = () => {
+    const newH: HighlightItem = {
+      id: `h-${Date.now()}`,
+      title: 'New Program Highlight',
+      description: 'Key benefit or differentiator for delegates.',
+      icon: 'Sparkles'
+    };
+    setFormData({ ...formData, highlights: [...(formData.highlights || []), newH] });
+  };
+
+  const updateHighlight = (idx: number, field: keyof HighlightItem, value: string) => {
+    const arr = [...(formData.highlights || [])];
+    arr[idx] = { ...arr[idx], [field]: value };
+    setFormData({ ...formData, highlights: arr });
+  };
+
+  const removeHighlight = (idx: number) => {
+    const arr = (formData.highlights || []).filter((_, i) => i !== idx);
+    setFormData({ ...formData, highlights: arr });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PROBLEMS CRUD
+  // ─────────────────────────────────────────────────────────────────────────────
+  const addProblem = () => {
+    const newP: ProblemItem = {
+      id: `p-${Date.now()}`,
+      icon: 'trending-down',
+      title: 'Costly Problem or Obstacle',
+      desc: 'Explain what currently costs the client time or money.'
+    };
+    setFormData({ ...formData, problems: [...(formData.problems || []), newP] });
+  };
+
+  const updateProblem = (idx: number, field: keyof ProblemItem, value: string) => {
+    const arr = [...(formData.problems || [])];
+    arr[idx] = { ...arr[idx], [field]: value };
+    setFormData({ ...formData, problems: arr });
+  };
+
+  const removeProblem = (idx: number) => {
+    const arr = (formData.problems || []).filter((_, i) => i !== idx);
+    setFormData({ ...formData, problems: arr });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // AUDIENCES CRUD
+  // ─────────────────────────────────────────────────────────────────────────────
+  const addAudience = () => {
+    const newA: AudienceItem = {
+      id: `aud-${Date.now()}`,
+      icon: 'users',
+      title: 'Target Buyer / Industry Group',
+      tag: 'Industry Tag',
+      desc: 'Who should participate and why this is engineered for them.'
+    };
+    setFormData({ ...formData, audiences: [...(formData.audiences || []), newA] });
+  };
+
+  const updateAudience = (idx: number, field: keyof AudienceItem, value: string) => {
+    const arr = [...(formData.audiences || [])];
+    arr[idx] = { ...arr[idx], [field]: value };
+    setFormData({ ...formData, audiences: arr });
+  };
+
+  const removeAudience = (idx: number) => {
+    const arr = (formData.audiences || []).filter((_, i) => i !== idx);
+    setFormData({ ...formData, audiences: arr });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // VALUE STACK & INCLUSIONS CRUD
+  // ─────────────────────────────────────────────────────────────────────────────
+  const addInclusion = () => {
+    const newInc: InclusionItem = {
+      id: `inc-${Date.now()}`,
+      title: 'Included Item / Service',
+      desc: 'Details of this inclusion provided to delegates.',
+      standalonePrice: 100
+    };
+    const currentStack = formData.valueStack || {
+      tag: 'Value Stack',
+      title: 'One Price. Nine Things Fully Handled.',
+      subtitle: 'Everything below is included in your seat.',
+      totalLabel: 'Total standalone value',
+      totalValue: '$900+',
+      inclusions: []
+    };
+    setFormData({
+      ...formData,
+      valueStack: {
+        ...currentStack,
+        inclusions: [...(currentStack.inclusions || []), newInc]
+      }
+    });
+  };
+
+  const updateInclusion = (idx: number, field: keyof InclusionItem, value: any) => {
+    const currentStack = formData.valueStack;
+    if (!currentStack) return;
+    const arr = [...currentStack.inclusions];
+    arr[idx] = { ...arr[idx], [field]: value };
+    setFormData({
+      ...formData,
+      valueStack: { ...currentStack, inclusions: arr }
+    });
+  };
+
+  const removeInclusion = (idx: number) => {
+    const currentStack = formData.valueStack;
+    if (!currentStack) return;
+    const arr = currentStack.inclusions.filter((_, i) => i !== idx);
+    setFormData({
+      ...formData,
+      valueStack: { ...currentStack, inclusions: arr }
+    });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // TESTIMONIALS CRUD
+  // ─────────────────────────────────────────────────────────────────────────────
+  const addTestimonial = () => {
+    const newT: TestimonialItem = {
+      id: `t-${Date.now()}`,
+      name: 'Client Name',
+      role: 'Founder / CEO',
+      company: 'Company Ltd.',
+      quote: 'Attending this event gave our business incredible returns and direct contacts.',
+      rating: 5
+    };
+    setFormData({ ...formData, testimonials: [...(formData.testimonials || []), newT] });
+  };
+
+  const updateTestimonial = (idx: number, field: keyof TestimonialItem, value: any) => {
+    const arr = [...(formData.testimonials || [])];
+    arr[idx] = { ...arr[idx], [field]: value };
+    setFormData({ ...formData, testimonials: arr });
+  };
+
+  const removeTestimonial = (idx: number) => {
+    const arr = (formData.testimonials || []).filter((_, i) => i !== idx);
+    setFormData({ ...formData, testimonials: arr });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // GALLERY CRUD
+  // ─────────────────────────────────────────────────────────────────────────────
+  const addGalleryImage = (url: string) => {
+    const clean = url.trim();
+    if (!clean) return;
+    setFormData({ ...formData, gallery: [...(formData.gallery || []), clean] });
+    setNewGalleryUrl('');
+  };
+
+  const removeGalleryImage = (idx: number) => {
+    const arr = (formData.gallery || []).filter((_, i) => i !== idx);
+    setFormData({ ...formData, gallery: arr });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // FAQS CRUD
+  // ─────────────────────────────────────────────────────────────────────────────
+  const addFaq = () => {
+    const newF: FaqItem = {
+      id: `f-${Date.now()}`,
+      question: 'Frequently Asked Question?',
+      answer: 'Clear, reassuring answer for prospective delegates.'
+    };
+    setFormData({ ...formData, faqs: [...(formData.faqs || []), newF] });
+  };
+
+  const updateFaq = (idx: number, field: keyof FaqItem, value: string) => {
+    const arr = [...(formData.faqs || [])];
+    arr[idx] = { ...arr[idx], [field]: value };
+    setFormData({ ...formData, faqs: arr });
+  };
+
+  const removeFaq = (idx: number) => {
+    const arr = (formData.faqs || []).filter((_, i) => i !== idx);
+    setFormData({ ...formData, faqs: arr });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // GUARANTEE CRUD
+  // ─────────────────────────────────────────────────────────────────────────────
+  const addGuaranteePoint = () => {
+    const currentG = formData.guarantee || {
+      title: '100% Risk-Free Reservation',
+      subtitle: 'You pay nothing today until your seat is confirmed.',
+      points: []
+    };
+    setFormData({
+      ...formData,
+      guarantee: {
+        ...currentG,
+        points: [...(currentG.points || []), 'No upfront payment required — reserve with your name & phone number']
+      }
+    });
+  };
+
+  const updateGuaranteePoint = (idx: number, text: string) => {
+    const currentG = formData.guarantee;
+    if (!currentG) return;
+    const arr = [...(currentG.points || [])];
+    arr[idx] = text;
+    setFormData({
+      ...formData,
+      guarantee: { ...currentG, points: arr }
+    });
+  };
+
+  const removeGuaranteePoint = (idx: number) => {
+    const currentG = formData.guarantee;
+    if (!currentG) return;
+    const arr = (currentG.points || []).filter((_, i) => i !== idx);
+    setFormData({
+      ...formData,
+      guarantee: { ...currentG, points: arr }
+    });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // FORM FIELDS CRUD
+  // ─────────────────────────────────────────────────────────────────────────────
+  const addFormField = () => {
+    const currentForm = formData.formConfig || {
+      headline: 'Reserve Your Registration',
+      subheadline: 'Fill in your details below.',
+      submitButtonText: 'Submit Registration',
+      successMessage: 'Thank you! We will get in touch shortly.',
+      fields: []
+    };
+    const newField: FormField = {
+      id: `field_${Date.now()}`,
+      label: 'New Field Label',
+      type: 'text',
+      placeholder: 'Enter details...',
+      required: false
+    };
+    setFormData({
+      ...formData,
+      formConfig: {
+        ...currentForm,
+        fields: [...(currentForm.fields || []), newField]
+      }
+    });
+  };
+
+  const updateFormField = (idx: number, field: keyof FormField, value: any) => {
+    const currentForm = formData.formConfig;
+    if (!currentForm) return;
+    const arr = [...currentForm.fields];
+    arr[idx] = { ...arr[idx], [field]: value };
+    setFormData({
+      ...formData,
+      formConfig: { ...currentForm, fields: arr }
+    });
+  };
+
+  const removeFormField = (idx: number) => {
+    const currentForm = formData.formConfig;
+    if (!currentForm) return;
+    const arr = currentForm.fields.filter((_, i) => i !== idx);
+    setFormData({
+      ...formData,
+      formConfig: { ...currentForm, fields: arr }
+    });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // TAB DEFINITIONS
+  // ─────────────────────────────────────────────────────────────────────────────
+  const tabs: { id: TabType; label: string; count?: number }[] = [
+    { id: 'general', label: 'General & Toggles' },
+    { id: 'hero', label: 'Hero Section' },
+    { id: 'event', label: 'Date & Urgency' },
+    { id: 'packages', label: 'Pricing Tiers', count: formData.packages?.length },
+    { id: 'itinerary', label: 'Itinerary / Days', count: formData.itinerary?.length },
+    { id: 'values', label: 'Core Values', count: (formData.coreValues?.length || 0) + (formData.highlights?.length || 0) },
+    { id: 'problems', label: 'Problem vs Solution', count: formData.problems?.length },
+    { id: 'audiences', label: 'Target Audience', count: formData.audiences?.length },
+    { id: 'valueStack', label: 'Value Stack', count: formData.valueStack?.inclusions?.length },
+    { id: 'testimonials', label: 'Testimonials', count: formData.testimonials?.length },
+    { id: 'gallery', label: 'Visual Gallery', count: formData.gallery?.length },
+    { id: 'faqs', label: 'FAQs', count: formData.faqs?.length },
+    { id: 'guarantee', label: 'Guarantee & Trust', count: formData.guarantee?.points?.length },
+    { id: 'form', label: 'Lead Form', count: formData.formConfig?.fields?.length },
+    { id: 'seo', label: 'SEO & Social' }
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto pb-24">
       {/* Top action header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-emerald-900/40">
         <div className="flex items-center gap-3">
           <Link
             href="/admin/pages"
-            className="p-2 rounded-lg bg-slate-100 dark:bg-emerald-950 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-200 dark:border-emerald-800/50 transition-colors"
+            className="p-2.5 rounded-xl bg-slate-100 dark:bg-emerald-950 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-200 dark:border-emerald-800/50 transition-colors shadow-sm"
+            title="Back to Landing Pages"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">
-              {isNew ? 'Create New Landing Page' : `Edit: ${formData.title || 'Landing Page'}`}
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-gray-400 font-mono">
-              URL: /{formData.slug || 'your-slug'}
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white">
+                {isNew ? 'Create New Landing Page' : `Edit: ${formData.title || 'Untitled Campaign'}`}
+              </h1>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                formData.status === 'published' 
+                  ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700' 
+                  : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300'
+              }`}>
+                {formData.status}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-gray-400 font-mono flex items-center gap-1 mt-0.5">
+              <span>Path:</span>
+              <span className="text-amber-600 dark:text-amber-400 font-bold">/{formData.slug || 'your-slug'}</span>
             </p>
           </div>
         </div>
@@ -205,7 +720,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             <Link
               href={`/${formData.slug}`}
               target="_blank"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-emerald-950 hover:bg-slate-200 dark:hover:bg-emerald-900 border border-slate-200 dark:border-emerald-800 text-slate-800 dark:text-emerald-300 text-xs font-semibold transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-emerald-950 hover:bg-slate-200 dark:hover:bg-emerald-900 border border-slate-200 dark:border-emerald-800 text-slate-800 dark:text-emerald-300 text-xs font-semibold transition-colors shadow-sm"
             >
               <span>Preview Live</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -214,83 +729,90 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
           <button
             type="button"
-            onClick={handleSave}
+            onClick={() => handleSave()}
             disabled={saving}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer transition-all hover:scale-102"
           >
             <Save className="w-4 h-4 text-black" />
-            <span>{saving ? 'Saving...' : 'Save Page'}</span>
+            <span>{saving ? 'Saving...' : 'Save & Publish'}</span>
           </button>
         </div>
       </div>
 
       {saveSuccess && (
-        <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-500/60 text-xs text-emerald-800 dark:text-emerald-200 flex items-center gap-2 shadow-sm dark:shadow-lg">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          <span>Landing page saved and published successfully!</span>
+        <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-500/60 text-xs text-emerald-800 dark:text-emerald-200 flex items-center gap-2.5 shadow-md">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <div>
+            <strong>Success!</strong> All landing page sections and changes have been saved and published live.
+          </div>
         </div>
       )}
 
       {error && (
-        <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800/60 text-xs text-rose-800 dark:text-rose-200 shadow-sm dark:shadow-lg">
-          {error}
+        <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800/60 text-xs text-rose-800 dark:text-rose-200 shadow-md flex items-center gap-2.5">
+          <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-emerald-900/40 pb-2">
-        {[
-          { id: 'general', label: 'General & Slug' },
-          { id: 'hero', label: 'Hero Section' },
-          { id: 'event', label: 'Date & Venue' },
-          { id: 'packages', label: `Pricing Tiers (${formData.packages?.length || 0})` },
-          { id: 'highlights', label: `Highlights (${formData.highlights?.length || 0})` },
-          { id: 'faqs', label: `FAQs (${formData.faqs?.length || 0})` },
-          { id: 'seo', label: 'SEO & Metadata' }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              activeTab === tab.id
-                ? 'bg-amber-400 text-black shadow-md'
-                : 'bg-slate-100 dark:bg-emerald-950/60 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* Tabs list with counters */}
+      <div className="flex flex-wrap gap-1.5 border-b border-slate-200 dark:border-emerald-900/40 pb-2">
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                isActive
+                  ? 'bg-amber-400 text-black shadow-md'
+                  : 'bg-slate-100 dark:bg-emerald-950/60 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-emerald-900/40'
+              }`}
+            >
+              <span>{tab.label}</span>
+              {typeof tab.count === 'number' && (
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                  isActive ? 'bg-black text-amber-300' : 'bg-slate-200 dark:bg-emerald-900 text-slate-700 dark:text-emerald-200'
+                }`}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Form Body */}
+      {/* Main Container */}
       <div className="rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 p-6 sm:p-8 space-y-6 shadow-sm dark:shadow-xl transition-colors">
+        
+        {/* 1. GENERAL & TOGGLES */}
         {activeTab === 'general' && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Page Title <span className="text-amber-500 dark:text-amber-400">*</span>
+                  Page Title <span className="text-amber-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.title || ''}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g. Vietnam Smart City, Tea & Cafe Delegation"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
+                  placeholder="e.g. Smart City, Tea & Cafe Business Delegation 2026"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  URL Slug (sale.khbevents.com/...) <span className="text-amber-500 dark:text-amber-400">*</span>
+                  URL Slug (sale.khbevents.com/...) <span className="text-amber-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.slug || ''}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '-') })}
                   placeholder="e.g. smart-city-tea-cafe"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-amber-700 dark:text-amber-300 font-mono text-xs focus:outline-none focus:border-amber-400 transition-colors"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-amber-700 dark:text-amber-300 font-mono text-xs focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -302,21 +824,21 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   type="text"
                   value={formData.category || ''}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  placeholder="e.g. Trade Delegation, Corporate, Concert, Exhibition"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
+                  placeholder="e.g. Trade Delegation, Corporate, Exhibition"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Badge / Pill Text
+                  Badge / Top Pill Text
                 </label>
                 <input
                   type="text"
                   value={formData.badge || ''}
                   onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
-                  placeholder="e.g. Exclusive 30 VIP Seats Only"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
+                  placeholder="e.g. Strictly 30 Seats Cohort"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -327,7 +849,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 <select
                   value={formData.status || 'published'}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
                 >
                   <option value="published">Published (Active & Live)</option>
                   <option value="draft">Draft (Hidden)</option>
@@ -338,19 +860,74 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                Subtitle / Description Summary
+                Campaign Summary / Brief Overview
               </label>
               <textarea
                 rows={2}
                 value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Brief overview of what this event or sales campaign is about..."
-                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 resize-none transition-colors"
+                placeholder="Overview of this delegation or sales event..."
+                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs resize-none focus:outline-none focus:border-amber-400"
               />
+            </div>
+
+            {/* SECTION VISIBILITY TOGGLES PANEL */}
+            <div className="pt-4 border-t border-slate-200 dark:border-emerald-900/50 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-amber-500" />
+                    <span>Landing Page Section Display Toggles</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-gray-400">
+                    Easily turn individual landing page sections on or off to tailor the page flow.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {[
+                  { key: 'hero', label: 'Hero Banner' },
+                  { key: 'urgency', label: 'Urgency & Quota Bar' },
+                  { key: 'coreValues', label: 'Core Values' },
+                  { key: 'problems', label: 'Problem vs Solution' },
+                  { key: 'audiences', label: 'Target Audience' },
+                  { key: 'itinerary', label: 'Itinerary / Timetable' },
+                  { key: 'valueStack', label: 'Value Stack (9-in-1)' },
+                  { key: 'packages', label: 'Pricing Passes' },
+                  { key: 'gallery', label: 'Photo Gallery' },
+                  { key: 'testimonials', label: 'Testimonials' },
+                  { key: 'faqs', label: 'FAQs' },
+                  { key: 'guarantee', label: 'Risk-Free Guarantee' },
+                  { key: 'form', label: 'Lead Capture Form' }
+                ].map((s) => {
+                  const isVisible = formData.sectionVisibility?.[s.key as keyof SectionVisibility] !== false;
+                  return (
+                    <button
+                      key={s.key}
+                      type="button"
+                      onClick={() => toggleSection(s.key as keyof SectionVisibility)}
+                      className={`p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                        isVisible
+                          ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200'
+                          : 'bg-slate-50 dark:bg-[#060D0A] border-slate-200 dark:border-emerald-950 text-slate-400 dark:text-gray-500 opacity-60'
+                      }`}
+                    >
+                      <span className="text-xs font-bold">{s.label}</span>
+                      {isVisible ? (
+                        <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      ) : (
+                        <EyeOff className="w-4 h-4 text-slate-400 shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
 
+        {/* 2. HERO SECTION */}
         {activeTab === 'hero' && (
           <div className="space-y-4">
             <div>
@@ -362,7 +939,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 value={formData.heroHeadline || ''}
                 onChange={(e) => setFormData({ ...formData, heroHeadline: e.target.value })}
                 placeholder="e.g. Vietnam Smart City, Tea & Cafe B2B Business Delegation 2026"
-                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
+                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
               />
             </div>
 
@@ -371,11 +948,11 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 Hero Subheadline / Value Proposition
               </label>
               <textarea
-                rows={2}
+                rows={3}
                 value={formData.heroSubheadline || ''}
                 onChange={(e) => setFormData({ ...formData, heroSubheadline: e.target.value })}
                 placeholder="Expand on why delegates must attend..."
-                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 resize-none transition-colors"
+                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs resize-none focus:outline-none focus:border-amber-400"
               />
             </div>
 
@@ -388,40 +965,73 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   type="text"
                   value={formData.heroCtaText || ''}
                   onChange={(e) => setFormData({ ...formData, heroCtaText: e.target.value })}
-                  placeholder="e.g. Reserve Your VIP Seat"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
+                  placeholder="e.g. Reserve Your Seat ($499)"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Hero Image URL or Path
+                  Hero CTA Button Target Link / Anchor
                 </label>
                 <input
                   type="text"
-                  value={formData.heroImage || ''}
-                  onChange={(e) => setFormData({ ...formData, heroImage: e.target.value })}
-                  placeholder="/images/events/photo_2026-09-16_22-01-09.jpg"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
+                  value={formData.heroCtaLink || ''}
+                  onChange={(e) => setFormData({ ...formData, heroCtaLink: e.target.value })}
+                  placeholder="e.g. #booking-form or https://t.me/khbevents"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
                 />
+              </div>
+            </div>
+
+            {/* Hero Image Selection */}
+            <div className="space-y-2 pt-2">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300">
+                Hero Image URL
+              </label>
+              <input
+                type="text"
+                value={formData.heroImage || ''}
+                onChange={(e) => setFormData({ ...formData, heroImage: e.target.value })}
+                placeholder="/photos/photo_2026-09-16_22-01-09 (2).jpg"
+                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
+              />
+
+              <div className="text-[11px] text-slate-500 dark:text-gray-400 font-semibold pt-1">
+                Quick Select from Event Photo Library:
+              </div>
+              <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2 pt-1">
+                {PRESET_PHOTOS.map((photo, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, heroImage: photo })}
+                    className={`rounded-xl overflow-hidden aspect-[4/3] border-2 transition-all cursor-pointer ${
+                      formData.heroImage === photo ? 'border-amber-400 scale-105 shadow-md' : 'border-transparent opacity-75 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={photo} alt={`Preset ${i}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
               </div>
             </div>
           </div>
         )}
 
+        {/* 3. EVENT & URGENCY */}
         {activeTab === 'event' && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Event Date
+                  Event Start Date
                 </label>
                 <input
                   type="text"
                   value={formData.eventDate || ''}
                   onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-                  placeholder="e.g. 2026-10-15 or Oct 15-20, 2026"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
+                  placeholder="e.g. 2026-10-08 or Oct 8-11, 2026"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -433,8 +1043,8 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   type="text"
                   value={formData.eventTime || ''}
                   onChange={(e) => setFormData({ ...formData, eventTime: e.target.value })}
-                  placeholder="e.g. 5 Days / 4 Nights or 6:00 PM - 10:00 PM"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
+                  placeholder="e.g. 4 Days / 3 Nights"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -446,8 +1056,8 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   type="text"
                   value={formData.venue || ''}
                   onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                  placeholder="e.g. Diamond Island (Koh Pich) Hall G"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
+                  placeholder="e.g. Hanoi & Halong Bay, Vietnam"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -459,8 +1069,8 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   type="text"
                   value={formData.venueAddress || ''}
                   onChange={(e) => setFormData({ ...formData, venueAddress: e.target.value })}
-                  placeholder="e.g. Phnom Penh, Cambodia or Ho Chi Minh City, Vietnam"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
+                  placeholder="e.g. Vietnam Exhibition Center & Halong Bay"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
                 />
               </div>
             </div>
@@ -474,40 +1084,140 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-[#06100B] border-slate-300 dark:border-emerald-900 focus:ring-0 cursor-pointer"
               />
               <label htmlFor="countdownEnabled" className="text-xs text-slate-700 dark:text-gray-200 font-semibold cursor-pointer">
-                Enable live countdown timer in hero banner (targets event date)
+                Enable live countdown timer banner on landing page
               </label>
+            </div>
+
+            {/* Quota & Urgency Settings */}
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-4">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-500" />
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                  Seats Quota & Early Bird Pricing Anchor
+                </h4>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Total Seats</label>
+                  <input
+                    type="number"
+                    value={formData.urgency?.totalSeats ?? 30}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      urgency: { ...formData.urgency, totalSeats: Number(e.target.value) }
+                    })}
+                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Claimed Seats</label>
+                  <input
+                    type="number"
+                    value={formData.urgency?.claimedSeats ?? 19}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      urgency: { ...formData.urgency, claimedSeats: Number(e.target.value) }
+                    })}
+                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-amber-600 font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Early Bird Price ($)</label>
+                  <input
+                    type="text"
+                    value={formData.urgency?.earlyBirdPrice ?? 499}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      urgency: { ...formData.urgency, earlyBirdPrice: e.target.value }
+                    })}
+                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-emerald-600 font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Regular Price ($)</label>
+                  <input
+                    type="text"
+                    value={formData.urgency?.regularPrice ?? 550}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      urgency: { ...formData.urgency, regularPrice: e.target.value }
+                    })}
+                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-500 font-bold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Urgency Notice Banner Text</label>
+                <input
+                  type="text"
+                  value={formData.urgency?.noticeText || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    urgency: { ...formData.urgency, noticeText: e.target.value }
+                  })}
+                  placeholder="Early Bird Special: Save $51 before Sept 8, 2026 | Strictly limited to 30 seats"
+                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Risk-Free Note</label>
+                <input
+                  type="text"
+                  value={formData.urgency?.riskNote || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    urgency: { ...formData.urgency, riskNote: e.target.value }
+                  })}
+                  placeholder="No payment today • Seat held instantly • Reply within 15 mins"
+                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
+                />
+              </div>
             </div>
           </div>
         )}
 
+        {/* 4. PACKAGES & PRICING */}
         {activeTab === 'packages' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                Ticket Passes & Package Tiers
-              </h3>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Ticket Passes & Pricing Tiers ({formData.packages?.length || 0})
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">
+                  Create, edit, or delete the admission and delegate passes.
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={addPackage}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200 dark:hover:bg-emerald-800 text-xs font-bold cursor-pointer transition-colors"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200 dark:hover:bg-emerald-800 text-xs font-bold cursor-pointer transition-colors shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Package</span>
+                <span>Add Package Tier</span>
               </button>
             </div>
 
             <div className="space-y-4">
               {(formData.packages || []).map((pkg, idx) => (
-                <div key={pkg.id || idx} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/70 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400">Tier #{idx + 1}</span>
+                <div key={pkg.id || idx} className="p-5 rounded-2xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/70 space-y-4 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-emerald-900/40 pb-3">
+                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                      Tier #{idx + 1}: {pkg.name || 'Unnamed Tier'}
+                    </span>
                     <button
                       type="button"
                       onClick={() => removePackage(idx)}
                       className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 text-xs flex items-center gap-1 cursor-pointer transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span>Remove</span>
+                      <span>Delete Tier</span>
                     </button>
                   </div>
 
@@ -518,7 +1228,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                         type="text"
                         value={pkg.name}
                         onChange={(e) => updatePackage(idx, 'name', e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-bold"
                       />
                     </div>
                     <div>
@@ -527,18 +1237,18 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                         type="text"
                         value={pkg.price}
                         onChange={(e) => updatePackage(idx, 'price', e.target.value)}
-                        placeholder="e.g. $1,450 or From $4,500"
-                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-amber-600 dark:text-amber-300 font-bold text-xs focus:outline-none focus:border-amber-400 transition-colors"
+                        placeholder="e.g. $499 or $1,450"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-amber-600 dark:text-amber-300 font-black text-xs"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Period / Unit</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Period / Unit Note</label>
                       <input
                         type="text"
                         value={pkg.period || ''}
                         onChange={(e) => updatePackage(idx, 'period', e.target.value)}
                         placeholder="e.g. per delegate"
-                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
                       />
                     </div>
                   </div>
@@ -552,18 +1262,650 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-[#050C08] border-slate-300 dark:border-emerald-900 focus:ring-0 cursor-pointer"
                     />
                     <label htmlFor={`pop-${idx}`} className="text-xs text-amber-700 dark:text-amber-300 font-semibold cursor-pointer">
-                      Mark as "Most Popular / Recommended" (Gold Highlight)
+                      Mark as &quot;Most Popular / Recommended&quot; (Gold Highlight)
                     </label>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Features (One per line)</label>
+                    <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Short Description</label>
+                    <input
+                      type="text"
+                      value={pkg.description || ''}
+                      onChange={(e) => updatePackage(idx, 'description', e.target.value)}
+                      placeholder="e.g. Most popular choice for founders, importers, and F&B entrepreneurs."
+                      className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
+                    />
+                  </div>
+
+                  {/* Features List CRUD */}
+                  <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-emerald-950">
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300">
+                      Package Features & Inclusions ({pkg.features?.length || 0})
+                    </label>
+                    <div className="space-y-1.5">
+                      {(pkg.features || []).map((feat, fIdx) => (
+                        <div key={fIdx} className="flex items-center gap-2 bg-white dark:bg-[#050C08] p-2 rounded-lg border border-slate-200 dark:border-emerald-900/40 text-xs">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          <input
+                            type="text"
+                            value={feat}
+                            onChange={(e) => {
+                              const updated = [...pkg.features];
+                              updated[fIdx] = e.target.value;
+                              updatePackage(idx, 'features', updated);
+                            }}
+                            className="flex-1 bg-transparent border-none text-slate-900 dark:text-white focus:outline-none text-xs"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removePackageFeature(idx, fIdx)}
+                            className="text-slate-400 hover:text-rose-500 cursor-pointer p-1"
+                            title="Remove feature"
+                          >
+                            &times;
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <input
+                        type="text"
+                        value={newFeatureText[idx] || ''}
+                        onChange={(e) => setNewFeatureText({ ...newFeatureText, [idx]: e.target.value })}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addPackageFeature(idx); } }}
+                        placeholder="Add a new feature bullet point..."
+                        className="flex-1 px-3 py-1.5 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => addPackageFeature(idx)}
+                        className="px-3 py-1.5 rounded-lg bg-amber-400 text-black font-bold text-xs cursor-pointer hover:bg-amber-300"
+                      >
+                        + Add Feature
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-3 pt-2">
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Button CTA Text</label>
+                      <input
+                        type="text"
+                        value={pkg.ctaText || ''}
+                        onChange={(e) => updatePackage(idx, 'ctaText', e.target.value)}
+                        placeholder="e.g. Lock In $499 Early Bird Rate"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 5. ITINERARY & AGENDA */}
+        {activeTab === 'itinerary' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Program Itinerary & Schedule ({formData.itinerary?.length || 0} Days)
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">
+                  Manage the daily timetable, expo visits, and matching sessions.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={addDay}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200 dark:hover:bg-emerald-800 text-xs font-bold cursor-pointer transition-colors shadow-sm"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Day</span>
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {(formData.itinerary || []).map((day, dayIdx) => (
+                <div key={day.id || dayIdx} className="p-5 rounded-2xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/70 space-y-4 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-emerald-900/40 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-7 h-7 rounded-lg bg-amber-400 text-black font-extrabold text-xs flex items-center justify-center">
+                        {day.day}
+                      </span>
+                      <span className="text-xs font-bold text-slate-900 dark:text-white">
+                        Day {day.day}: {day.title}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeDay(dayIdx)}
+                      className="text-rose-600 hover:text-rose-700 dark:text-rose-400 text-xs flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete Day</span>
+                    </button>
+                  </div>
+
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Day Number</label>
+                      <input
+                        type="text"
+                        value={day.day}
+                        onChange={(e) => updateDay(dayIdx, 'day', e.target.value)}
+                        className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Date</label>
+                      <input
+                        type="text"
+                        value={day.date}
+                        onChange={(e) => updateDay(dayIdx, 'date', e.target.value)}
+                        placeholder="e.g. Oct 8, 2026"
+                        className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Day Title</label>
+                      <input
+                        type="text"
+                        value={day.title}
+                        onChange={(e) => updateDay(dayIdx, 'title', e.target.value)}
+                        placeholder="e.g. Cafe Show Expo & B2B Matchmaking"
+                        className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Day Events / Schedule CRUD */}
+                  <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-emerald-950">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                        Events &amp; Timetable Slots ({day.events?.length || 0})
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => addEventToDay(dayIdx)}
+                        className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
+                      >
+                        + Add Time Slot
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {(day.events || []).map((ev, evIdx) => (
+                        <div key={evIdx} className="p-3 rounded-xl bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/50 flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs">
+                          <input
+                            type="text"
+                            value={ev.time}
+                            onChange={(e) => updateEventInDay(dayIdx, evIdx, 'time', e.target.value)}
+                            placeholder="08:00 - 09:00"
+                            className="w-full sm:w-36 px-2 py-1 rounded bg-slate-100 dark:bg-emerald-950 border border-slate-200 dark:border-emerald-900/50 font-mono text-[11px] text-amber-600 dark:text-amber-300 font-bold"
+                          />
+                          <input
+                            type="text"
+                            value={ev.activity}
+                            onChange={(e) => updateEventInDay(dayIdx, evIdx, 'activity', e.target.value)}
+                            placeholder="Activity / Session headline"
+                            className="flex-1 w-full px-2 py-1 rounded bg-transparent border border-slate-200 dark:border-emerald-900/50 text-slate-900 dark:text-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeEventFromDay(dayIdx, evIdx)}
+                            className="text-rose-500 hover:text-rose-600 p-1 cursor-pointer self-end sm:self-center"
+                            title="Delete time slot"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 6. CORE VALUES & HIGHLIGHTS */}
+        {activeTab === 'values' && (
+          <div className="space-y-8">
+            {/* Core Values */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Core Value Outcomes ({formData.coreValues?.length || 0})
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-gray-400">
+                    The 4 fundamental commercial outcomes delegates take home.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={addCoreValue}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Core Value</span>
+                </button>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                {(formData.coreValues || []).map((cv, idx) => (
+                  <div key={cv.id || idx} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold text-amber-500">Outcome #{cv.num || idx + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeCoreValue(idx)}
+                        className="text-rose-500 text-xs cursor-pointer"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <input
+                        type="text"
+                        value={cv.num || ''}
+                        onChange={(e) => updateCoreValue(idx, 'num', e.target.value)}
+                        placeholder="01"
+                        className="col-span-1 px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-amber-500 font-bold"
+                      />
+                      <input
+                        type="text"
+                        value={cv.title}
+                        onChange={(e) => updateCoreValue(idx, 'title', e.target.value)}
+                        placeholder="Outcome Title"
+                        className="col-span-3 px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white font-bold"
+                      />
+                    </div>
                     <textarea
-                      rows={3}
-                      value={(pkg.features || []).join('\n')}
-                      onChange={(e) => updatePackage(idx, 'features', e.target.value.split('\n').filter(Boolean))}
-                      className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-mono resize-none focus:outline-none focus:border-amber-400 transition-colors"
-                      placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
+                      rows={2}
+                      value={cv.desc}
+                      onChange={(e) => updateCoreValue(idx, 'desc', e.target.value)}
+                      placeholder="Outcome Description"
+                      className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white resize-none"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Highlights */}
+            <div className="space-y-4 pt-6 border-t border-slate-200 dark:border-emerald-950">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Program Highlights ({formData.highlights?.length || 0})
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-gray-400">
+                    Key features that make this program unrivaled.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={addHighlight}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Highlight</span>
+                </button>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                {(formData.highlights || []).map((h, idx) => (
+                  <div key={h.id || idx} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Highlight #{idx + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeHighlight(idx)}
+                        className="text-rose-500 text-xs cursor-pointer"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={h.title}
+                      onChange={(e) => updateHighlight(idx, 'title', e.target.value)}
+                      placeholder="Title"
+                      className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs font-bold text-slate-900 dark:text-white"
+                    />
+                    <textarea
+                      rows={2}
+                      value={h.description}
+                      onChange={(e) => updateHighlight(idx, 'description', e.target.value)}
+                      placeholder="Description"
+                      className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white resize-none"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 7. PROBLEMS & SOLUTIONS */}
+        {activeTab === 'problems' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Pain Points &amp; Obstacles Solved ({formData.problems?.length || 0})
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">
+                  The frustrating problems importers face when sourcing alone.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={addProblem}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Pain Point</span>
+              </button>
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-4">
+              {(formData.problems || []).map((p, idx) => (
+                <div key={p.id || idx} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-rose-500">Problem #{idx + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeProblem(idx)}
+                      className="text-rose-500 text-xs cursor-pointer"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={p.title}
+                    onChange={(e) => updateProblem(idx, 'title', e.target.value)}
+                    placeholder="e.g. Middleman Markups"
+                    className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs font-bold text-slate-900 dark:text-white"
+                  />
+                  <textarea
+                    rows={3}
+                    value={p.desc}
+                    onChange={(e) => updateProblem(idx, 'desc', e.target.value)}
+                    placeholder="Describe how this costs the importer money..."
+                    className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white resize-none"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 8. TARGET AUDIENCE */}
+        {activeTab === 'audiences' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Target Audience &amp; Personas ({formData.audiences?.length || 0})
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">
+                  The specific profiles engineered to participate in this delegation.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={addAudience}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Persona</span>
+              </button>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              {(formData.audiences || []).map((aud, idx) => (
+                <div key={aud.id || idx} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-500">Persona #{idx + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeAudience(idx)}
+                      className="text-rose-500 text-xs cursor-pointer"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <input
+                      type="text"
+                      value={aud.title}
+                      onChange={(e) => updateAudience(idx, 'title', e.target.value)}
+                      placeholder="e.g. Cafe & Tea Brand Owners"
+                      className="col-span-2 px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs font-bold text-slate-900 dark:text-white"
+                    />
+                    <input
+                      type="text"
+                      value={aud.tag || ''}
+                      onChange={(e) => updateAudience(idx, 'tag', e.target.value)}
+                      placeholder="Tag e.g. F&B"
+                      className="col-span-1 px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-emerald-600 dark:text-emerald-400 font-bold"
+                    />
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={aud.desc}
+                    onChange={(e) => updateAudience(idx, 'desc', e.target.value)}
+                    placeholder="Describe what opportunities await this profile..."
+                    className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white resize-none"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 9. VALUE STACK */}
+        {activeTab === 'valueStack' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Value Stack &amp; Inclusions ({formData.valueStack?.inclusions?.length || 0} items)
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">
+                  Build the high-converting &quot;9-in-1 Everything Handled&quot; package stack with standalone price anchors.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={addInclusion}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Inclusion Item</span>
+              </button>
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-3 p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/50">
+              <div>
+                <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Stack Headline</label>
+                <input
+                  type="text"
+                  value={formData.valueStack?.title || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    valueStack: { ...(formData.valueStack || { inclusions: [] }), title: e.target.value }
+                  })}
+                  placeholder="One Price. Nine Things Fully Handled."
+                  className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs font-bold text-slate-900 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Total Standalone Value Anchor</label>
+                <input
+                  type="text"
+                  value={formData.valueStack?.totalValue || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    valueStack: { ...(formData.valueStack || { inclusions: [] }), totalValue: e.target.value }
+                  })}
+                  placeholder="e.g. $910+"
+                  className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs font-bold text-amber-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Pay Anchor Label</label>
+                <input
+                  type="text"
+                  value={formData.valueStack?.payLabel || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    valueStack: { ...(formData.valueStack || { inclusions: [] }), payLabel: e.target.value }
+                  })}
+                  placeholder="e.g. Your Early Bird investment"
+                  className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {(formData.valueStack?.inclusions || []).map((inc, idx) => (
+                <div key={inc.id || idx} className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <span className="w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 font-bold text-xs flex items-center justify-center shrink-0">
+                    {idx + 1}
+                  </span>
+                  <input
+                    type="text"
+                    value={inc.title}
+                    onChange={(e) => updateInclusion(idx, 'title', e.target.value)}
+                    placeholder="Title e.g. Roundtrip Flight Tickets"
+                    className="w-full sm:w-64 px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs font-bold text-slate-900 dark:text-white"
+                  />
+                  <input
+                    type="text"
+                    value={inc.desc}
+                    onChange={(e) => updateInclusion(idx, 'desc', e.target.value)}
+                    placeholder="Details e.g. Phnom Penh - Hanoi roundtrip included."
+                    className="flex-1 w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
+                  />
+                  <div className="flex items-center gap-1.5 self-end sm:self-center">
+                    <span className="text-xs text-slate-500">$</span>
+                    <input
+                      type="number"
+                      value={inc.standalonePrice ?? 50}
+                      onChange={(e) => updateInclusion(idx, 'standalonePrice', Number(e.target.value))}
+                      className="w-20 px-2 py-1 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-amber-500 font-bold"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeInclusion(idx)}
+                      className="text-rose-500 p-1 cursor-pointer"
+                      title="Delete inclusion"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 10. TESTIMONIALS */}
+        {activeTab === 'testimonials' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Testimonials &amp; Reviews ({formData.testimonials?.length || 0})
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">
+                  Participant quotes, social proof, and verified delegate feedback.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={addTestimonial}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Testimonial</span>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {(formData.testimonials || []).map((t, idx) => (
+                <div key={t.id || idx} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-500">Review #{idx + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeTestimonial(idx)}
+                      className="text-rose-500 text-xs cursor-pointer"
+                    >
+                      Delete
+                    </button>
+                  </div>
+
+                  <div className="grid sm:grid-cols-4 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Name</label>
+                      <input
+                        type="text"
+                        value={t.name}
+                        onChange={(e) => updateTestimonial(idx, 'name', e.target.value)}
+                        placeholder="Dara S."
+                        className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs font-bold text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Role</label>
+                      <input
+                        type="text"
+                        value={t.role}
+                        onChange={(e) => updateTestimonial(idx, 'role', e.target.value)}
+                        placeholder="Cafe Chain CEO"
+                        className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Company</label>
+                      <input
+                        type="text"
+                        value={t.company}
+                        onChange={(e) => updateTestimonial(idx, 'company', e.target.value)}
+                        placeholder="Phnom Penh Roastery"
+                        className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Rating (1-5)</label>
+                      <select
+                        value={t.rating || 5}
+                        onChange={(e) => updateTestimonial(idx, 'rating', Number(e.target.value))}
+                        className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-amber-500 font-bold"
+                      >
+                        <option value={5}>★★★★★ (5 Stars)</option>
+                        <option value={4}>★★★★☆ (4 Stars)</option>
+                        <option value={3}>★★★☆☆ (3 Stars)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Review Quote</label>
+                    <textarea
+                      rows={2}
+                      value={t.quote}
+                      onChange={(e) => updateTestimonial(idx, 'quote', e.target.value)}
+                      placeholder="Attending this event gave us..."
+                      className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white resize-none"
                     />
                   </div>
                 </div>
@@ -572,61 +1914,98 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
           </div>
         )}
 
-        {activeTab === 'highlights' && (
-          <div className="space-y-4">
+        {/* 11. PHOTO GALLERY */}
+        {activeTab === 'gallery' && (
+          <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Program Selling Points</h3>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Visual Gallery ({formData.gallery?.length || 0} Photos)
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">
+                  Photos of previous editions, expo floors, VIP transfers, and scenery.
+                </p>
+              </div>
+            </div>
+
+            {/* Add Custom URL */}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={newGalleryUrl}
+                onChange={(e) => setNewGalleryUrl(e.target.value)}
+                placeholder="Enter image URL or path (/photos/...)"
+                className="flex-1 px-4 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
+              />
               <button
                 type="button"
-                onClick={addHighlight}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer transition-colors hover:bg-emerald-200 dark:hover:bg-emerald-800"
+                onClick={() => addGalleryImage(newGalleryUrl)}
+                className="px-4 py-2 rounded-xl bg-amber-400 text-black font-bold text-xs cursor-pointer hover:bg-amber-300"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add Highlight</span>
+                + Add Image
               </button>
             </div>
 
-            <div className="space-y-3">
-              {(formData.highlights || []).map((h, idx) => (
-                <div key={h.id || idx} className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">Highlight #{idx + 1}</span>
+            {/* Quick 1-Click Library Presets */}
+            <div className="space-y-1 pt-2">
+              <div className="text-[11px] text-slate-500 dark:text-gray-400 font-semibold">
+                Click any photo to instantly add it to this page gallery:
+              </div>
+              <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
+                {PRESET_PHOTOS.map((photo, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => addGalleryImage(photo)}
+                    className="rounded-xl overflow-hidden aspect-[4/3] border border-slate-200 dark:border-emerald-900/40 hover:border-amber-400 hover:scale-105 transition-all cursor-pointer group relative"
+                    title="Click to add to gallery"
+                  >
+                    <img src={photo} alt="" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold">
+                      + Add
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Active Gallery Grid */}
+            <div className="space-y-2 pt-4 border-t border-slate-200 dark:border-emerald-950">
+              <div className="text-xs font-bold text-slate-900 dark:text-white">Current Gallery Items:</div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {(formData.gallery || []).map((img, idx) => (
+                  <div key={idx} className="rounded-2xl overflow-hidden border border-slate-200 dark:border-emerald-900/50 bg-slate-100 dark:bg-black/30 relative group shadow-sm">
+                    <img src={img} alt={`Gallery ${idx + 1}`} className="w-full aspect-[4/3] object-cover" />
                     <button
                       type="button"
-                      onClick={() => removeHighlight(idx)}
-                      className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 text-xs cursor-pointer transition-colors"
+                      onClick={() => removeGalleryImage(idx)}
+                      className="absolute top-2 right-2 p-1.5 rounded-lg bg-rose-600/90 text-white hover:bg-rose-700 cursor-pointer shadow"
+                      title="Delete image"
                     >
-                      Delete
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
+                    <div className="p-2 text-[10px] text-slate-500 dark:text-gray-400 truncate bg-white dark:bg-[#07130D]">
+                      {img}
+                    </div>
                   </div>
-                  <input
-                    type="text"
-                    value={h.title}
-                    onChange={(e) => updateHighlight(idx, 'title', e.target.value)}
-                    placeholder="Title"
-                    className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-amber-400 transition-colors"
-                  />
-                  <textarea
-                    rows={2}
-                    value={h.description}
-                    onChange={(e) => updateHighlight(idx, 'description', e.target.value)}
-                    placeholder="Description"
-                    className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs resize-none focus:outline-none focus:border-amber-400 transition-colors"
-                  />
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         )}
 
+        {/* 12. FAQS */}
         {activeTab === 'faqs' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Frequently Asked Questions</h3>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Frequently Asked Questions ({formData.faqs?.length || 0})</h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">Directly resolve objections and doubts.</p>
+              </div>
               <button
                 type="button"
                 onClick={addFaq}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer transition-colors hover:bg-emerald-200 dark:hover:bg-emerald-800"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add FAQ</span>
@@ -641,7 +2020,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                     <button
                       type="button"
                       onClick={() => removeFaq(idx)}
-                      className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 text-xs cursor-pointer transition-colors"
+                      className="text-rose-600 text-xs cursor-pointer"
                     >
                       Delete
                     </button>
@@ -651,14 +2030,14 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                     value={faq.question}
                     onChange={(e) => updateFaq(idx, 'question', e.target.value)}
                     placeholder="Question"
-                    className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-amber-400 transition-colors"
+                    className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-amber-400"
                   />
                   <textarea
                     rows={2}
                     value={faq.answer}
                     onChange={(e) => updateFaq(idx, 'answer', e.target.value)}
                     placeholder="Answer"
-                    className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs resize-none focus:outline-none focus:border-amber-400 transition-colors"
+                    className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs resize-none focus:outline-none focus:border-amber-400"
                   />
                 </div>
               ))}
@@ -666,45 +2045,292 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
           </div>
         )}
 
+        {/* 13. GUARANTEE & TRUST */}
+        {activeTab === 'guarantee' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Risk-Free Guarantee &amp; Confidence ({formData.guarantee?.points?.length || 0} Points)</h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">Reassure clients that their seat reservation has zero financial risk.</p>
+              </div>
+              <button
+                type="button"
+                onClick={addGuaranteePoint}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Guarantee Point</span>
+              </button>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Guarantee Section Title</label>
+                <input
+                  type="text"
+                  value={formData.guarantee?.title || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    guarantee: { ...(formData.guarantee || { points: [] }), title: e.target.value }
+                  })}
+                  placeholder="Your Reservation is 100% Risk-Free"
+                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Badge / Tag</label>
+                <input
+                  type="text"
+                  value={formData.guarantee?.badge || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    guarantee: { ...(formData.guarantee || { points: [] }), badge: e.target.value }
+                  })}
+                  placeholder="100% Risk Reversal Guarantee"
+                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-xs text-amber-500 font-bold"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Guarantee Explanation Subtitle</label>
+              <textarea
+                rows={2}
+                value={formData.guarantee?.subtitle || ''}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  guarantee: { ...(formData.guarantee || { points: [] }), subtitle: e.target.value }
+                })}
+                placeholder="You pay nothing today until you have spoken with our team..."
+                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white resize-none"
+              />
+            </div>
+
+            <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-emerald-950">
+              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">Guarantee Bullets / Safeguards:</span>
+              <div className="space-y-2">
+                {(formData.guarantee?.points || []).map((point, idx) => (
+                  <div key={idx} className="flex items-center gap-2 bg-slate-50 dark:bg-[#07130D] p-2.5 rounded-xl border border-slate-200 dark:border-emerald-900/50">
+                    <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <input
+                      type="text"
+                      value={point}
+                      onChange={(e) => updateGuaranteePoint(idx, e.target.value)}
+                      className="flex-1 bg-transparent border-none text-xs text-slate-900 dark:text-white focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeGuaranteePoint(idx)}
+                      className="text-rose-500 p-1 cursor-pointer"
+                      title="Delete bullet"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 14. LEAD FORM */}
+        {activeTab === 'form' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Lead Capture Form Configuration</h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">Configure the headline, fields, and success feedback.</p>
+              </div>
+              <button
+                type="button"
+                onClick={addFormField}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Form Field</span>
+              </button>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Form Headline</label>
+                <input
+                  type="text"
+                  value={formData.formConfig?.headline || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    formConfig: { ...(formData.formConfig || { fields: [], successMessage: '', submitButtonText: '', subheadline: '' }), headline: e.target.value }
+                  })}
+                  placeholder="Reserve Your Registration"
+                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Submit Button Text</label>
+                <input
+                  type="text"
+                  value={formData.formConfig?.submitButtonText || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    formConfig: { ...(formData.formConfig || { fields: [], successMessage: '', headline: '', subheadline: '' }), submitButtonText: e.target.value }
+                  })}
+                  placeholder="Submit Registration Now"
+                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white font-bold"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Form Subheadline / Instructions</label>
+              <input
+                type="text"
+                value={formData.formConfig?.subheadline || ''}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  formConfig: { ...(formData.formConfig || { fields: [], successMessage: '', headline: '', submitButtonText: '' }), subheadline: e.target.value }
+                })}
+                placeholder="Fill in your details below and our team will get in touch within 15 minutes."
+                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Success Message (Shown after submit)</label>
+              <input
+                type="text"
+                value={formData.formConfig?.successMessage || ''}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  formConfig: { ...(formData.formConfig || { fields: [], subheadline: '', headline: '', submitButtonText: '' }), successMessage: e.target.value }
+                })}
+                placeholder="Thank you! Your registration has been received."
+                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-xs text-emerald-600 dark:text-emerald-400 font-bold"
+              />
+            </div>
+
+            {/* Custom fields list */}
+            <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-emerald-950">
+              <div className="text-xs font-bold text-slate-900 dark:text-white">Form Input Fields ({formData.formConfig?.fields?.length || 0}):</div>
+              {(formData.formConfig?.fields || []).map((f, fIdx) => (
+                <div key={f.id || fIdx} className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 grid sm:grid-cols-4 gap-3 items-center">
+                  <div>
+                    <label className="block text-[10px] text-slate-500 mb-1">Field Label</label>
+                    <input
+                      type="text"
+                      value={f.label}
+                      onChange={(e) => updateFormField(fIdx, 'label', e.target.value)}
+                      placeholder="Label"
+                      className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-slate-500 mb-1">Type</label>
+                    <select
+                      value={f.type}
+                      onChange={(e) => updateFormField(fIdx, 'type', e.target.value as any)}
+                      className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs"
+                    >
+                      <option value="text">Text</option>
+                      <option value="tel">Phone / Tel</option>
+                      <option value="email">Email</option>
+                      <option value="textarea">Textarea</option>
+                      <option value="select">Dropdown Select</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-slate-500 mb-1">Placeholder</label>
+                    <input
+                      type="text"
+                      value={f.placeholder || ''}
+                      onChange={(e) => updateFormField(fIdx, 'placeholder', e.target.value)}
+                      placeholder="e.g. Enter name..."
+                      className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between pt-3 sm:pt-0">
+                    <label className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-gray-300 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={f.required}
+                        onChange={(e) => updateFormField(fIdx, 'required', e.target.checked)}
+                        className="w-3.5 h-3.5 rounded text-amber-500"
+                      />
+                      <span>Required</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => removeFormField(fIdx)}
+                      className="text-rose-500 p-1 cursor-pointer"
+                      title="Delete field"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 15. SEO & SOCIAL */}
         {activeTab === 'seo' && (
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                Meta Title (Appears in Google search and browser tab)
+                Meta Title (Search engines &amp; browser tab)
               </label>
               <input
                 type="text"
                 value={formData.metaTitle || ''}
                 onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
-                placeholder="Title | KHB EVENTS Cambodia"
-                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
+                placeholder="e.g. Smart City, Tea & Cafe Business Delegation 2026 | KHB EVENTS"
+                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
               />
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                Meta Description
+                Meta Description (Search snippet &amp; social previews)
               </label>
               <textarea
                 rows={3}
                 value={formData.metaDescription || ''}
                 onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-                placeholder="Brief snippet for search engines..."
-                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 resize-none transition-colors"
+                placeholder="Brief summary shown on Google and Telegram link previews..."
+                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs resize-none focus:outline-none focus:border-amber-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
+                Open Graph / Social Share Image URL
+              </label>
+              <input
+                type="text"
+                value={formData.ogImage || ''}
+                onChange={(e) => setFormData({ ...formData, ogImage: e.target.value })}
+                placeholder="/photos/photo_2026-09-16_22-01-09 (2).jpg"
+                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
               />
             </div>
           </div>
         )}
 
-        <div className="pt-4 border-t border-slate-200 dark:border-emerald-950 flex items-center justify-end gap-3">
+        {/* Bottom Save bar */}
+        <div className="pt-6 border-t border-slate-200 dark:border-emerald-950 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-xs text-slate-500 dark:text-gray-400">
+            {isNew ? 'Ready to create page' : `Editing ${formData.title || 'Landing Page'}`} &bull; All changes save to real-time storage.
+          </div>
           <button
             type="button"
-            onClick={handleSave}
+            onClick={() => handleSave()}
             disabled={saving}
-            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer transition-all hover:scale-102"
           >
             <Save className="w-4 h-4 text-black" />
-            <span>{saving ? 'Saving...' : 'Save & Publish Page'}</span>
+            <span>{saving ? 'Saving...' : 'Save & Publish Landing Page'}</span>
           </button>
         </div>
       </div>

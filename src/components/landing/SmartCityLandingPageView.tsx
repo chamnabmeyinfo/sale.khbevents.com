@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { LandingPage, SystemSettings } from '@/lib/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BILINGUAL CONTENT — exactly from old project content.json + app.js STR obj
@@ -624,7 +625,7 @@ const TG_ICON = (size = 30) => (
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-export default function SmartCityLandingPageView() {
+export default function SmartCityLandingPageView({ page, settings }: { page?: LandingPage; settings?: SystemSettings } = {}) {
   const [lang, setLang] = useState<'en' | 'kh'>('en');
   const [heroSlide, setHeroSlide] = useState(0);
   const [activeItinTab, setActiveItinTab] = useState(0);
@@ -641,8 +642,18 @@ export default function SmartCityLandingPageView() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [successSeat, setSuccessSeat] = useState(20);
-  const [localClaimed, setLocalClaimed] = useState(GENERAL.claimedSeats);
+  const [localClaimed, setLocalClaimed] = useState(page?.urgency?.claimedSeats ?? GENERAL.claimedSeats);
   const [utmParams, setUtmParams] = useState<Record<string, string>>({});
+
+  // Dynamic overrides from Page editor data
+  const effTotalSeats = page?.urgency?.totalSeats ?? GENERAL.totalSeats;
+  const effClaimedSeats = page?.urgency?.claimedSeats ?? GENERAL.claimedSeats;
+  const effEarlyBirdPrice = page?.urgency?.earlyBirdPrice ? (Number(page.urgency.earlyBirdPrice) || GENERAL.earlyBirdPrice) : GENERAL.earlyBirdPrice;
+  const effRegularPrice = page?.urgency?.regularPrice ? (Number(page.urgency.regularPrice) || GENERAL.regularPrice) : GENERAL.regularPrice;
+  const effTgUsername = settings?.telegramUsername || GENERAL.contactTelegramUsername;
+  const effTgUrl = settings?.telegramUsername 
+    ? `https://t.me/${settings.telegramUsername.replace('@', '')}` 
+    : GENERAL.contactTelegramUrl;
 
   // ── Restore saved language & capture UTMs on mount
   useEffect(() => {
@@ -661,8 +672,24 @@ export default function SmartCityLandingPageView() {
     } catch { /* silent */ }
   }, []);
 
-  const c = CONTENT[lang];
-  const tgUrl = GENERAL.contactTelegramUrl;
+  // Merge dynamic page data into active language content
+  const baseContent = CONTENT[lang];
+  const c = {
+    ...baseContent,
+    badge: page?.badge || baseContent.badge,
+    heroTitle: page?.heroHeadline || page?.title || baseContent.heroTitle,
+    heroSubtitle: page?.heroSubheadline || page?.description || baseContent.heroSubtitle,
+    pillDate: page?.eventDate ? `${page.eventDate} (${page.eventTime || '4D/3N'})` : baseContent.pillDate,
+    pillDest: page?.venue || baseContent.pillDest,
+    coreValues: (page?.coreValues && page.coreValues.length > 0) ? page.coreValues : baseContent.coreValues,
+    problems: (page?.problems && page.problems.length > 0) ? page.problems : baseContent.problems,
+    audiences: (page?.audiences && page.audiences.length > 0) ? page.audiences : baseContent.audiences,
+    itinerary: (page?.itinerary && page.itinerary.length > 0) ? page.itinerary : baseContent.itinerary,
+    testimonials: (page?.testimonials && page.testimonials.length > 0) ? page.testimonials : baseContent.testimonials,
+    faqs: (page?.faqs && page.faqs.length > 0) ? page.faqs.map(f => ({ q: f.question, a: f.answer })) : baseContent.faqs,
+    guaranteePoints: (page?.guarantee?.points && page.guarantee.points.length > 0) ? page.guarantee.points : baseContent.guaranteePoints
+  };
+  const tgUrl = effTgUrl;
 
   // ── Hero slider
   useEffect(() => {
@@ -912,7 +939,7 @@ export default function SmartCityLandingPageView() {
             {c.coreValues.map(v => (
               <div className="core-card" key={v.num}>
                 <div className="core-card-num">{v.num}</div>
-                <div className="core-icon-box">{ICONS[v.icon]}</div>
+                <div className="core-icon-box">{ICONS[v.icon || 'chart']}</div>
                 <h3>{v.title}</h3>
                 <p>{v.desc}</p>
               </div>
@@ -974,7 +1001,7 @@ export default function SmartCityLandingPageView() {
           <div className="problem-grid">
             {c.problems.map((p, i) => (
               <div key={i} className="problem-card">
-                <div className="problem-icon-box">{ICONS[p.icon]}</div>
+                <div className="problem-icon-box">{ICONS[p.icon || 'trend-down']}</div>
                 <h3>{p.title}</h3>
                 <p>{p.desc}</p>
               </div>
@@ -1000,7 +1027,7 @@ export default function SmartCityLandingPageView() {
           <div className="audience-grid">
             {c.audiences.map((a, i) => (
               <div key={i} className="audience-card">
-                <div className="audience-card-icon">{ICONS[a.icon]}</div>
+                <div className="audience-card-icon">{ICONS[a.icon || 'users']}</div>
                 <div className="audience-card-title">{a.title}</div>
                 <div className="audience-card-desc">{a.desc}</div>
               </div>
@@ -1614,7 +1641,7 @@ export default function SmartCityLandingPageView() {
             {TG_ICON(18)}<span>Telegram</span>
           </a>
           <a href="#register" className="btn-mobile-reg">
-            <span>VIP Pass (${GENERAL.earlyBirdPrice})</span>
+            <span>VIP Pass (${effEarlyBirdPrice})</span>
           </a>
         </div>
       </div>

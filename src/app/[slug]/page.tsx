@@ -55,6 +55,7 @@ export default async function CampaignPage({ params, searchParams }: PageProps) 
   const sp = searchParams ? await searchParams : {};
   const view = typeof sp.view === 'string' ? sp.view.toLowerCase() : '';
   const settings = await getSettings();
+  const page = await getPageBySlug(slug);
 
   if (cleanSlug === 'smart-city-tea-cafe') {
     if (view === 'app') {
@@ -63,23 +64,11 @@ export default async function CampaignPage({ params, searchParams }: PageProps) 
     if (view === 'optin') {
       return <SmartCityOptinView />;
     }
-    return <SmartCityLandingPageView />;
+    return <SmartCityLandingPageView page={page || undefined} settings={settings} />;
   }
-
-  const page = await getPageBySlug(slug);
 
   if (!page || page.status === 'archived') {
     notFound();
-  }
-
-  if (page.slug === 'smart-city-tea-cafe') {
-    if (view === 'app') {
-      return <SmartCityAppView />;
-    }
-    if (view === 'optin') {
-      return <SmartCityOptinView />;
-    }
-    return <SmartCityLandingPageView />;
   }
 
   return <DynamicLandingPageView page={page} settings={settings} />;

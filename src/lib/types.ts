@@ -51,6 +51,95 @@ export interface FormConfig {
   fields: FormField[];
 }
 
+export interface CoreValueItem {
+  id: string;
+  num?: string;
+  icon?: string;
+  title: string;
+  desc: string;
+}
+
+export interface ProblemItem {
+  id: string;
+  icon?: string;
+  title: string;
+  desc: string;
+}
+
+export interface AudienceItem {
+  id: string;
+  icon?: string;
+  title: string;
+  desc: string;
+  tag?: string;
+}
+
+export interface ItineraryEvent {
+  time: string;
+  activity: string;
+  desc?: string;
+}
+
+export interface ItineraryDay {
+  id: string;
+  day: number | string;
+  date: string;
+  title: string;
+  events: ItineraryEvent[];
+}
+
+export interface InclusionItem {
+  id: string;
+  title: string;
+  desc: string;
+  standalonePrice?: number | string;
+}
+
+export interface ValueStackConfig {
+  tag?: string;
+  title?: string;
+  subtitle?: string;
+  note?: string;
+  totalLabel?: string;
+  totalValue?: string;
+  payLabel?: string;
+  inclusions: InclusionItem[];
+}
+
+export interface GuaranteeConfig {
+  title?: string;
+  subtitle?: string;
+  badge?: string;
+  points: string[];
+}
+
+export interface UrgencyConfig {
+  totalSeats?: number;
+  claimedSeats?: number;
+  earlyBirdPrice?: number | string;
+  regularPrice?: number | string;
+  earlyBirdDeadline?: string;
+  registrationDeadline?: string;
+  noticeText?: string;
+  riskNote?: string;
+}
+
+export interface SectionVisibility {
+  hero?: boolean;
+  urgency?: boolean;
+  coreValues?: boolean;
+  problems?: boolean;
+  audiences?: boolean;
+  itinerary?: boolean;
+  valueStack?: boolean;
+  packages?: boolean;
+  gallery?: boolean;
+  testimonials?: boolean;
+  faqs?: boolean;
+  guarantee?: boolean;
+  form?: boolean;
+}
+
 export interface LandingPage {
   id: string;
   slug: string;
@@ -76,12 +165,24 @@ export interface LandingPage {
   venueAddress?: string;
   countdownEnabled?: boolean;
 
+  // Quota & Urgency
+  urgency?: UrgencyConfig;
+
+  // Section visibility toggles
+  sectionVisibility?: SectionVisibility;
+
   // Structured content sections
   highlights: HighlightItem[];
+  coreValues?: CoreValueItem[];
+  problems?: ProblemItem[];
+  audiences?: AudienceItem[];
+  itinerary?: ItineraryDay[];
+  valueStack?: ValueStackConfig;
   packages: PackageTier[];
   gallery: string[];
   testimonials: TestimonialItem[];
   faqs: FaqItem[];
+  guarantee?: GuaranteeConfig;
   formConfig: FormConfig;
 
   // SEO & Social
