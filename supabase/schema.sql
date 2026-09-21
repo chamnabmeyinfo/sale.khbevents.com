@@ -37,6 +37,17 @@ CREATE TABLE IF NOT EXISTS landing_pages (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- (Optional) If you prefer native top-level columns instead of form_config._extra:
+-- ALTER TABLE landing_pages ADD COLUMN IF NOT EXISTS template TEXT DEFAULT 'b2b-delegation';
+-- ALTER TABLE landing_pages ADD COLUMN IF NOT EXISTS urgency JSONB;
+-- ALTER TABLE landing_pages ADD COLUMN IF NOT EXISTS section_visibility JSONB;
+-- ALTER TABLE landing_pages ADD COLUMN IF NOT EXISTS core_values JSONB DEFAULT '[]'::jsonb;
+-- ALTER TABLE landing_pages ADD COLUMN IF NOT EXISTS problems JSONB DEFAULT '[]'::jsonb;
+-- ALTER TABLE landing_pages ADD COLUMN IF NOT EXISTS audiences JSONB DEFAULT '[]'::jsonb;
+-- ALTER TABLE landing_pages ADD COLUMN IF NOT EXISTS itinerary JSONB DEFAULT '[]'::jsonb;
+-- ALTER TABLE landing_pages ADD COLUMN IF NOT EXISTS value_stack JSONB;
+-- ALTER TABLE landing_pages ADD COLUMN IF NOT EXISTS guarantee JSONB;
+
 -- 2. Create leads table
 CREATE TABLE IF NOT EXISTS leads (
   id TEXT PRIMARY KEY,

@@ -2,13 +2,20 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { LandingPage, SystemSettings } from '@/lib/types';
 
-export default function SmartCityOptinView() {
+export default function SmartCityOptinView({ page, settings }: { page?: LandingPage; settings?: SystemSettings } = {}) {
   const [lang, setLang] = useState<'en' | 'kh'>('en');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  const effTotalSeats = page?.urgency?.totalSeats ?? 30;
+  const effEarlyBirdPrice = page?.urgency?.earlyBirdPrice ? (Number(page.urgency.earlyBirdPrice) || 499) : 499;
+  const effTgUrl = settings?.telegramUsername
+    ? `https://t.me/${settings.telegramUsername.replace('@', '')}`
+    : 'https://t.me/khbevents';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,11 +28,11 @@ export default function SmartCityOptinView() {
         body: JSON.stringify({
           fullName: name.trim(),
           phone: phone.trim(),
-          landingPageSlug: 'smart-city-tea-cafe',
-          landingPageTitle: 'Smart City, Tea & Cafe Delegation (Fast Opt-in)',
+          landingPageSlug: page?.slug || 'smart-city-tea-cafe',
+          landingPageTitle: page?.title || 'Smart City, Tea & Cafe Delegation (Fast Opt-in)',
           source: 'optin_funnel',
           message: 'Direct Opt-in Lead (Express Booking)',
-          packageInterest: 'Early Bird $499',
+          packageInterest: `Early Bird $${effEarlyBirdPrice}`,
         }),
       });
       const data = await res.json();
@@ -75,7 +82,7 @@ export default function SmartCityOptinView() {
                 borderRadius: '999px',
                 marginBottom: '16px'
               }}>
-                ⏳ {isKh ? 'កៅអីកំណត់ត្រឹម ៣០' : 'Strictly 30 Seats Cohort'}
+                ⏳ {isKh ? `កៅអីកំណត់ត្រឹម ${effTotalSeats}` : `Strictly ${effTotalSeats} Seats Cohort`}
               </div>
 
               <h1 style={{
@@ -111,7 +118,7 @@ export default function SmartCityOptinView() {
                 marginBottom: '20px',
                 lineHeight: 1.5
               }}>
-                💥 {isKh ? 'តម្លៃ Early Bird $499 អនុវត្តសម្រាប់កៅអីបញ្ជាក់មុនគេ' : 'Early Bird $499 rate applies to the first confirmed seats'}
+                💥 {isKh ? `តម្លៃ Early Bird $${effEarlyBirdPrice} អនុវត្តសម្រាប់កៅអីបញ្ជាក់មុនគេ` : `Early Bird $${effEarlyBirdPrice} rate applies to the first confirmed seats`}
               </div>
 
               <form onSubmit={handleSubmit}>
@@ -176,7 +183,7 @@ export default function SmartCityOptinView() {
                 >
                   {submitting
                     ? (isKh ? 'កំពុងបញ្ជូន...' : 'Holding your seat...')
-                    : (isKh ? 'កក់កៅអីឥឡូវនេះ ($499)' : 'Reserve My Seat Now ($499)')}
+                    : (isKh ? `កក់កៅអីឥឡូវនេះ ($${effEarlyBirdPrice})` : `Reserve My Seat Now ($${effEarlyBirdPrice})`)}
                 </button>
 
                 <p style={{ textAlign: 'center', fontSize: '0.75rem', color: '#8A9A90', marginTop: '14px' }}>
@@ -213,7 +220,7 @@ export default function SmartCityOptinView() {
               </p>
 
               <Link
-                href="/smart-city-tea-cafe"
+                href={`/${page?.slug || 'smart-city-tea-cafe'}`}
                 style={{
                   display: 'block',
                   background: '#277856',
@@ -230,7 +237,7 @@ export default function SmartCityOptinView() {
               </Link>
 
               <a
-                href="https://t.me/khbevents"
+                href={effTgUrl}
                 target="_blank"
                 rel="noreferrer"
                 style={{

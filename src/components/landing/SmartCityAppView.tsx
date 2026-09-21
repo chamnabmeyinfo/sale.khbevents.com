@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { LandingPage, SystemSettings } from '@/lib/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GENERAL CONSTANTS
@@ -289,14 +290,35 @@ const HERO_SLIDES = [
   '/photos/photo_2026-09-16_22-01-09 (6).jpg',
 ];
 
-export default function SmartCityAppView() {
+export default function SmartCityAppView({ page, settings }: { page?: LandingPage; settings?: SystemSettings } = {}) {
   const [lang, setLang] = useState<'en' | 'kh'>('en');
   const [activeTab, setActiveTab] = useState<'home' | 'trip' | 'seats'>('home');
   const [heroSlide, setHeroSlide] = useState(0);
   const [activeProfile, setActiveProfile] = useState<'cafe' | 'tech' | 'distributor'>('cafe');
   const [activeDay, setActiveDay] = useState(0);
   const [selectedSeat, setSelectedSeat] = useState(20);
-  const [claimedSeats, setClaimedSeats] = useState(GENERAL.claimedSeats);
+
+  // Dynamic overrides
+  const effTotalSeats = page?.urgency?.totalSeats ?? GENERAL.totalSeats;
+  const effClaimedSeats = page?.urgency?.claimedSeats ?? GENERAL.claimedSeats;
+  const effEarlyBirdPrice = page?.urgency?.earlyBirdPrice ? (Number(page.urgency.earlyBirdPrice) || GENERAL.earlyBirdPrice) : GENERAL.earlyBirdPrice;
+  const effRegularPrice = page?.urgency?.regularPrice ? (Number(page.urgency.regularPrice) || GENERAL.regularPrice) : GENERAL.regularPrice;
+  const effEarlyBirdDeadline = page?.urgency?.earlyBirdDeadline || GENERAL.earlyBirdDeadline;
+  const effRegistrationDeadline = page?.urgency?.registrationDeadline || GENERAL.registrationDeadline;
+  const effTgUsername = settings?.telegramUsername || GENERAL.contactTelegramUsername;
+  const effPhone = settings?.phone || GENERAL.contactPhone;
+  const effTgUrl = settings?.telegramUsername 
+    ? `https://t.me/${settings.telegramUsername.replace('@', '')}` 
+    : GENERAL.contactTelegramUrl;
+
+  const [claimedSeats, setClaimedSeats] = useState(effClaimedSeats);
+
+  useEffect(() => {
+    if (page?.urgency?.claimedSeats !== undefined) {
+      setClaimedSeats(page.urgency.claimedSeats);
+    }
+  }, [page?.urgency?.claimedSeats]);
+
   const [sheetOpen, setSheetOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const [countdown, setCountdown] = useState({ d: '00', h: '00', m: '00', s: '00' });
@@ -307,20 +329,24 @@ export default function SmartCityAppView() {
   const [submitted, setSubmitted] = useState(false);
   const [a2hsDismissed, setA2hsDismissed] = useState(false);
 
+  const heroSlides = (page?.gallery && page.gallery.length > 0)
+    ? (page.heroImage && !page.gallery.includes(page.heroImage) ? [page.heroImage, ...page.gallery] : page.gallery)
+    : (page?.heroImage ? [page.heroImage, ...HERO_SLIDES.filter(s => s !== page.heroImage)] : HERO_SLIDES);
+
   const s = STR[lang];
   const match = MATCH_DATA[activeProfile][lang];
 
   // Hero slideshow
   useEffect(() => {
     const timer = setInterval(() => {
-      setHeroSlide(prev => (prev + 1) % HERO_SLIDES.length);
+      setHeroSlide(prev => (prev + 1) % (heroSlides.length || 1));
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [heroSlides.length]);
 
   // Countdown timer
   useEffect(() => {
-    const target = new Date(GENERAL.earlyBirdDeadline).getTime();
+    const target = new Date(effEarlyBirdDeadline).getTime();
     function tick() {
       const now = Date.now();
       const diff = Math.max(0, target - now);
@@ -338,7 +364,7 @@ export default function SmartCityAppView() {
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [effEarlyBirdDeadline]);
 
   const openBooking = (seatNum?: number) => {
     if (seatNum && seatNum > claimedSeats) {
@@ -359,18 +385,18 @@ export default function SmartCityAppView() {
         body: JSON.stringify({
           fullName: regName.trim(),
           phone: regPhone.trim(),
-          landingPageSlug: 'smart-city-tea-cafe',
-          landingPageTitle: 'Smart City, Tea & Cafe Delegation (Mobile App)',
+          landingPageSlug: page?.slug || 'smart-city-tea-cafe',
+          landingPageTitle: page?.title || 'Smart City, Tea & Cafe Delegation (Mobile App)',
           source: 'mobile_app',
           message: `Seat #${selectedSeat} | Profile: ${regProfile}`,
-          packageInterest: 'Early Bird $499',
+          packageInterest: `Early Bird $${effEarlyBirdPrice}`,
           customFields: { seat: String(selectedSeat), profile: regProfile }
         }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
         setSubmitted(true);
-        setClaimedSeats(prev => Math.min(prev + 1, 30));
+        setClaimedSeats(prev => Math.min(prev + 1, effTotalSeats));
       } else {
         alert(data.error || 'Submission failed. Please try again.');
       }
@@ -381,35 +407,37 @@ export default function SmartCityAppView() {
     }
   };
 
-  const availableSeats = Array.from({ length: 30 }, (_, i) => i + 1).filter(n => n > claimedSeats);
-  const passName = regName.trim() ? regName.toUpperCase() : s.passGuest;
+  const passName = regName.trim() ? regName.toUpperCase() : (lang === 'kh' ? 'ភ្ញៀវប្រតិភូ' : 'GUEST DELEGATE');
+  const availableSeats = Array.from({ length: effTotalSeats }, (_, i) => i + 1).filter(n => n > claimedSeats);
 
   return (
-    <div className="smart-city-app-wrapper">
-      <div id="app" className={`smart-city-app${lang === 'kh' ? ' lang-kh' : ''}`}>
+    <div className={`app-shell-root${lang === 'kh' ? ' lang-kh' : ''}`}>
+      {/* Fake Mobile Device Container */}
+      <div className="mobile-frame">
 
         {/* ═══════════════════════════════════════════
-            APP HEADER
+            TOP APP BAR
         ═══════════════════════════════════════════ */}
-        <header className="app-header">
-          <Link href="/smart-city-tea-cafe">
-            <img src="/images/khb-logo.png" className="app-logo" alt="KHB EVENTS" width={120} height={30} />
-          </Link>
-          <div className="app-header-actions">
-            <button className="seats-chip pressable" onClick={() => setActiveTab('seats')}>
-              🔥 <b>{30 - claimedSeats}</b>
-            </button>
-            <div className="lang-switcher">
-              <button className={`lang-btn${lang === 'en' ? ' active' : ''}`} onClick={() => setLang('en')}>EN</button>
-              <button className={`lang-btn${lang === 'kh' ? ' active' : ''}`} onClick={() => setLang('kh')}>ខ្មែរ</button>
+        <header className="app-bar">
+          <div className="bar-brand">
+            <span className="brand-badge">KHB</span>
+            <span className="brand-name">KHB Events</span>
+          </div>
+          <div className="bar-actions">
+            <Link href="/smart-city-tea-cafe" className="bar-btn-chip" title="Switch to Full Web Landing Page">
+              🌐 Web View
+            </Link>
+            <div className="app-lang-switch">
+              <button className={`l-btn${lang === 'en' ? ' active' : ''}`} onClick={() => setLang('en')}>EN</button>
+              <button className={`l-btn${lang === 'kh' ? ' active' : ''}`} onClick={() => setLang('kh')}>ខ្មែរ</button>
             </div>
           </div>
         </header>
 
         {/* ═══════════════════════════════════════════
-            MAIN SCROLL CONTAINER
+            MAIN SCROLLABLE CONTAINER
         ═══════════════════════════════════════════ */}
-        <main className="app-main" id="app-main">
+        <main className="app-main">
 
           {/* ────────── TAB: HOME ────────── */}
           {activeTab === 'home' && (
@@ -417,7 +445,7 @@ export default function SmartCityAppView() {
               {/* Mini Hero */}
               <div className="app-hero">
                 <div className="app-hero-slider">
-                  {HERO_SLIDES.map((src, idx) => (
+                  {heroSlides.map((src, idx) => (
                     <div
                       key={idx}
                       className={`app-hero-slide${heroSlide === idx ? ' active' : ''}`}
@@ -429,14 +457,14 @@ export default function SmartCityAppView() {
                 <div className="app-hero-body">
                   <span className="app-hero-badge">
                     <i className="dot" />
-                    <span>{s.heroBadge}</span>
+                    <span>{page?.badge || s.heroBadge}</span>
                   </span>
-                  <h1>{s.heroTitle}</h1>
-                  <p className="app-hero-sub">{s.heroSub}</p>
+                  <h1>{page?.heroHeadline || page?.title || s.heroTitle}</h1>
+                  <p className="app-hero-sub">{page?.heroSubheadline || page?.description || s.heroSub}</p>
                   <div className="app-price-chip">
-                    <s>${GENERAL.regularPrice}</s>
-                    <b>${GENERAL.earlyBirdPrice}</b>
-                    <span className="chip-save">{s.saveNote}</span>
+                    <s>${effRegularPrice}</s>
+                    <b>${effEarlyBirdPrice}</b>
+                    <span className="chip-save">save ${Math.max(0, effRegularPrice - effEarlyBirdPrice)}</span>
                   </div>
                   <button className="app-cta pressable" onClick={() => openBooking()}>
                     <span>{s.homeBook}</span>
@@ -713,10 +741,10 @@ export default function SmartCityAppView() {
               <div className="seat-card">
                 <div className="seat-stats">
                   <span className="ss reserved"><i /><span>{s.resStat(claimedSeats)}</span></span>
-                  <span className="ss available"><i /><span>{s.availStat(30 - claimedSeats)}</span></span>
+                  <span className="ss available"><i /><span>{s.availStat(Math.max(0, effTotalSeats - claimedSeats))}</span></span>
                 </div>
                 <div className="seat-grid">
-                  {Array.from({ length: 30 }, (_, i) => i + 1).map(n => {
+                  {Array.from({ length: effTotalSeats }, (_, i) => i + 1).map(n => {
                     const isReserved = n <= claimedSeats;
                     const isSelected = !isReserved && n === selectedSeat;
                     const cls = `s-box ${isReserved ? 'reserved' : isSelected ? 'selected' : 'available'}`;
@@ -752,9 +780,9 @@ export default function SmartCityAppView() {
         ═══════════════════════════════════════════ */}
         <div className="book-bar">
           <div className="bar-price">
-            <s>${GENERAL.regularPrice}</s>
-            <b>${GENERAL.earlyBirdPrice}</b>
-            <small>{s.saveNote}</small>
+            <s>${effRegularPrice}</s>
+            <b>${effEarlyBirdPrice}</b>
+            <small>save ${Math.max(0, effRegularPrice - effEarlyBirdPrice)}</small>
           </div>
           <button className="bar-btn pressable" onClick={() => openBooking()}>
             <span>{s.barBtn}</span>
@@ -783,7 +811,7 @@ export default function SmartCityAppView() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>
             <span>{s.tabSeats}</span>
           </button>
-          <a className="tab-item" href={GENERAL.contactTelegramUrl} target="_blank" rel="noreferrer">
+          <a className="tab-item" href={effTgUrl} target="_blank" rel="noreferrer">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.77-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .27z"/></svg>
             <span>{s.tabChat}</span>
           </a>
@@ -822,7 +850,7 @@ export default function SmartCityAppView() {
               </div>
               <div>
                 <small>Rate</small>
-                <b className="gold">${GENERAL.earlyBirdPrice}</b>
+                <b className="gold">${effEarlyBirdPrice}</b>
               </div>
             </div>
           </div>

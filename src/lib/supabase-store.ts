@@ -4,6 +4,10 @@ import { LandingPage, Lead, LeadStatus, SystemSettings } from './types';
 // Map database row (snake_case) to LandingPage (camelCase)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToLandingPage(row: any): LandingPage {
+  const extra = (row.form_config && typeof row.form_config === 'object' && '_extra' in row.form_config)
+    ? row.form_config._extra
+    : {};
+
   return {
     id: row.id,
     slug: row.slug,
@@ -13,6 +17,7 @@ function rowToLandingPage(row: any): LandingPage {
     category: row.category || 'General',
     badge: row.badge || undefined,
     status: row.status || 'published',
+    template: row.template || extra.template || 'b2b-delegation',
     heroHeadline: row.hero_headline || row.title,
     heroSubheadline: row.hero_subheadline || row.subtitle || '',
     heroCtaText: row.hero_cta_text || 'Get Started',
@@ -24,25 +29,25 @@ function rowToLandingPage(row: any): LandingPage {
     venue: row.venue || undefined,
     venueAddress: row.venue_address || undefined,
     countdownEnabled: Boolean(row.countdown_enabled),
-    urgency: row.urgency || undefined,
-    sectionVisibility: row.section_visibility || row.sectionVisibility || undefined,
+    urgency: row.urgency || extra.urgency || undefined,
+    sectionVisibility: row.section_visibility || row.sectionVisibility || extra.sectionVisibility || undefined,
     highlights: Array.isArray(row.highlights) ? row.highlights : [],
-    coreValues: Array.isArray(row.core_values) ? row.core_values : (Array.isArray(row.coreValues) ? row.coreValues : []),
-    problems: Array.isArray(row.problems) ? row.problems : [],
-    audiences: Array.isArray(row.audiences) ? row.audiences : [],
-    itinerary: Array.isArray(row.itinerary) ? row.itinerary : [],
-    valueStack: row.value_stack || row.valueStack || undefined,
+    coreValues: Array.isArray(row.core_values) ? row.core_values : (Array.isArray(extra.coreValues) ? extra.coreValues : []),
+    problems: Array.isArray(row.problems) ? row.problems : (Array.isArray(extra.problems) ? extra.problems : []),
+    audiences: Array.isArray(row.audiences) ? row.audiences : (Array.isArray(extra.audiences) ? extra.audiences : []),
+    itinerary: Array.isArray(row.itinerary) ? row.itinerary : (Array.isArray(extra.itinerary) ? extra.itinerary : []),
+    valueStack: row.value_stack || row.valueStack || extra.valueStack || undefined,
     packages: Array.isArray(row.packages) ? row.packages : [],
     gallery: Array.isArray(row.gallery) ? row.gallery : [],
     testimonials: Array.isArray(row.testimonials) ? row.testimonials : [],
     faqs: Array.isArray(row.faqs) ? row.faqs : [],
-    guarantee: row.guarantee || undefined,
-    formConfig: row.form_config || {
-      headline: 'Inquire or Register',
-      subheadline: 'Fill in your details below and our team will get in touch.',
-      submitButtonText: 'Submit Inquiry',
-      successMessage: 'Thank you! We will reach out shortly.',
-      fields: [],
+    guarantee: row.guarantee || extra.guarantee || undefined,
+    formConfig: {
+      headline: row.form_config?.headline || 'Inquire or Register',
+      subheadline: row.form_config?.subheadline || 'Fill in your details below and our team will get in touch.',
+      submitButtonText: row.form_config?.submitButtonText || 'Submit Inquiry',
+      successMessage: row.form_config?.successMessage || 'Thank you! We will reach out shortly.',
+      fields: Array.isArray(row.form_config?.fields) ? row.form_config.fields : [],
     },
     metaTitle: row.meta_title || `${row.title} | KHB EVENTS`,
     metaDescription: row.meta_description || row.description || '',
@@ -56,6 +61,27 @@ function rowToLandingPage(row: any): LandingPage {
 
 // Map LandingPage to database row (snake_case)
 function landingPageToRow(page: LandingPage) {
+  const formConfigWithExtra = {
+    ...(page.formConfig || {
+      headline: 'Inquire or Register',
+      subheadline: 'Fill in your details below and our team will get in touch.',
+      submitButtonText: 'Submit Inquiry',
+      successMessage: 'Thank you! We will reach out shortly.',
+      fields: [],
+    }),
+    _extra: {
+      template: page.template || 'b2b-delegation',
+      urgency: page.urgency,
+      sectionVisibility: page.sectionVisibility,
+      coreValues: page.coreValues,
+      problems: page.problems,
+      audiences: page.audiences,
+      itinerary: page.itinerary,
+      valueStack: page.valueStack,
+      guarantee: page.guarantee,
+    }
+  };
+
   return {
     id: page.id,
     slug: page.slug,
@@ -76,20 +102,12 @@ function landingPageToRow(page: LandingPage) {
     venue: page.venue,
     venue_address: page.venueAddress,
     countdown_enabled: page.countdownEnabled,
-    urgency: page.urgency,
-    section_visibility: page.sectionVisibility,
     highlights: page.highlights,
-    core_values: page.coreValues,
-    problems: page.problems,
-    audiences: page.audiences,
-    itinerary: page.itinerary,
-    value_stack: page.valueStack,
     packages: page.packages,
     gallery: page.gallery,
     testimonials: page.testimonials,
     faqs: page.faqs,
-    guarantee: page.guarantee,
-    form_config: page.formConfig,
+    form_config: formConfigWithExtra,
     meta_title: page.metaTitle,
     meta_description: page.metaDescription,
     og_image: page.ogImage,

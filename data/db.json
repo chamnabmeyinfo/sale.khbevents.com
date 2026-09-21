@@ -7,7 +7,7 @@
       "subtitle": "Exclusive B2B Business Delegation to Hanoi & Halong Bay, Vietnam",
       "description": "Join Cambodia's premier business delegation to explore Cafe Show Vietnam & Smart City Expo, direct factory visits, and business matchmaking in Hanoi & Halong Bay.",
       "category": "Trade Delegation",
-      "badge": "Strictly 30 Seats Cohort",
+      "badge": "Exclusive 30 VIP Seats Only",
       "template": "b2b-delegation",
       "status": "published",
       "heroHeadline": "Smart City, Tea & Cafe Business Trip to Vietnam 2026",
@@ -21,108 +21,108 @@
       "venueAddress": "Vietnam Exhibition Center & Halong Bay UNESCO World Heritage Site",
       "countdownEnabled": true,
       "urgency": {
+        "riskNote": "No payment today • Seat held instantly • Reply within 15 mins",
+        "noticeText": "Early Bird Special: Save $51 before Sept 8, 2026 | Strictly limited to 30 seats",
         "totalSeats": 30,
         "claimedSeats": 19,
-        "earlyBirdPrice": 499,
         "regularPrice": 550,
+        "earlyBirdPrice": 499,
         "earlyBirdDeadline": "2026-09-08T23:59:59",
-        "registrationDeadline": "2026-09-20T23:59:59",
-        "noticeText": "Early Bird Special: Save $51 before Sept 8, 2026 | Strictly limited to 30 seats",
-        "riskNote": "No payment today • Seat held instantly • Reply within 15 mins"
+        "registrationDeadline": "2026-09-20T23:59:59"
       },
       "sectionVisibility": {
+        "faqs": true,
+        "form": true,
         "hero": true,
+        "gallery": true,
         "urgency": true,
-        "coreValues": true,
+        "packages": true,
         "problems": true,
         "audiences": true,
-        "itinerary": true,
-        "valueStack": true,
-        "packages": true,
-        "gallery": true,
-        "testimonials": true,
-        "faqs": true,
         "guarantee": true,
-        "form": true
+        "itinerary": true,
+        "coreValues": true,
+        "valueStack": true,
+        "testimonials": true
       },
       "coreValues": [
         {
           "id": "cv-1",
           "num": "01",
+          "desc": "Buy at the source and cut 25% - 35% off what middlemen charge. One negotiated container order can repay the entire trip.",
           "icon": "chart",
-          "title": "Factory-Direct Pricing Power",
-          "desc": "Buy at the source and cut 25% - 35% off what middlemen charge. One negotiated container order can repay the entire trip."
+          "title": "Factory-Direct Pricing Power"
         },
         {
           "id": "cv-2",
           "num": "02",
+          "desc": "Walk the factory floor, inspect the QC lab, and look your supplier in the eye before a single dollar is wired.",
           "icon": "shield",
-          "title": "Trust Built Face-to-Face",
-          "desc": "Walk the factory floor, inspect the QC lab, and look your supplier in the eye before a single dollar is wired."
+          "title": "Trust Built Face-to-Face"
         },
         {
           "id": "cv-3",
           "num": "03",
+          "desc": "Secure exclusive distribution for Cambodia before another importer signs the same supplier.",
           "icon": "trophy",
-          "title": "Exclusive Territory Rights",
-          "desc": "Secure exclusive distribution for Cambodia before another importer signs the same supplier."
+          "title": "Exclusive Territory Rights"
         },
         {
           "id": "cv-4",
           "num": "04",
+          "desc": "Two international expos in one trip — see next year's products, packaging, and smart-retail tech first.",
           "icon": "zap",
-          "title": "2026 Trends Before Competitors",
-          "desc": "Two international expos in one trip — see next year's products, packaging, and smart-retail tech first."
+          "title": "2026 Trends Before Competitors"
         }
       ],
       "problems": [
         {
           "id": "prob-1",
+          "desc": "Buying through brokers and resellers adds 25% - 35% to every order before it ever reaches your warehouse.",
           "icon": "trending-down",
-          "title": "Middleman Markups",
-          "desc": "Buying through brokers and resellers adds 25% - 35% to every order before it ever reaches your warehouse."
+          "title": "Middleman Markups"
         },
         {
           "id": "prob-2",
+          "desc": "Without a shared language, deals die in translation — and you can't verify who is a real factory and who is a middleman.",
           "icon": "message-square-off",
-          "title": "Language & Trust Barriers",
-          "desc": "Without a shared language, deals die in translation — and you can't verify who is a real factory and who is a middleman."
+          "title": "Language & Trust Barriers"
         },
         {
           "id": "prob-3",
+          "desc": "Ordering from photos and hoping. No factory floor, no QC lab, no face-to-face MOQ negotiation, no relationship.",
           "icon": "search",
-          "title": "Blind Online Sourcing",
-          "desc": "Ordering from photos and hoping. No factory floor, no QC lab, no face-to-face MOQ negotiation, no relationship."
+          "title": "Blind Online Sourcing"
         }
       ],
       "audiences": [
         {
           "id": "aud-1",
-          "icon": "cpu",
-          "title": "Smart City & Tech Importers",
           "tag": "IoT & Tech",
-          "desc": "Source smart urban technologies, IoT solutions, smart home automation, and security equipment directly from certified manufacturers."
+          "desc": "Source smart urban technologies, IoT solutions, smart home automation, and security equipment directly from certified manufacturers.",
+          "icon": "cpu",
+          "title": "Smart City & Tech Importers"
         },
         {
           "id": "aud-2",
-          "icon": "coffee",
-          "title": "Cafe & Tea Brand Owners",
           "tag": "F&B Roasters",
-          "desc": "Discover premium Vietnamese tea, coffee beans, syrups, packaging, commercial espresso machines, and brewing technologies."
+          "desc": "Discover premium Vietnamese tea, coffee beans, syrups, packaging, commercial espresso machines, and brewing technologies.",
+          "icon": "coffee",
+          "title": "Cafe & Tea Brand Owners"
         },
         {
           "id": "aud-3",
-          "icon": "truck",
-          "title": "Wholesalers & Distributors",
           "tag": "Supply Chain",
-          "desc": "Establish exclusive distribution rights, negotiate factory-direct wholesale pricing, and explore OEM/ODM partnerships."
+          "desc": "Establish exclusive distribution rights, negotiate factory-direct wholesale pricing, and explore OEM/ODM partnerships.",
+          "icon": "truck",
+          "title": "Wholesalers & Distributors"
         },
         {
           "id": "aud-4",
-          "icon": "users",
-          "title": "F&B Entrepreneurs & Investors",
           "tag": "Franchise & Retail",
-          "desc": "Explore top Vietnamese and international franchise brands, trendsetting beverage concepts, and lucrative retail models."
+          "desc": "Explore top Vietnamese and international franchise brands, trendsetting beverage concepts, and lucrative retail models.",
+          "icon": "users",
+          "title": "F&B Entrepreneurs & Investors"
         }
       ],
       "itinerary": [
@@ -132,9 +132,18 @@
           "date": "Oct 8, 2026",
           "title": "Phnom Penh to Hanoi & Welcome Night",
           "events": [
-            { "time": "17:45 - 21:35", "activity": "Flight from Phnom Penh to Hanoi (Noi Bai International Airport)" },
-            { "time": "22:30 - 23:00", "activity": "Private bus transfer & Hotel Check-in in Hanoi" },
-            { "time": "23:00 - 24:00", "activity": "Optional evening walk & explore Hanoi Night Life" }
+            {
+              "time": "17:45 - 21:35",
+              "activity": "Flight from Phnom Penh to Hanoi (Noi Bai International Airport)"
+            },
+            {
+              "time": "22:30 - 23:00",
+              "activity": "Private bus transfer & Hotel Check-in in Hanoi"
+            },
+            {
+              "time": "23:00 - 24:00",
+              "activity": "Optional evening walk & explore Hanoi Night Life"
+            }
           ]
         },
         {
@@ -143,13 +152,34 @@
           "date": "Oct 9, 2026",
           "title": "Cafe Show Expo & B2B Matchmaking",
           "events": [
-            { "time": "08:00 - 09:00", "activity": "Buffet breakfast at the hotel" },
-            { "time": "09:00 - 09:30", "activity": "Transfer to Vietnam Exhibition Center by private coach" },
-            { "time": "10:00 - 12:00", "activity": "Visit Cafe Show Vietnam Expo (Tea, Coffee, Machinery & Ingredients)" },
-            { "time": "12:00 - 13:00", "activity": "Lunch break at the exhibition center" },
-            { "time": "13:00 - 16:00", "activity": "Focused B2B Matchmaking & brand negotiations with suppliers" },
-            { "time": "16:00 - 17:00", "activity": "Return to hotel and refresh" },
-            { "time": "18:00 - 22:00", "activity": "Hanoi Old Quarter cultural walk, dining & famous attraction sites" }
+            {
+              "time": "08:00 - 09:00",
+              "activity": "Buffet breakfast at the hotel"
+            },
+            {
+              "time": "09:00 - 09:30",
+              "activity": "Transfer to Vietnam Exhibition Center by private coach"
+            },
+            {
+              "time": "10:00 - 12:00",
+              "activity": "Visit Cafe Show Vietnam Expo (Tea, Coffee, Machinery & Ingredients)"
+            },
+            {
+              "time": "12:00 - 13:00",
+              "activity": "Lunch break at the exhibition center"
+            },
+            {
+              "time": "13:00 - 16:00",
+              "activity": "Focused B2B Matchmaking & brand negotiations with suppliers"
+            },
+            {
+              "time": "16:00 - 17:00",
+              "activity": "Return to hotel and refresh"
+            },
+            {
+              "time": "18:00 - 22:00",
+              "activity": "Hanoi Old Quarter cultural walk, dining & famous attraction sites"
+            }
           ]
         },
         {
@@ -158,13 +188,34 @@
           "date": "Oct 10, 2026",
           "title": "Smart City Expo, Factory Visit & Journey to Halong Bay",
           "events": [
-            { "time": "08:00 - 09:00", "activity": "Breakfast at the hotel" },
-            { "time": "09:00 - 09:30", "activity": "Coach departure to Vietnam Exhibition Center" },
-            { "time": "10:00 - 12:00", "activity": "Explore Smart City Expo (IoT, Smart Lighting, Infrastructure & Tech)" },
-            { "time": "12:00 - 13:00", "activity": "Lunch break at Exhibition Center" },
-            { "time": "13:00 - 15:30", "activity": "On-site visit to wholesale coffee/tea roasting factory and showroom" },
-            { "time": "15:30 - 18:30", "activity": "Scenic highway transfer to picturesque Halong Bay" },
-            { "time": "18:30 - 22:00", "activity": "Hotel check-in & explore Halong Bay Night Market and coastal promenade" }
+            {
+              "time": "08:00 - 09:00",
+              "activity": "Breakfast at the hotel"
+            },
+            {
+              "time": "09:00 - 09:30",
+              "activity": "Coach departure to Vietnam Exhibition Center"
+            },
+            {
+              "time": "10:00 - 12:00",
+              "activity": "Explore Smart City Expo (IoT, Smart Lighting, Infrastructure & Tech)"
+            },
+            {
+              "time": "12:00 - 13:00",
+              "activity": "Lunch break at Exhibition Center"
+            },
+            {
+              "time": "13:00 - 15:30",
+              "activity": "On-site visit to wholesale coffee/tea roasting factory and showroom"
+            },
+            {
+              "time": "15:30 - 18:30",
+              "activity": "Scenic highway transfer to picturesque Halong Bay"
+            },
+            {
+              "time": "18:30 - 22:00",
+              "activity": "Hotel check-in & explore Halong Bay Night Market and coastal promenade"
+            }
           ]
         },
         {
@@ -173,68 +224,131 @@
           "date": "Oct 11, 2026",
           "title": "UNESCO Halong Bay Cruise & Return to Phnom Penh",
           "events": [
-            { "time": "06:00 - 07:00", "activity": "Breakfast at hotel and express check-out" },
-            { "time": "07:00 - 07:30", "activity": "Transfer to Halong Bay International Tourist Harbour" },
-            { "time": "07:30 - 11:30", "activity": "Deluxe Cruise along Halong Bay UNESCO World Heritage Site with fresh seafood lunch" },
-            { "time": "11:30 - 15:00", "activity": "Private expressway transfer directly to Hanoi Noi Bai Airport" },
-            { "time": "15:00 - 17:00", "activity": "Check-in and international customs clearance" },
-            { "time": "18:00 - 20:30", "activity": "Flight back to Phnom Penh International Airport" }
+            {
+              "time": "06:00 - 07:00",
+              "activity": "Breakfast at hotel and express check-out"
+            },
+            {
+              "time": "07:00 - 07:30",
+              "activity": "Transfer to Halong Bay International Tourist Harbour"
+            },
+            {
+              "time": "07:30 - 11:30",
+              "activity": "Deluxe Cruise along Halong Bay UNESCO World Heritage Site with fresh seafood lunch"
+            },
+            {
+              "time": "11:30 - 15:00",
+              "activity": "Private expressway transfer directly to Hanoi Noi Bai Airport"
+            },
+            {
+              "time": "15:00 - 17:00",
+              "activity": "Check-in and international customs clearance"
+            },
+            {
+              "time": "18:00 - 20:30",
+              "activity": "Flight back to Phnom Penh International Airport"
+            }
           ]
         }
       ],
       "valueStack": {
         "tag": "Value Stack",
         "title": "One Price. Nine Things Fully Handled.",
-        "subtitle": "Everything below is included in your seat. Arrange each of these yourself and the same trip would cost you far more — in money and in months of effort.",
-        "totalLabel": "Total standalone value",
-        "totalValue": "$910+",
         "payLabel": "Your Early Bird investment",
+        "subtitle": "Everything below is included in your seat. Arrange each of these yourself and the same trip would cost you far more — in money and in months of effort.",
         "inclusions": [
-          { "id": "inc-1", "title": "Roundtrip Flight Tickets", "desc": "Phnom Penh - Hanoi roundtrip flights included.", "standalonePrice": 220 },
-          { "id": "inc-2", "title": "Hotel Stay (3 Nights / 4 Days)", "desc": "Premium hotel accommodation with twin/double sharing.", "standalonePrice": 150 },
-          { "id": "inc-3", "title": "Daily Hotel Breakfast", "desc": "Buffet breakfast provided every morning at the hotel.", "standalonePrice": 25 },
-          { "id": "inc-4", "title": "Private Air-Conditioned Coach", "desc": "Comfortable transportation for all expos, tours, and transfers in Vietnam.", "standalonePrice": 80 },
-          { "id": "inc-5", "title": "Trilingual Professional Guide", "desc": "Dedicated business guide fluent in Vietnamese, English, and Khmer.", "standalonePrice": 60 },
-          { "id": "inc-6", "title": "VIP All-Access Expo Passes", "desc": "Full official registration for Cafe Show Vietnam & Smart City Expo.", "standalonePrice": 120 },
-          { "id": "inc-7", "title": "Border & Customs Facilitation", "desc": "Smooth airport immigration and document assistance upon arrival.", "standalonePrice": 40 },
-          { "id": "inc-8", "title": "Direct Factory & Wholesale Visits", "desc": "Exclusive on-site visits to coffee/tea processing factories and wholesale hubs.", "standalonePrice": 150 },
-          { "id": "inc-9", "title": "Halong Bay Cruise & Hanoi Tour", "desc": "Sightseeing at Halong Bay UNESCO World Heritage Site with onboard lunch.", "standalonePrice": 65 }
-        ]
+          {
+            "id": "inc-1",
+            "desc": "Phnom Penh - Hanoi roundtrip flights included.",
+            "title": "Roundtrip Flight Tickets",
+            "standalonePrice": 220
+          },
+          {
+            "id": "inc-2",
+            "desc": "Premium hotel accommodation with twin/double sharing.",
+            "title": "Hotel Stay (3 Nights / 4 Days)",
+            "standalonePrice": 150
+          },
+          {
+            "id": "inc-3",
+            "desc": "Buffet breakfast provided every morning at the hotel.",
+            "title": "Daily Hotel Breakfast",
+            "standalonePrice": 25
+          },
+          {
+            "id": "inc-4",
+            "desc": "Comfortable transportation for all expos, tours, and transfers in Vietnam.",
+            "title": "Private Air-Conditioned Coach",
+            "standalonePrice": 80
+          },
+          {
+            "id": "inc-5",
+            "desc": "Dedicated business guide fluent in Vietnamese, English, and Khmer.",
+            "title": "Trilingual Professional Guide",
+            "standalonePrice": 60
+          },
+          {
+            "id": "inc-6",
+            "desc": "Full official registration for Cafe Show Vietnam & Smart City Expo.",
+            "title": "VIP All-Access Expo Passes",
+            "standalonePrice": 120
+          },
+          {
+            "id": "inc-7",
+            "desc": "Smooth airport immigration and document assistance upon arrival.",
+            "title": "Border & Customs Facilitation",
+            "standalonePrice": 40
+          },
+          {
+            "id": "inc-8",
+            "desc": "Exclusive on-site visits to coffee/tea processing factories and wholesale hubs.",
+            "title": "Direct Factory & Wholesale Visits",
+            "standalonePrice": 150
+          },
+          {
+            "id": "inc-9",
+            "desc": "Sightseeing at Halong Bay UNESCO World Heritage Site with onboard lunch.",
+            "title": "Halong Bay Cruise & Hanoi Tour",
+            "standalonePrice": 65
+          }
+        ],
+        "totalLabel": "Total standalone value",
+        "totalValue": "$910+"
       },
       "guarantee": {
-        "title": "Your Reservation is 100% Risk-Free",
-        "subtitle": "You pay nothing today until you have spoken with our team and decided this delegation is right for your business.",
         "badge": "100% Risk Reversal Guarantee",
+        "title": "Your Reservation is 100% Risk-Free",
         "points": [
           "No payment today — reserve with just your name & phone number",
           "Official corporate tax invoice & complete itinerary sent via Telegram",
           "Full refund if the organizer cancels the delegation"
-        ]
+        ],
+        "subtitle": "You pay nothing today until you have spoken with our team and decided this delegation is right for your business."
       },
       "highlights": [
         {
           "id": "h1",
+          "icon": "Building2",
           "title": "2 International Trade Expos",
-          "description": "VIP All-Access Passes to Cafe Show Vietnam & Smart City Expo 2026 in Hanoi.",
-          "icon": "Building2"
+          "description": "VIP All-Access Passes to Cafe Show Vietnam & Smart City Expo 2026 in Hanoi."
         },
         {
           "id": "h2",
+          "icon": "Coffee",
           "title": "Direct Factory & Wholesale Visits",
-          "description": "Exclusive on-site inspections of coffee/tea processing facilities, roasteries, and wholesale hubs.",
-          "icon": "Coffee"
+          "description": "Exclusive on-site inspections of coffee/tea processing facilities, roasteries, and wholesale hubs."
         },
         {
           "id": "h3",
+          "icon": "Ship",
           "title": "UNESCO Halong Bay Cruise",
-          "description": "Deluxe cruise along Halong Bay World Heritage Site with fresh seafood lunch on board.",
-          "icon": "Ship"
+          "description": "Deluxe cruise along Halong Bay World Heritage Site with fresh seafood lunch on board."
         },
         {
           "id": "h4",
+          "icon": "Languages",
           "title": "Trilingual Professional Guide",
-          "description": "Dedicated business facilitation and negotiation support fluent in Khmer, English, and Vietnamese.",
-          "icon": "Languages"
+          "description": "Dedicated business facilitation and negotiation support fluent in Khmer, English, and Vietnamese."
         }
       ],
       "packages": [
@@ -243,7 +357,7 @@
           "name": "Early Bird Admission",
           "price": "$499",
           "period": "per delegate (save $51 before Sept 8)",
-          "description": "Most popular choice for founders, importers, and F&B entrepreneurs.",
+          "ctaText": "Lock In $499 Early Bird Rate",
           "popular": true,
           "features": [
             "Roundtrip Flight Tickets (Phnom Penh - Hanoi)",
@@ -256,14 +370,14 @@
             "Direct Factory & Wholesale Market Visits",
             "UNESCO Halong Bay Cruise & Seafood Lunch"
           ],
-          "ctaText": "Lock In $499 Early Bird Rate"
+          "description": "Most popular choice for founders, importers, and F&B entrepreneurs."
         },
         {
           "id": "pkg-standard",
           "name": "Standard Admission",
           "price": "$550",
           "period": "per delegate (after Sept 8)",
-          "description": "Standard registration subject to remaining seat availability.",
+          "ctaText": "Register Standard Seat ($550)",
           "popular": false,
           "features": [
             "Roundtrip Flight Tickets (Phnom Penh - Hanoi)",
@@ -276,7 +390,7 @@
             "Direct Factory & Wholesale Market Visits",
             "UNESCO Halong Bay Cruise & Seafood Lunch"
           ],
-          "ctaText": "Register Standard Seat ($550)"
+          "description": "Standard registration subject to remaining seat availability."
         }
       ],
       "gallery": [
@@ -292,47 +406,47 @@
           "id": "t1",
           "name": "Dara S.",
           "role": "Cafe Chain CEO",
-          "company": "Phnom Penh Roastery Network",
           "quote": "I met five roasters in one day and cut my bean sourcing cost by 30%. One container order paid for this trip twice over.",
-          "rating": 5
+          "rating": 5,
+          "company": "Phnom Penh Roastery Network"
         },
         {
           "id": "t2",
           "name": "Sophea T.",
           "role": "Beverage Importer",
-          "company": "Indochina Wholesale Goods",
           "quote": "Seeing the factory floor with my own eyes built trust I could never get online. We signed an exclusive distribution deal for Cambodia.",
-          "rating": 5
+          "rating": 5,
+          "company": "Indochina Wholesale Goods"
         },
         {
           "id": "t3",
           "name": "Vuthy K.",
           "role": "Retail Tech Investor",
-          "company": "Smart Retail Ventures",
           "quote": "The trilingual guide handled every negotiation. We returned with two signed MOQ agreements and a new POS supplier.",
-          "rating": 5
+          "rating": 5,
+          "company": "Smart Retail Ventures"
         }
       ],
       "faqs": [
         {
           "id": "f1",
-          "question": "Do I need a visa for Vietnam?",
-          "answer": "Cambodian passport holders can enter Vietnam visa-free for up to 30 days. Our team also handles arrival paperwork and customs facilitation."
+          "answer": "Cambodian passport holders can enter Vietnam visa-free for up to 30 days. Our team also handles arrival paperwork and customs facilitation.",
+          "question": "Do I need a visa for Vietnam?"
         },
         {
           "id": "f2",
-          "question": "Do I have to pay today?",
-          "answer": "No. You reserve with just your name and phone number. Our coordinator calls you within 15 minutes, and you pay only after details are verified."
+          "answer": "No. You reserve with just your name and phone number. Our coordinator calls you within 15 minutes, and you pay only after details are verified.",
+          "question": "Do I have to pay today?"
         },
         {
           "id": "f3",
-          "question": "Can my company get an official invoice?",
-          "answer": "Yes. We issue corporate billing and official tax invoices — just request it during your confirmation call."
+          "answer": "Yes. We issue corporate billing and official tax invoices — just request it during your confirmation call.",
+          "question": "Can my company get an official invoice?"
         },
         {
           "id": "f4",
-          "question": "Is the hotel room private?",
-          "answer": "The package includes premium twin/double sharing. Single private rooms are available with a small supplement upon request."
+          "answer": "The package includes premium twin/double sharing. Single private rooms are available with a small supplement upon request.",
+          "question": "Is the hotel room private?"
         }
       ],
       "formConfig": {
@@ -343,24 +457,24 @@
         "fields": [
           {
             "id": "fullName",
-            "label": "Full Name",
             "type": "text",
-            "placeholder": "e.g. Sok Sovann / Johnathan Doe",
-            "required": true
+            "label": "Full Name",
+            "required": true,
+            "placeholder": "e.g. Sok Sovann / Johnathan Doe"
           },
           {
             "id": "phone",
-            "label": "Phone / Telegram / WhatsApp",
             "type": "tel",
-            "placeholder": "e.g. 012 345 678",
-            "required": true
+            "label": "Phone / Telegram / WhatsApp",
+            "required": true,
+            "placeholder": "e.g. 012 345 678"
           },
           {
             "id": "email",
-            "label": "Work Email (Optional)",
             "type": "email",
-            "placeholder": "sokha@company.com.kh",
-            "required": false
+            "label": "Work Email (Optional)",
+            "required": false,
+            "placeholder": "sokha@company.com.kh"
           }
         ]
       },
@@ -368,8 +482,8 @@
       "metaDescription": "Join the exclusive B2B Business Delegation to Hanoi and Halong Bay, Vietnam. Explore Cafe Show Vietnam & Smart City Expo, direct factory visits, and business matchmaking. Organized by KHB EVENTS.",
       "viewsCount": 342,
       "leadsCount": 22,
-      "createdAt": "2026-09-21T04:22:10.310Z",
-      "updatedAt": "2026-09-21T04:22:10.311Z"
+      "createdAt": "2026-09-21T04:22:10.31+00:00",
+      "updatedAt": "2026-09-21T08:43:11.694Z"
     }
   ],
   "leads": [

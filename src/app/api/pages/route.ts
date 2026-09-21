@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getPages, savePage } from '@/lib/storage';
 import { isAuthenticated } from '@/lib/auth';
 
@@ -19,6 +20,15 @@ export async function POST(req: NextRequest) {
     }
 
     const saved = await savePage(body);
+
+    try {
+      revalidatePath(`/${saved.slug}`);
+      revalidatePath(`/${saved.slug}/app`);
+      revalidatePath(`/${saved.slug}/optin`);
+      revalidatePath('/[slug]', 'page');
+      revalidatePath('/');
+    } catch {}
+
     return NextResponse.json({ success: true, page: saved });
   } catch (error) {
     console.error('Save page error:', error);

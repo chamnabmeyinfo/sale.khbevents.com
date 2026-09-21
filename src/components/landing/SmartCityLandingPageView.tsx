@@ -642,18 +642,59 @@ export default function SmartCityLandingPageView({ page, settings }: { page?: La
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [successSeat, setSuccessSeat] = useState(20);
-  const [localClaimed, setLocalClaimed] = useState(page?.urgency?.claimedSeats ?? GENERAL.claimedSeats);
-  const [utmParams, setUtmParams] = useState<Record<string, string>>({});
-
   // Dynamic overrides from Page editor data
   const effTotalSeats = page?.urgency?.totalSeats ?? GENERAL.totalSeats;
   const effClaimedSeats = page?.urgency?.claimedSeats ?? GENERAL.claimedSeats;
   const effEarlyBirdPrice = page?.urgency?.earlyBirdPrice ? (Number(page.urgency.earlyBirdPrice) || GENERAL.earlyBirdPrice) : GENERAL.earlyBirdPrice;
   const effRegularPrice = page?.urgency?.regularPrice ? (Number(page.urgency.regularPrice) || GENERAL.regularPrice) : GENERAL.regularPrice;
+  const effEarlyBirdDeadline = page?.urgency?.earlyBirdDeadline || GENERAL.earlyBirdDeadline;
+  const effRegistrationDeadline = page?.urgency?.registrationDeadline || GENERAL.registrationDeadline;
+  const effPhone = settings?.phone || GENERAL.contactPhone;
   const effTgUsername = settings?.telegramUsername || GENERAL.contactTelegramUsername;
   const effTgUrl = settings?.telegramUsername 
     ? `https://t.me/${settings.telegramUsername.replace('@', '')}` 
     : GENERAL.contactTelegramUrl;
+
+  const [localClaimed, setLocalClaimed] = useState(effClaimedSeats);
+  const [utmParams, setUtmParams] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (page?.urgency?.claimedSeats !== undefined) {
+      setLocalClaimed(page.urgency.claimedSeats);
+    }
+  }, [page?.urgency?.claimedSeats]);
+
+  // Section visibility helper
+  const isVisible = (key: string) => {
+    if (!page?.sectionVisibility) return true;
+    return (page.sectionVisibility as any)[key] !== false;
+  };
+
+  // Date formatter for display
+  const formatDeadlineText = (isoStr?: string) => {
+    if (!isoStr) return 'Sept 8, 2026';
+    try {
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return isoStr;
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return isoStr;
+    }
+  };
+
+  // Hero slides: prefer page.heroImage and page.gallery if configured
+  const heroSlides = (page?.gallery && page.gallery.length > 0)
+    ? (page.heroImage && !page.gallery.includes(page.heroImage) ? [page.heroImage, ...page.gallery] : page.gallery)
+    : (page?.heroImage ? [page.heroImage, ...HERO_SLIDES.filter(s => s !== page.heroImage)] : HERO_SLIDES);
+
+  // Gallery items: prefer page.gallery
+  const galleryItems = (page?.gallery && page.gallery.length > 0)
+    ? page.gallery.map((img, idx) => ({
+        src: img,
+        alt: `${page.title || 'Delegation'} Photo ${idx + 1}`,
+        badge: idx === 0 ? 'Featured' : `Photo ${idx + 1}`
+      }))
+    : GALLERY_ITEMS;
 
   // ── Restore saved language & capture UTMs on mount
   useEffect(() => {
@@ -674,35 +715,80 @@ export default function SmartCityLandingPageView({ page, settings }: { page?: La
 
   // Merge dynamic page data into active language content
   const baseContent = CONTENT[lang];
+  const savings = Math.max(0, effRegularPrice - effEarlyBirdPrice);
+  const formattedDeadline = formatDeadlineText(effEarlyBirdDeadline);
+
   const c = {
     ...baseContent,
     badge: page?.badge || baseContent.badge,
     heroTitle: page?.heroHeadline || page?.title || baseContent.heroTitle,
+    heroHeadlineHighlight: page?.heroSubheadline && !page?.subtitle ? '' : (page?.subtitle || baseContent.heroHeadlineHighlight),
     heroSubtitle: page?.heroSubheadline || page?.description || baseContent.heroSubtitle,
-    pillDate: page?.eventDate ? `${page.eventDate} (${page.eventTime || '4D/3N'})` : baseContent.pillDate,
+    heroCtaDiscover: page?.heroCtaText || baseContent.heroCtaDiscover,
+    heroRiskNote: page?.urgency?.riskNote || baseContent.heroRiskNote,
+    earlyBirdNotice: page?.urgency?.noticeText || (lang === 'kh'
+      ? `ការផ្តល់ជូន Early Bird: ចំណេញ $${savings} មុន ${formattedDeadline} | កម្រិតត្រឹម ${effTotalSeats} កៅអីប៉ុណ្ណោះ`
+      : `Early Bird Special: Save $${savings} before ${formattedDeadline} | Strictly limited to ${effTotalSeats} seats`),
+    heroPriceAnchorNote: lang === 'kh'
+      ? `តម្លៃ Early Bird — ពីមុន $${effRegularPrice}. អ្នកចំណេញ $${savings}.`
+      : `Early Bird rate — was $${effRegularPrice}. You save $${savings}.`,
+    pillDate: page?.eventDate ? `${page.eventDate} (${page.eventTime || '4D / 3N'})` : baseContent.pillDate,
     pillDest: page?.venue || baseContent.pillDest,
+    pillSeats: `Strictly ${effTotalSeats} Seats Cohort`,
+    navCta: lang === 'kh' ? `កក់ $${effEarlyBirdPrice}` : `Reserve $${effEarlyBirdPrice}`,
+    navCtaMobile: lang === 'kh' ? `ចុះឈ្មោះ ($${effEarlyBirdPrice})` : `Reserve Your Seat ($${effEarlyBirdPrice})`,
     coreValues: (page?.coreValues && page.coreValues.length > 0) ? page.coreValues : baseContent.coreValues,
     problems: (page?.problems && page.problems.length > 0) ? page.problems : baseContent.problems,
     audiences: (page?.audiences && page.audiences.length > 0) ? page.audiences : baseContent.audiences,
     itinerary: (page?.itinerary && page.itinerary.length > 0) ? page.itinerary : baseContent.itinerary,
     testimonials: (page?.testimonials && page.testimonials.length > 0) ? page.testimonials : baseContent.testimonials,
     faqs: (page?.faqs && page.faqs.length > 0) ? page.faqs.map(f => ({ q: f.question, a: f.answer })) : baseContent.faqs,
-    guaranteePoints: (page?.guarantee?.points && page.guarantee.points.length > 0) ? page.guarantee.points : baseContent.guaranteePoints
+    guaranteeTitle: page?.guarantee?.title || baseContent.guaranteeTitle,
+    guaranteeText: page?.guarantee?.subtitle || baseContent.guaranteeText,
+    guaranteePoints: (page?.guarantee?.points && page.guarantee.points.length > 0) ? page.guarantee.points : baseContent.guaranteePoints,
+    valueStackTag: page?.valueStack?.tag || baseContent.valueStackTag,
+    valueStackTitle: page?.valueStack?.title || baseContent.valueStackTitle,
+    valueStackSubtitle: page?.valueStack?.subtitle || baseContent.valueStackSubtitle,
+    valueStackTotalLabel: page?.valueStack?.totalLabel || baseContent.valueStackTotalLabel,
+    valueStackTotalValue: page?.valueStack?.totalValue || baseContent.valueStackTotalValue,
+    valueStackPayLabel: page?.valueStack?.payLabel || baseContent.valueStackPayLabel,
+    valueCtaBtn: lang === 'kh' ? `ចាក់សោ $${effEarlyBirdPrice} — កក់ឥឡូវ` : `Lock In $${effEarlyBirdPrice} — Reserve Now`,
+    passRateValue: `$${effEarlyBirdPrice} EARLY BIRD`,
+    seatTitle: `${effTotalSeats}-Seat Delegation Roster`,
+    earlyBirdPlanName: lang === 'kh' ? 'សំបុត្រ Early Bird' : 'Early Bird Admission',
+    regularPlanName: lang === 'kh' ? 'សំបុត្រធម្មតា' : 'Standard Admission',
+    registrationSectionTitle: page?.formConfig?.headline || baseContent.registrationSectionTitle,
+    registrationSectionSubtitle: page?.formConfig?.subheadline || baseContent.registrationSectionSubtitle,
+    formSubmitBtn: page?.formConfig?.submitButtonText || baseContent.formSubmitBtn,
+    formSuccessDesc: page?.formConfig?.successMessage || baseContent.formSuccessDesc,
   };
   const tgUrl = effTgUrl;
+
+  // Inclusions for Value Stack
+  const inclusionsList = (page?.valueStack?.inclusions && page.valueStack.inclusions.length > 0)
+    ? page.valueStack.inclusions.map((item, idx) => ({
+        id: idx + 1,
+        title: item.title,
+        desc: item.desc,
+        price: item.standalonePrice ? `$${item.standalonePrice}` : (CONTENT.en.valueStackPrices[idx] ? `$${CONTENT.en.valueStackPrices[idx]}` : '')
+      }))
+    : c.inclusions.map((item, idx) => ({
+        ...item,
+        price: `$${CONTENT.en.valueStackPrices[idx] || 50}`
+      }));
 
   // ── Hero slider
   useEffect(() => {
     const timer = setInterval(() => {
-      setHeroSlide(s => (s + 1) % HERO_SLIDES.length);
+      setHeroSlide(s => (s + 1) % (heroSlides.length || 1));
     }, 5500);
     return () => clearInterval(timer);
-  }, []);
+  }, [heroSlides.length]);
 
   // ── Countdown
   useEffect(() => {
-    const earlyDeadline = new Date(GENERAL.earlyBirdDeadline).getTime();
-    const regDeadline = new Date(GENERAL.registrationDeadline).getTime();
+    const earlyDeadline = new Date(effEarlyBirdDeadline).getTime();
+    const regDeadline = new Date(effRegistrationDeadline).getTime();
     function tick() {
       const now = Date.now();
       const early = earlyDeadline > now;
@@ -723,7 +809,7 @@ export default function SmartCityLandingPageView({ page, settings }: { page?: La
     tick();
     const iv = setInterval(tick, 1000);
     return () => clearInterval(iv);
-  }, []);
+  }, [effEarlyBirdDeadline, effRegistrationDeadline]);
 
   // ── Language toggle with persistence
   const switchLang = (l: 'en' | 'kh') => {
@@ -768,9 +854,9 @@ export default function SmartCityLandingPageView({ page, settings }: { page?: La
           fullName: regName.trim(),
           phone: regPhone.trim(),
           message: `Seat #${regSeat} | Profile: ${regProfile}`,
-          packageInterest: isEarlyBird ? `Early Bird $${GENERAL.earlyBirdPrice}` : `Standard $${GENERAL.regularPrice}`,
-          landingPageSlug: 'smart-city-tea-cafe',
-          landingPageTitle: 'Smart City, Tea & Cafe Business Trip to Vietnam 2026',
+          packageInterest: isEarlyBird ? `Early Bird $${effEarlyBirdPrice}` : `Standard $${effRegularPrice}`,
+          landingPageSlug: page?.slug || 'smart-city-tea-cafe',
+          landingPageTitle: page?.title || 'Smart City, Tea & Cafe Business Trip to Vietnam 2026',
           source: 'landing_page',
           customFields: { seat: String(regSeat), profile: regProfile },
           utmSource: utmParams.utm_source,
@@ -784,7 +870,7 @@ export default function SmartCityLandingPageView({ page, settings }: { page?: La
       if (res.ok && result.success) {
         setSuccessSeat(regSeat);
         setSubmitted(true);
-        setLocalClaimed(prev => Math.min(prev + 1, 30));
+        setLocalClaimed(prev => Math.min(prev + 1, effTotalSeats));
       } else {
         alert(result.error || 'Submission failed. Please try again.');
       }
@@ -799,7 +885,7 @@ export default function SmartCityLandingPageView({ page, settings }: { page?: La
   const passName = regName.trim() ? regName.toUpperCase() : (lang === 'kh' ? c.passGuest : 'GUEST DELEGATE');
 
   // Available seats for dropdown
-  const availableSeats = Array.from({ length: 30 }, (_, i) => i + 1).filter(n => n > localClaimed);
+  const availableSeats = Array.from({ length: effTotalSeats }, (_, i) => i + 1).filter(n => n > localClaimed);
 
   // Telegram msg for concierge
   const tgMsg = encodeURIComponent(`Hello KHB Events, I want to reserve Seat #${regSeat} for the Vietnam Delegation 2026. My name is ${regName.trim() || 'Guest'}.`);
@@ -811,16 +897,18 @@ export default function SmartCityLandingPageView({ page, settings }: { page?: La
       {/* ═══════════════════════════════════════════════
           STICKY URGENCY BAR
       ═══════════════════════════════════════════════ */}
-      <div className="urgency-bar">
-        <div className="container urgency-inner">
-          <span className="urgency-fire">🔥</span>
-          <span className="urgency-msg">{c.earlyBirdNotice}</span>
-          <span className="urgency-countdown" aria-hidden="true">
-            <b>{countdown.d}</b>d&nbsp;<b>{countdown.h}</b>h&nbsp;<b>{countdown.m}</b>m&nbsp;<b>{countdown.s}</b>s
-          </span>
-          <a href="#register" className="urgency-cta">Claim $499 →</a>
+      {isVisible('urgency') && (
+        <div className="urgency-bar">
+          <div className="container urgency-inner">
+            <span className="urgency-fire">🔥</span>
+            <span className="urgency-msg">{c.earlyBirdNotice}</span>
+            <span className="urgency-countdown" aria-hidden="true">
+              <b>{countdown.d}</b>d&nbsp;<b>{countdown.h}</b>h&nbsp;<b>{countdown.m}</b>m&nbsp;<b>{countdown.s}</b>s
+            </span>
+            <a href="#register" className="urgency-cta">Claim ${effEarlyBirdPrice} →</a>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ═══════════════════════════════════════════════
           HEADER
@@ -882,75 +970,79 @@ export default function SmartCityLandingPageView({ page, settings }: { page?: La
       {/* ═══════════════════════════════════════════════
           HERO
       ═══════════════════════════════════════════════ */}
-      <section className="hero-section" id="overview">
-        <div className="hero-slider">
-          {HERO_SLIDES.map((src, i) => (
-            <div key={i} className={`hero-slide${heroSlide === i ? ' active' : ''}`} style={{ backgroundImage: `url('${src}')` }} />
-          ))}
-        </div>
-        <div className="hero-overlay" />
-        <div className="hero-slider-dots">
-          {HERO_SLIDES.map((_, i) => (
-            <span key={i} className={`hero-dot${heroSlide === i ? ' active' : ''}`} onClick={() => setHeroSlide(i)} />
-          ))}
-        </div>
-        <div className="container hero-content">
-          <div className="hero-badge">
-            <span className="badge-dot" />
-            <span>{c.badge}</span>
+      {isVisible('hero') && (
+        <section className="hero-section" id="overview">
+          <div className="hero-slider">
+            {heroSlides.map((src, i) => (
+              <div key={i} className={`hero-slide${heroSlide === i ? ' active' : ''}`} style={{ backgroundImage: `url('${src}')` }} />
+            ))}
           </div>
-          <h1 className="hero-title">{c.heroTitle}</h1>
-          <p className="hero-headline-sub">{c.heroHeadlineHighlight}</p>
-          <p className="hero-subtitle">{c.heroSubtitle}</p>
+          <div className="hero-overlay" />
+          <div className="hero-slider-dots">
+            {heroSlides.map((_, i) => (
+              <span key={i} className={`hero-dot${heroSlide === i ? ' active' : ''}`} onClick={() => setHeroSlide(i)} />
+            ))}
+          </div>
+          <div className="container hero-content">
+            <div className="hero-badge">
+              <span className="badge-dot" />
+              <span>{c.badge}</span>
+            </div>
+            <h1 className="hero-title">{c.heroTitle}</h1>
+            {c.heroHeadlineHighlight && <p className="hero-headline-sub">{c.heroHeadlineHighlight}</p>}
+            <p className="hero-subtitle">{c.heroSubtitle}</p>
 
-          <div className="hero-cta-group">
-            <a href="#core-value" className="btn-primary-hero">
-              {ICONS.plus}
-              <span>{c.heroCtaDiscover}</span>
-            </a>
-          </div>
-          <a href="#register" className="hero-skip-link">{c.heroSkipLink}</a>
-          <div className="hero-risk-note">
-            {ICONS.check}
-            <span>{c.heroRiskNote}</span>
-          </div>
+            <div className="hero-cta-group">
+              <a href={page?.heroCtaLink || "#core-value"} className="btn-primary-hero">
+                {ICONS.plus}
+                <span>{c.heroCtaDiscover}</span>
+              </a>
+            </div>
+            <a href="#register" className="hero-skip-link">{c.heroSkipLink}</a>
+            <div className="hero-risk-note">
+              {ICONS.check}
+              <span>{c.heroRiskNote}</span>
+            </div>
 
-          <div className="hero-pills-grid">
-            <div className="hero-pill"><span className="hero-pill-icon">📅</span><span>{c.pillDate}</span></div>
-            <div className="hero-pill"><span className="hero-pill-icon">📍</span><span>{c.pillDest}</span></div>
-            <div className="hero-pill"><span className="hero-pill-icon">🏢</span><span>{c.pillExpos}</span></div>
-            <div className="hero-pill"><span className="hero-pill-icon">🚢</span><span>{c.pillCruise}</span></div>
-            <div className="hero-pill highlight-pill"><span className="hero-pill-icon">👥</span><span>{c.pillSeats}</span></div>
+            <div className="hero-pills-grid">
+              <div className="hero-pill"><span className="hero-pill-icon">📅</span><span>{c.pillDate}</span></div>
+              <div className="hero-pill"><span className="hero-pill-icon">📍</span><span>{c.pillDest}</span></div>
+              <div className="hero-pill"><span className="hero-pill-icon">🏢</span><span>{c.pillExpos}</span></div>
+              <div className="hero-pill"><span className="hero-pill-icon">🚢</span><span>{c.pillCruise}</span></div>
+              <div className="hero-pill highlight-pill"><span className="hero-pill-icon">👥</span><span>{c.pillSeats}</span></div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
           CORE VALUE
       ═══════════════════════════════════════════════ */}
-      <section className="section-padding core-value-section" id="core-value">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-tag">{c.coreValueTag}</span>
-            <h2 className="section-title">{c.coreValueTitle}</h2>
-            <p className="section-subtitle">{c.coreValueSubtitle}</p>
+      {isVisible('coreValues') && (
+        <section className="section-padding core-value-section" id="core-value">
+          <div className="container">
+            <div className="section-header">
+              <span className="section-tag">{c.coreValueTag}</span>
+              <h2 className="section-title">{c.coreValueTitle}</h2>
+              <p className="section-subtitle">{c.coreValueSubtitle}</p>
+            </div>
+            <div className="core-grid">
+              {c.coreValues.map((v, i) => (
+                <div className="core-card" key={v.num || i}>
+                  <div className="core-card-num">{v.num || `0${i + 1}`}</div>
+                  <div className="core-icon-box">{ICONS[v.icon || 'chart'] || ICONS.chart}</div>
+                  <h3>{v.title}</h3>
+                  <p>{v.desc}</p>
+                </div>
+              ))}
+            </div>
+            <div className="core-bridge">
+              {ICONS.down}
+              <span>{c.coreValueBridge}</span>
+            </div>
           </div>
-          <div className="core-grid">
-            {c.coreValues.map(v => (
-              <div className="core-card" key={v.num}>
-                <div className="core-card-num">{v.num}</div>
-                <div className="core-icon-box">{ICONS[v.icon || 'chart']}</div>
-                <h3>{v.title}</h3>
-                <p>{v.desc}</p>
-              </div>
-            ))}
-          </div>
-          <div className="core-bridge">
-            {ICONS.down}
-            <span>{c.coreValueBridge}</span>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
           SOCIAL PROOF STRIP
@@ -977,108 +1069,127 @@ export default function SmartCityLandingPageView({ page, settings }: { page?: La
       {/* ═══════════════════════════════════════════════
           STATS STRIP
       ═══════════════════════════════════════════════ */}
-      <section className="stats-section">
-        <div className="container stats-grid">
-          {c.statsStrip.map((s, i) => (
-            <div key={i} className="stats-card">
-              <div className="stats-value">{s.value}</div>
-              <div className="stats-label">{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      {page?.highlights && page.highlights.length > 0 ? (
+        <section className="stats-section">
+          <div className="container stats-grid" style={{ gridTemplateColumns: `repeat(${Math.min(page.highlights.length, 4)}, 1fr)` }}>
+            {page.highlights.map((h, i) => (
+              <div key={h.id || i} className="stats-card">
+                <div className="stats-value" style={{ fontSize: '1.25rem' }}>{h.title}</div>
+                <div className="stats-label">{h.description}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <section className="stats-section">
+          <div className="container stats-grid">
+            {c.statsStrip.map((s, i) => (
+              <div key={i} className="stats-card">
+                <div className="stats-value">{s.value}</div>
+                <div className="stats-label">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
           PROBLEM → SOLUTION
       ═══════════════════════════════════════════════ */}
-      <section className="section-padding problem-section" id="problem">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-tag">{c.problemTag}</span>
-            <h2 className="section-title">{c.problemTitle}</h2>
-            <p className="section-subtitle">{c.problemSubtitle}</p>
+      {isVisible('problems') && (
+        <section className="section-padding problem-section" id="problem">
+          <div className="container">
+            <div className="section-header">
+              <span className="section-tag">{c.problemTag}</span>
+              <h2 className="section-title">{c.problemTitle}</h2>
+              <p className="section-subtitle">{c.problemSubtitle}</p>
+            </div>
+            <div className="problem-grid">
+              {c.problems.map((p: any, i: number) => (
+                <div key={p.id || i} className="problem-card">
+                  <div className="problem-icon-box">{ICONS[p.icon || 'trend-down'] || ICONS['trend-down']}</div>
+                  <h3>{p.title}</h3>
+                  <p>{p.desc}</p>
+                </div>
+              ))}
+            </div>
+            <div className="solution-bridge">
+              <div className="bridge-icon">🤝</div>
+              <p>{c.solutionBridge}</p>
+            </div>
           </div>
-          <div className="problem-grid">
-            {c.problems.map((p, i) => (
-              <div key={i} className="problem-card">
-                <div className="problem-icon-box">{ICONS[p.icon || 'trend-down']}</div>
-                <h3>{p.title}</h3>
-                <p>{p.desc}</p>
-              </div>
-            ))}
-          </div>
-          <div className="solution-bridge">
-            <div className="bridge-icon">🤝</div>
-            <p>{c.solutionBridge}</p>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
           WHO SHOULD JOIN
       ═══════════════════════════════════════════════ */}
-      <section className="section-padding audience-section" id="audience">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-tag">Target Participants</span>
-            <h2 className="section-title">{c.audienceSecTitle}</h2>
-            <p className="section-subtitle">{c.audienceSecSub}</p>
+      {isVisible('audiences') && (
+        <section className="section-padding audience-section" id="audience">
+          <div className="container">
+            <div className="section-header">
+              <span className="section-tag">Target Participants</span>
+              <h2 className="section-title">{c.audienceSecTitle}</h2>
+              <p className="section-subtitle">{c.audienceSecSub}</p>
+            </div>
+            <div className="audience-grid">
+              {c.audiences.map((a: any, i: number) => (
+                <div key={a.id || i} className="audience-card">
+                  <div className="audience-card-icon">{ICONS[a.icon || 'users'] || ICONS.users}</div>
+                  <div className="audience-card-title">{a.title}</div>
+                  <div className="audience-card-desc">{a.desc}</div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="audience-grid">
-            {c.audiences.map((a, i) => (
-              <div key={i} className="audience-card">
-                <div className="audience-card-icon">{ICONS[a.icon || 'users']}</div>
-                <div className="audience-card-title">{a.title}</div>
-                <div className="audience-card-desc">{a.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
           VALUE STACK
       ═══════════════════════════════════════════════ */}
-      <section className="section-padding value-section" id="value">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-tag">{c.valueStackTag}</span>
-            <h2 className="section-title">{c.valueStackTitle}</h2>
-            <p className="section-subtitle">{c.valueStackSubtitle}</p>
-          </div>
-          <div className="value-grid">
-            <div className="value-list">
-              {c.inclusions.map((item, idx) => (
-                <div key={item.id} className="value-item">
-                  <div className="value-badge-num">{item.id}</div>
-                  <div className="value-item-details">
-                    <h4 className="value-item-title">{item.title}</h4>
-                    <p className="value-item-desc">{item.desc}</p>
-                  </div>
-                  <div className="value-item-value">${CONTENT.en.valueStackPrices[idx]}</div>
-                </div>
-              ))}
+      {isVisible('valueStack') && (
+        <section className="section-padding value-section" id="value">
+          <div className="container">
+            <div className="section-header">
+              <span className="section-tag">{c.valueStackTag}</span>
+              <h2 className="section-title">{c.valueStackTitle}</h2>
+              <p className="section-subtitle">{c.valueStackSubtitle}</p>
             </div>
-            <aside className="value-total-card">
-              <div className="value-total-note">{c.valueStackNote}</div>
-              <div className="value-total-row">
-                <span className="value-total-label">{c.valueStackTotalLabel}</span>
-                <span className="value-total-amount">{c.valueStackTotalValue}</span>
+            <div className="value-grid">
+              <div className="value-list">
+                {inclusionsList.map((item) => (
+                  <div key={item.id} className="value-item">
+                    <div className="value-badge-num">{item.id}</div>
+                    <div className="value-item-details">
+                      <h4 className="value-item-title">{item.title}</h4>
+                      <p className="value-item-desc">{item.desc}</p>
+                    </div>
+                    {item.price && <div className="value-item-value">{item.price}</div>}
+                  </div>
+                ))}
               </div>
-              <div className="value-divider" />
-              <div className="value-total-row pay">
-                <span className="value-total-label">{c.valueStackPayLabel}</span>
-                <div className="value-total-price">
-                  <span className="price-currency-sm">$</span>
-                  <span>{GENERAL.earlyBirdPrice}</span>
+              <aside className="value-total-card">
+                <div className="value-total-note">{c.valueStackNote}</div>
+                <div className="value-total-row">
+                  <span className="value-total-label">{c.valueStackTotalLabel}</span>
+                  <span className="value-total-amount">{c.valueStackTotalValue}</span>
                 </div>
-              </div>
-              <a href="#register" className="btn-value-cta">{c.valueCtaBtn}</a>
-              <div className="value-cta-sub">{c.heroRiskNote}</div>
-            </aside>
+                <div className="value-divider" />
+                <div className="value-total-row pay">
+                  <span className="value-total-label">{c.valueStackPayLabel}</span>
+                  <div className="value-total-price">
+                    <span className="price-currency-sm">$</span>
+                    <span>{effEarlyBirdPrice}</span>
+                  </div>
+                </div>
+                <a href="#register" className="btn-value-cta">{c.valueCtaBtn}</a>
+                <div className="value-cta-sub">{c.heroRiskNote}</div>
+              </aside>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
           ROI MATCHMAKER
@@ -1160,420 +1271,469 @@ export default function SmartCityLandingPageView({ page, settings }: { page?: La
       {/* ═══════════════════════════════════════════════
           ITINERARY + GALLERY
       ═══════════════════════════════════════════════ */}
-      <section className="section-padding" id="itinerary">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-tag">Agenda &amp; Visual Experience</span>
-            <h2 className="section-title">{c.itineraryTitle}</h2>
-            <p className="section-subtitle">{c.itinerarySubtitle}</p>
-          </div>
-
-          {/* Gallery banner */}
-          <div className="photo-gallery-banner">
-            <div className="gallery-track">
-              {[...GALLERY_ITEMS, ...GALLERY_ITEMS].map((item, i) => (
-                <div key={i} className="gallery-item">
-                  <img src={item.src} alt={item.alt} width={400} height={240} loading="lazy" decoding="async" />
-                  <div className="gallery-badge">{item.badge}</div>
-                </div>
-              ))}
+      {isVisible('itinerary') && (
+        <section className="section-padding" id="itinerary">
+          <div className="container">
+            <div className="section-header">
+              <span className="section-tag">Agenda &amp; Visual Experience</span>
+              <h2 className="section-title">{c.itineraryTitle}</h2>
+              <p className="section-subtitle">{c.itinerarySubtitle}</p>
             </div>
-          </div>
 
-          {/* Itinerary tabs */}
-          <div className="itinerary-tabs-nav">
-            {c.itinerary.map((day, idx) => (
-              <button key={idx} className={`itinerary-tab-btn${activeItinTab === idx ? ' active' : ''}`} onClick={() => setActiveItinTab(idx)}>
-                <span className="tab-day-badge">Day {day.day}</span>
-                <span>{day.date}</span>
-              </button>
-            ))}
-          </div>
-          <div className="itinerary-cards-container">
-            {c.itinerary.map((day, idx) => (
-              <div key={idx} className={`itinerary-day-card${activeItinTab === idx ? ' active' : ''}`}>
-                <div className="day-card-header">
-                  <div className="day-title-wrap">
-                    <span className="day-date-tag">{day.date}</span>
-                    <h3>{day.title}</h3>
-                  </div>
-                </div>
-                <div className="timeline-events-list">
-                  {day.events.map((ev, ei) => (
-                    <div key={ei} className="timeline-event-item">
-                      <span className="event-time-badge">{ev.time}</span>
-                      <div className="event-activity-text">{ev.activity}</div>
+            {/* Gallery banner */}
+            {isVisible('gallery') && (
+              <div className="photo-gallery-banner">
+                <div className="gallery-track">
+                  {[...galleryItems, ...galleryItems].map((item, i) => (
+                    <div key={i} className="gallery-item">
+                      <img src={item.src} alt={item.alt} width={400} height={240} loading="lazy" decoding="async" />
+                      <div className="gallery-badge">{item.badge}</div>
                     </div>
                   ))}
                 </div>
               </div>
-            ))}
+            )}
+
+            {/* Itinerary tabs */}
+            <div className="itinerary-tabs-nav">
+              {c.itinerary.map((day, idx) => (
+                <button key={idx} className={`itinerary-tab-btn${activeItinTab === idx ? ' active' : ''}`} onClick={() => setActiveItinTab(idx)}>
+                  <span className="tab-day-badge">Day {day.day}</span>
+                  <span>{day.date}</span>
+                </button>
+              ))}
+            </div>
+            <div className="itinerary-cards-container">
+              {c.itinerary.map((day, idx) => (
+                <div key={idx} className={`itinerary-day-card${activeItinTab === idx ? ' active' : ''}`}>
+                  <div className="day-card-header">
+                    <div className="day-title-wrap">
+                      <span className="day-date-tag">{day.date}</span>
+                      <h3>{day.title}</h3>
+                    </div>
+                  </div>
+                  <div className="timeline-events-list">
+                    {day.events.map((ev, ei) => (
+                      <div key={ei} className="timeline-event-item">
+                        <span className="event-time-badge">{ev.time}</span>
+                        <div className="event-activity-text">{ev.activity}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
-          30-SEAT CABIN BOARD
+          CABIN SEATS BOARD
       ═══════════════════════════════════════════════ */}
-      <section className="section-padding seat-board-section" id="seats">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-tag">Executive Seat Allocation</span>
-            <h2 className="section-title">{c.seatTitle}</h2>
-            <p className="section-subtitle">{c.seatSubtitle}</p>
-          </div>
-          <div className="seat-board-card">
-            <div className="seat-board-header">
-              <div className="seat-board-stats">
-                <div className="stat-pill reserved-stat">
-                  <span className="stat-dot reserved-dot" />
-                  <span>{localClaimed} {c.seatReservedTxt}</span>
-                </div>
-                <div className="stat-pill available-stat">
-                  <span className="stat-dot available-dot" />
-                  <span>{30 - localClaimed} {c.seatAvailableTxt}</span>
-                </div>
-              </div>
-              <div className="seat-legend">
-                <span className="legend-item"><span className="legend-box reserved" /> <span>{c.seatLegendBooked}</span></span>
-                <span className="legend-item"><span className="legend-box available" /> <span>{c.seatLegendAvailable}</span></span>
-                <span className="legend-item"><span className="legend-box selected" /> <span>{c.seatLegendSelected}</span></span>
-              </div>
+      {isVisible('urgency') && (
+        <section className="section-padding seat-board-section" id="seats">
+          <div className="container">
+            <div className="section-header">
+              <span className="section-tag">Executive Seat Allocation</span>
+              <h2 className="section-title">{c.seatTitle}</h2>
+              <p className="section-subtitle">{c.seatSubtitle}</p>
             </div>
-            <div className="seats-grid-cabin">
-              {Array.from({ length: 30 }, (_, i) => i + 1).map(n => {
-                const isReserved = n <= localClaimed;
-                const isSelected = !isReserved && n === selectedSeat;
-                const cls = `cabin-seat ${isReserved ? 'reserved' : isSelected ? 'available selected' : 'available'}`;
-                const lbl = isReserved
-                  ? (n <= GENERAL.claimedSeats ? SEAT_TAG_POOL[(n - 1) % SEAT_TAG_POOL.length] : c.reservedLabel)
-                  : isSelected ? c.selectedLabel : c.availableLabel;
-                return (
-                  <div key={n} className={cls} onClick={() => handleSeatClick(n)}
-                    title={isReserved ? c.bookedSeat(n) : `${c.clickSeat}${n}`}>
-                    <div className="seat-num">#{String(n).padStart(2, '0')}</div>
-                    <div className="seat-tag">{lbl}</div>
+            <div className="seat-board-card">
+              <div className="seat-board-header">
+                <div className="seat-board-stats">
+                  <div className="stat-pill reserved-stat">
+                    <span className="stat-dot reserved-dot" />
+                    <span>{localClaimed} {c.seatReservedTxt}</span>
                   </div>
-                );
-              })}
+                  <div className="stat-pill available-stat">
+                    <span className="stat-dot available-dot" />
+                    <span>{Math.max(0, effTotalSeats - localClaimed)} {c.seatAvailableTxt}</span>
+                  </div>
+                </div>
+                <div className="seat-legend">
+                  <span className="legend-item"><span className="legend-box reserved" /> <span>{c.seatLegendBooked}</span></span>
+                  <span className="legend-item"><span className="legend-box available" /> <span>{c.seatLegendAvailable}</span></span>
+                  <span className="legend-item"><span className="legend-box selected" /> <span>{c.seatLegendSelected}</span></span>
+                </div>
+              </div>
+              <div className="seats-grid-cabin">
+                {Array.from({ length: effTotalSeats }, (_, i) => i + 1).map(n => {
+                  const isReserved = n <= localClaimed;
+                  const isSelected = !isReserved && n === selectedSeat;
+                  const cls = `cabin-seat ${isReserved ? 'reserved' : isSelected ? 'available selected' : 'available'}`;
+                  const lbl = isReserved
+                    ? (n <= effClaimedSeats ? SEAT_TAG_POOL[(n - 1) % SEAT_TAG_POOL.length] : c.reservedLabel)
+                    : isSelected ? c.selectedLabel : c.availableLabel;
+                  return (
+                    <div key={n} className={cls} onClick={() => handleSeatClick(n)}
+                      title={isReserved ? c.bookedSeat(n) : `${c.clickSeat}${n}`}>
+                      <div className="seat-num">#{String(n).padStart(2, '0')}</div>
+                      <div className="seat-tag">{lbl}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="seat-selection-prompt" dangerouslySetInnerHTML={{ __html: c.seatBanner(selectedSeat) }} />
             </div>
-            <div className="seat-selection-prompt" dangerouslySetInnerHTML={{ __html: c.seatBanner(selectedSeat) }} />
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
           TESTIMONIALS
       ═══════════════════════════════════════════════ */}
-      <section className="section-padding testimonials-section" id="testimonials">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-tag">{c.testimonialsTag}</span>
-            <h2 className="section-title">{c.testimonialsTitle}</h2>
-            <p className="section-subtitle">{c.testimonialsSubtitle}</p>
-          </div>
-          <div className="testimonials-grid">
-            {c.testimonials.map((t, i) => {
-              const initials = t.name.split(' ').map((w: string) => w[0]).slice(0, 2).join('');
-              return (
-                <div key={i} className="testimonial-card">
-                  <div className="testimonial-stars">★★★★★</div>
-                  <p className="testimonial-quote">&ldquo;{t.quote}&rdquo;</p>
-                  <div className="testimonial-author">
-                    <div className="testimonial-avatar">{initials}</div>
-                    <div>
-                      <div className="testimonial-name">{t.name}</div>
-                      <div className="testimonial-role">{t.role}</div>
+      {isVisible('testimonials') && (
+        <section className="section-padding testimonials-section" id="testimonials">
+          <div className="container">
+            <div className="section-header">
+              <span className="section-tag">{c.testimonialsTag}</span>
+              <h2 className="section-title">{c.testimonialsTitle}</h2>
+              <p className="section-subtitle">{c.testimonialsSubtitle}</p>
+            </div>
+            <div className="testimonials-grid">
+              {c.testimonials.map((t: any, i: number) => {
+                const initials = t.name.split(' ').map((w: string) => w[0]).slice(0, 2).join('');
+                return (
+                  <div key={t.id || i} className="testimonial-card">
+                    <div className="testimonial-stars">★★★★★</div>
+                    <p className="testimonial-quote">&ldquo;{t.quote}&rdquo;</p>
+                    <div className="testimonial-author">
+                      <div className="testimonial-avatar">{initials}</div>
+                      <div>
+                        <div className="testimonial-name">{t.name}</div>
+                        <div className="testimonial-role">{t.role}</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
           PRICING
       ═══════════════════════════════════════════════ */}
-      <section className="section-padding pricing-section" id="pricing">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-tag">Investment</span>
-            <h2 className="section-title">{c.pricingTitle}</h2>
-            <p className="section-subtitle">{c.pricingSubtitle}</p>
-          </div>
-          <div className="pricing-cards-grid">
-            {/* Early Bird */}
-            <div className="pricing-card featured">
-              <div className="pricing-card-badge">{c.earlyBirdBadge}</div>
-              <div className="pricing-plan-name">{c.earlyBirdPlanName}</div>
-              <div className="pricing-price-wrap">
-                <span className="price-currency">$</span>
-                <span className="price-amount">{GENERAL.earlyBirdPrice}</span>
-                <span className="price-unit">/ person</span>
-              </div>
-              <div className="pricing-deadline-tag">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span>Valid until Sept 8, 2026 — then ${GENERAL.regularPrice}</span>
-              </div>
-              <ul className="pricing-features-list">
-                <li className="pricing-feature-item"><i>✓</i> Roundtrip Flight (Phnom Penh - Hanoi)</li>
-                <li className="pricing-feature-item"><i>✓</i> 3 Nights Hotel Stay (Twin Sharing)</li>
-                <li className="pricing-feature-item"><i>✓</i> All 2 International Expos VIP Passes</li>
-                <li className="pricing-feature-item"><i>✓</i> Direct Factory &amp; Wholesale Visits</li>
-                <li className="pricing-feature-item"><i>✓</i> UNESCO Halong Bay Cruise + Lunch</li>
-                <li className="pricing-feature-item"><i>✓</i> Trilingual Guide (Khmer/Eng/Viet)</li>
-              </ul>
-              <a href="#register" className="btn-pricing-cta">Lock In ${GENERAL.earlyBirdPrice} Early Bird Rate</a>
-              <div className="pricing-secure-note">No payment today • Pay after confirmation call</div>
+      {isVisible('packages') && (
+        <section className="section-padding pricing-section" id="pricing">
+          <div className="container">
+            <div className="section-header">
+              <span className="section-tag">Investment</span>
+              <h2 className="section-title">{c.pricingTitle}</h2>
+              <p className="section-subtitle">{c.pricingSubtitle}</p>
             </div>
-            {/* Regular */}
-            <div className="pricing-card">
-              <div className="pricing-plan-name">{c.regularPlanName}</div>
-              <div className="pricing-price-wrap">
-                <span className="price-currency">$</span>
-                <span className="price-amount">{GENERAL.regularPrice}</span>
-                <span className="price-unit">/ person</span>
-              </div>
-              <div className="pricing-deadline-tag">
-                <span>After Sept 8, 2026 (Subject to seat limits)</span>
-              </div>
-              <ul className="pricing-features-list">
-                <li className="pricing-feature-item"><i>✓</i> Roundtrip Flight (Phnom Penh - Hanoi)</li>
-                <li className="pricing-feature-item"><i>✓</i> 3 Nights Hotel Stay (Twin Sharing)</li>
-                <li className="pricing-feature-item"><i>✓</i> All 2 International Expos VIP Passes</li>
-                <li className="pricing-feature-item"><i>✓</i> Direct Factory &amp; Wholesale Visits</li>
-                <li className="pricing-feature-item"><i>✓</i> UNESCO Halong Bay Cruise + Lunch</li>
-                <li className="pricing-feature-item"><i>✓</i> Trilingual Guide (Khmer/Eng/Viet)</li>
-              </ul>
-              <a href="#register" className="pricing-alt-link">Register Standard Seat →</a>
+            <div className="pricing-cards-grid">
+              {page?.packages && page.packages.length > 0 ? (
+                page.packages.map((pkg, pIdx) => {
+                  const isFeatured = pkg.popular ?? (pIdx === 0);
+                  return (
+                    <div key={pkg.id || pIdx} className={`pricing-card${isFeatured ? ' featured' : ''}`}>
+                      {isFeatured && <div className="pricing-card-badge">{pkg.popular ? (c.earlyBirdBadge || 'Featured Pass') : c.earlyBirdBadge}</div>}
+                      <div className="pricing-plan-name">{pkg.name}</div>
+                      <div className="pricing-price-wrap">
+                        <span className="price-amount">{pkg.price.startsWith('$') ? pkg.price : `$${pkg.price}`}</span>
+                        {pkg.period && <span className="price-unit">/{pkg.period.replace(/^\/?\s*/, ' ')}</span>}
+                      </div>
+                      {pkg.description && (
+                        <div className="pricing-deadline-tag">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                          <span>{pkg.description}</span>
+                        </div>
+                      )}
+                      <ul className="pricing-features-list">
+                        {pkg.features.map((feat, fIdx) => (
+                          <li key={fIdx} className="pricing-feature-item"><i>✓</i> {feat}</li>
+                        ))}
+                      </ul>
+                      <a href="#register" className={isFeatured ? "btn-pricing-cta" : "pricing-alt-link"}>
+                        {pkg.ctaText || (isFeatured ? `Lock In ${pkg.price} Rate` : 'Register Seat →')}
+                      </a>
+                      {isFeatured && <div className="pricing-secure-note">No payment today • Pay after confirmation call</div>}
+                    </div>
+                  );
+                })
+              ) : (
+                <>
+                  {/* Early Bird */}
+                  <div className="pricing-card featured">
+                    <div className="pricing-card-badge">{c.earlyBirdBadge}</div>
+                    <div className="pricing-plan-name">{c.earlyBirdPlanName}</div>
+                    <div className="pricing-price-wrap">
+                      <span className="price-currency">$</span>
+                      <span className="price-amount">{effEarlyBirdPrice}</span>
+                      <span className="price-unit">/ person</span>
+                    </div>
+                    <div className="pricing-deadline-tag">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      <span>Valid until {formattedDeadline} — then ${effRegularPrice}</span>
+                    </div>
+                    <ul className="pricing-features-list">
+                      <li className="pricing-feature-item"><i>✓</i> Roundtrip Flight (Phnom Penh - Hanoi)</li>
+                      <li className="pricing-feature-item"><i>✓</i> 3 Nights Hotel Stay (Twin Sharing)</li>
+                      <li className="pricing-feature-item"><i>✓</i> All 2 International Expos VIP Passes</li>
+                      <li className="pricing-feature-item"><i>✓</i> Direct Factory &amp; Wholesale Visits</li>
+                      <li className="pricing-feature-item"><i>✓</i> UNESCO Halong Bay Cruise + Lunch</li>
+                      <li className="pricing-feature-item"><i>✓</i> Trilingual Guide (Khmer/Eng/Viet)</li>
+                    </ul>
+                    <a href="#register" className="btn-pricing-cta">Lock In ${effEarlyBirdPrice} Early Bird Rate</a>
+                    <div className="pricing-secure-note">No payment today • Pay after confirmation call</div>
+                  </div>
+                  {/* Regular */}
+                  <div className="pricing-card">
+                    <div className="pricing-plan-name">{c.regularPlanName}</div>
+                    <div className="pricing-price-wrap">
+                      <span className="price-currency">$</span>
+                      <span className="price-amount">{effRegularPrice}</span>
+                      <span className="price-unit">/ person</span>
+                    </div>
+                    <div className="pricing-deadline-tag">
+                      <span>After {formattedDeadline} (Subject to seat limits)</span>
+                    </div>
+                    <ul className="pricing-features-list">
+                      <li className="pricing-feature-item"><i>✓</i> Roundtrip Flight (Phnom Penh - Hanoi)</li>
+                      <li className="pricing-feature-item"><i>✓</i> 3 Nights Hotel Stay (Twin Sharing)</li>
+                      <li className="pricing-feature-item"><i>✓</i> All 2 International Expos VIP Passes</li>
+                      <li className="pricing-feature-item"><i>✓</i> Direct Factory &amp; Wholesale Visits</li>
+                      <li className="pricing-feature-item"><i>✓</i> UNESCO Halong Bay Cruise + Lunch</li>
+                      <li className="pricing-feature-item"><i>✓</i> Trilingual Guide (Khmer/Eng/Viet)</li>
+                    </ul>
+                    <a href="#register" className="pricing-alt-link">Register Standard Seat (${effRegularPrice}) →</a>
+                  </div>
+                </>
+              )}
             </div>
-          </div>
 
-          {/* Countdown card */}
-          <div className="pricing-countdown-card">
-            <div className="countdown-icon-box">⏱️</div>
-            <div className="countdown-text-group">
-              <div className="countdown-text-title">{isEarlyBird ? c.earlyBirdLabel : c.regDeadline}</div>
-              <div className="countdown-text-sub">{isEarlyBird ? c.earlyBirdSub : c.regDeadlineSub}</div>
-            </div>
-            <div className="countdown-timer-units">
-              <div className="time-unit-box"><div className="time-value">{countdown.d}</div><div className="time-label">Days</div></div>
-              <span className="time-colon">:</span>
-              <div className="time-unit-box"><div className="time-value">{countdown.h}</div><div className="time-label">Hours</div></div>
-              <span className="time-colon">:</span>
-              <div className="time-unit-box"><div className="time-value">{countdown.m}</div><div className="time-label">Mins</div></div>
-              <span className="time-colon">:</span>
-              <div className="time-unit-box"><div className="time-value">{countdown.s}</div><div className="time-label">Secs</div></div>
+            {/* Countdown card */}
+            <div className="pricing-countdown-card">
+              <div className="countdown-icon-box">⏱️</div>
+              <div className="countdown-text-group">
+                <div className="countdown-text-title">{isEarlyBird ? c.earlyBirdLabel : c.regDeadline}</div>
+                <div className="countdown-text-sub">{isEarlyBird ? c.earlyBirdSub : c.regDeadlineSub}</div>
+              </div>
+              <div className="countdown-timer-units">
+                <div className="time-unit-box"><div className="time-value">{countdown.d}</div><div className="time-label">Days</div></div>
+                <span className="time-colon">:</span>
+                <div className="time-unit-box"><div className="time-value">{countdown.h}</div><div className="time-label">Hours</div></div>
+                <span className="time-colon">:</span>
+                <div className="time-unit-box"><div className="time-value">{countdown.m}</div><div className="time-label">Mins</div></div>
+                <span className="time-colon">:</span>
+                <div className="time-unit-box"><div className="time-value">{countdown.s}</div><div className="time-label">Secs</div></div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
           STEPS + GUARANTEE
       ═══════════════════════════════════════════════ */}
-      <section className="section-padding steps-section" id="steps">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-tag">Zero-Risk Reservation</span>
-            <h2 className="section-title">{c.stepsTitle}</h2>
-            <p className="section-subtitle">{c.stepsSubtitle}</p>
-          </div>
-          <div className="steps-grid">
-            {c.steps.map(s => (
-              <div key={s.num} className="step-card">
-                <div className="step-num-badge">{s.num}</div>
-                <h3>{s.title}</h3>
-                <p>{s.desc}</p>
+      {isVisible('guarantee') && (
+        <section className="section-padding steps-section" id="steps">
+          <div className="container">
+            <div className="section-header">
+              <span className="section-tag">Zero-Risk Reservation</span>
+              <h2 className="section-title">{c.stepsTitle}</h2>
+              <p className="section-subtitle">{c.stepsSubtitle}</p>
+            </div>
+            <div className="steps-grid">
+              {c.steps.map(s => (
+                <div key={s.num} className="step-card">
+                  <div className="step-num-badge">{s.num}</div>
+                  <h3>{s.title}</h3>
+                  <p>{s.desc}</p>
+                </div>
+              ))}
+            </div>
+            <div className="guarantee-card">
+              <div className="guarantee-icon">🛡️</div>
+              <div className="guarantee-body">
+                <h3>{c.guaranteeTitle}</h3>
+                <p>{c.guaranteeText}</p>
+                <ul className="guarantee-points">
+                  {c.guaranteePoints.map((pt, i) => <li key={i}>{pt}</li>)}
+                </ul>
               </div>
-            ))}
-          </div>
-          <div className="guarantee-card">
-            <div className="guarantee-icon">🛡️</div>
-            <div className="guarantee-body">
-              <h3>{c.guaranteeTitle}</h3>
-              <p>{c.guaranteeText}</p>
-              <ul className="guarantee-points">
-                {c.guaranteePoints.map((pt, i) => <li key={i}>{pt}</li>)}
-              </ul>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
           REGISTRATION — Live VIP Pass + Form
       ═══════════════════════════════════════════════ */}
-      <section className="section-padding registration-section" id="register">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-tag">Priority Reservation</span>
-            <h2 className="section-title">{c.registrationSectionTitle}</h2>
-            <p className="section-subtitle">{c.registrationSectionSubtitle}</p>
-          </div>
-          <div className="boarding-pass-experience-grid">
-            {/* Live VIP Pass */}
-            <div className="pass-preview-column">
-              <div className="pass-card-label">Live Pass Preview</div>
-              <div className="boarding-pass-card">
-                <div className="pass-header">
-                  <div className="pass-brand">
-                    <span className="pass-logo-badge">KHB</span>
-                    <div>
-                      <div className="pass-brand-title">KHB BUSINESS DELEGATION</div>
-                      <div className="pass-brand-sub">{c.passBrandSub}</div>
+      {isVisible('form') && (
+        <section className="section-padding registration-section" id="register">
+          <div className="container">
+            <div className="section-header">
+              <span className="section-tag">Priority Reservation</span>
+              <h2 className="section-title">{c.registrationSectionTitle}</h2>
+              <p className="section-subtitle">{c.registrationSectionSubtitle}</p>
+            </div>
+            <div className="boarding-pass-experience-grid">
+              {/* Live VIP Pass */}
+              <div className="pass-preview-column">
+                <div className="pass-card-label">Live Pass Preview</div>
+                <div className="boarding-pass-card">
+                  <div className="pass-header">
+                    <div className="pass-brand">
+                      <span className="pass-logo-badge">KHB</span>
+                      <div>
+                        <div className="pass-brand-title">KHB BUSINESS DELEGATION</div>
+                        <div className="pass-brand-sub">{c.passBrandSub}</div>
+                      </div>
+                    </div>
+                    <div className="pass-tier-badge">{c.passTier}</div>
+                  </div>
+                  <div className="pass-route-row">
+                    <div className="route-point">
+                      <div className="city-code">PNH</div>
+                      <div className="city-name">{c.passFrom}</div>
+                    </div>
+                    <div className="route-flight-graphic">
+                      <span className="plane-icon">✈</span>
+                      <span className="flight-line" />
+                      <span className="flight-tag">{c.passRouteDate}</span>
+                    </div>
+                    <div className="route-point">
+                      <div className="city-code">HAN</div>
+                      <div className="city-name">{c.passTo}</div>
                     </div>
                   </div>
-                  <div className="pass-tier-badge">{c.passTier}</div>
-                </div>
-                <div className="pass-route-row">
-                  <div className="route-point">
-                    <div className="city-code">PNH</div>
-                    <div className="city-name">{c.passFrom}</div>
+                  <div className="pass-details-grid">
+                    <div className="pass-data-item">
+                      <div className="data-label">{c.passNameLabel}</div>
+                      <div className="data-val">{passName}</div>
+                    </div>
+                    <div className="pass-data-item">
+                      <div className="data-label">{c.passSeatLabel}</div>
+                      <div className="data-val highlight-val">SEAT #{regSeat}</div>
+                    </div>
+                    <div className="pass-data-item">
+                      <div className="data-label">{c.passIndustryLabel}</div>
+                      <div className="data-val">{regProfile}</div>
+                    </div>
+                    <div className="pass-data-item">
+                      <div className="data-label">{c.passRateLabel}</div>
+                      <div className="data-val gold-val">{c.passRateValue}</div>
+                    </div>
                   </div>
-                  <div className="route-flight-graphic">
-                    <span className="plane-icon">✈</span>
-                    <span className="flight-line" />
-                    <span className="flight-tag">{c.passRouteDate}</span>
-                  </div>
-                  <div className="route-point">
-                    <div className="city-code">HAN</div>
-                    <div className="city-name">{c.passTo}</div>
-                  </div>
-                </div>
-                <div className="pass-details-grid">
-                  <div className="pass-data-item">
-                    <div className="data-label">{c.passNameLabel}</div>
-                    <div className="data-val">{passName}</div>
-                  </div>
-                  <div className="pass-data-item">
-                    <div className="data-label">{c.passSeatLabel}</div>
-                    <div className="data-val highlight-val">SEAT #{regSeat}</div>
-                  </div>
-                  <div className="pass-data-item">
-                    <div className="data-label">{c.passIndustryLabel}</div>
-                    <div className="data-val">{regProfile}</div>
-                  </div>
-                  <div className="pass-data-item">
-                    <div className="data-label">{c.passRateLabel}</div>
-                    <div className="data-val gold-val">{c.passRateValue}</div>
+                  <div className="pass-footer-barcode">
+                    <div className="barcode-lines" />
+                    <div className="pass-security-seal"><span>✓ KHB VERIFIED</span></div>
                   </div>
                 </div>
-                <div className="pass-footer-barcode">
-                  <div className="barcode-lines" />
-                  <div className="pass-security-seal"><span>✓ KHB VERIFIED</span></div>
+              </div>
+
+              {/* Form */}
+              <div className="pass-form-column">
+                <div className="reg-form-card">
+                  <div className="option-badge badge-form">Instant Reservation</div>
+                  <h3 className="reg-form-title">{c.option2Title}</h3>
+                  <p className="reg-form-desc">{c.option2Desc}</p>
+
+                  {!submitted ? (
+                    <form className="fast-reg-form" onSubmit={handleSubmit}>
+                      <div className="form-group">
+                        <label className="form-label">{c.formNameLabel}</label>
+                        <div className="input-with-icon">
+                          <span className="input-icon">👤</span>
+                          <input type="text" className="form-input" placeholder={c.formNamePlaceholder}
+                            value={regName} onChange={e => setRegName(e.target.value)} required />
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">{c.formPhoneLabel}</label>
+                        <div className="input-with-icon">
+                          <span className="input-icon">📞</span>
+                          <input type="tel" className="form-input" placeholder={c.formPhonePlaceholder}
+                            value={regPhone} onChange={e => setRegPhone(e.target.value)} required />
+                        </div>
+                      </div>
+                      <div className="form-row-two">
+                        <div className="form-group">
+                          <label className="form-label">Business Focus</label>
+                          <select className="form-input form-select" value={regProfile} onChange={e => setRegProfile(e.target.value)}>
+                            <option value="Cafe & Tea Business">Cafe &amp; Tea Brand</option>
+                            <option value="Smart City & Retail Tech">Smart City / Tech</option>
+                            <option value="Wholesale & Distribution">Wholesaler / Importer</option>
+                            <option value="F&B Entrepreneur">F&amp;B Investor</option>
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Assigned Seat</label>
+                          <select className="form-input form-select" value={regSeat}
+                            onChange={e => { const v = Number(e.target.value); setRegSeat(v); setSelectedSeat(v); }}>
+                            {availableSeats.map(n => (
+                              <option key={n} value={n}>Seat #{n} ({c.availableLabel})</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <button type="submit" className="btn-submit-form" disabled={submitting}>
+                        {ICONS.arrow}
+                        <span>{submitting ? c.formSubmitting : c.formSubmitBtn}</span>
+                      </button>
+                      <div className="form-secure-note">
+                        {ICONS.lock}
+                        <span>No instant payment required • Official invoice sent via Telegram</span>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="form-success-state" style={{ display: 'block' }}>
+                      <div className="success-icon-circle">✓</div>
+                      <h4 className="success-title">{c.formSuccessTitle}</h4>
+                      <p className="success-desc"><span>{c.formSuccessDesc}</span></p>
+                      <div className="success-pass-badge">Seat #{successSeat} Held</div>
+                      <p style={{ fontSize: '0.9rem', marginBottom: '16px' }}>{c.formSuccessTelegramPrompt}</p>
+                      <a href={tgUrl} target="_blank" rel="noreferrer" className="btn-secondary-telegram">
+                        {TG_ICON(18)}<span>Confirm VIP Pass with Trip Coordinator</span>
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Telegram alt */}
+                  {!submitted && (
+                    <div className="direct-telegram-box">
+                      <div className="tg-divider"><span>OR CHAT DIRECTLY</span></div>
+                      <a href={tgConciergeUrl} target="_blank" rel="noreferrer" className="btn-telegram-direct">
+                        {TG_ICON(20)}<span>Telegram VIP Concierge Direct Chat</span>
+                      </a>
+                      <div className="tg-highlight">{c.option1Highlight}</div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-
-            {/* Form */}
-            <div className="pass-form-column">
-              <div className="reg-form-card">
-                <div className="option-badge badge-form">Instant Reservation</div>
-                <h3 className="reg-form-title">{c.option2Title}</h3>
-                <p className="reg-form-desc">{c.option2Desc}</p>
-
-                {!submitted ? (
-                  <form className="fast-reg-form" onSubmit={handleSubmit}>
-                    <div className="form-group">
-                      <label className="form-label">{c.formNameLabel}</label>
-                      <div className="input-with-icon">
-                        <span className="input-icon">👤</span>
-                        <input type="text" className="form-input" placeholder={c.formNamePlaceholder}
-                          value={regName} onChange={e => setRegName(e.target.value)} required />
-                      </div>
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">{c.formPhoneLabel}</label>
-                      <div className="input-with-icon">
-                        <span className="input-icon">📞</span>
-                        <input type="tel" className="form-input" placeholder={c.formPhonePlaceholder}
-                          value={regPhone} onChange={e => setRegPhone(e.target.value)} required />
-                      </div>
-                    </div>
-                    <div className="form-row-two">
-                      <div className="form-group">
-                        <label className="form-label">Business Focus</label>
-                        <select className="form-input form-select" value={regProfile} onChange={e => setRegProfile(e.target.value)}>
-                          <option value="Cafe & Tea Business">Cafe &amp; Tea Brand</option>
-                          <option value="Smart City & Retail Tech">Smart City / Tech</option>
-                          <option value="Wholesale & Distribution">Wholesaler / Importer</option>
-                          <option value="F&B Entrepreneur">F&amp;B Investor</option>
-                        </select>
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Assigned Seat</label>
-                        <select className="form-input form-select" value={regSeat}
-                          onChange={e => { const v = Number(e.target.value); setRegSeat(v); setSelectedSeat(v); }}>
-                          {availableSeats.map(n => (
-                            <option key={n} value={n}>Seat #{n} ({c.availableLabel})</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <button type="submit" className="btn-submit-form" disabled={submitting}>
-                      {ICONS.arrow}
-                      <span>{submitting ? c.formSubmitting : c.formSubmitBtn}</span>
-                    </button>
-                    <div className="form-secure-note">
-                      {ICONS.lock}
-                      <span>No instant payment required • Official invoice sent via Telegram</span>
-                    </div>
-                  </form>
-                ) : (
-                  <div className="form-success-state" style={{ display: 'block' }}>
-                    <div className="success-icon-circle">✓</div>
-                    <h4 className="success-title">{c.formSuccessTitle}</h4>
-                    <p className="success-desc"><span>{c.formSuccessDesc}</span></p>
-                    <div className="success-pass-badge">Seat #{successSeat} Held</div>
-                    <p style={{ fontSize: '0.9rem', marginBottom: '16px' }}>{c.formSuccessTelegramPrompt}</p>
-                    <a href={tgUrl} target="_blank" rel="noreferrer" className="btn-secondary-telegram">
-                      {TG_ICON(18)}<span>Confirm VIP Pass with Trip Coordinator</span>
-                    </a>
-                  </div>
-                )}
-
-                {/* Telegram alt */}
-                {!submitted && (
-                  <div className="direct-telegram-box">
-                    <div className="tg-divider"><span>OR CHAT DIRECTLY</span></div>
-                    <a href={tgConciergeUrl} target="_blank" rel="noreferrer" className="btn-telegram-direct">
-                      {TG_ICON(20)}<span>Telegram VIP Concierge Direct Chat</span>
-                    </a>
-                    <div className="tg-highlight">{c.option1Highlight}</div>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
           FAQ
       ═══════════════════════════════════════════════ */}
-      <section className="section-padding faq-section" id="faq">
-        <div className="container faq-container">
-          <div className="section-header">
-            <span className="section-tag">{c.faqTag}</span>
-            <h2 className="section-title">{c.faqTitle}</h2>
-            <p className="section-subtitle">{c.faqSubtitle}</p>
+      {isVisible('faqs') && (
+        <section className="section-padding faq-section" id="faq">
+          <div className="container faq-container">
+            <div className="section-header">
+              <span className="section-tag">{c.faqTag}</span>
+              <h2 className="section-title">{c.faqTitle}</h2>
+              <p className="section-subtitle">{c.faqSubtitle}</p>
+            </div>
+            <div className="faq-list">
+              {c.faqs.map((item, idx) => (
+                <div key={idx} className={`faq-item${openFaq === idx ? ' open' : ''}`}>
+                  <button className="faq-question" onClick={() => setOpenFaq(openFaq === idx ? null : idx)}>
+                    <span>{item.q}</span>
+                    <span className="faq-chevron">▾</span>
+                  </button>
+                  <div className="faq-answer">{item.a}</div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="faq-list">
-            {c.faqs.map((item, idx) => (
-              <div key={idx} className={`faq-item${openFaq === idx ? ' open' : ''}`}>
-                <button className="faq-question" onClick={() => setOpenFaq(openFaq === idx ? null : idx)}>
-                  <span>{item.q}</span>
-                  <span className="faq-chevron">▾</span>
-                </button>
-                <div className="faq-answer">{item.a}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
           FINAL CTA
@@ -1599,11 +1759,11 @@ export default function SmartCityLandingPageView({ page, settings }: { page?: La
               <p>{c.trustDesc}</p>
             </div>
             <div className="trust-contacts">
-              <a href={`tel:${GENERAL.contactPhone.replace(/\s/g, '')}`} className="trust-contact-pill">
-                <span>📞 Hotline: {GENERAL.contactPhone}</span>
+              <a href={`tel:${effPhone.replace(/\s/g, '')}`} className="trust-contact-pill">
+                <span>📞 Hotline: {effPhone}</span>
               </a>
               <a href={tgUrl} target="_blank" rel="noreferrer" className="trust-contact-pill">
-                <span>✈️ Telegram: @{GENERAL.contactTelegramUsername}</span>
+                <span>✈️ Telegram: @{effTgUsername}</span>
               </a>
             </div>
           </div>
