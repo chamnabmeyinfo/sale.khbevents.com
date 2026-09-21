@@ -30,17 +30,17 @@ export default function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="py-20 bg-[#070D0A] relative">
+    <section id="faq" className="py-20 bg-slate-50 dark:bg-[#070D0A] relative transition-colors">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center space-y-3 mb-12">
-          <span className="text-xs font-bold uppercase tracking-widest text-amber-400 bg-amber-950/40 border border-amber-800/40 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+          <span className="text-xs font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 px-3 py-1 rounded-full inline-flex items-center gap-1.5 shadow-sm">
             <HelpCircle className="w-3.5 h-3.5" />
             Got Questions?
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Frequently Asked Questions
           </h2>
-          <p className="text-xs sm:text-sm text-gray-400">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-400">
             Clear answers on how we plan, price, and execute world-class events in Cambodia.
           </p>
         </div>
@@ -51,22 +51,22 @@ export default function FaqSection() {
             return (
               <div
                 key={index}
-                className="rounded-2xl bg-[#0C1912] border border-emerald-900/40 overflow-hidden transition-colors"
+                className="rounded-2xl bg-white dark:bg-[#0C1912] border border-slate-200 dark:border-emerald-900/40 overflow-hidden transition-colors shadow-sm"
               >
                 <button
                   type="button"
                   onClick={() => setOpenIndex(isOpen ? null : index)}
-                  className="w-full flex items-center justify-between p-5 text-left text-sm sm:text-base font-bold text-white hover:text-amber-300 transition-colors cursor-pointer"
+                  className="w-full flex items-center justify-between p-5 text-left text-sm sm:text-base font-bold text-slate-900 dark:text-white hover:text-amber-600 dark:hover:text-amber-300 transition-colors cursor-pointer"
                 >
                   <span>{faq.q}</span>
                   <ChevronDown
-                    className={`w-5 h-5 text-amber-400 transition-transform duration-300 shrink-0 ml-4 ${
+                    className={`w-5 h-5 text-amber-500 dark:text-amber-400 transition-transform duration-300 shrink-0 ml-4 ${
                       isOpen ? 'transform rotate-180' : ''
                     }`}
                   />
                 </button>
                 {isOpen && (
-                  <div className="px-5 pb-5 text-xs sm:text-sm text-gray-300 leading-relaxed border-t border-emerald-950/80 pt-3">
+                  <div className="px-5 pb-5 text-xs sm:text-sm text-slate-600 dark:text-gray-300 leading-relaxed border-t border-slate-100 dark:border-emerald-950/80 pt-3">
                     {faq.a}
                   </div>
                 )}

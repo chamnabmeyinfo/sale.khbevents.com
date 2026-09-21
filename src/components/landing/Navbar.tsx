@@ -19,11 +19,11 @@ export default function Navbar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-md bg-[#09140E]/85 border-b border-emerald-900/30 transition-all">
+    <header className="sticky top-0 z-50 backdrop-blur-md bg-white/90 dark:bg-[#09140E]/85 border-b border-slate-200 dark:border-emerald-900/30 transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-950 to-emerald-900 border border-emerald-700/40 p-2 flex items-center justify-center shadow-lg shadow-emerald-950/50 group-hover:border-emerald-500/60 transition-all">
+            <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-950 dark:to-emerald-900 border border-emerald-300 dark:border-emerald-700/40 p-2 flex items-center justify-center shadow-md dark:shadow-lg dark:shadow-emerald-950/50 group-hover:border-emerald-500 transition-all">
               <Image
                 src="/images/khb-logo.png"
                 alt="KHB EVENTS Logo"
@@ -34,40 +34,40 @@ export default function Navbar({
                   e.currentTarget.style.display = 'none';
                 }}
               />
-              <span className="absolute inset-0 flex items-center justify-center text-amber-400 font-bold text-lg pointer-events-none -z-10">
+              <span className="absolute inset-0 flex items-center justify-center text-amber-500 font-bold text-lg pointer-events-none -z-10">
                 KHB
               </span>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xl font-extrabold tracking-wider text-white font-sans">
-                  KHB <span className="text-amber-400">EVENTS</span>
+                <span className="text-xl font-extrabold tracking-wider text-slate-900 dark:text-white font-sans">
+                  KHB <span className="text-amber-500 dark:text-amber-400">EVENTS</span>
                 </span>
-                <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-900/60 text-emerald-300 border border-emerald-700/40">
+                <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700/40">
                   PRODUCTIONS
                 </span>
               </div>
-              <p className="text-[11px] text-emerald-300/70 hidden sm:block tracking-wide">
+              <p className="text-[11px] text-emerald-800/80 dark:text-emerald-300/70 hidden sm:block tracking-wide">
                 Cambodia&apos;s Leading Event Management Partner
               </p>
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
-            <Link href="/#services" className="hover:text-amber-400 transition-colors">
+          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600 dark:text-gray-300">
+            <Link href="/#services" className="hover:text-amber-500 dark:hover:text-amber-400 transition-colors">
               Services
             </Link>
-            <Link href="/#campaigns" className="hover:text-amber-400 transition-colors flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <Link href="/#campaigns" className="hover:text-amber-500 dark:hover:text-amber-400 transition-colors flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
               Featured Expos
             </Link>
-            <Link href="/#portfolio" className="hover:text-amber-400 transition-colors">
+            <Link href="/#portfolio" className="hover:text-amber-500 dark:hover:text-amber-400 transition-colors">
               Past Events
             </Link>
-            <Link href="/#estimator" className="hover:text-amber-400 transition-colors">
+            <Link href="/#estimator" className="hover:text-amber-500 dark:hover:text-amber-400 transition-colors">
               Cost Calculator
             </Link>
-            <Link href="/#faq" className="hover:text-amber-400 transition-colors">
+            <Link href="/#faq" className="hover:text-amber-500 dark:hover:text-amber-400 transition-colors">
               FAQ
             </Link>
           </nav>
@@ -80,9 +80,9 @@ export default function Navbar({
               href={`https://wa.me/${whatsapp}?text=Hello%20KHB%20Events,%20I%20would%20like%20to%20inquire%20about%20event%20management%20and%20production%20services.`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold text-emerald-300 bg-emerald-950/80 hover:bg-emerald-900/80 border border-emerald-800/60 transition-all"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 border border-emerald-200 dark:border-emerald-800/60 transition-all shadow-sm"
             >
-              <MessageCircle className="w-4 h-4 text-emerald-400" />
+              <MessageCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>WhatsApp Chat</span>
             </a>
 
@@ -91,7 +91,7 @@ export default function Navbar({
               className="relative group overflow-hidden rounded-xl p-[1px] focus:outline-none"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-amber-500 via-emerald-500 to-amber-500 rounded-xl blur-sm group-hover:blur-md transition-all"></span>
-              <span className="relative flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-900 to-[#0A2016] text-white text-xs font-bold uppercase tracking-wider group-hover:bg-emerald-800 transition-colors">
+              <span className="relative flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-800 to-emerald-950 text-white text-xs font-bold uppercase tracking-wider group-hover:from-emerald-700 group-hover:to-emerald-900 transition-colors shadow-md">
                 <span>Get VIP Quote</span>
                 <ArrowRight className="w-3.5 h-3.5 text-amber-400 group-hover:translate-x-0.5 transition-transform" />
               </span>
@@ -103,14 +103,14 @@ export default function Navbar({
             <UserNavButton />
             <a
               href={`https://wa.me/${whatsapp}`}
-              className="p-2 text-emerald-400 hover:text-emerald-300"
+              className="p-2 text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300"
               aria-label="WhatsApp"
             >
               <MessageCircle className="w-5 h-5" />
             </a>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg bg-emerald-950/60 text-gray-300 hover:text-white border border-emerald-800/40 focus:outline-none cursor-pointer"
+              className="p-2 rounded-lg bg-slate-100 dark:bg-emerald-950/60 text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-emerald-800/40 focus:outline-none cursor-pointer"
               aria-label="Toggle Menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -120,43 +120,43 @@ export default function Navbar({
       </div>
 
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#0a1811] border-b border-emerald-900/60 px-4 pt-3 pb-6 space-y-3 shadow-2xl">
+        <div className="md:hidden bg-white dark:bg-[#0a1811] border-b border-slate-200 dark:border-emerald-900/60 px-4 pt-3 pb-6 space-y-3 shadow-2xl">
           <Link
             href="/#services"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:bg-emerald-900/40 hover:text-amber-400"
+            className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-emerald-900/40 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
           >
             Services & Staging
           </Link>
           <Link
             href="/#campaigns"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:bg-emerald-900/40 hover:text-amber-400"
+            className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-emerald-900/40 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
           >
             Featured Expos & Delegations
           </Link>
           <Link
             href="/#portfolio"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:bg-emerald-900/40 hover:text-amber-400"
+            className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-emerald-900/40 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
           >
             Past Mega Events
           </Link>
           <Link
             href="/#estimator"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:bg-emerald-900/40 hover:text-amber-400"
+            className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-emerald-900/40 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
           >
             Instant Cost Calculator
           </Link>
           <Link
             href="/#faq"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:bg-emerald-900/40 hover:text-amber-400"
+            className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-emerald-900/40 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
           >
             Frequently Asked Questions
           </Link>
-          <div className="pt-4 border-t border-emerald-900/50 flex flex-col gap-2.5">
+          <div className="pt-4 border-t border-slate-200 dark:border-emerald-900/50 flex flex-col gap-2.5">
             <a
               href="#inquiry-form"
               onClick={() => setMobileMenuOpen(false)}
@@ -166,9 +166,9 @@ export default function Navbar({
             </a>
             <a
               href={`tel:${phone.replace(/[^0-9+]/g, '')}`}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-800/60 text-xs font-semibold"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-semibold shadow-sm"
             >
-              <Phone className="w-4 h-4 text-amber-400" />
+              <Phone className="w-4 h-4 text-amber-500 dark:text-amber-400" />
               <span>Call Direct: {phone}</span>
             </a>
           </div>

@@ -34,22 +34,22 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const userName = isSuperAdmin ? 'Admin KHB' : 'Chamnam Mey';
 
   return (
-    <div className="min-h-screen bg-[#070E0A] text-gray-100 selection:bg-amber-400 selection:text-black">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#070E0A] text-slate-900 dark:text-gray-100 selection:bg-amber-400 selection:text-black transition-colors duration-200">
       {/* Left Aside Navigation (Fixed on desktop, sliding drawer on mobile) */}
       <AdminSidebar />
 
       {/* Main Content Area (Offset by sidebar width on desktop) */}
       <div className="lg:pl-72 flex flex-col min-h-screen">
         {/* Desktop Top Header Bar */}
-        <header className="hidden lg:flex items-center justify-between px-8 py-3.5 bg-[#050D09]/95 backdrop-blur-md border-b border-emerald-900/30 sticky top-0 z-20 shadow-sm">
+        <header className="hidden lg:flex items-center justify-between px-8 py-3.5 bg-white/95 dark:bg-[#050D09]/95 backdrop-blur-md border-b border-slate-200 dark:border-emerald-900/30 sticky top-0 z-20 shadow-sm transition-colors duration-200">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-xs text-zinc-400 font-medium">
-              <span className="text-zinc-500 font-mono">PORTAL</span>
-              <span className="text-zinc-600">/</span>
-              <span className="text-emerald-300 font-semibold tracking-wide">{getBreadcrumb()}</span>
+            <div className="flex items-center gap-2 text-xs font-medium">
+              <span className="text-slate-400 dark:text-zinc-500 font-mono">PORTAL</span>
+              <span className="text-slate-300 dark:text-zinc-600">/</span>
+              <span className="text-emerald-700 dark:text-emerald-300 font-semibold tracking-wide">{getBreadcrumb()}</span>
             </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-semibold text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
               <span>Live DB Online</span>
             </div>
           </div>
@@ -61,16 +61,16 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             <Link
               href="/"
               target="_blank"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-800/50 text-emerald-300 hover:text-white text-xs font-semibold transition-all shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-emerald-950/60 hover:bg-slate-200 dark:hover:bg-emerald-900/60 border border-slate-200 dark:border-emerald-800/50 text-slate-700 dark:text-emerald-300 hover:text-black dark:hover:text-white text-xs font-semibold transition-all shadow-sm"
             >
               <span>View Public Site</span>
-              <ExternalLink className="w-3.5 h-3.5 text-amber-400" />
+              <ExternalLink className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
             </Link>
 
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold shadow-sm">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-bold shadow-sm">
               <span>{roleName}</span>
-              <span className="text-zinc-500 font-normal">|</span>
-              <span className="text-white">{userName}</span>
+              <span className="text-slate-400 dark:text-zinc-500 font-normal">|</span>
+              <span className="text-slate-900 dark:text-white">{userName}</span>
             </div>
           </div>
         </header>

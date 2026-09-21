@@ -52,17 +52,17 @@ export default function PortfolioGallery() {
     : galleryItems.filter((item) => item.category === activeCategory);
 
   return (
-    <section id="portfolio" className="py-20 bg-[#08130E] relative">
+    <section id="portfolio" className="py-20 bg-white dark:bg-[#08130E] relative transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-          <span className="text-xs font-bold uppercase tracking-widest text-amber-400 bg-amber-950/50 border border-amber-800/40 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+          <span className="text-xs font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/40 px-3 py-1 rounded-full inline-flex items-center gap-1.5 shadow-sm">
             <Camera className="w-3.5 h-3.5" />
             Visual Production Portfolio
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Proven Track Record of Excellence
           </h2>
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-slate-600 dark:text-gray-300">
             Browse glimpses of prestigious high-profile events produced, managed, and staged by the KHB Events team.
           </p>
 
@@ -75,7 +75,7 @@ export default function PortfolioGallery() {
                 className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                   activeCategory === cat
                     ? 'bg-amber-400 text-black shadow-md shadow-amber-400/20'
-                    : 'bg-emerald-950/60 text-gray-300 border border-emerald-800/40 hover:border-emerald-700'
+                    : 'bg-slate-100 dark:bg-emerald-950/60 text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-emerald-800/40 hover:border-slate-300 dark:hover:border-emerald-700'
                 }`}
               >
                 {cat}

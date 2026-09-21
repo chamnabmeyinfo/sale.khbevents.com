@@ -15,18 +15,18 @@ export default function CampaignsShowcase({ pages }: CampaignsShowcaseProps) {
   if (publishedPages.length === 0) return null;
 
   return (
-    <section id="campaigns" className="py-20 bg-[#060B08] relative">
+    <section id="campaigns" className="py-20 bg-slate-50 dark:bg-[#060B08] relative transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
           <div className="space-y-3">
-            <span className="text-xs font-bold uppercase tracking-widest text-amber-400 bg-amber-950/40 border border-amber-800/40 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+            <span className="text-xs font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 px-3 py-1 rounded-full inline-flex items-center gap-1.5 shadow-sm">
               <Sparkles className="w-3.5 h-3.5" />
               Special Event Registrations &amp; Delegations
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Featured Campaigns &amp; Pass Bookings
             </h2>
-            <p className="text-gray-300 text-sm max-w-2xl">
+            <p className="text-slate-600 dark:text-gray-300 text-sm max-w-2xl">
               Direct access to KHB exclusive international delegations, premium festivals, and specialized booking channels.
             </p>
           </div>
@@ -36,7 +36,7 @@ export default function CampaignsShowcase({ pages }: CampaignsShowcaseProps) {
           {publishedPages.map((page) => (
             <div
               key={page.id}
-              className="group rounded-3xl bg-[#0C1912] border border-emerald-900/50 overflow-hidden hover:border-emerald-500/60 transition-all duration-300 flex flex-col justify-between hover:shadow-2xl hover:shadow-emerald-950/50"
+              className="group rounded-3xl bg-white dark:bg-[#0C1912] border border-slate-200 dark:border-emerald-900/50 overflow-hidden hover:border-emerald-500/60 transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-xl dark:hover:shadow-2xl dark:hover:shadow-emerald-950/50"
             >
               <div>
                 <div className="relative h-52 overflow-hidden">
@@ -45,7 +45,7 @@ export default function CampaignsShowcase({ pages }: CampaignsShowcaseProps) {
                     alt={page.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0C1912] via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#0C1912] via-transparent to-transparent" />
                   
                   {page.badge && (
                     <div className="absolute top-3 left-3">
@@ -70,16 +70,16 @@ export default function CampaignsShowcase({ pages }: CampaignsShowcaseProps) {
                 </div>
 
                 <div className="p-6 space-y-3">
-                  <h3 className="text-xl font-bold text-white group-hover:text-amber-300 transition-colors line-clamp-2 leading-snug">
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-amber-500 dark:group-hover:text-amber-300 transition-colors line-clamp-2 leading-snug">
                     {page.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-gray-300 line-clamp-3 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-300 line-clamp-3 leading-relaxed">
                     {page.heroSubheadline || page.description}
                   </p>
 
                   {page.venue && (
-                    <div className="flex items-center gap-1.5 text-xs text-gray-400 pt-2">
-                      <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-gray-400 pt-2">
+                      <MapPin className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
                       <span className="truncate">{page.venue}</span>
                     </div>
                   )}
@@ -89,10 +89,10 @@ export default function CampaignsShowcase({ pages }: CampaignsShowcaseProps) {
               <div className="p-6 pt-0">
                 <Link
                   href={`/${page.slug}`}
-                  className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-emerald-900 to-emerald-950 hover:from-emerald-800 hover:to-emerald-900 border border-emerald-700/50 text-emerald-200 text-xs font-bold uppercase tracking-wider group-hover:text-white transition-all shadow-md"
+                  className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-gradient-to-r dark:from-emerald-900 dark:to-emerald-950 dark:hover:from-emerald-800 dark:hover:to-emerald-900 border border-emerald-200 dark:border-emerald-700/50 text-emerald-900 dark:text-emerald-200 text-xs font-bold uppercase tracking-wider group-hover:text-emerald-950 dark:group-hover:text-white transition-all shadow-sm"
                 >
                   <span>Explore Campaign &amp; Passes</span>
-                  <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 text-amber-500 dark:text-amber-400 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
             </div>

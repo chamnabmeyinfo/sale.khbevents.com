@@ -25,36 +25,71 @@ body {
 }
 
 /* Light Theme Overrides */
+html.light {
+  color-scheme: light;
+}
+
 html.light body {
   background-color: #F8FAFC !important;
   color: #0F172A !important;
 }
 
-/* Light theme for Admin Panels and Containers */
-html.light .bg-\[\#070E0A\],
-html.light .bg-\[\#070D0A\],
-html.light .bg-\[\#080E0B\] {
-  background-color: #F1F5F9 !important;
+/* 1. Main Backgrounds */
+html.light .min-h-screen,
+html.light [class*="bg-[#070D0A]"],
+html.light [class*="bg-[#070E0A]"],
+html.light [class*="bg-[#080E0B]"] {
+  background-color: #F8FAFC !important;
 }
 
-html.light .bg-\[\#050D09\],
-html.light .bg-\[\#06120B\] {
+/* 2. Sidebars, Top Headers & Navbars */
+html.light aside,
+html.light header,
+html.light [class*="bg-[#050D09]"],
+html.light [class*="bg-[#06120B]"],
+html.light [class*="bg-[#09140E]"] {
   background-color: #FFFFFF !important;
   border-color: #E2E8F0 !important;
 }
 
-html.light .bg-\[\#08170F\],
-html.light .bg-\[\#0A1610\],
-html.light .bg-\[\#0A1711\],
-html.light .bg-\[\#0A1811\],
-html.light .bg-\[\#08150E\],
-html.light .bg-\[\#06100B\] {
+/* 3. Cards, Panels, Modals, Forms & Containers */
+html.light [class*="bg-[#0A1610]"],
+html.light [class*="bg-[#0A1711]"],
+html.light [class*="bg-[#0A1811]"],
+html.light [class*="bg-[#08150E]"],
+html.light [class*="bg-[#06100B]"],
+html.light [class*="bg-[#0B1711]"],
+html.light [class*="bg-[#0E1F17]"],
+html.light [class*="bg-[#0A1D14]"],
+html.light [class*="bg-[#08170F]"],
+html.light [class*="bg-emerald-950/30"],
+html.light [class*="bg-emerald-950/50"],
+html.light [class*="bg-emerald-950/60"] {
   background-color: #FFFFFF !important;
   border-color: #E2E8F0 !important;
   box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05) !important;
 }
 
-html.light .text-white {
+/* 4. Reset Dark Linear Gradients on Containers */
+html.light [class*="bg-gradient"][class*="from-[#0"],
+html.light [class*="bg-gradient"][class*="to-[#0"],
+html.light [class*="bg-gradient"][class*="from-emerald-950"],
+html.light [class*="bg-gradient"][class*="to-emerald-900"] {
+  background-image: none !important;
+  background-color: #FFFFFF !important;
+}
+
+/* Welcome Banner Light Mode Luxury Gradient */
+html.light .rounded-3xl[class*="from-[#0C1F16]"],
+html.light .rounded-3xl[class*="bg-gradient-to-r"] {
+  background-image: linear-gradient(135deg, #ECFDF5 0%, #F0FDF4 50%, #FEFCE8 100%) !important;
+  border-color: #A7F3D0 !important;
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.08) !important;
+}
+
+/* 5. Typography */
+html.light .text-white,
+html.light [class*="text-white"] {
   color: #0F172A !important;
 }
 
@@ -66,46 +101,134 @@ html.light .text-gray-300 {
 
 html.light .text-gray-400,
 html.light .text-zinc-400 {
-  color: #64748B !important;
+  color: #475569 !important;
 }
 
 html.light .text-zinc-500,
 html.light .text-gray-500 {
+  color: #64748B !important;
+}
+
+html.light .text-emerald-300,
+html.light .text-emerald-400 {
+  color: #047857 !important;
+}
+
+html.light .text-amber-400,
+html.light .text-amber-300 {
+  color: #B45309 !important;
+}
+
+/* Gold badges / buttons stay black text on amber background */
+html.light [class*="bg-amber-400"],
+html.light [class*="bg-amber-500"] {
+  color: #000000 !important;
+}
+html.light [class*="bg-amber-400"] *,
+html.light [class*="bg-amber-500"] * {
+  color: #000000 !important;
+}
+
+/* 6. Borders & Dividers */
+html.light [class*="border-emerald-9"],
+html.light [class*="border-emerald-8"],
+html.light [class*="border-emerald-7"],
+html.light [class*="border-emerald-950"],
+html.light [class*="border-slate-800"] {
+  border-color: #E2E8F0 !important;
+}
+
+html.light [class*="divide-emerald-9"] > :not([hidden]) ~ :not([hidden]),
+html.light [class*="divide-emerald-950"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #E2E8F0 !important;
+}
+
+/* 7. Inputs, Selects & Textareas */
+html.light input,
+html.light select,
+html.light textarea {
+  color: #0F172A !important;
+  background-color: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
   color: #94A3B8 !important;
 }
 
-html.light .border-emerald-900\/30,
-html.light .border-emerald-900\/40,
-html.light .border-emerald-900\/50,
-html.light .border-emerald-900\/60,
-html.light .border-emerald-950,
-html.light .border-emerald-950\/80 {
+html.light input:focus,
+html.light select:focus,
+html.light textarea:focus {
+  border-color: #F59E0B !important;
+}
+
+/* 8. Table Elements */
+html.light thead,
+html.light thead tr,
+html.light thead th {
+  background-color: #F8FAFC !important;
+  color: #475569 !important;
   border-color: #E2E8F0 !important;
 }
 
-html.light .divide-emerald-950\/80 > :not([hidden]) ~ :not([hidden]) {
+html.light tbody tr {
+  border-color: #F1F5F9 !important;
+}
+
+html.light tbody tr:hover {
+  background-color: #F8FAFC !important;
+}
+
+/* 9. Buttons, Tabs & Interactive States */
+html.light [class*="bg-[#0A1610]"][class*="cursor-pointer"],
+html.light button[class*="bg-[#0A1610]"] {
+  background-color: #F1F5F9 !important;
+  color: #475569 !important;
   border-color: #E2E8F0 !important;
 }
 
-html.light .bg-emerald-950 {
+html.light [class*="bg-[#0A1610]"][class*="cursor-pointer"]:hover,
+html.light button[class*="bg-[#0A1610]"]:hover {
+  background-color: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+html.light [class*="bg-emerald-950"] {
   background-color: #ECFDF5 !important;
   color: #065F46 !important;
   border-color: #A7F3D0 !important;
 }
 
-html.light .bg-emerald-950\/30,
-html.light .bg-emerald-950\/50,
-html.light .bg-emerald-950\/60 {
-  background-color: #F0FDF4 !important;
-  border-color: #DCFCE7 !important;
+html.light aside [class*="from-emerald-950"] {
+  background-image: linear-gradient(to right, #ECFDF5, #F0FDF4) !important;
+  background-color: #ECFDF5 !important;
+  border-color: #A7F3D0 !important;
+}
+html.light aside [class*="from-emerald-950"] * {
+  color: #065F46 !important;
 }
 
-html.light input,
-html.light select,
-html.light textarea {
-  color: #0F172A !important;
-  background-color: #F8FAFC !important;
+html.light aside [class*="bg-amber-400/15"] {
+  background-color: #FEF3C7 !important;
+  color: #92400E !important;
+}
+
+html.light aside [class*="border-emerald-900/40"] {
   border-color: #CBD5E1 !important;
+}
+
+html.light aside [class*="bg-amber-500/10"] {
+  background-color: #FEF3C7 !important;
+  border-color: #FDE68A !important;
+  color: #92400E !important;
+}
+
+/* 10. Drawer & Modal Backdrops */
+html.light [class*="bg-black/80"],
+html.light [class*="bg-black/70"],
+html.light [class*="bg-black/50"] {
+  background-color: rgba(15, 23, 42, 0.45) !important;
 }
 
 /* Custom scrollbar */

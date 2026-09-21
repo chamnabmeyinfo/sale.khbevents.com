@@ -125,29 +125,29 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 sm:p-8 bg-zinc-900/95 border border-amber-500/20 rounded-2xl shadow-2xl backdrop-blur-xl text-white">
+    <div className="w-full max-w-md mx-auto p-6 sm:p-8 bg-white dark:bg-zinc-900/95 border border-slate-200 dark:border-amber-500/20 rounded-2xl shadow-2xl backdrop-blur-xl text-slate-900 dark:text-white transition-colors">
       {/* Brand Header */}
       <div className="text-center mb-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
           KHB Events Portal
         </div>
-        <h2 className="text-2xl font-extrabold text-white">
-          Welcome to <span className="text-amber-400">KHB EVENTS</span>
+        <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
+          Welcome to <span className="text-amber-500 dark:text-amber-400">KHB EVENTS</span>
         </h2>
-        <p className="text-xs text-zinc-400 mt-1">
+        <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
           Access your bookings, event passes, inquiries, and VIP services.
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="grid grid-cols-3 gap-1 p-1 bg-zinc-800/80 rounded-xl mb-6 text-xs font-semibold">
+      <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-transparent rounded-xl mb-6 text-xs font-semibold">
         <button
           type="button"
           onClick={() => { setAuthMethod('google'); setError(null); }}
-          className={`py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+          className={`py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             authMethod === 'google'
               ? 'bg-amber-500 text-zinc-950 shadow-md font-bold'
-              : 'text-zinc-400 hover:text-white'
+              : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           Google
@@ -155,10 +155,10 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
         <button
           type="button"
           onClick={() => { setAuthMethod('email'); setError(null); }}
-          className={`py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+          className={`py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             authMethod === 'email'
               ? 'bg-amber-500 text-zinc-950 shadow-md font-bold'
-              : 'text-zinc-400 hover:text-white'
+              : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <Mail className="w-3.5 h-3.5" /> Email
@@ -166,10 +166,10 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
         <button
           type="button"
           onClick={() => { setAuthMethod('phone'); setError(null); }}
-          className={`py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+          className={`py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             authMethod === 'phone'
               ? 'bg-amber-500 text-zinc-950 shadow-md font-bold'
-              : 'text-zinc-400 hover:text-white'
+              : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <Phone className="w-3.5 h-3.5" /> Phone
@@ -178,15 +178,15 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
 
       {/* Alerts */}
       {error && (
-        <div className="mb-4 p-3 rounded-xl bg-red-950/50 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+        <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-red-950/50 border border-rose-200 dark:border-red-500/30 text-rose-700 dark:text-red-300 text-xs flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 text-rose-500 dark:text-red-400 shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="mb-4 p-3 rounded-xl bg-emerald-950/50 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+        <div className="mb-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs flex items-start gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
           <span>{successMsg}</span>
         </div>
       )}
@@ -194,7 +194,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
       {/* TAB 1: GOOGLE AUTH */}
       {authMethod === 'google' && (
         <div className="space-y-4">
-          <p className="text-xs text-zinc-400 text-center">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 text-center">
             Sign in with your Google account for instantaneous 1-click access with no password required.
           </p>
 
@@ -202,10 +202,10 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
             type="button"
             onClick={handleGoogleAuth}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-zinc-100 text-zinc-900 font-semibold rounded-xl transition-all shadow-lg hover:shadow-white/10 active:scale-[0.99] disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-slate-50 hover:bg-slate-100 dark:bg-white dark:hover:bg-zinc-100 border border-slate-200 dark:border-transparent text-slate-900 dark:text-zinc-900 font-semibold rounded-xl transition-all shadow-sm dark:shadow-lg hover:shadow-md active:scale-[0.99] disabled:opacity-60 cursor-pointer"
           >
             {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin text-zinc-800" />
+              <Loader2 className="w-5 h-5 animate-spin text-slate-800 dark:text-zinc-800" />
             ) : (
               <>
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -236,12 +236,12 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
       {/* TAB 2: EMAIL AUTH */}
       {authMethod === 'email' && (
         <form onSubmit={handleEmailAuth} className="space-y-4">
-          <div className="flex items-center justify-between text-xs text-zinc-400 mb-1">
+          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 mb-1">
             <span>{emailMode === 'signin' ? 'Sign In to existing account' : 'Create a new client account'}</span>
             <button
               type="button"
               onClick={() => { setEmailMode(emailMode === 'signin' ? 'signup' : 'signin'); setError(null); }}
-              className="text-amber-400 hover:text-amber-300 font-semibold underline"
+              className="text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 font-semibold underline cursor-pointer"
             >
               {emailMode === 'signin' ? 'Need an account? Sign Up' : 'Already registered? Sign In'}
             </button>
@@ -249,40 +249,40 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
 
           {emailMode === 'signup' && (
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1">Full Name</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Full Name</label>
               <div className="relative">
-                <User className="absolute left-3 top-2.5 w-4 h-4 text-zinc-500" />
+                <User className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 dark:text-zinc-500" />
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Chamnan Mey"
-                  className="w-full pl-9 pr-3 py-2 text-sm bg-zinc-800/80 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                  className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors"
                 />
               </div>
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-300 mb-1">Email Address</label>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-2.5 w-4 h-4 text-zinc-500" />
+              <Mail className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 dark:text-zinc-500" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
-                className="w-full pl-9 pr-3 py-2 text-sm bg-zinc-800/80 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-300 mb-1">Password</label>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Password</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-2.5 w-4 h-4 text-zinc-500" />
+              <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 dark:text-zinc-500" />
               <input
                 type="password"
                 required
@@ -290,22 +290,22 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-9 pr-3 py-2 text-sm bg-zinc-800/80 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors"
               />
             </div>
           </div>
 
           {emailMode === 'signup' && (
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1">Phone Number (Optional)</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Phone Number (Optional)</label>
               <div className="relative">
-                <Phone className="absolute left-3 top-2.5 w-4 h-4 text-zinc-500" />
+                <Phone className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 dark:text-zinc-500" />
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+855 12 888 999"
-                  className="w-full pl-9 pr-3 py-2 text-sm bg-zinc-800/80 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                  className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors"
                 />
               </div>
             </div>
@@ -314,7 +314,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-bold text-sm rounded-xl transition-all shadow-lg shadow-amber-500/20 active:scale-[0.99] disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-bold text-sm rounded-xl transition-all shadow-lg shadow-amber-500/20 active:scale-[0.99] disabled:opacity-60 cursor-pointer"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -333,21 +333,21 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
         <div>
           {!otpSent ? (
             <form onSubmit={handlePhoneSendOtp} className="space-y-4">
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-slate-500 dark:text-zinc-400">
                 Enter your mobile number to receive a one-time SMS verification code. Supports Cambodian (+855) and international numbers.
               </p>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1">Mobile Phone</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Mobile Phone</label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-2.5 w-4 h-4 text-zinc-500" />
+                  <Phone className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 dark:text-zinc-500" />
                   <input
                     type="tel"
                     required
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="012 888 999 or +855 12 888 999"
-                    className="w-full pl-9 pr-3 py-2 text-sm bg-zinc-800/80 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                    className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors"
                   />
                 </div>
               </div>
@@ -355,7 +355,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.99] disabled:opacity-60"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.99] disabled:opacity-60 cursor-pointer"
               >
                 {loading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -369,19 +369,19 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
             </form>
           ) : (
             <form onSubmit={handlePhoneVerifyOtp} className="space-y-4">
-              <div className="flex items-center justify-between text-xs text-zinc-400">
-                <span>Code sent to <b className="text-white">{phone}</b></span>
+              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400">
+                <span>Code sent to <b className="text-slate-900 dark:text-white">{phone}</b></span>
                 <button
                   type="button"
                   onClick={() => { setOtpSent(false); setOtpCode(''); }}
-                  className="text-amber-400 hover:underline"
+                  className="text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
                 >
                   Change
                 </button>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1">6-Digit Code</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">6-Digit Code</label>
                 <input
                   type="text"
                   maxLength={6}
@@ -389,14 +389,14 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value)}
                   placeholder="123456"
-                  className="w-full text-center tracking-widest text-lg font-bold py-2 bg-zinc-800/80 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"
+                  className="w-full text-center tracking-widest text-lg font-bold py-2 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 transition-colors"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-sm rounded-xl transition-all shadow-lg active:scale-[0.99] disabled:opacity-60"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-sm rounded-xl transition-all shadow-lg active:scale-[0.99] disabled:opacity-60 cursor-pointer"
               >
                 {loading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -410,7 +410,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
       )}
 
       {/* Footer */}
-      <div className="mt-6 pt-4 border-t border-zinc-800 text-center text-xs text-zinc-500">
+      <div className="mt-6 pt-4 border-t border-slate-200 dark:border-zinc-800 text-center text-xs text-slate-500 dark:text-zinc-500">
         By continuing, you agree to KHB EVENTS Terms of Service and Privacy Policy.
       </div>
     </div>

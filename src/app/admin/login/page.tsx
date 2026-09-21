@@ -39,11 +39,11 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070D0A] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative selection:bg-amber-400 selection:text-black">
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-700/15 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070D0A] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative selection:bg-amber-400 selection:text-black transition-colors">
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-700/15 rounded-full blur-3xl pointer-events-none" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-4">
-        <div className="w-16 h-16 rounded-2xl bg-[#0C1B13] border border-emerald-700/60 p-3 mx-auto flex items-center justify-center shadow-xl shadow-emerald-950/60">
+        <div className="w-16 h-16 rounded-2xl bg-white dark:bg-[#0C1B13] border border-slate-200 dark:border-emerald-700/60 p-3 mx-auto flex items-center justify-center shadow-xl shadow-slate-200/50 dark:shadow-emerald-950/60">
           <Image
             src="/images/khb-logo.png"
             alt="KHB Logo"
@@ -55,54 +55,54 @@ export default function AdminLoginPage() {
         </div>
         
         <div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            KHB <span className="text-amber-400">PORTAL</span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            KHB <span className="text-amber-500 dark:text-amber-400">PORTAL</span>
           </h2>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
             Landing Page CMS & Lead Management System
           </p>
         </div>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-[#0A1711] border border-emerald-800/50 py-8 px-6 sm:px-10 rounded-3xl shadow-2xl space-y-6">
+        <div className="bg-white dark:bg-[#0A1711] border border-slate-200 dark:border-emerald-800/50 py-8 px-6 sm:px-10 rounded-3xl shadow-xl space-y-6">
           
           {error && (
-            <div className="p-3.5 rounded-xl bg-rose-950/80 border border-rose-800/60 text-xs text-rose-200">
+            <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800/60 text-xs text-rose-700 dark:text-rose-200">
               {error}
             </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1.5">
                 Admin Email
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-gray-500 absolute left-3.5 top-3.5" />
+                <Mail className="w-4 h-4 text-slate-400 dark:text-gray-500 absolute left-3.5 top-3.5" />
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#06100B] border border-emerald-900/80 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                   placeholder="admin@khbevents.com"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1.5">
                 Password
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-gray-500 absolute left-3.5 top-3.5" />
+                <Lock className="w-4 h-4 text-slate-400 dark:text-gray-500 absolute left-3.5 top-3.5" />
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#06100B] border border-emerald-900/80 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                   placeholder="••••••••••••"
                 />
               </div>
@@ -124,17 +124,17 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-800/40 text-[11px] text-gray-300 space-y-1">
-            <div className="font-bold text-amber-400 flex items-center gap-1.5">
+          <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 text-[11px] text-slate-700 dark:text-gray-300 space-y-1">
+            <div className="font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
               <KeyRound className="w-3.5 h-3.5" />
               Default Credentials:
             </div>
-            <div>Email: <code className="text-emerald-200 bg-emerald-950 px-1 py-0.5 rounded">admin@khbevents.com</code></div>
-            <div>Password: <code className="text-emerald-200 bg-emerald-950 px-1 py-0.5 rounded">khbevents2026</code></div>
+            <div>Email: <code className="text-emerald-800 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-950 px-1 py-0.5 rounded">admin@khbevents.com</code></div>
+            <div>Password: <code className="text-emerald-800 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-950 px-1 py-0.5 rounded">khbevents2026</code></div>
           </div>
 
           <div className="text-center">
-            <a href="/" className="text-xs text-emerald-400 hover:underline">
+            <a href="/" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
               ← Return to public website
             </a>
           </div>

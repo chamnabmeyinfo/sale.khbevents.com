@@ -182,19 +182,19 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
   return (
     <div className="space-y-6">
       {/* Top action header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-emerald-900/40">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-emerald-900/40">
         <div className="flex items-center gap-3">
           <Link
             href="/admin/pages"
-            className="p-2 rounded-lg bg-emerald-950 text-gray-300 hover:text-white border border-emerald-800/50"
+            className="p-2 rounded-lg bg-slate-100 dark:bg-emerald-950 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-200 dark:border-emerald-800/50 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-white">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">
               {isNew ? 'Create New Landing Page' : `Edit: ${formData.title || 'Landing Page'}`}
             </h1>
-            <p className="text-xs text-gray-400 font-mono">
+            <p className="text-xs text-slate-500 dark:text-gray-400 font-mono">
               URL: /{formData.slug || 'your-slug'}
             </p>
           </div>
@@ -205,7 +205,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             <Link
               href={`/${formData.slug}`}
               target="_blank"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-950 hover:bg-emerald-900 border border-emerald-800 text-emerald-300 text-xs font-semibold"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-emerald-950 hover:bg-slate-200 dark:hover:bg-emerald-900 border border-slate-200 dark:border-emerald-800 text-slate-800 dark:text-emerald-300 text-xs font-semibold transition-colors"
             >
               <span>Preview Live</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -225,20 +225,20 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
       </div>
 
       {saveSuccess && (
-        <div className="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-500/60 text-xs text-emerald-200 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+        <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-500/60 text-xs text-emerald-800 dark:text-emerald-200 flex items-center gap-2 shadow-sm dark:shadow-lg">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           <span>Landing page saved and published successfully!</span>
         </div>
       )}
 
       {error && (
-        <div className="p-3.5 rounded-xl bg-rose-950/80 border border-rose-800/60 text-xs text-rose-200">
+        <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800/60 text-xs text-rose-800 dark:text-rose-200 shadow-sm dark:shadow-lg">
           {error}
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-emerald-900/40 pb-2">
+      <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-emerald-900/40 pb-2">
         {[
           { id: 'general', label: 'General & Slug' },
           { id: 'hero', label: 'Hero Section' },
@@ -255,7 +255,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeTab === tab.id
                 ? 'bg-amber-400 text-black shadow-md'
-                : 'bg-emerald-950/60 text-gray-400 hover:text-white'
+                : 'bg-slate-100 dark:bg-emerald-950/60 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent'
             }`}
           >
             {tab.label}
@@ -264,38 +264,38 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
       </div>
 
       {/* Form Body */}
-      <div className="rounded-2xl bg-[#0A1610] border border-emerald-900/50 p-6 sm:p-8 space-y-6 shadow-xl">
+      <div className="rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 p-6 sm:p-8 space-y-6 shadow-sm dark:shadow-xl transition-colors">
         {activeTab === 'general' && (
           <div className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
-                  Page Title <span className="text-amber-400">*</span>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
+                  Page Title <span className="text-amber-500 dark:text-amber-400">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.title || ''}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="e.g. Vietnam Smart City, Tea & Cafe Delegation"
-                  className="w-full px-4 py-2.5 rounded-xl bg-[#06100B] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
-                  URL Slug (sale.khbevents.com/...) <span className="text-amber-400">*</span>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
+                  URL Slug (sale.khbevents.com/...) <span className="text-amber-500 dark:text-amber-400">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.slug || ''}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '-') })}
                   placeholder="e.g. smart-city-tea-cafe"
-                  className="w-full px-4 py-2.5 rounded-xl bg-[#06100B] border border-emerald-900/60 text-amber-300 font-mono text-xs focus:outline-none focus:border-amber-400"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-amber-700 dark:text-amber-300 font-mono text-xs focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
                   Category
                 </label>
                 <input
@@ -303,12 +303,12 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   value={formData.category || ''}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   placeholder="e.g. Trade Delegation, Corporate, Concert, Exhibition"
-                  className="w-full px-4 py-2.5 rounded-xl bg-[#06100B] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
                   Badge / Pill Text
                 </label>
                 <input
@@ -316,18 +316,18 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   value={formData.badge || ''}
                   onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
                   placeholder="e.g. Exclusive 30 VIP Seats Only"
-                  className="w-full px-4 py-2.5 rounded-xl bg-[#06100B] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
                   Publishing Status
                 </label>
                 <select
                   value={formData.status || 'published'}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-[#06100B] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
                 >
                   <option value="published">Published (Active & Live)</option>
                   <option value="draft">Draft (Hidden)</option>
@@ -337,7 +337,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
                 Subtitle / Description Summary
               </label>
               <textarea
@@ -345,7 +345,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Brief overview of what this event or sales campaign is about..."
-                className="w-full px-4 py-2.5 rounded-xl bg-[#06100B] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400 resize-none"
+                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 resize-none transition-colors"
               />
             </div>
           </div>
@@ -354,7 +354,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
         {activeTab === 'hero' && (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
                 Hero Headline
               </label>
               <input
@@ -362,12 +362,12 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 value={formData.heroHeadline || ''}
                 onChange={(e) => setFormData({ ...formData, heroHeadline: e.target.value })}
                 placeholder="e.g. Vietnam Smart City, Tea & Cafe B2B Business Delegation 2026"
-                className="w-full px-4 py-2.5 rounded-xl bg-[#06100B] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400"
+                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
                 Hero Subheadline / Value Proposition
               </label>
               <textarea
@@ -375,13 +375,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 value={formData.heroSubheadline || ''}
                 onChange={(e) => setFormData({ ...formData, heroSubheadline: e.target.value })}
                 placeholder="Expand on why delegates must attend..."
-                className="w-full px-4 py-2.5 rounded-xl bg-[#06100B] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400 resize-none"
+                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 resize-none transition-colors"
               />
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
                   Hero CTA Button Text
                 </label>
                 <input
@@ -389,12 +389,12 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   value={formData.heroCtaText || ''}
                   onChange={(e) => setFormData({ ...formData, heroCtaText: e.target.value })}
                   placeholder="e.g. Reserve Your VIP Seat"
-                  className="w-full px-4 py-2.5 rounded-xl bg-[#06100B] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
                   Hero Image URL or Path
                 </label>
                 <input
@@ -402,7 +402,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   value={formData.heroImage || ''}
                   onChange={(e) => setFormData({ ...formData, heroImage: e.target.value })}
                   placeholder="/images/events/photo_2026-09-16_22-01-09.jpg"
-                  className="w-full px-4 py-2.5 rounded-xl bg-[#06100B] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
             </div>
@@ -413,7 +413,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
           <div className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
                   Event Date
                 </label>
                 <input
@@ -421,12 +421,12 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   value={formData.eventDate || ''}
                   onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
                   placeholder="e.g. 2026-10-15 or Oct 15-20, 2026"
-                  className="w-full px-4 py-2.5 rounded-xl bg-[#06100B] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
                   Duration / Time
                 </label>
                 <input
@@ -434,12 +434,12 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   value={formData.eventTime || ''}
                   onChange={(e) => setFormData({ ...formData, eventTime: e.target.value })}
                   placeholder="e.g. 5 Days / 4 Nights or 6:00 PM - 10:00 PM"
-                  className="w-full px-4 py-2.5 rounded-xl bg-[#06100B] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
                   Venue Name
                 </label>
                 <input
@@ -447,12 +447,12 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   value={formData.venue || ''}
                   onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
                   placeholder="e.g. Diamond Island (Koh Pich) Hall G"
-                  className="w-full px-4 py-2.5 rounded-xl bg-[#06100B] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
                   Venue Address / City
                 </label>
                 <input
@@ -460,7 +460,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   value={formData.venueAddress || ''}
                   onChange={(e) => setFormData({ ...formData, venueAddress: e.target.value })}
                   placeholder="e.g. Phnom Penh, Cambodia or Ho Chi Minh City, Vietnam"
-                  className="w-full px-4 py-2.5 rounded-xl bg-[#06100B] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
             </div>
@@ -471,9 +471,9 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 id="countdownEnabled"
                 checked={formData.countdownEnabled ?? false}
                 onChange={(e) => setFormData({ ...formData, countdownEnabled: e.target.checked })}
-                className="w-4 h-4 rounded text-amber-400 bg-[#06100B] border-emerald-900 focus:ring-0"
+                className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-[#06100B] border-slate-300 dark:border-emerald-900 focus:ring-0 cursor-pointer"
               />
-              <label htmlFor="countdownEnabled" className="text-xs text-gray-200 font-semibold cursor-pointer">
+              <label htmlFor="countdownEnabled" className="text-xs text-slate-700 dark:text-gray-200 font-semibold cursor-pointer">
                 Enable live countdown timer in hero banner (targets event date)
               </label>
             </div>
@@ -483,13 +483,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
         {activeTab === 'packages' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                 Ticket Passes & Package Tiers
               </h3>
               <button
                 type="button"
                 onClick={addPackage}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-900 text-emerald-200 hover:bg-emerald-800 text-xs font-bold cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200 dark:hover:bg-emerald-800 text-xs font-bold cursor-pointer transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Package</span>
@@ -498,13 +498,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
             <div className="space-y-4">
               {(formData.packages || []).map((pkg, idx) => (
-                <div key={pkg.id || idx} className="p-4 rounded-xl bg-[#07130D] border border-emerald-900/70 space-y-3">
+                <div key={pkg.id || idx} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/70 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-amber-400">Tier #{idx + 1}</span>
+                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400">Tier #{idx + 1}</span>
                     <button
                       type="button"
                       onClick={() => removePackage(idx)}
-                      className="text-rose-400 hover:text-rose-300 text-xs flex items-center gap-1 cursor-pointer"
+                      className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 text-xs flex items-center gap-1 cursor-pointer transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>Remove</span>
@@ -513,32 +513,32 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
                   <div className="grid sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-[11px] text-gray-400 mb-1">Package Name</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Package Name</label>
                       <input
                         type="text"
                         value={pkg.name}
                         onChange={(e) => updatePackage(idx, 'name', e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-[#050C08] border border-emerald-900/60 text-white text-xs"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-gray-400 mb-1">Price</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Price</label>
                       <input
                         type="text"
                         value={pkg.price}
                         onChange={(e) => updatePackage(idx, 'price', e.target.value)}
                         placeholder="e.g. $1,450 or From $4,500"
-                        className="w-full px-3 py-2 rounded-lg bg-[#050C08] border border-emerald-900/60 text-amber-300 font-bold text-xs"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-amber-600 dark:text-amber-300 font-bold text-xs focus:outline-none focus:border-amber-400 transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-gray-400 mb-1">Period / Unit</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Period / Unit</label>
                       <input
                         type="text"
                         value={pkg.period || ''}
                         onChange={(e) => updatePackage(idx, 'period', e.target.value)}
                         placeholder="e.g. per delegate"
-                        className="w-full px-3 py-2 rounded-lg bg-[#050C08] border border-emerald-900/60 text-white text-xs"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
                       />
                     </div>
                   </div>
@@ -549,20 +549,20 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       id={`pop-${idx}`}
                       checked={pkg.popular || false}
                       onChange={(e) => updatePackage(idx, 'popular', e.target.checked)}
-                      className="w-4 h-4 rounded text-amber-400"
+                      className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-[#050C08] border-slate-300 dark:border-emerald-900 focus:ring-0 cursor-pointer"
                     />
-                    <label htmlFor={`pop-${idx}`} className="text-xs text-amber-300 font-semibold cursor-pointer">
+                    <label htmlFor={`pop-${idx}`} className="text-xs text-amber-700 dark:text-amber-300 font-semibold cursor-pointer">
                       Mark as "Most Popular / Recommended" (Gold Highlight)
                     </label>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] text-gray-400 mb-1">Features (One per line)</label>
+                    <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Features (One per line)</label>
                     <textarea
                       rows={3}
                       value={(pkg.features || []).join('\n')}
                       onChange={(e) => updatePackage(idx, 'features', e.target.value.split('\n').filter(Boolean))}
-                      className="w-full px-3 py-2 rounded-lg bg-[#050C08] border border-emerald-900/60 text-white text-xs font-mono resize-none"
+                      className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-mono resize-none focus:outline-none focus:border-amber-400 transition-colors"
                       placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
                     />
                   </div>
@@ -575,11 +575,11 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
         {activeTab === 'highlights' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white">Program Selling Points</h3>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Program Selling Points</h3>
               <button
                 type="button"
                 onClick={addHighlight}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-900 text-emerald-200 text-xs font-bold cursor-pointer"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer transition-colors hover:bg-emerald-200 dark:hover:bg-emerald-800"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Highlight</span>
@@ -588,13 +588,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
             <div className="space-y-3">
               {(formData.highlights || []).map((h, idx) => (
-                <div key={h.id || idx} className="p-3.5 rounded-xl bg-[#07130D] border border-emerald-900/60 space-y-2">
+                <div key={h.id || idx} className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-emerald-400">Highlight #{idx + 1}</span>
+                    <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">Highlight #{idx + 1}</span>
                     <button
                       type="button"
                       onClick={() => removeHighlight(idx)}
-                      className="text-rose-400 hover:text-rose-300 text-xs cursor-pointer"
+                      className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 text-xs cursor-pointer transition-colors"
                     >
                       Delete
                     </button>
@@ -604,14 +604,14 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                     value={h.title}
                     onChange={(e) => updateHighlight(idx, 'title', e.target.value)}
                     placeholder="Title"
-                    className="w-full px-3 py-1.5 rounded bg-[#050C08] border border-emerald-900/60 text-white text-xs font-semibold"
+                    className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-amber-400 transition-colors"
                   />
                   <textarea
                     rows={2}
                     value={h.description}
                     onChange={(e) => updateHighlight(idx, 'description', e.target.value)}
                     placeholder="Description"
-                    className="w-full px-3 py-1.5 rounded bg-[#050C08] border border-emerald-900/60 text-white text-xs resize-none"
+                    className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs resize-none focus:outline-none focus:border-amber-400 transition-colors"
                   />
                 </div>
               ))}
@@ -622,11 +622,11 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
         {activeTab === 'faqs' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white">Frequently Asked Questions</h3>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Frequently Asked Questions</h3>
               <button
                 type="button"
                 onClick={addFaq}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-900 text-emerald-200 text-xs font-bold cursor-pointer"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer transition-colors hover:bg-emerald-200 dark:hover:bg-emerald-800"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add FAQ</span>
@@ -635,13 +635,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
             <div className="space-y-3">
               {(formData.faqs || []).map((faq, idx) => (
-                <div key={faq.id || idx} className="p-3.5 rounded-xl bg-[#07130D] border border-emerald-900/60 space-y-2">
+                <div key={faq.id || idx} className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-amber-400">FAQ #{idx + 1}</span>
+                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400">FAQ #{idx + 1}</span>
                     <button
                       type="button"
                       onClick={() => removeFaq(idx)}
-                      className="text-rose-400 hover:text-rose-300 text-xs cursor-pointer"
+                      className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 text-xs cursor-pointer transition-colors"
                     >
                       Delete
                     </button>
@@ -651,14 +651,14 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                     value={faq.question}
                     onChange={(e) => updateFaq(idx, 'question', e.target.value)}
                     placeholder="Question"
-                    className="w-full px-3 py-1.5 rounded bg-[#050C08] border border-emerald-900/60 text-white text-xs font-semibold"
+                    className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-amber-400 transition-colors"
                   />
                   <textarea
                     rows={2}
                     value={faq.answer}
                     onChange={(e) => updateFaq(idx, 'answer', e.target.value)}
                     placeholder="Answer"
-                    className="w-full px-3 py-1.5 rounded bg-[#050C08] border border-emerald-900/60 text-white text-xs resize-none"
+                    className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs resize-none focus:outline-none focus:border-amber-400 transition-colors"
                   />
                 </div>
               ))}
@@ -669,7 +669,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
         {activeTab === 'seo' && (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
                 Meta Title (Appears in Google search and browser tab)
               </label>
               <input
@@ -677,12 +677,12 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 value={formData.metaTitle || ''}
                 onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
                 placeholder="Title | KHB EVENTS Cambodia"
-                className="w-full px-4 py-2.5 rounded-xl bg-[#06100B] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400"
+                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
                 Meta Description
               </label>
               <textarea
@@ -690,13 +690,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 value={formData.metaDescription || ''}
                 onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
                 placeholder="Brief snippet for search engines..."
-                className="w-full px-4 py-2.5 rounded-xl bg-[#06100B] border border-emerald-900/60 text-white text-xs focus:outline-none focus:border-amber-400 resize-none"
+                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 resize-none transition-colors"
               />
             </div>
           </div>
         )}
 
-        <div className="pt-4 border-t border-emerald-950 flex items-center justify-end gap-3">
+        <div className="pt-4 border-t border-slate-200 dark:border-emerald-950 flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={handleSave}

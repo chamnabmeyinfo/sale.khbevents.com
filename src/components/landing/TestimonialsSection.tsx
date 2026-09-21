@@ -29,16 +29,16 @@ const testimonials = [
 
 export default function TestimonialsSection() {
   return (
-    <section className="py-20 bg-[#060D09] relative border-t border-emerald-900/30">
+    <section className="py-20 bg-slate-50 dark:bg-[#060D09] relative border-t border-slate-200 dark:border-emerald-900/30 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
-          <span className="text-xs font-bold uppercase tracking-widest text-amber-400 bg-amber-950/40 border border-amber-800/40 px-3 py-1 rounded-full">
+          <span className="text-xs font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 px-3 py-1 rounded-full shadow-sm">
             Client Confidence
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Endorsed by Industry Leaders
           </h2>
-          <p className="text-xs sm:text-sm text-gray-300">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-300">
             Hear directly from enterprise directors and brand leaders who trust KHB EVENTS.
           </p>
         </div>
@@ -47,11 +47,11 @@ export default function TestimonialsSection() {
           {testimonials.map((t, idx) => (
             <div
               key={idx}
-              className="rounded-2xl bg-[#0A1811] border border-emerald-900/40 p-7 flex flex-col justify-between hover:border-emerald-700/50 transition-colors relative group"
+              className="rounded-2xl bg-white dark:bg-[#0A1811] border border-slate-200 dark:border-emerald-900/40 p-7 flex flex-col justify-between hover:border-emerald-500/50 transition-colors relative group shadow-sm hover:shadow-md"
             >
-              <Quote className="w-8 h-8 text-emerald-800/60 mb-4 group-hover:text-amber-400/40 transition-colors" />
+              <Quote className="w-8 h-8 text-emerald-600/30 dark:text-emerald-800/60 mb-4 group-hover:text-amber-500/50 dark:group-hover:text-amber-400/40 transition-colors" />
               
-              <p className="text-xs sm:text-sm text-gray-300 italic leading-relaxed mb-6">
+              <p className="text-xs sm:text-sm text-slate-700 dark:text-gray-300 italic leading-relaxed mb-6">
                 &ldquo;{t.quote}&rdquo;
               </p>
 
@@ -61,10 +61,10 @@ export default function TestimonialsSection() {
                     <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
-                <div className="font-bold text-white text-sm">{t.name}</div>
-                <div className="text-xs text-amber-300/80 font-medium">{t.role}</div>
-                <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                  <Building className="w-3 h-3 text-emerald-400" />
+                <div className="font-bold text-slate-900 dark:text-white text-sm">{t.name}</div>
+                <div className="text-xs text-amber-600 dark:text-amber-300/80 font-medium">{t.role}</div>
+                <div className="text-xs text-slate-500 dark:text-gray-400 mt-0.5 flex items-center gap-1">
+                  <Building className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                   <span>{t.company}</span>
                 </div>
               </div>

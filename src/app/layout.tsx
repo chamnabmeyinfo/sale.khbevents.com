@@ -55,7 +55,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-[#070D0A] text-gray-100">
+      <body className="min-h-full flex flex-col bg-slate-50 dark:bg-[#070D0A] text-slate-900 dark:text-gray-100 transition-colors">
         <ThemeProvider>
           <AuthProvider>
             {children}

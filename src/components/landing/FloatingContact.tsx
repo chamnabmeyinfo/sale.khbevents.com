@@ -18,8 +18,8 @@ export default function FloatingContact({
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
       {showTooltip && (
-        <div className="relative hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-950/95 border border-emerald-500/50 text-white text-xs font-medium shadow-2xl backdrop-blur-md animate-bounce">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+        <div className="relative hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/95 dark:bg-emerald-950/95 border border-emerald-500/50 text-slate-800 dark:text-white text-xs font-medium shadow-2xl backdrop-blur-md animate-bounce">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-ping" />
           <span>Need fast quote? Chat with our event producer now!</span>
           <button
             onClick={() => setShowTooltip(false)}

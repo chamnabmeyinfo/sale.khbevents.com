@@ -65,25 +65,25 @@ export default function InteractiveEstimator({ onApplyEstimate }: EstimatorProps
   };
 
   return (
-    <section id="estimator" className="py-20 bg-[#08130E] relative border-y border-emerald-900/30">
+    <section id="estimator" className="py-20 bg-slate-50 dark:bg-[#08130E] relative border-y border-slate-200 dark:border-emerald-900/30 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
-          <span className="text-xs font-bold uppercase tracking-widest text-amber-400 bg-amber-950/50 border border-amber-800/40 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+          <span className="text-xs font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/40 px-3 py-1 rounded-full inline-flex items-center gap-1.5 shadow-sm">
             <Calculator className="w-3.5 h-3.5" />
             Instant Budget Estimator
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Plan Your Event Production In 60 Seconds
           </h2>
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-slate-600 dark:text-gray-300">
             Configure your event requirements below to get an immediate estimated production guideline and customized equipment proposal.
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto rounded-3xl bg-[#0C1A13] border border-emerald-800/40 p-6 sm:p-10 shadow-2xl">
+        <div className="max-w-4xl mx-auto rounded-3xl bg-white dark:bg-[#0C1A13] border border-slate-200 dark:border-emerald-800/40 p-6 sm:p-10 shadow-xl dark:shadow-2xl">
           <div className="space-y-8">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300 mb-3">
+              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 mb-3">
                 1. Select Event Type
               </label>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -99,8 +99,8 @@ export default function InteractiveEstimator({ onApplyEstimate }: EstimatorProps
                     onClick={() => setEventType(type)}
                     className={`text-left p-3.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
                       eventType === type
-                        ? 'bg-amber-500/15 border-amber-400 text-white shadow-md'
-                        : 'bg-[#09150F] border-emerald-900/40 text-gray-300 hover:border-emerald-700/60'
+                        ? 'bg-amber-500/15 border-amber-500 dark:border-amber-400 text-slate-900 dark:text-white shadow-sm'
+                        : 'bg-slate-50 dark:bg-[#09150F] border-slate-200 dark:border-emerald-900/40 text-slate-700 dark:text-gray-300 hover:border-amber-400/60'
                     }`}
                   >
                     {type}
@@ -110,7 +110,7 @@ export default function InteractiveEstimator({ onApplyEstimate }: EstimatorProps
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300 mb-3">
+              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 mb-3">
                 2. Expected Audience / Guests
               </label>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -126,8 +126,8 @@ export default function InteractiveEstimator({ onApplyEstimate }: EstimatorProps
                     onClick={() => setScale(s)}
                     className={`text-center p-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
                       scale === s
-                        ? 'bg-emerald-500/20 border-emerald-400 text-white shadow-md'
-                        : 'bg-[#09150F] border-emerald-900/40 text-gray-300 hover:border-emerald-700/60'
+                        ? 'bg-emerald-500/15 border-emerald-500 dark:border-emerald-400 text-slate-900 dark:text-white shadow-sm'
+                        : 'bg-slate-50 dark:bg-[#09150F] border-slate-200 dark:border-emerald-900/40 text-slate-700 dark:text-gray-300 hover:border-emerald-500/60'
                     }`}
                   >
                     {s}
@@ -137,7 +137,7 @@ export default function InteractiveEstimator({ onApplyEstimate }: EstimatorProps
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300 mb-3">
+              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 mb-3">
                 3. Equipment &amp; Technical Specs (Select All Required)
               </label>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -159,32 +159,32 @@ export default function InteractiveEstimator({ onApplyEstimate }: EstimatorProps
                       onClick={() => toggleOption(opt)}
                       className={`flex items-center gap-2.5 p-3 rounded-xl border text-xs text-left transition-all cursor-pointer ${
                         selected
-                          ? 'bg-emerald-900/50 border-emerald-400 text-white'
-                          : 'bg-[#09150F] border-emerald-900/30 text-gray-400 hover:border-emerald-800'
+                          ? 'bg-emerald-50 dark:bg-emerald-900/50 border-emerald-500 dark:border-emerald-400 text-slate-900 dark:text-white shadow-sm font-semibold'
+                          : 'bg-slate-50 dark:bg-[#09150F] border-slate-200 dark:border-emerald-900/30 text-slate-600 dark:text-gray-400 hover:border-slate-300 dark:hover:border-emerald-800'
                       }`}
                     >
                       <div className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 border ${
-                        selected ? 'bg-amber-400 border-amber-400 text-black' : 'border-gray-600'
+                        selected ? 'bg-amber-400 border-amber-400 text-black' : 'border-slate-300 dark:border-gray-600'
                       }`}>
                         {selected && <Check className="w-3 h-3 stroke-[3]" />}
                       </div>
-                      <span className="font-medium">{opt}</span>
+                      <span>{opt}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            <div className="rounded-2xl bg-gradient-to-r from-emerald-950 via-[#0A2217] to-emerald-950 border border-emerald-600/40 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
+            <div className="rounded-2xl bg-gradient-to-r from-emerald-900 via-emerald-950 to-emerald-900 border border-emerald-500/40 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl text-white">
               <div className="text-center sm:text-left space-y-1">
-                <div className="text-xs uppercase tracking-widest text-emerald-300 font-bold flex items-center justify-center sm:justify-start gap-1.5">
+                <div className="text-xs uppercase tracking-widest text-emerald-200 font-bold flex items-center justify-center sm:justify-start gap-1.5">
                   <Sparkles className="w-4 h-4 text-amber-400" />
                   Estimated Production Guideline
                 </div>
                 <div className="text-3xl sm:text-4xl font-extrabold text-amber-400 tracking-tight">
                   {estimatedBudget}
                 </div>
-                <p className="text-[11px] text-gray-400">
+                <p className="text-[11px] text-emerald-100/80">
                   Includes full technician crew, transportation, rigging, safety permits &amp; rehearsal.
                 </p>
               </div>

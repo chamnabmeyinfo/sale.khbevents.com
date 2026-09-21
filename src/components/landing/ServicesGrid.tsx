@@ -58,16 +58,16 @@ const services = [
 
 export default function ServicesGrid() {
   return (
-    <section id="services" className="py-20 bg-[#070D0A] relative">
+    <section id="services" className="py-20 bg-white dark:bg-[#070D0A] relative transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-          <span className="text-xs font-bold uppercase tracking-widest text-amber-400 bg-amber-950/40 border border-amber-800/40 px-3 py-1 rounded-full">
+          <span className="text-xs font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 px-3 py-1 rounded-full shadow-sm">
             Complete Turnkey Capabilities
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             End-To-End Event Production Services
           </h2>
-          <p className="text-gray-300 text-sm sm:text-base">
+          <p className="text-slate-600 dark:text-gray-300 text-sm sm:text-base">
             Whether organizing an intimate VIP summit or a massive public festival across Cambodia, our in-house engineering and production team handles every detail with perfection.
           </p>
         </div>
@@ -78,31 +78,31 @@ export default function ServicesGrid() {
             return (
               <div
                 key={index}
-                className="group relative rounded-2xl bg-[#0B1711] border border-emerald-900/40 p-7 hover:border-emerald-500/50 hover:bg-[#0E1F17] transition-all duration-300 flex flex-col justify-between hover:shadow-xl hover:shadow-emerald-950/40"
+                className="group relative rounded-2xl bg-slate-50 dark:bg-[#0B1711] border border-slate-200 dark:border-emerald-900/40 p-7 hover:border-emerald-500/50 hover:bg-slate-100/80 dark:hover:bg-[#0E1F17] transition-all duration-300 flex flex-col justify-between shadow-sm hover:shadow-xl dark:shadow-none dark:hover:shadow-emerald-950/40"
               >
                 <div>
                   <div className="flex items-center justify-between mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-900/80 to-emerald-950 border border-emerald-700/50 flex items-center justify-center text-amber-400 group-hover:scale-110 group-hover:text-amber-300 transition-all">
+                    <div className="w-12 h-12 rounded-xl bg-white dark:bg-gradient-to-br dark:from-emerald-900/80 dark:to-emerald-950 border border-slate-200 dark:border-emerald-700/50 flex items-center justify-center text-amber-500 dark:text-amber-400 group-hover:scale-110 group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-all shadow-sm">
                       <Icon className="w-6 h-6" />
                     </div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-950/80 border border-emerald-800/50 px-2.5 py-1 rounded-full">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800/50 px-2.5 py-1 rounded-full">
                       {item.badge}
                     </span>
                   </div>
 
-                  <h3 className="text-lg font-bold text-white mb-2 group-hover:text-amber-300 transition-colors">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors">
                     {item.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-300 leading-relaxed">
                     {item.desc}
                   </p>
                 </div>
 
-                <div className="pt-6 mt-6 border-t border-emerald-950/80 flex items-center justify-between text-xs text-gray-400">
-                  <span className="font-medium text-emerald-400/80">{item.tag}</span>
+                <div className="pt-6 mt-6 border-t border-slate-200 dark:border-emerald-950/80 flex items-center justify-between text-xs text-slate-500 dark:text-gray-400">
+                  <span className="font-medium text-emerald-700 dark:text-emerald-400/80">{item.tag}</span>
                   <a
                     href="#inquiry-form"
-                    className="inline-flex items-center gap-1 font-semibold text-amber-400 group-hover:text-amber-300"
+                    className="inline-flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400 group-hover:text-amber-500 dark:group-hover:text-amber-300"
                   >
                     <span>Inquire</span>
                     <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />

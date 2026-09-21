@@ -39,7 +39,7 @@ export default function MainSalesView({ pages, settings }: MainSalesViewProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#070D0A] text-gray-100 flex flex-col selection:bg-amber-400 selection:text-black">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070D0A] text-slate-900 dark:text-gray-100 flex flex-col selection:bg-amber-400 selection:text-black transition-colors">
       <Navbar phone={settings.phone} whatsapp={settings.whatsappNumber} />
 
       <main className="flex-1">
