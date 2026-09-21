@@ -51,18 +51,30 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
     setLoading(true);
 
     try {
+      const cleanEmail = email.toLowerCase().trim();
+      const isPrivileged = cleanEmail === 'chamnabmey.info@gmail.com' || cleanEmail === 'admin@khbevents.com' || cleanEmail.endsWith('@khbevents.com');
+
       if (emailMode === 'signin') {
         const { error } = await signInWithEmail(email, password);
         if (error) throw error;
         setSuccessMsg('Successfully signed in!');
         if (onSuccess) onSuccess();
-        router.push(redirectUrl);
+        router.push(isPrivileged ? '/admin' : redirectUrl);
       } else {
         if (!fullName.trim()) throw new Error('Please enter your full name');
         const { error } = await signUpWithEmail(email, password, fullName, phone);
         if (error) throw error;
-        setSuccessMsg('Account created successfully! Check your email to confirm or sign in directly.');
-        if (onSuccess) onSuccess();
+
+        // Auto-login immediately after sign up
+        const { error: loginErr } = await signInWithEmail(email, password);
+        if (!loginErr) {
+          setSuccessMsg('Account created and signed in successfully!');
+          if (onSuccess) onSuccess();
+          router.push(isPrivileged ? '/admin' : redirectUrl);
+        } else {
+          setSuccessMsg('Account created successfully! Please sign in with your password.');
+          setEmailMode('signin');
+        }
       }
     } catch (err) {
       setError((err as Error).message || 'Authentication failed');
