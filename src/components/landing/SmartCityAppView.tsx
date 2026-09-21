@@ -12,8 +12,8 @@ import PagePasswordGate from '@/components/common/PagePasswordGate';
 const GENERAL = {
   organizer: 'KHB EVENTS',
   contactPhone: '+855 12 345 678',
-  contactTelegramUrl: 'https://t.me/khbevent_sale_bot',
-  contactTelegramUsername: 'khbevent_sale_bot',
+  contactTelegramUrl: 'https://t.me/khb_sale_admin_bot',
+  contactTelegramUsername: 'khb_sale_admin_bot',
   totalSeats: 30,
   claimedSeats: 19,
   earlyBirdPrice: 499,

@@ -50,7 +50,7 @@ const defaultSettings: SystemSettings = {
   brandTagline: 'Cambodia\'s Premier Event Management, Staging & Exhibition Production',
   phone: '+855 12 888 999',
   whatsappNumber: '85512888999',
-  telegramUsername: 'khbevent_sale_bot',
+  telegramUsername: 'khb_sale_admin_bot',
   email: 'sale@khbevents.com',
   address: 'Diamond Island (Koh Pich), Phnom Penh, Cambodia',
   facebookUrl: 'https://facebook.com/khbevents',
@@ -1120,7 +1120,7 @@ export async function recordDirectContactRoute(params: {
 
   const now = new Date().toISOString();
   const logId = `rr-click-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-  const targetTelegramUrl = `https://t.me/khbevent_sale_bot?start=khb_${params.pageSlug}_staff_${staff.id.replace('staff-', '')}_${logId}`;
+  const targetTelegramUrl = `https://t.me/khb_sale_admin_bot?start=khb_${params.pageSlug}_staff_${staff.id.replace('staff-', '')}_${logId}`;
 
   // Update staff stats
   staff.totalDirectClicks = (staff.totalDirectClicks || 0) + 1;

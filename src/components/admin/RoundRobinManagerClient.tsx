@@ -1598,7 +1598,7 @@ export default function RoundRobinManagerClient({
                           ✓
                         </span>
                       </div>
-                      <div className="text-[10px] text-sky-300/80">bot • @khbevent_sale_bot</div>
+                      <div className="text-[10px] text-sky-300/80">bot • @khb_sale_admin_bot</div>
                     </div>
                   </div>
 

@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/storage';
 
 /**
- * Telegram Bot Webhook Handler for @khbevent_sale_bot
+ * Telegram Bot Webhook Handler for @khb_sale_admin_bot
  * 
  * Flow:
  * 1. Visitor clicks floating Telegram button on a landing page
- * 2. Redirects to: https://t.me/khbevent_sale_bot?start=<pageSlug>_<staffId>_<logId>
+ * 2. Redirects to: https://t.me/khb_sale_admin_bot?start=<pageSlug>_<staffId>_<logId>
  * 3. Visitor opens chat with bot, Telegram sends /start <payload> to this webhook
  * 4. Bot greets the visitor with page context
  * 5. Bot notifies the assigned staff member about the new visitor

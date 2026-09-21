@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
     // Fallback to default Telegram channel / support
     const settings = await getRoundRobinSettings();
-    const defaultUsername = 'khbevent_sale_bot';
+    const defaultUsername = 'khb_sale_admin_bot';
     const fallbackUrl = `https://t.me/${defaultUsername}?start=khb_${slug}`;
 
     if (redirectMode) {
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       routed: false,
-      targetTelegramUrl: `https://t.me/khbevent_sale_bot?start=khb_${slug}`
+      targetTelegramUrl: `https://t.me/khb_sale_admin_bot?start=khb_${slug}`
     });
   } catch (error: any) {
     return NextResponse.json(
