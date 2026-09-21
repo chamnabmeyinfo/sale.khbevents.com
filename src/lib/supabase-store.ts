@@ -1,5 +1,5 @@
 import { getSupabase } from './supabase';
-import { LandingPage, Lead, LeadStatus, SystemSettings } from './types';
+import { LandingPage, Lead, LeadStatus, SystemSettings, RoundRobinSettings, RoundRobinLog } from './types';
 
 // Map database row (snake_case) to LandingPage (camelCase)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -446,4 +446,75 @@ export async function supabaseRecordPageView(slug: string, referrer?: string): P
     page_slug: slug,
     referrer: referrer || null,
   });
+}
+
+export async function supabaseGetRoundRobinSettings(): Promise<RoundRobinSettings | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('system_settings')
+    .select('brand_tagline')
+    .eq('id', 'round_robin')
+    .single();
+  if (error || !data || !data.brand_tagline) return null;
+  try {
+    return JSON.parse(data.brand_tagline) as RoundRobinSettings;
+  } catch {
+    return null;
+  }
+}
+
+export async function supabaseUpdateRoundRobinSettings(
+  settings: RoundRobinSettings
+): Promise<RoundRobinSettings | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { error } = await supabase
+    .from('system_settings')
+    .upsert({
+      id: 'round_robin',
+      brand_tagline: JSON.stringify(settings),
+      updated_at: new Date().toISOString()
+    });
+  if (error) {
+    console.error('Supabase updateRoundRobinSettings error:', error);
+    return null;
+  }
+  return settings;
+}
+
+export async function supabaseGetRoundRobinLogs(limit: number = 100): Promise<RoundRobinLog[] | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('system_settings')
+    .select('brand_tagline')
+    .eq('id', 'round_robin_logs')
+    .single();
+  if (error || !data || !data.brand_tagline) return null;
+  try {
+    const logs = JSON.parse(data.brand_tagline) as RoundRobinLog[];
+    return Array.isArray(logs) ? logs.slice(0, limit) : [];
+  } catch {
+    return null;
+  }
+}
+
+export async function supabaseSaveRoundRobinLog(log: RoundRobinLog): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  try {
+    const existing = await supabaseGetRoundRobinLogs(200);
+    const updated = [log, ...(existing || [])].slice(0, 200);
+    const { error } = await supabase
+      .from('system_settings')
+      .upsert({
+        id: 'round_robin_logs',
+        brand_tagline: JSON.stringify(updated),
+        updated_at: new Date().toISOString()
+      });
+    return !error;
+  } catch {
+    return false;
+  }
 }

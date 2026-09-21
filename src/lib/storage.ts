@@ -36,6 +36,10 @@ import {
   supabaseGetSettings,
   supabaseUpdateSettings,
   supabaseRecordPageView,
+  supabaseGetRoundRobinSettings,
+  supabaseUpdateRoundRobinSettings,
+  supabaseGetRoundRobinLogs,
+  supabaseSaveRoundRobinLog,
 } from './supabase-store';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -603,7 +607,7 @@ export async function createLead(leadData: {
 
       // Add to Round Robin Audit Logs
       if (!db.roundRobinLogs) db.roundRobinLogs = [];
-      db.roundRobinLogs.unshift({
+      const auditLog: RoundRobinLog = {
         id: `rr-log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         timestamp: now,
         routeType: 'FORM_SUBMISSION',
@@ -623,8 +627,15 @@ export async function createLead(leadData: {
         deliveryError: dispatchResult.error,
         visitorIp: newLead.ip,
         userAgent: newLead.userAgent
-      });
+      };
+      db.roundRobinLogs.unshift(auditLog);
       if (db.roundRobinLogs.length > 500) db.roundRobinLogs.length = 500;
+
+      if (isSupabaseConfigured()) {
+        try {
+          await supabaseSaveRoundRobinLog(auditLog);
+        } catch {}
+      }
     }
   } else {
     // Fallback: Standard Telegram group broadcast alert if Round Robin is inactive
@@ -758,10 +769,10 @@ export async function getSettings(): Promise<SystemSettings> {
 export async function updateSettings(
   partial: Partial<SystemSettings>
 ): Promise<SystemSettings> {
+  let updated: SystemSettings | null = null;
   if (isSupabaseConfigured()) {
     try {
-      const updated = await supabaseUpdateSettings(partial);
-      if (updated) return updated;
+      updated = await supabaseUpdateSettings(partial);
     } catch (err) {
       console.error('Supabase updateSettings error:', err);
     }
@@ -769,7 +780,7 @@ export async function updateSettings(
   const db = await getDatabase();
   db.settings = { ...db.settings, ...partial };
   await saveDatabase(db);
-  return db.settings;
+  return updated || db.settings;
 }
 
 export interface RecordTrackingPayload {
@@ -1020,34 +1031,60 @@ async function dispatchLeadWebhook(lead: Lead, webhookUrl: string, secret?: stri
 }
 
 export async function getRoundRobinSettings(): Promise<RoundRobinSettings> {
-  const settings = await getSettings();
-  if (!settings.roundRobinSettings) {
-    const db = await getDatabase();
-    if (!db.settings.roundRobinSettings) {
-      db.settings.roundRobinSettings = defaultRoundRobinSettings;
-      await saveDatabase(db);
+  if (isSupabaseConfigured()) {
+    try {
+      const remote = await supabaseGetRoundRobinSettings();
+      if (remote && Array.isArray(remote.staffList) && remote.staffList.length > 0) {
+        return remote;
+      }
+    } catch (err) {
+      console.error('Supabase getRoundRobinSettings error:', err);
     }
-    return db.settings.roundRobinSettings;
   }
-  return settings.roundRobinSettings;
+
+  const db = await getDatabase();
+  if (!db.settings.roundRobinSettings) {
+    db.settings.roundRobinSettings = defaultRoundRobinSettings;
+    await saveDatabase(db);
+  }
+  return db.settings.roundRobinSettings;
 }
 
 export async function updateRoundRobinSettings(
   partial: Partial<RoundRobinSettings>
 ): Promise<RoundRobinSettings> {
-  const db = await getDatabase();
-  const current = db.settings.roundRobinSettings || defaultRoundRobinSettings;
+  const current = await getRoundRobinSettings();
   const updated: RoundRobinSettings = {
     ...current,
     ...partial,
     lastUpdated: new Date().toISOString()
   };
+
+  const db = await getDatabase();
   db.settings.roundRobinSettings = updated;
   await saveDatabase(db);
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseUpdateRoundRobinSettings(updated);
+    } catch (err) {
+      console.error('Supabase updateRoundRobinSettings error:', err);
+    }
+  }
+
   return updated;
 }
 
 export async function getRoundRobinLogs(limit: number = 100): Promise<RoundRobinLog[]> {
+  if (isSupabaseConfigured()) {
+    try {
+      const remoteLogs = await supabaseGetRoundRobinLogs(limit);
+      if (remoteLogs && remoteLogs.length > 0) return remoteLogs;
+    } catch (err) {
+      console.error('Supabase getRoundRobinLogs error:', err);
+    }
+  }
+
   const db = await getDatabase();
   const logs = db.roundRobinLogs || [];
   return logs
@@ -1090,8 +1127,7 @@ export async function recordDirectContactRoute(params: {
   staff.lastAssignedAt = now;
   rrSettings.lastAssignedIndex = nextIndex;
 
-  if (!db.roundRobinLogs) db.roundRobinLogs = [];
-  db.roundRobinLogs.unshift({
+  const logEntry: RoundRobinLog = {
     id: logId,
     timestamp: now,
     routeType: 'DIRECT_CONTACT_CLICK',
@@ -1106,10 +1142,21 @@ export async function recordDirectContactRoute(params: {
     targetTelegramUrl,
     visitorIp: params.visitorIp,
     userAgent: params.userAgent
-  });
+  };
+
+  if (!db.roundRobinLogs) db.roundRobinLogs = [];
+  db.roundRobinLogs.unshift(logEntry);
 
   if (db.roundRobinLogs.length > 500) db.roundRobinLogs.length = 500;
   await saveDatabase(db);
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseSaveRoundRobinLog(logEntry);
+    } catch (err) {
+      console.error('Supabase save roundRobinLog error:', err);
+    }
+  }
 
   return {
     staff,
