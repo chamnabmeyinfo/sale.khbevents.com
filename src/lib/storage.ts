@@ -41,6 +41,9 @@ import {
   supabaseGetRoundRobinLogs,
   supabaseSaveRoundRobinLog,
 } from './supabase-store';
+import bundledDbJson from '../../data/db.json';
+
+const bundledDb = bundledDbJson as unknown as DatabaseSchema;
 
 const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 const BUNDLED_DB_FILE = path.join(process.cwd(), 'data', 'db.json');
@@ -259,6 +262,13 @@ export async function getDatabase(): Promise<DatabaseSchema> {
       throw new Error('Database file empty or not found');
     }
     const db = JSON.parse(content) as DatabaseSchema;
+    if (bundledDb?.pages) {
+      for (const bp of bundledDb.pages) {
+        if (!db.pages.some((p) => p.slug === bp.slug || p.id === bp.id)) {
+          db.pages.push(bp);
+        }
+      }
+    }
     if (!db.settings.roundRobinSettings) {
       db.settings.roundRobinSettings = defaultRoundRobinSettings;
     }
@@ -269,11 +279,11 @@ export async function getDatabase(): Promise<DatabaseSchema> {
     return db;
   } catch {
     const initialDb: DatabaseSchema = {
-      pages: defaultPages,
-      leads: defaultLeads,
-      settings: defaultSettings,
-      pageViews: [],
-      roundRobinLogs: []
+      pages: (bundledDb?.pages && bundledDb.pages.length > 0) ? bundledDb.pages : defaultPages,
+      leads: bundledDb?.leads || defaultLeads,
+      settings: bundledDb?.settings || defaultSettings,
+      pageViews: bundledDb?.pageViews || [],
+      roundRobinLogs: bundledDb?.roundRobinLogs || []
     };
     try {
       await fs.mkdir(DATA_DIR, { recursive: true });
@@ -299,43 +309,97 @@ export async function saveDatabase(data: DatabaseSchema): Promise<void> {
 }
 
 export async function getPages(): Promise<LandingPage[]> {
+  const db = await getDatabase();
+  const localPages = db.pages || [];
+
   if (isSupabaseConfigured()) {
     try {
-      const pages = await supabaseGetPages();
-      if (pages && pages.length > 0) return pages;
+      const remotePages = await supabaseGetPages();
+      if (remotePages && remotePages.length > 0) {
+        // Check if any local/bundled pages are missing in Supabase
+        const remoteSlugs = new Set(remotePages.map((p) => p.slug.toLowerCase().trim()));
+        const missingPages = localPages.filter((lp) => !remoteSlugs.has(lp.slug.toLowerCase().trim()));
+
+        if (missingPages.length > 0) {
+          for (const page of missingPages) {
+            try {
+              await supabaseSavePage(page);
+              remotePages.push(page);
+            } catch (syncErr) {
+              console.error(`Failed to auto-sync page ${page.slug} to Supabase:`, syncErr);
+              remotePages.push(page); // Still include in returned list
+            }
+          }
+        }
+        return remotePages;
+      } else if (localPages.length > 0) {
+        // If Supabase is empty, seed all local pages to Supabase
+        for (const page of localPages) {
+          try {
+            await supabaseSavePage(page);
+          } catch (syncErr) {
+            console.error(`Failed to seed page ${page.slug} to Supabase:`, syncErr);
+          }
+        }
+        return localPages;
+      }
     } catch (err) {
       console.error('Supabase getPages error:', err);
     }
   }
-  const db = await getDatabase();
-  return db.pages;
+  return localPages;
 }
 
 export async function getPageBySlug(slug: string): Promise<LandingPage | null> {
   const cleanSlug = slug.toLowerCase().trim();
+  const db = await getDatabase();
+  const localPage = db.pages.find((p) => p.slug === cleanSlug) || null;
+
   if (isSupabaseConfigured()) {
     try {
       const page = await supabaseGetPageBySlug(cleanSlug);
       if (page) return page;
+
+      // Auto-sync to Supabase if present locally but missing in Supabase
+      if (localPage) {
+        try {
+          await supabaseSavePage(localPage);
+        } catch (syncErr) {
+          console.error(`Failed to auto-sync page ${cleanSlug} to Supabase:`, syncErr);
+        }
+        return localPage;
+      }
     } catch (err) {
       console.error('Supabase getPageBySlug error:', err);
     }
   }
-  const db = await getDatabase();
-  return db.pages.find((p) => p.slug === cleanSlug) || null;
+
+  return localPage;
 }
 
 export async function getPageById(id: string): Promise<LandingPage | null> {
+  const db = await getDatabase();
+  const localPage = db.pages.find((p) => p.id === id) || null;
+
   if (isSupabaseConfigured()) {
     try {
       const page = await supabaseGetPageById(id);
       if (page) return page;
+
+      if (localPage) {
+        try {
+          await supabaseSavePage(localPage);
+        } catch (syncErr) {
+          console.error(`Failed to auto-sync page ${id} to Supabase:`, syncErr);
+        }
+        return localPage;
+      }
     } catch (err) {
       console.error('Supabase getPageById error:', err);
     }
   }
-  const db = await getDatabase();
-  return db.pages.find((p) => p.id === id) || null;
+
+  return localPage;
 }
 
 export async function savePage(pageData: Partial<LandingPage> & { title: string; slug: string }): Promise<LandingPage> {
