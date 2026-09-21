@@ -31,7 +31,10 @@ import {
   Smartphone,
   RotateCcw,
   Code,
-  Copy
+  Copy,
+  UserPlus,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { 
   RoundRobinSettings, 
@@ -223,6 +226,84 @@ export default function RoundRobinManagerClient({
     });
 
     setSettings((prev) => ({ ...prev, staffList: balanced }));
+  };
+
+  // Add a new staff member
+  const handleAddStaff = () => {
+    const newId = `staff-${Date.now()}`;
+    const nextNumber = settings.staffList.length + 1;
+    const newStaff: RoundRobinStaff = {
+      id: newId,
+      name: `Staff Member #${nextNumber}`,
+      title: 'Sales Representative',
+      telegramUsername: '',
+      telegramChatId: '',
+      percentage: 0,
+      isActive: true,
+      phone: '',
+      totalLeadsRouted: 0,
+      totalDirectClicks: 0,
+      successfulDeliveries: 0,
+      failedDeliveries: 0
+    };
+
+    setSettings((prev) => {
+      const updatedList = [...prev.staffList, newStaff];
+      // Auto-rebalance percentages across all active staff
+      const activeStaff = updatedList.filter((s) => s.isActive);
+      if (activeStaff.length > 0) {
+        const share = Math.floor(100 / activeStaff.length);
+        const remainder = 100 - share * activeStaff.length;
+        let activeIdx = 0;
+        const rebalanced = updatedList.map((s) => {
+          if (!s.isActive) return { ...s, percentage: 0 };
+          const pct = share + (activeIdx === 0 ? remainder : 0);
+          activeIdx++;
+          return { ...s, percentage: pct };
+        });
+        return { ...prev, staffList: rebalanced };
+      }
+      return { ...prev, staffList: updatedList };
+    });
+  };
+
+  // Delete a staff member
+  const handleDeleteStaff = (staffId: string, staffName: string) => {
+    if (settings.staffList.length <= 1) {
+      alert('ប្រព័ន្ធត្រូវមានយ៉ាងហោចណាស់គណនីបុគ្គលិក ១ នាក់ (You must maintain at least 1 staff account).');
+      return;
+    }
+
+    const confirmDelete = window.confirm(
+      `តើអ្នកពិតជាចង់លុបគណនីបុគ្គលិក "${staffName || 'Staff Member'}" នេះចេញពីប្រព័ន្ធមែនទេ?\n\nAre you sure you want to delete "${staffName || 'Staff Member'}"?`
+    );
+    if (!confirmDelete) return;
+
+    setSettings((prev) => {
+      const remaining = prev.staffList.filter((s) => s.id !== staffId);
+      // Rebalance remaining active staff
+      const activeStaff = remaining.filter((s) => s.isActive);
+      if (activeStaff.length > 0) {
+        const share = Math.floor(100 / activeStaff.length);
+        const remainder = 100 - share * activeStaff.length;
+        let activeIdx = 0;
+        const rebalanced = remaining.map((s) => {
+          if (!s.isActive) return { ...s, percentage: 0 };
+          const pct = share + (activeIdx === 0 ? remainder : 0);
+          activeIdx++;
+          return { ...s, percentage: pct };
+        });
+        return { ...prev, staffList: rebalanced };
+      }
+      return { ...prev, staffList: remaining };
+    });
+
+    if (selectedTestStaffId === staffId) {
+      const fallback = settings.staffList.find((s) => s.id !== staffId);
+      if (fallback) {
+        setSelectedTestStaffId(fallback.id);
+      }
+    }
   };
 
   // Test Telegram connection for a specific staff member
@@ -565,7 +646,7 @@ export default function RoundRobinManagerClient({
               <h1 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <span>Round Robin Lead Distribution</span>
                 <span className="text-xs px-2.5 py-0.5 rounded-full font-extrabold bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
-                  5 Staff Telegram Accounts
+                  {settings.staffList.length} Staff Telegram Accounts
                 </span>
               </h1>
               <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
@@ -850,15 +931,31 @@ export default function RoundRobinManagerClient({
             </div>
           </div>
 
-          {/* 5 Staff Accounts Configurator Cards */}
+          {/* Staff Accounts Configurator Cards */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                Configure 5 Staff Telegram Accounts
-              </h2>
-              <span className="text-[11px] text-slate-500 dark:text-gray-400">
-                Click &quot;⚡ Test Telegram Ping&quot; to verify each staff connection in real-time
-              </span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>Staff Telegram Accounts</span>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full font-black bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
+                    {settings.staffList.length} Reps
+                  </span>
+                </h2>
+                <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5">
+                  បន្ថែម ឬលុបគណនីបុគ្គលិក កំណត់ភាគរយចែក Lead និងតេស្ត Telegram Ping ជាក់ស្តែង
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleAddStaff}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs transition-all shadow-md cursor-pointer hover:shadow-emerald-500/20 active:scale-95"
+                >
+                  <UserPlus className="w-4 h-4 text-amber-300" />
+                  <span>+ Add Staff Account (បន្ថែមបុគ្គលិក)</span>
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4">
@@ -900,13 +997,13 @@ export default function RoundRobinManagerClient({
                         </div>
                       </div>
 
-                      {/* Right controls: Active switch & Test button */}
-                      <div className="flex items-center gap-3">
+                      {/* Right controls: Active switch, Test button & Delete button */}
+                      <div className="flex items-center gap-2.5">
                         <button
                           type="button"
                           onClick={() => handleTestConnection(staff)}
                           disabled={testResult?.testing || !staff.telegramChatId}
-                          className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-emerald-950 hover:bg-slate-200 dark:hover:bg-emerald-900 border border-slate-200 dark:border-emerald-800 text-slate-800 dark:text-emerald-300 text-xs font-bold cursor-pointer transition-colors flex items-center gap-1.5 disabled:opacity-40"
+                          className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-emerald-950 hover:bg-slate-200 dark:hover:bg-emerald-900 border border-slate-200 dark:border-emerald-800 text-slate-800 dark:text-emerald-300 text-xs font-bold cursor-pointer transition-colors flex items-center gap-1.5 disabled:opacity-40"
                           title="Sends a test ping to this staff Telegram chat ID"
                         >
                           {testResult?.testing ? (
@@ -914,7 +1011,7 @@ export default function RoundRobinManagerClient({
                           ) : (
                             <Send className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                           )}
-                          <span>{testResult?.testing ? 'Pinging...' : '⚡ Test Telegram Ping'}</span>
+                          <span>{testResult?.testing ? 'Pinging...' : '⚡ Test Ping'}</span>
                         </button>
 
                         <label className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-emerald-900/40 cursor-pointer">
@@ -925,9 +1022,18 @@ export default function RoundRobinManagerClient({
                             className="w-4 h-4 accent-amber-400 cursor-pointer"
                           />
                           <span className={`text-xs font-bold ${staff.isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-400'}`}>
-                            {staff.isActive ? 'Receiving Leads' : 'On Leave / Off'}
+                            {staff.isActive ? 'Active' : 'Off'}
                           </span>
                         </label>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteStaff(staff.id, staff.name)}
+                          className="p-2 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-900 transition-all cursor-pointer"
+                          title={`Delete ${staff.name} (លុបគណនីបុគ្គលិកនេះចេញ)`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
 
@@ -1073,6 +1179,16 @@ export default function RoundRobinManagerClient({
                 );
               })}
             </div>
+
+            {/* Add Another Staff Member dashed button */}
+            <button
+              type="button"
+              onClick={handleAddStaff}
+              className="w-full py-4 px-4 rounded-2xl border-2 border-dashed border-slate-300 dark:border-emerald-900/60 hover:border-amber-400 dark:hover:border-amber-400 text-slate-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer bg-slate-50/50 dark:bg-black/20 hover:bg-amber-500/5 active:scale-[0.99]"
+            >
+              <UserPlus className="w-4 h-4 text-amber-500" />
+              <span>+ Add Another Staff Member (បន្ថែមគណនីបុគ្គលិកថ្មី)</span>
+            </button>
           </div>
 
           {/* Advanced Engine Settings */}
@@ -1760,7 +1876,7 @@ export default function RoundRobinManagerClient({
                     </span>
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
-                    Test lead routing, verify Telegram bot delivery to your 5 staff accounts, and benchmark percentage weights.
+                    Test lead routing, verify Telegram bot delivery to your configured staff accounts, and benchmark percentage weights.
                   </p>
                 </div>
               </div>

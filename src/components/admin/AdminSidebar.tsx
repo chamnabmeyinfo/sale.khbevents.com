@@ -124,7 +124,7 @@ export default function AdminSidebar() {
       href: '/admin/round-robin',
       isActive: pathname.startsWith('/admin/round-robin'),
       subItems: [
-        { label: '5 Staff Allocations', href: '/admin/round-robin', icon: Users, badge: '5 Reps' },
+        { label: 'Staff Allocations', href: '/admin/round-robin', icon: Users, badge: 'Routing' },
         { label: 'Real-Time Routing Log', href: '/admin/round-robin', icon: Activity },
       ]
     },
