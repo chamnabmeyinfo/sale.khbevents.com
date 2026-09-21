@@ -158,7 +158,7 @@
       "metaTitle": "Vietnam B2B Business Delegation 2026 | KHB EVENTS",
       "metaDescription": "Join KHB EVENTS for an exclusive business delegation to Vietnam. 1-on-1 business matching, smart city tech, high-end tea & cafe investments.",
       "viewsCount": 342,
-      "leadsCount": 19,
+      "leadsCount": 21,
       "createdAt": "2026-09-21T04:22:10.310Z",
       "updatedAt": "2026-09-21T04:22:10.311Z"
     },
@@ -261,6 +261,38 @@
     }
   ],
   "leads": [
+    {
+      "id": "lead-1789974532021-gvq6",
+      "landingPageId": "page-smart-city",
+      "landingPageSlug": "smart-city-tea-cafe",
+      "landingPageTitle": "Vietnam B2B Business Delegation: Smart City, Tea & Cafe",
+      "fullName": "Sok Sovann",
+      "email": "",
+      "phone": "012999777",
+      "eventType": "General Inquiry",
+      "status": "NEW",
+      "notes": [],
+      "ip": "::1",
+      "userAgent": "node",
+      "createdAt": "2026-09-21T07:08:52.021Z",
+      "updatedAt": "2026-09-21T07:08:52.021Z"
+    },
+    {
+      "id": "lead-1789972893238-0dlk",
+      "landingPageId": "page-smart-city",
+      "landingPageSlug": "smart-city-tea-cafe",
+      "landingPageTitle": "Vietnam B2B Business Delegation: Smart City, Tea & Cafe",
+      "fullName": "Test Delegate",
+      "email": "",
+      "phone": "012999888",
+      "eventType": "General Inquiry",
+      "status": "NEW",
+      "notes": [],
+      "ip": "::1",
+      "userAgent": "node",
+      "createdAt": "2026-09-21T06:41:33.238Z",
+      "updatedAt": "2026-09-21T06:41:33.238Z"
+    },
     {
       "id": "lead-1789966937792-pfwx",
       "landingPageId": "page-smart-city",

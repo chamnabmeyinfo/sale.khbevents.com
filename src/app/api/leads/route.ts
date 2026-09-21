@@ -21,7 +21,9 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    if (!body.fullName || !body.phone) {
+    const fullName = (body.fullName || body.name || '').trim();
+
+    if (!fullName || !body.phone) {
       return NextResponse.json(
         { error: 'Name and phone number are required' },
         { status: 400 }
@@ -34,7 +36,7 @@ export async function POST(req: NextRequest) {
     const newLead = await createLead({
       landingPageSlug: body.landingPageSlug || 'general',
       landingPageTitle: body.landingPageTitle,
-      fullName: body.fullName,
+      fullName: fullName,
       email: body.email || '',
       phone: body.phone,
       company: body.company,

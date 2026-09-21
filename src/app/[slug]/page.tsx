@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getPageBySlug, getSettings } from '@/lib/storage';
 import DynamicLandingPageView from '@/components/landing/DynamicLandingPageView';
+import SmartCityLandingPageView from '@/components/landing/SmartCityLandingPageView';
 import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -11,6 +12,20 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const cleanSlug = slug.toLowerCase().trim();
+
+  if (cleanSlug === 'smart-city-tea-cafe') {
+    return {
+      title: 'Smart City, Tea & Cafe Business Delegation 2026 | KHB EVENTS',
+      description: 'Join the exclusive B2B Business Delegation to Hanoi and Halong Bay, Vietnam. Explore Cafe Show Vietnam & Smart City Expo, direct factory visits, and business matchmaking. Organized by KHB EVENTS.',
+      openGraph: {
+        title: 'Smart City, Tea & Cafe Business Trip to Vietnam 2026 | KHB EVENTS',
+        description: 'Exclusive B2B Trip to Vietnam: 2 Major Expos, Factory Visits, Business Matching & Halong Bay UNESCO Cruise. Oct 8-11, 2026. Early Bird $499.',
+        images: ['/photos/photo_2026-09-16_22-01-09 (2).jpg']
+      }
+    };
+  }
+
   const page = await getPageBySlug(slug);
   const settings = await getSettings();
 
@@ -33,11 +48,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CampaignPage({ params }: PageProps) {
   const { slug } = await params;
-  const page = await getPageBySlug(slug);
+  const cleanSlug = slug.toLowerCase().trim();
   const settings = await getSettings();
+
+  if (cleanSlug === 'smart-city-tea-cafe') {
+    return <SmartCityLandingPageView />;
+  }
+
+  const page = await getPageBySlug(slug);
 
   if (!page || page.status === 'archived') {
     notFound();
+  }
+
+  if (page.slug === 'smart-city-tea-cafe') {
+    return <SmartCityLandingPageView />;
   }
 
   return <DynamicLandingPageView page={page} settings={settings} />;
