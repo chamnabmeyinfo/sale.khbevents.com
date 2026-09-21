@@ -539,6 +539,51 @@
   ],
   "leads": [
     {
+      "id": "lead-1790010931846-it3d",
+      "landingPageId": "page-smart-city",
+      "landingPageSlug": "smart-city-tea-cafe",
+      "landingPageTitle": "Smart City, Tea & Cafe Business Delegation 2026",
+      "fullName": "Oknha Bunleng Heng",
+      "email": "sopheak.vong@capital.com.kh",
+      "phone": "+855 12 777 666",
+      "company": "Vong Capital Investment Group",
+      "eventType": "Smart City & Retail Tech",
+      "budgetRange": "$4,400 (2 Executive Passes)",
+      "packageInterest": "VIP Chairman Suite Pass",
+      "message": "[SIMULATION TEST] Looking for smart retail kiosk suppliers and digital payment integrations.",
+      "customFields": {
+        "simulation": "true",
+        "simulatedBy": "Admin Test Flight",
+        "campaignTags": "b2b-vietnam, tea-cafe-buyer, vip-delegation"
+      },
+      "tags": [
+        "b2b-vietnam",
+        "tea-cafe-buyer",
+        "vip-delegation"
+      ],
+      "status": "NEW",
+      "notes": [],
+      "utmSource": "simulation_tool",
+      "utmCampaign": "round_robin_test",
+      "ip": "::1",
+      "userAgent": "node",
+      "createdAt": "2026-09-21T17:15:31.580Z",
+      "updatedAt": "2026-09-21T17:15:31.580Z",
+      "routing": {
+        "staffId": "staff-3",
+        "staffName": "Vannak Meas",
+        "staffTelegram": "vannakmeas_khb",
+        "staffChatId": "",
+        "percentageWeight": 20,
+        "status": "FAILED",
+        "telegramResponse": "Telegram Bot Token not configured in Settings",
+        "deliveryError": "Telegram Bot Token not configured in Settings",
+        "fallbackChatId": "",
+        "routedAt": "2026-09-21T17:15:31.580Z",
+        "routeType": "FORM_SUBMISSION"
+      }
+    },
+    {
       "id": "lead-1790009828794-mhhz",
       "landingPageId": "page-smart-city",
       "landingPageSlug": "smart-city-tea-cafe",
@@ -841,10 +886,10 @@
           "isActive": true,
           "phone": "+855 12 333 444",
           "totalLeadsRouted": 2,
-          "totalDirectClicks": 0,
+          "totalDirectClicks": 1,
           "successfulDeliveries": 0,
           "failedDeliveries": 2,
-          "lastAssignedAt": "2026-09-21T16:57:08.610Z"
+          "lastAssignedAt": "2026-09-21T17:15:27.780Z"
         },
         {
           "id": "staff-3",
@@ -855,10 +900,11 @@
           "percentage": 20,
           "isActive": true,
           "phone": "+855 12 555 666",
-          "totalLeadsRouted": 0,
+          "totalLeadsRouted": 1,
           "totalDirectClicks": 0,
           "successfulDeliveries": 0,
-          "failedDeliveries": 0
+          "failedDeliveries": 1,
+          "lastAssignedAt": "2026-09-21T17:15:31.580Z"
         },
         {
           "id": "staff-4",
@@ -893,7 +939,7 @@
       "enableManagerNotification": true,
       "managerChatId": "",
       "directContactRoutingEnabled": true,
-      "lastAssignedIndex": 4,
+      "lastAssignedIndex": 1,
       "lastUpdated": "2026-09-21T16:57:31.763Z"
     }
   },
@@ -934,6 +980,42 @@
     }
   ],
   "roundRobinLogs": [
+    {
+      "id": "rr-log-1790010931846-4hvd",
+      "timestamp": "2026-09-21T17:15:31.580Z",
+      "routeType": "FORM_SUBMISSION",
+      "pageSlug": "smart-city-tea-cafe",
+      "pageTitle": "Smart City, Tea & Cafe Business Delegation 2026",
+      "leadId": "lead-1790010931846-it3d",
+      "clientName": "Oknha Bunleng Heng",
+      "clientPhone": "+855 12 777 666",
+      "clientCompany": "Vong Capital Investment Group",
+      "staffId": "staff-3",
+      "staffName": "Vannak Meas",
+      "staffTelegram": "vannakmeas_khb",
+      "staffChatId": "",
+      "percentageWeight": 20,
+      "status": "FAILED",
+      "deliveryError": "Telegram Bot Token not configured in Settings",
+      "visitorIp": "::1",
+      "userAgent": "node"
+    },
+    {
+      "id": "rr-click-1790010927780-ssri",
+      "timestamp": "2026-09-21T17:15:27.780Z",
+      "routeType": "DIRECT_CONTACT_CLICK",
+      "pageSlug": "smart-city-tea-cafe",
+      "pageTitle": "Smart City, Tea & Cafe Business Delegation 2026",
+      "staffId": "staff-2",
+      "staffName": "Dara Kim",
+      "staffTelegram": "darakim_khb",
+      "staffChatId": "",
+      "percentageWeight": 25,
+      "status": "DELIVERED",
+      "targetTelegramUrl": "https://t.me/darakim_khb?start=khb_smart-city-tea-cafe_mubiaffo",
+      "visitorIp": "::1",
+      "userAgent": "node"
+    },
     {
       "id": "rr-log-1790009828794-vtmm",
       "timestamp": "2026-09-21T16:57:08.610Z",
