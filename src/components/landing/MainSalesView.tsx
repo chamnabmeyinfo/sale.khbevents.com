@@ -61,6 +61,7 @@ export default function MainSalesView({ pages, settings }: MainSalesViewProps) {
         whatsappNumber={settings.whatsappNumber}
         telegramUsername={settings.telegramUsername}
         phone={settings.phone}
+        pageSlug="main-sales"
       />
 
       <Footer

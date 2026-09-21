@@ -1013,6 +1013,7 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
         whatsappNumber={effWhatsapp}
         telegramUsername={effTelegramUsername}
         phone={effPhone}
+        pageSlug={page.slug}
       />
 
       <Footer

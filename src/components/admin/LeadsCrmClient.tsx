@@ -156,6 +156,9 @@ export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientPr
       'Email',
       'Company',
       'Tags',
+      'Assigned Staff',
+      'Routing Status',
+      'Routing Share',
       'Event Type',
       'Estimated Date',
       'Guest Count',
@@ -175,6 +178,9 @@ export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientPr
       `"${l.email}"`,
       `"${(l.company || '').replace(/"/g, '""')}"`,
       `"${getLeadTags(l).join(', ')}"`,
+      `"${l.routing?.staffName || 'Unassigned'}"`,
+      `"${l.routing?.status || 'N/A'}"`,
+      `"${l.routing?.percentageWeight ? `${l.routing.percentageWeight}%` : 'N/A'}"`,
       `"${l.eventType}"`,
       `"${l.estimatedDate || ''}"`,
       `"${l.guestCount || ''}"`,
@@ -400,6 +406,20 @@ export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientPr
                         <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono">
                           UTM: {lead.utmSource || 'Direct'}
                         </div>
+                        {lead.routing && (
+                          <div className="flex items-center gap-1 mt-1 text-[10px]">
+                            <span className="font-semibold text-slate-700 dark:text-gray-300">
+                              Rep: {lead.routing.staffName}
+                            </span>
+                            {lead.routing.status === 'DELIVERED' ? (
+                              <span className="text-emerald-700 dark:text-emerald-400 font-bold" title="Telegram delivered">✓</span>
+                            ) : lead.routing.status === 'FALLBACK' ? (
+                              <span className="text-amber-700 dark:text-amber-400 font-bold" title="Fallback sent">⚠️</span>
+                            ) : (
+                              <span className="text-rose-600 dark:text-rose-400 font-bold" title={lead.routing.deliveryError || 'Failed'}>✕</span>
+                            )}
+                          </div>
+                        )}
                       </td>
 
                       <td className="p-4" onClick={(e) => e.stopPropagation()}>
@@ -581,6 +601,56 @@ export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientPr
                       </span>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Round Robin Staff Assignment */}
+              {selectedLead.routing && (
+                <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 font-bold text-blue-800 dark:text-blue-300 text-[11px]">
+                      <Users className="w-3.5 h-3.5" />
+                      <span>Round Robin Staff Assignment</span>
+                    </div>
+                    {selectedLead.routing.status === 'DELIVERED' ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40">
+                        ✓ Telegram Delivered {selectedLead.routing.telegramMessageId ? `(#${selectedLead.routing.telegramMessageId})` : ''}
+                      </span>
+                    ) : selectedLead.routing.status === 'FALLBACK' ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40">
+                        ⚠️ Fallback to Manager
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/40">
+                        ❌ Telegram Failed
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 text-slate-700 dark:text-gray-300">
+                    <div>
+                      <span className="text-[10px] text-slate-400 block">Assigned Staff Rep:</span>
+                      <strong className="text-slate-900 dark:text-white">{selectedLead.routing.staffName}</strong>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block">Telegram Handle:</span>
+                      <strong className="text-emerald-700 dark:text-emerald-300">@{selectedLead.routing.staffTelegram.replace(/^@/, '')}</strong>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block">Allocation Share:</span>
+                      <span className="font-mono font-bold text-amber-700 dark:text-amber-400">{selectedLead.routing.percentageWeight}%</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block">Assigned At:</span>
+                      <span>{new Date(selectedLead.routing.routedAt).toLocaleTimeString()}</span>
+                    </div>
+                  </div>
+
+                  {selectedLead.routing.deliveryError && (
+                    <div className="text-[10px] text-rose-600 dark:text-rose-400 p-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60">
+                      <strong>Delivery Error:</strong> {selectedLead.routing.deliveryError}
+                    </div>
+                  )}
                 </div>
               )}
 

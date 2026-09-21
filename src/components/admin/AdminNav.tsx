@@ -12,7 +12,8 @@ import {
   ExternalLink, 
   LogOut, 
   Menu, 
-  X
+  X,
+  Sliders
 } from 'lucide-react';
 
 export default function AdminNav() {
@@ -34,6 +35,7 @@ export default function AdminNav() {
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/pages', label: 'Landing Pages', icon: FileText },
     { href: '/admin/leads', label: 'Leads CRM', icon: Users },
+    { href: '/admin/round-robin', label: 'Round Robin', icon: Sliders },
     { href: '/admin/settings', label: 'Settings & Alerts', icon: Settings }
   ];
 

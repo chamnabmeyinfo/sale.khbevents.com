@@ -25,7 +25,8 @@ import {
   Menu,
   X,
   Sun,
-  Activity
+  Activity,
+  Sliders
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
@@ -58,6 +59,7 @@ export default function AdminSidebar() {
     dashboard: pathname === '/admin',
     pages: pathname.startsWith('/admin/pages'),
     leads: pathname.startsWith('/admin/leads'),
+    roundRobin: pathname.startsWith('/admin/round-robin'),
     settings: pathname.startsWith('/admin/settings')
   });
 
@@ -113,6 +115,17 @@ export default function AdminSidebar() {
         { label: 'New Client Requests', href: '/admin/leads?status=NEW', icon: Clock, badge: 'NEW' },
         { label: 'In Negotiation', href: '/admin/leads?status=NEGOTIATING', icon: UserCheck },
         { label: 'Won Event Contracts', href: '/admin/leads?status=WON', icon: CheckCircle2 },
+      ]
+    },
+    {
+      id: 'roundRobin',
+      label: 'Staff Round Robin',
+      icon: Sliders,
+      href: '/admin/round-robin',
+      isActive: pathname.startsWith('/admin/round-robin'),
+      subItems: [
+        { label: '5 Staff Allocations', href: '/admin/round-robin', icon: Users, badge: '5 Reps' },
+        { label: 'Real-Time Routing Log', href: '/admin/round-robin', icon: Activity },
       ]
     },
     {

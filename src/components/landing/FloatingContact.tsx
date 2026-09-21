@@ -7,13 +7,17 @@ interface FloatingContactProps {
   whatsappNumber?: string;
   telegramUsername?: string;
   phone?: string;
+  pageSlug?: string;
 }
 
 export default function FloatingContact({
   whatsappNumber = '85512888999',
-  telegramUsername = 'khbevents'
+  telegramUsername = 'khbevents',
+  pageSlug = 'home'
 }: FloatingContactProps) {
   const [showTooltip, setShowTooltip] = useState(true);
+
+  const telegramHref = `/api/round-robin/route?page=${encodeURIComponent(pageSlug)}&redirect=true`;
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
@@ -33,7 +37,7 @@ export default function FloatingContact({
 
       <div className="flex flex-col gap-2.5 items-end">
         <a
-          href={`https://t.me/${telegramUsername}`}
+          href={telegramHref}
           target="_blank"
           rel="noopener noreferrer"
           className="w-12 h-12 rounded-full bg-[#2AABEE] hover:bg-[#229ED9] text-white flex items-center justify-center shadow-lg shadow-[#2AABEE]/30 hover:scale-110 transition-all group relative"

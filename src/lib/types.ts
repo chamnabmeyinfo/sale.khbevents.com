@@ -332,6 +332,10 @@ export interface IsolatedPageSettings {
   bankName?: string;
   bankAccountName?: string;
   bankAccountNumber?: string;
+
+  // 7. Round Robin & Sales Routing Override
+  useCustomRoundRobin?: boolean;
+  customRoundRobin?: RoundRobinSettings;
 }
 
 export interface LandingPage {
@@ -449,6 +453,10 @@ export interface Lead {
   tags?: string[];
   ip?: string;
   userAgent?: string;
+
+  // Round Robin distribution detail
+  routing?: RoutingDetail;
+
   createdAt: string;
   updatedAt: string;
 }
@@ -473,6 +481,9 @@ export interface SystemSettings {
   telegramChatId?: string;
   enableTelegramAlerts: boolean;
 
+  // Global Staff Round Robin System
+  roundRobinSettings?: RoundRobinSettings;
+
   // Admin & Owner auth
   ownerEmail?: string;
   adminEmail: string;
@@ -495,4 +506,81 @@ export interface DatabaseSchema {
     lang?: string;
   }>;
   trackingEvents?: TrackingEvent[];
+  roundRobinLogs?: RoundRobinLog[];
+}
+
+export interface RoundRobinStaff {
+  id: string;
+  name: string;
+  title?: string;
+  telegramUsername: string; // e.g. "sokhachen_khb" (without @)
+  telegramChatId: string; // Numeric Chat ID for private bot delivery, e.g. "123456789"
+  percentage: number; // Configured percentage weight (e.g. 20)
+  isActive: boolean; // Active receiving status
+  phone?: string;
+  email?: string;
+  avatar?: string;
+  notes?: string;
+  
+  // Real-time tracking counters
+  totalLeadsRouted: number;
+  totalDirectClicks: number;
+  successfulDeliveries: number;
+  failedDeliveries: number;
+  lastAssignedAt?: string;
+}
+
+export type RoundRobinAlgorithm = 'weighted_percentage' | 'strict_round_robin' | 'random_weighted';
+
+export interface RoundRobinSettings {
+  enabled: boolean;
+  algorithm: RoundRobinAlgorithm;
+  staffList: RoundRobinStaff[];
+  fallbackChatId?: string; // Fallback manager Telegram Chat ID if staff send fails
+  enableManagerNotification?: boolean; // Send CC copy to manager group
+  managerChatId?: string;
+  directContactRoutingEnabled?: boolean; // Route landing page "Chat on Telegram" clicks
+  lastAssignedIndex?: number;
+  lastUpdated?: string;
+}
+
+export type RoutingDeliveryStatus = 'DELIVERED' | 'FAILED' | 'FALLBACK' | 'PENDING';
+
+export interface RoutingDetail {
+  staffId: string;
+  staffName: string;
+  staffTelegram: string;
+  staffChatId?: string;
+  percentageWeight: number;
+  status: RoutingDeliveryStatus;
+  telegramMessageId?: number;
+  telegramResponse?: string;
+  deliveryError?: string;
+  fallbackChatId?: string;
+  fallbackSent?: boolean;
+  routedAt: string;
+  routeType: 'FORM_SUBMISSION' | 'DIRECT_CONTACT_CLICK';
+}
+
+export interface RoundRobinLog {
+  id: string;
+  timestamp: string;
+  routeType: 'FORM_SUBMISSION' | 'DIRECT_CONTACT_CLICK';
+  pageSlug: string;
+  pageTitle?: string;
+  leadId?: string;
+  clientName?: string;
+  clientPhone?: string;
+  clientCompany?: string;
+  staffId: string;
+  staffName: string;
+  staffTelegram: string;
+  staffChatId?: string;
+  percentageWeight: number;
+  status: RoutingDeliveryStatus;
+  telegramMessageId?: number;
+  deliveryError?: string;
+  targetTelegramUrl?: string;
+  visitorIp?: string;
+  userAgent?: string;
 }

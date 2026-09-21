@@ -539,6 +539,107 @@
   ],
   "leads": [
     {
+      "id": "lead-1790009828794-mhhz",
+      "landingPageId": "page-smart-city",
+      "landingPageSlug": "smart-city-tea-cafe",
+      "landingPageTitle": "Smart City, Tea & Cafe Business Delegation 2026",
+      "fullName": "Lok Chumteav Sopheak",
+      "email": "sopheak@invest.com.kh",
+      "phone": "+85512888123",
+      "company": "Sopheak Beverage Co",
+      "eventType": "Corporate Exhibition",
+      "customFields": {
+        "campaignTags": "b2b-vietnam, tea-cafe-buyer, vip-delegation"
+      },
+      "tags": [
+        "b2b-vietnam",
+        "tea-cafe-buyer",
+        "vip-delegation"
+      ],
+      "status": "NEW",
+      "notes": [],
+      "ip": "::1",
+      "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9444",
+      "createdAt": "2026-09-21T16:57:08.610Z",
+      "updatedAt": "2026-09-21T16:57:08.610Z",
+      "routing": {
+        "staffId": "staff-2",
+        "staffName": "Dara Kim",
+        "staffTelegram": "darakim_khb",
+        "staffChatId": "",
+        "percentageWeight": 20,
+        "status": "FAILED",
+        "telegramResponse": "Telegram Bot Token not configured in Settings",
+        "deliveryError": "Telegram Bot Token not configured in Settings",
+        "fallbackChatId": "",
+        "routedAt": "2026-09-21T16:57:08.610Z",
+        "routeType": "FORM_SUBMISSION"
+      }
+    },
+    {
+      "id": "lead-1790009816946-t13n",
+      "landingPageId": "page-smart-city",
+      "landingPageSlug": "smart-city-tea-cafe",
+      "landingPageTitle": "Smart City, Tea & Cafe Business Delegation 2026",
+      "fullName": "Oknha Bunleng Heng",
+      "email": "bunleng@heng.com",
+      "phone": "+85512777666",
+      "company": "Heng Global Logistics",
+      "eventType": "VIP Trade Delegation",
+      "customFields": {
+        "campaignTags": "b2b-vietnam, tea-cafe-buyer, vip-delegation"
+      },
+      "tags": [
+        "b2b-vietnam",
+        "tea-cafe-buyer",
+        "vip-delegation"
+      ],
+      "status": "NEW",
+      "notes": [],
+      "ip": "::1",
+      "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9444",
+      "createdAt": "2026-09-21T16:56:56.761Z",
+      "updatedAt": "2026-09-21T16:56:56.761Z",
+      "routing": {
+        "staffId": "staff-2",
+        "staffName": "Dara Kim",
+        "staffTelegram": "darakim_khb",
+        "staffChatId": "",
+        "percentageWeight": 20,
+        "status": "FAILED",
+        "telegramResponse": "Telegram Bot Token not configured in Settings",
+        "deliveryError": "Telegram Bot Token not configured in Settings",
+        "fallbackChatId": "",
+        "routedAt": "2026-09-21T16:56:56.761Z",
+        "routeType": "FORM_SUBMISSION"
+      }
+    },
+    {
+      "id": "lead-1790009792812-p5ka",
+      "landingPageId": "page-smart-city",
+      "landingPageSlug": "smart-city-tea-cafe",
+      "landingPageTitle": "Smart City, Tea & Cafe Business Delegation 2026",
+      "fullName": "Oknha Bunleng Heng",
+      "email": "bunleng@heng.com",
+      "phone": "+85512777666",
+      "company": "Heng Global Logistics",
+      "eventType": "VIP Trade Delegation",
+      "customFields": {
+        "campaignTags": "b2b-vietnam, tea-cafe-buyer, vip-delegation"
+      },
+      "tags": [
+        "b2b-vietnam",
+        "tea-cafe-buyer",
+        "vip-delegation"
+      ],
+      "status": "NEW",
+      "notes": [],
+      "ip": "::1",
+      "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9444",
+      "createdAt": "2026-09-21T16:56:32.539Z",
+      "updatedAt": "2026-09-21T16:56:32.539Z"
+    },
+    {
       "id": "lead-1790001702549-5iot",
       "landingPageId": "page-smart-city",
       "landingPageSlug": "smart-city-tea-cafe",
@@ -710,7 +811,91 @@
     "enableTelegramAlerts": false,
     "ownerEmail": "chamnabmey.info@gmail.com",
     "adminEmail": "admin@khbevents.com",
-    "adminPasswordHash": "83229271a10d3b01457d7210debcc3b53feb79b862dc5fa52a2d982483ae8194"
+    "adminPasswordHash": "83229271a10d3b01457d7210debcc3b53feb79b862dc5fa52a2d982483ae8194",
+    "roundRobinSettings": {
+      "enabled": true,
+      "algorithm": "weighted_percentage",
+      "staffList": [
+        {
+          "id": "staff-1",
+          "name": "Sokha Chen",
+          "title": "Senior B2B Consultant",
+          "telegramUsername": "sokhachen_khb",
+          "telegramChatId": "",
+          "percentage": 30,
+          "isActive": true,
+          "phone": "+855 12 111 222",
+          "totalLeadsRouted": 0,
+          "totalDirectClicks": 2,
+          "successfulDeliveries": 0,
+          "failedDeliveries": 0,
+          "lastAssignedAt": "2026-09-21T16:56:08.239Z"
+        },
+        {
+          "id": "staff-2",
+          "name": "Dara Kim",
+          "title": "VIP Event Specialist",
+          "telegramUsername": "darakim_khb",
+          "telegramChatId": "",
+          "percentage": 25,
+          "isActive": true,
+          "phone": "+855 12 333 444",
+          "totalLeadsRouted": 2,
+          "totalDirectClicks": 0,
+          "successfulDeliveries": 0,
+          "failedDeliveries": 2,
+          "lastAssignedAt": "2026-09-21T16:57:08.610Z"
+        },
+        {
+          "id": "staff-3",
+          "name": "Vannak Meas",
+          "title": "Exhibition & Trade Director",
+          "telegramUsername": "vannakmeas_khb",
+          "telegramChatId": "",
+          "percentage": 20,
+          "isActive": true,
+          "phone": "+855 12 555 666",
+          "totalLeadsRouted": 0,
+          "totalDirectClicks": 0,
+          "successfulDeliveries": 0,
+          "failedDeliveries": 0
+        },
+        {
+          "id": "staff-4",
+          "name": "Sreyleak Pov",
+          "title": "Corporate Partnership Manager",
+          "telegramUsername": "sreyleak_khb",
+          "telegramChatId": "",
+          "percentage": 15,
+          "isActive": true,
+          "phone": "+855 12 777 888",
+          "totalLeadsRouted": 0,
+          "totalDirectClicks": 0,
+          "successfulDeliveries": 0,
+          "failedDeliveries": 0
+        },
+        {
+          "id": "staff-5",
+          "name": "Bopha Heng",
+          "title": "Client Relations & Ticketing",
+          "telegramUsername": "bophaheng_khb",
+          "telegramChatId": "",
+          "percentage": 10,
+          "isActive": true,
+          "phone": "+855 12 999 000",
+          "totalLeadsRouted": 0,
+          "totalDirectClicks": 0,
+          "successfulDeliveries": 0,
+          "failedDeliveries": 0
+        }
+      ],
+      "fallbackChatId": "",
+      "enableManagerNotification": true,
+      "managerChatId": "",
+      "directContactRoutingEnabled": true,
+      "lastAssignedIndex": 4,
+      "lastUpdated": "2026-09-21T16:57:31.763Z"
+    }
   },
   "pageViews": [
     {
@@ -746,6 +931,80 @@
       },
       "lang": "kh",
       "timestamp": "2026-09-21T09:22:31.933Z"
+    }
+  ],
+  "roundRobinLogs": [
+    {
+      "id": "rr-log-1790009828794-vtmm",
+      "timestamp": "2026-09-21T16:57:08.610Z",
+      "routeType": "FORM_SUBMISSION",
+      "pageSlug": "smart-city-tea-cafe",
+      "pageTitle": "Smart City, Tea & Cafe Business Delegation 2026",
+      "leadId": "lead-1790009828794-mhhz",
+      "clientName": "Lok Chumteav Sopheak",
+      "clientPhone": "+85512888123",
+      "clientCompany": "Sopheak Beverage Co",
+      "staffId": "staff-2",
+      "staffName": "Dara Kim",
+      "staffTelegram": "darakim_khb",
+      "staffChatId": "",
+      "percentageWeight": 20,
+      "status": "FAILED",
+      "deliveryError": "Telegram Bot Token not configured in Settings",
+      "visitorIp": "::1",
+      "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9444"
+    },
+    {
+      "id": "rr-log-1790009816947-47r4",
+      "timestamp": "2026-09-21T16:56:56.761Z",
+      "routeType": "FORM_SUBMISSION",
+      "pageSlug": "smart-city-tea-cafe",
+      "pageTitle": "Smart City, Tea & Cafe Business Delegation 2026",
+      "leadId": "lead-1790009816946-t13n",
+      "clientName": "Oknha Bunleng Heng",
+      "clientPhone": "+85512777666",
+      "clientCompany": "Heng Global Logistics",
+      "staffId": "staff-2",
+      "staffName": "Dara Kim",
+      "staffTelegram": "darakim_khb",
+      "staffChatId": "",
+      "percentageWeight": 20,
+      "status": "FAILED",
+      "deliveryError": "Telegram Bot Token not configured in Settings",
+      "visitorIp": "::1",
+      "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9444"
+    },
+    {
+      "id": "rr-click-1790009768239-w74p",
+      "timestamp": "2026-09-21T16:56:08.239Z",
+      "routeType": "DIRECT_CONTACT_CLICK",
+      "pageSlug": "smart-city-tea-cafe",
+      "pageTitle": "Smart City, Tea & Cafe Business Delegation 2026",
+      "staffId": "staff-1",
+      "staffName": "Sokha Chen",
+      "staffTelegram": "sokhachen_khb",
+      "staffChatId": "",
+      "percentageWeight": 20,
+      "status": "DELIVERED",
+      "targetTelegramUrl": "https://t.me/sokhachen_khb?start=khb_smart-city-tea-cafe_mubhlkq7",
+      "visitorIp": "::1",
+      "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9444"
+    },
+    {
+      "id": "rr-click-1790009763266-w1f9",
+      "timestamp": "2026-09-21T16:56:03.266Z",
+      "routeType": "DIRECT_CONTACT_CLICK",
+      "pageSlug": "smart-city-tea-cafe",
+      "pageTitle": "Smart City, Tea & Cafe Business Delegation 2026",
+      "staffId": "staff-1",
+      "staffName": "Sokha Chen",
+      "staffTelegram": "sokhachen_khb",
+      "staffChatId": "",
+      "percentageWeight": 20,
+      "status": "DELIVERED",
+      "targetTelegramUrl": "https://t.me/sokhachen_khb?start=khb_smart-city-tea-cafe_mubhlgw2",
+      "visitorIp": "::1",
+      "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9444"
     }
   ]
 }

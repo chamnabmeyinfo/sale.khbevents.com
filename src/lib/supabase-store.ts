@@ -144,6 +144,7 @@ function rowToLead(row: any): Lead {
     message: row.message || undefined,
     customFields: row.custom_fields || undefined,
     tags: Array.isArray(row.tags) ? row.tags : (Array.isArray(row.custom_fields?._tags) ? row.custom_fields._tags : []),
+    routing: row.routing || row.custom_fields?._routing || undefined,
     status: row.status || 'NEW',
     notes: Array.isArray(row.notes) ? row.notes : [],
     utmSource: row.utm_source || undefined,
@@ -305,7 +306,8 @@ export async function supabaseCreateLead(lead: Lead): Promise<Lead> {
       utm_campaign: lead.utmCampaign,
       custom_fields: {
         ...(lead.customFields || {}),
-        _tags: lead.tags || []
+        _tags: lead.tags || [],
+        _routing: lead.routing || null
       },
       created_at: lead.createdAt,
       updated_at: lead.updatedAt,

@@ -1,7 +1,25 @@
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
-import { DatabaseSchema, LandingPage, Lead, LeadStatus, SystemSettings, PageAnalyticsSummary, TrackingEvent, TrackingEventType } from './types';
+import { 
+  DatabaseSchema, 
+  LandingPage, 
+  Lead, 
+  LeadStatus, 
+  SystemSettings, 
+  PageAnalyticsSummary, 
+  TrackingEvent, 
+  TrackingEventType,
+  RoundRobinStaff,
+  RoundRobinSettings,
+  RoundRobinLog,
+  RoutingDeliveryStatus
+} from './types';
+import { 
+  defaultRoundRobinSettings, 
+  selectNextStaff, 
+  sendLeadToStaffTelegram 
+} from './round-robin';
 import { isSupabaseConfigured } from './supabase';
 import {
   supabaseGetPages,
@@ -34,6 +52,7 @@ const defaultSettings: SystemSettings = {
   facebookUrl: 'https://facebook.com/khbevents',
   tiktokUrl: 'https://tiktok.com/@khbevents',
   enableTelegramAlerts: false,
+  roundRobinSettings: defaultRoundRobinSettings,
   ownerEmail: 'chamnabmey.info@gmail.com',
   adminEmail: 'admin@khbevents.com',
   adminPasswordHash: crypto.createHash('sha256').update('khbevents2026').digest('hex')
@@ -214,13 +233,21 @@ export async function getDatabase(): Promise<DatabaseSchema> {
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
     const content = await fs.readFile(DB_FILE, 'utf-8');
-    return JSON.parse(content) as DatabaseSchema;
+    const db = JSON.parse(content) as DatabaseSchema;
+    if (!db.settings.roundRobinSettings) {
+      db.settings.roundRobinSettings = defaultRoundRobinSettings;
+    }
+    if (!db.roundRobinLogs) {
+      db.roundRobinLogs = [];
+    }
+    return db;
   } catch {
     const initialDb: DatabaseSchema = {
       pages: defaultPages,
       leads: defaultLeads,
       settings: defaultSettings,
-      pageViews: []
+      pageViews: [],
+      roundRobinLogs: []
     };
     try {
       await fs.mkdir(DATA_DIR, { recursive: true });
@@ -512,6 +539,106 @@ export async function createLead(leadData: {
     updatedAt: now
   };
 
+  // 1. Check if Round Robin Lead Distribution is active (Campaign-specific override or Global)
+  const effectiveRrSettings = (page?.isolatedSettings?.useCustomRoundRobin && page.isolatedSettings.customRoundRobin?.enabled)
+    ? page.isolatedSettings.customRoundRobin
+    : (db.settings.roundRobinSettings?.enabled ? db.settings.roundRobinSettings : null);
+
+  const botToken = page?.isolatedSettings?.telegramBotToken || db.settings.telegramBotToken;
+
+  if (effectiveRrSettings) {
+    const selection = selectNextStaff(effectiveRrSettings);
+    if (selection) {
+      const { staff, effectivePercentage, nextIndex } = selection;
+
+      // Dispatch to assigned staff member's Telegram (or record diagnostic failure if token/chatId missing)
+      let dispatchResult: { status: RoutingDeliveryStatus; messageId?: number; error?: string; fallbackSent?: boolean } = {
+        status: 'FAILED',
+        error: !botToken 
+          ? 'Telegram Bot Token not configured in Settings' 
+          : (!staff.telegramChatId ? `Staff member ${staff.name} has no Telegram Chat ID configured` : undefined)
+      };
+
+      if (botToken && staff.telegramChatId) {
+        dispatchResult = await sendLeadToStaffTelegram(
+          newLead,
+          staff,
+          botToken,
+          {
+            fallbackChatId: effectiveRrSettings.fallbackChatId || page?.isolatedSettings?.telegramChatId || db.settings.telegramChatId,
+            managerChatId: effectiveRrSettings.managerChatId || page?.isolatedSettings?.telegramChatId || db.settings.telegramChatId,
+            enableManagerNotification: Boolean(effectiveRrSettings.enableManagerNotification)
+          }
+        );
+      }
+
+      // Attach routing audit details to the lead
+      newLead.routing = {
+        staffId: staff.id,
+        staffName: staff.name,
+        staffTelegram: staff.telegramUsername,
+        staffChatId: staff.telegramChatId,
+        percentageWeight: effectivePercentage,
+        status: dispatchResult.status,
+        telegramMessageId: dispatchResult.messageId,
+        telegramResponse: dispatchResult.status === 'DELIVERED' ? 'Delivered via Telegram Bot' : dispatchResult.error,
+        deliveryError: dispatchResult.error,
+        fallbackChatId: effectiveRrSettings.fallbackChatId,
+        fallbackSent: dispatchResult.fallbackSent,
+        routedAt: now,
+        routeType: 'FORM_SUBMISSION'
+      };
+
+      // Update staff live performance counters
+      staff.totalLeadsRouted = (staff.totalLeadsRouted || 0) + 1;
+      if (dispatchResult.status === 'DELIVERED') {
+        staff.successfulDeliveries = (staff.successfulDeliveries || 0) + 1;
+      } else {
+        staff.failedDeliveries = (staff.failedDeliveries || 0) + 1;
+      }
+      staff.lastAssignedAt = now;
+      effectiveRrSettings.lastAssignedIndex = nextIndex;
+
+      // Add to Round Robin Audit Logs
+      if (!db.roundRobinLogs) db.roundRobinLogs = [];
+      db.roundRobinLogs.unshift({
+        id: `rr-log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        timestamp: now,
+        routeType: 'FORM_SUBMISSION',
+        pageSlug: newLead.landingPageSlug,
+        pageTitle: newLead.landingPageTitle,
+        leadId: newLead.id,
+        clientName: newLead.fullName,
+        clientPhone: newLead.phone,
+        clientCompany: newLead.company,
+        staffId: staff.id,
+        staffName: staff.name,
+        staffTelegram: staff.telegramUsername,
+        staffChatId: staff.telegramChatId,
+        percentageWeight: effectivePercentage,
+        status: dispatchResult.status,
+        telegramMessageId: dispatchResult.messageId,
+        deliveryError: dispatchResult.error,
+        visitorIp: newLead.ip,
+        userAgent: newLead.userAgent
+      });
+      if (db.roundRobinLogs.length > 500) db.roundRobinLogs.length = 500;
+    }
+  } else {
+    // Fallback: Standard Telegram group broadcast alert if Round Robin is inactive
+    const enableAlerts = page?.isolatedSettings?.enableTelegramAlerts !== undefined 
+      ? page.isolatedSettings.enableTelegramAlerts 
+      : db.settings.enableTelegramAlerts;
+    const token = page?.isolatedSettings?.telegramBotToken || db.settings.telegramBotToken;
+    const chatId = page?.isolatedSettings?.telegramChatId || db.settings.telegramChatId;
+
+    if (enableAlerts && token && chatId) {
+      sendTelegramAlert(newLead, db.settings, token, chatId).catch((err) => {
+        console.error('Telegram error:', err);
+      });
+    }
+  }
+
   if (isSupabaseConfigured()) {
     try {
       await supabaseCreateLead(newLead);
@@ -522,19 +649,6 @@ export async function createLead(leadData: {
 
   db.leads.unshift(newLead);
   await saveDatabase(db);
-
-  // Telegram alert routing (isolated page group vs global system settings)
-  const enableAlerts = page?.isolatedSettings?.enableTelegramAlerts !== undefined 
-    ? page.isolatedSettings.enableTelegramAlerts 
-    : db.settings.enableTelegramAlerts;
-  const token = page?.isolatedSettings?.telegramBotToken || db.settings.telegramBotToken;
-  const chatId = page?.isolatedSettings?.telegramChatId || db.settings.telegramChatId;
-
-  if (enableAlerts && token && chatId) {
-    sendTelegramAlert(newLead, db.settings, token, chatId).catch((err) => {
-      console.error('Telegram error:', err);
-    });
-  }
 
   // Real-time Webhook dispatching (Zapier / Make / HubSpot / Google Sheets)
   if (page?.isolatedSettings?.webhookUrl) {
@@ -898,3 +1012,103 @@ async function dispatchLeadWebhook(lead: Lead, webhookUrl: string, secret?: stri
     console.error('Failed to dispatch lead webhook:', err);
   }
 }
+
+export async function getRoundRobinSettings(): Promise<RoundRobinSettings> {
+  const settings = await getSettings();
+  if (!settings.roundRobinSettings) {
+    const db = await getDatabase();
+    if (!db.settings.roundRobinSettings) {
+      db.settings.roundRobinSettings = defaultRoundRobinSettings;
+      await saveDatabase(db);
+    }
+    return db.settings.roundRobinSettings;
+  }
+  return settings.roundRobinSettings;
+}
+
+export async function updateRoundRobinSettings(
+  partial: Partial<RoundRobinSettings>
+): Promise<RoundRobinSettings> {
+  const db = await getDatabase();
+  const current = db.settings.roundRobinSettings || defaultRoundRobinSettings;
+  const updated: RoundRobinSettings = {
+    ...current,
+    ...partial,
+    lastUpdated: new Date().toISOString()
+  };
+  db.settings.roundRobinSettings = updated;
+  await saveDatabase(db);
+  return updated;
+}
+
+export async function getRoundRobinLogs(limit: number = 100): Promise<RoundRobinLog[]> {
+  const db = await getDatabase();
+  const logs = db.roundRobinLogs || [];
+  return logs
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice(0, limit);
+}
+
+export async function recordDirectContactRoute(params: {
+  pageSlug: string;
+  visitorIp?: string;
+  userAgent?: string;
+}): Promise<{
+  staff: RoundRobinStaff;
+  targetTelegramUrl: string;
+  logId: string;
+} | null> {
+  const db = await getDatabase();
+  const page = db.pages.find((p) => p.slug === params.pageSlug);
+  const rrSettings = (page?.isolatedSettings?.useCustomRoundRobin && page.isolatedSettings.customRoundRobin?.enabled)
+    ? page.isolatedSettings.customRoundRobin
+    : (db.settings.roundRobinSettings?.enabled ? db.settings.roundRobinSettings : null);
+
+  if (!rrSettings || !rrSettings.directContactRoutingEnabled) {
+    return null;
+  }
+
+  const selection = selectNextStaff(rrSettings);
+  if (!selection) return null;
+
+  const { staff, effectivePercentage, nextIndex } = selection;
+  const cleanUsername = (staff.telegramUsername || '').replace(/^@/, '');
+  if (!cleanUsername) return null;
+
+  const now = new Date().toISOString();
+  const logId = `rr-click-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+  const targetTelegramUrl = `https://t.me/${cleanUsername}?start=khb_${params.pageSlug}_${Date.now().toString(36)}`;
+
+  // Update staff stats
+  staff.totalDirectClicks = (staff.totalDirectClicks || 0) + 1;
+  staff.lastAssignedAt = now;
+  rrSettings.lastAssignedIndex = nextIndex;
+
+  if (!db.roundRobinLogs) db.roundRobinLogs = [];
+  db.roundRobinLogs.unshift({
+    id: logId,
+    timestamp: now,
+    routeType: 'DIRECT_CONTACT_CLICK',
+    pageSlug: params.pageSlug,
+    pageTitle: page?.title || params.pageSlug,
+    staffId: staff.id,
+    staffName: staff.name,
+    staffTelegram: staff.telegramUsername,
+    staffChatId: staff.telegramChatId,
+    percentageWeight: effectivePercentage,
+    status: 'DELIVERED',
+    targetTelegramUrl,
+    visitorIp: params.visitorIp,
+    userAgent: params.userAgent
+  });
+
+  if (db.roundRobinLogs.length > 500) db.roundRobinLogs.length = 500;
+  await saveDatabase(db);
+
+  return {
+    staff,
+    targetTelegramUrl,
+    logId
+  };
+}
+
