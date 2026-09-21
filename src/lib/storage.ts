@@ -963,18 +963,22 @@ async function sendTelegramAlert(
   const chatId = chatIdOverride || settings.telegramChatId;
   if (!token || !chatId) return;
 
-  const text = `🎉 *NEW KHB LEAD INQUIRY!*
-*Campaign:* ${lead.landingPageTitle}
-*Client:* ${lead.fullName}
-*Phone:* ${lead.phone}
-*Email:* ${lead.email}
-*Company:* ${lead.company || 'N/A'}
-*Event Type:* ${lead.eventType}
-*Budget:* ${lead.budgetRange || 'N/A'}
-*Package Interest:* ${lead.packageInterest || 'N/A'}
-*Message:* ${lead.message || 'N/A'}
-*UTM Source:* ${lead.utmSource || 'Direct'}
-*Time:* ${new Date(lead.createdAt).toLocaleString()}`;
+  const escapeHtml = (str: string) => (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const text = `🎉 <b>មានអតិថិជនថ្មីទាក់ទងមក (NEW LEAD INQUIRY)!</b>
+━━━━━━━━━━━━━━━━━━━━
+📌 <b>យុទ្ធនាការ៖</b> <b>${escapeHtml(lead.landingPageTitle)}</b>
+👤 <b>ឈ្មោះអតិថិជន៖</b> <b>${escapeHtml(lead.fullName)}</b>
+📞 <b>លេខទូរស័ព្ទ (Phone)៖</b> <code>${escapeHtml(lead.phone)}</code>
+📧 <b>អ៊ីមែល (Email)៖</b> ${escapeHtml(lead.email || 'មិនមាន')}
+🏢 <b>ក្រុមហ៊ុន/ស្ថាប័ន៖</b> ${escapeHtml(lead.company || 'រូបវន្តបុគ្គល / ទូទៅ')}
+🎪 <b>ប្រភេទកម្មវិធី៖</b> ${escapeHtml(lead.eventType)}
+💰 <b>កញ្ចប់សេវា / ថវិកា៖</b> ${escapeHtml(lead.budgetRange || lead.packageInterest || 'មិនទាន់កំណត់')}
+📝 <b>សារ/សំណើ៖</b> <i>${escapeHtml(lead.message || 'មិនមាន')}</i>
+🌐 <b>ប្រភព៖</b> ${escapeHtml(lead.utmSource || 'Direct')}
+⏰ <b>ពេលវេលា៖</b> ${new Date(lead.createdAt).toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' })}
+━━━━━━━━━━━━━━━━━━━━
+👉 <a href="https://sale.khbevents.com/admin/leads?id=${lead.id}">📂 បើកមើលក្នុងប្រព័ន្ធ KHB Leads CRM</a>`;
 
   const url = `https://api.telegram.org/bot${token}/sendMessage`;
   await fetch(url, {
@@ -983,7 +987,7 @@ async function sendTelegramAlert(
     body: JSON.stringify({
       chat_id: chatId,
       text,
-      parse_mode: 'Markdown'
+      parse_mode: 'HTML'
     })
   });
 }

@@ -194,32 +194,32 @@ export async function sendLeadToStaffTelegram(
 
   const leadUrl = `https://sale.khbevents.com/admin/leads?id=${lead.id}`;
   const whatsappUrl = `https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-    `Hello ${lead.fullName}, this is ${staff.name} from KHB Events regarding your inquiry for ${lead.landingPageTitle}.`
+    `ជម្រាបសួរ ${lead.fullName}, ខ្ញុំបាទ/នាងខ្ញុំ ${staff.name} មកពី KHB Events ទាក់ទងនឹងការចុះឈ្មោះ/សាកសួរព័ត៌មានលើកម្មវិធី ${lead.landingPageTitle}។`
   )}`;
 
-  const text = `🎯 <b>NEW PROSPECT ASSIGNED TO YOU!</b>
+  const text = `🎯 <b>មានអតិថិជនថ្មីត្រូវបានចាត់ចែងជូនអ្នក!</b> (NEW LEAD ASSIGNED)
 ━━━━━━━━━━━━━━━━━━━━
-👤 <b>Assigned Rep:</b> <b>${escapeHtml(staff.name)}</b> (${escapeHtml(staffTag)})
-📊 <b>Allocation Weight:</b> ${staff.percentage}%
-🏷️ <b>Lead ID:</b> <code>#${escapeHtml(lead.id)}</code>
-📌 <b>Campaign:</b> <b>${escapeHtml(lead.landingPageTitle)}</b>
+👤 <b>បុគ្គលិកទទួលបន្ទុក៖</b> <b>${escapeHtml(staff.name)}</b> (${escapeHtml(staffTag)})
+📊 <b>ចំណែកភាគរយ (Weight)៖</b> ${staff.percentage}%
+🏷️ <b>លេខសម្គាល់ Lead ID៖</b> <code>#${escapeHtml(lead.id)}</code>
+📌 <b>យុទ្ធនាការ/ទំព័រ៖</b> <b>${escapeHtml(lead.landingPageTitle)}</b>
 
-📋 <b>PROSPECT DETAILS:</b>
-• <b>Client Name:</b> <b>${escapeHtml(lead.fullName)}</b>
-• <b>Phone:</b> <code>${escapeHtml(lead.phone)}</code>
-• <b>Email:</b> ${escapeHtml(lead.email || 'N/A')}
-• <b>Company:</b> ${escapeHtml(lead.company || 'Private Individual')}
-• <b>Event Type:</b> ${escapeHtml(lead.eventType)}
-• <b>Target Date:</b> ${escapeHtml(lead.estimatedDate || 'TBD')}
-• <b>Scale:</b> ${escapeHtml(lead.guestCount || 'TBD')}
-• <b>Budget / Interest:</b> ${escapeHtml(lead.budgetRange || lead.packageInterest || 'TBD')}
-${lead.message ? `• <b>Client Note:</b> <i>${escapeHtml(lead.message)}</i>\n` : ''}${lead.tags && lead.tags.length > 0 ? `🏷️ <b>Tags:</b> ${lead.tags.map(t => `#${escapeHtml(t)}`).join(' ')}\n` : ''}
-🌐 <b>Source:</b> ${escapeHtml(lead.utmSource || 'Direct')} ${lead.utmCampaign ? `(${escapeHtml(lead.utmCampaign)})` : ''}
-⏰ <b>Routed At:</b> ${new Date().toLocaleString()}
+📋 <b>ព័ត៌មានលម្អិតរបស់អតិថិជន៖</b>
+• <b>ឈ្មោះអតិថិជន៖</b> <b>${escapeHtml(lead.fullName)}</b>
+• <b>លេខទូរស័ព្ទ (Phone)៖</b> <code>${escapeHtml(lead.phone)}</code>
+• <b>អ៊ីមែល (Email)៖</b> ${escapeHtml(lead.email || 'មិនមាន')}
+• <b>ក្រុមហ៊ុន/ស្ថាប័ន៖</b> ${escapeHtml(lead.company || 'រូបវន្តបុគ្គល / ទូទៅ')}
+• <b>ប្រភេទកម្មវិធី៖</b> ${escapeHtml(lead.eventType)}
+• <b>កាលបរិច្ឆេទរំពឹងទុក៖</b> ${escapeHtml(lead.estimatedDate || 'មិនទាន់កំណត់')}
+• <b>ចំនួនភ្ញៀវ/ទំហំ៖</b> ${escapeHtml(lead.guestCount || 'មិនទាន់កំណត់')}
+• <b>កញ្ចប់សេវា / ថវិកា៖</b> ${escapeHtml(lead.budgetRange || lead.packageInterest || 'មិនទាន់កំណត់')}
+${lead.message ? `• <b>សារ/សំណើបន្ថែម៖</b> <i>${escapeHtml(lead.message)}</i>\n` : ''}${lead.tags && lead.tags.length > 0 ? `🏷️ <b>ស្លាកសម្គាល់ (Tags)៖</b> ${lead.tags.map(t => `#${escapeHtml(t)}`).join(' ')}\n` : ''}
+🌐 <b>ប្រភពចូលមើល៖</b> ${escapeHtml(lead.utmSource || 'Direct')} ${lead.utmCampaign ? `(${escapeHtml(lead.utmCampaign)})` : ''}
+⏰ <b>ពេលវេលាចាត់ចែង៖</b> ${new Date().toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' })}
 ━━━━━━━━━━━━━━━━━━━━
-⚡ <b>QUICK ACTIONS:</b>
-👉 <a href="${whatsappUrl}">Open WhatsApp Chat</a>
-👉 <a href="${leadUrl}">Open in KHB Leads CRM</a>`;
+⚡ <b>សកម្មភាពរហ័ស (Quick Actions)៖</b>
+👉 <a href="${whatsappUrl}">💬 ចុចទីនេះដើម្បីផ្ញើសារ WhatsApp ទៅកាន់អតិថិជន</a>
+👉 <a href="${leadUrl}">📂 បើកមើលក្នុងប្រព័ន្ធ KHB Leads CRM</a>`;
 
   const telegramApiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
@@ -240,12 +240,13 @@ ${lead.message ? `• <b>Client Note:</b> <i>${escapeHtml(lead.message)}</i>\n` 
     if (res.ok && data.ok) {
       // Send CC to Manager if enabled
       if (options?.enableManagerNotification && options?.managerChatId) {
-        const managerText = `🔔 <b>LEAD DISPATCH NOTIFICATION (CC)</b>
+        const managerText = `🔔 <b>ការជូនដំណឹងអំពីការចាត់ចែង Lead ថ្មី (CC សម្រាប់ថ្នាក់ដឹកនាំ)</b>
 ━━━━━━━━━━━━━━━━━━━━
-Lead <b>#${escapeHtml(lead.id)}</b> from <b>${escapeHtml(lead.landingPageTitle)}</b> has been successfully routed to:
-👤 <b>${escapeHtml(staff.name)}</b> (${escapeHtml(staffTag)})
-📞 Client: <b>${escapeHtml(lead.fullName)}</b> (${escapeHtml(lead.phone)})
-📊 Weight: ${staff.percentage}%`;
+Lead <b>#${escapeHtml(lead.id)}</b> ពីទំព័រ <b>${escapeHtml(lead.landingPageTitle)}</b> ត្រូវបានចាត់ចែងជូន៖
+👤 <b>បុគ្គលិកទទួលបន្ទុក៖</b> <b>${escapeHtml(staff.name)}</b> (${escapeHtml(staffTag)})
+📞 <b>អតិថិជន៖</b> <b>${escapeHtml(lead.fullName)}</b> (${escapeHtml(lead.phone)})
+📊 <b>ចំណែកភាគរយ៖</b> ${staff.percentage}%
+⏰ <b>ពេលវេលា៖</b> ${new Date().toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' })}`;
 
         fetch(telegramApiUrl, {
           method: 'POST',
@@ -271,19 +272,20 @@ Lead <b>#${escapeHtml(lead.id)}</b> from <b>${escapeHtml(lead.landingPageTitle)}
 
     if (options?.fallbackChatId) {
       try {
-        const fallbackText = `⚠️ <b>ROUTING DELIVERY FAILED - FALLBACK DISPATCH</b>
+        const fallbackText = `⚠️ <b>ការបញ្ជូនទៅបុគ្គលិកមិនជោគជ័យ - បញ្ជូនបន្តមកអ្នកគ្រប់គ្រង (FALLBACK)</b>
 ━━━━━━━━━━━━━━━━━━━━
-Could not deliver lead to staff:
+មិនអាចផ្ញើជូនបុគ្គលិក៖
 👤 <b>${escapeHtml(staff.name)}</b> (Chat ID: <code>${escapeHtml(staff.telegramChatId)}</code>)
-❌ <b>Reason:</b> ${escapeHtml(errorDesc)}
+❌ <b>មូលហេតុ៖</b> ${escapeHtml(errorDesc)}
 
-📋 <b>LEAD DETAILS:</b>
-• <b>Client:</b> <b>${escapeHtml(lead.fullName)}</b> (${escapeHtml(lead.phone)})
-• <b>Campaign:</b> ${escapeHtml(lead.landingPageTitle)}
-• <b>Event:</b> ${escapeHtml(lead.eventType)}
-• <b>Budget:</b> ${escapeHtml(lead.budgetRange || 'N/A')}
+📋 <b>ព័ត៌មានអតិថិជន៖</b>
+• <b>ឈ្មោះអតិថិជន៖</b> <b>${escapeHtml(lead.fullName)}</b> (${escapeHtml(lead.phone)})
+• <b>យុទ្ធនាការ៖</b> ${escapeHtml(lead.landingPageTitle)}
+• <b>ប្រភេទកម្មវិធី៖</b> ${escapeHtml(lead.eventType)}
+• <b>កញ្ចប់សេវា/ថវិកា៖</b> ${escapeHtml(lead.budgetRange || 'មិនមាន')}
 ━━━━━━━━━━━━━━━━━━━━
-⚠️ <b>Action Required:</b> Please assign an alternate staff representative.`;
+⚠️ <b>សកម្មភាពចាំបាច់៖</b> សូមចាត់ចែងបុគ្គលិកផ្សេងទៀតដើម្បីទាក់ទងអតិថិជននេះជាបន្ទាន់។
+👉 <a href="${leadUrl}">📂 បើកមើលក្នុងប្រព័ន្ធ KHB Leads CRM</a>`;
 
         const fallbackRes = await fetch(telegramApiUrl, {
           method: 'POST',
@@ -345,14 +347,14 @@ export async function testStaffTelegramConnection(
 
   const cleanUser = (username || '').replace(/^@/, '');
   const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-  const text = `🔔 <b>KHB EVENTS - TELEGRAM ROUTING TEST</b>
+  const text = `🔔 <b>KHB EVENTS - តេស្តប្រព័ន្ធតភ្ជាប់ TELEGRAM</b>
 ━━━━━━━━━━━━━━━━━━━━
-Hello <b>${escapeHtml(staffName)}</b> ${cleanUser ? `(@${escapeHtml(cleanUser)})` : ''}!
+ជម្រាបសួរ <b>${escapeHtml(staffName)}</b> ${cleanUser ? `(@${escapeHtml(cleanUser)})` : ''}!
 
-✅ <b>Connection Verified Successfully!</b>
-Your Telegram account is active and connected to the <b>KHB Lead Distribution System</b>. You are ready to receive real-time visitor inquiries.
+✅ <b>ការតភ្ជាប់ទទួលបានជោគជ័យ ១០០%!</b>
+គណនី Telegram របស់អ្នកត្រូវបានភ្ជាប់ជាមួយ <b>ប្រព័ន្ធចាត់ចែង Lead ដោយស្វ័យប្រវត្តិនៃ KHB Events</b>។ អ្នករួចរាល់ក្នុងការទទួលព័ត៌មានអតិថិជនថ្មីៗតាមពេលវេលាជាក់ស្តែង។
 
-⏱️ <b>Verification Time:</b> ${new Date().toLocaleString()}
+⏱️ <b>ពេលវេលាផ្ទៀងផ្ទាត់៖</b> ${new Date().toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' })}
 ━━━━━━━━━━━━━━━━━━━━
 <i>KHB Events • Cambodia's Premier Event Production</i>`;
 
