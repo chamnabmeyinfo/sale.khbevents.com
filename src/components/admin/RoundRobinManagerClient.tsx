@@ -1422,19 +1422,29 @@ export default function RoundRobinManagerClient({
                                       <span>Fallback Transmitted</span>
                                     </span>
                                   ) : (
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black bg-rose-500/20 text-rose-800 dark:text-rose-300 border border-rose-500/30">
                                         <X className="w-3.5 h-3.5 text-rose-500" />
                                         <span>Delivery Failed</span>
                                       </span>
                                       {simulationResult.routing.deliveryError && (
-                                        <div className="text-[11px] text-rose-600 dark:text-rose-400">
+                                        <div className="text-[11px] font-bold text-rose-600 dark:text-rose-400">
                                           {simulationResult.routing.deliveryError}
                                         </div>
                                       )}
-                                      <div className="text-[10px] text-slate-500 dark:text-gray-400 pt-1">
-                                        💡 Tip: The staff member must open the Telegram bot and click <strong>START</strong> (/start) first before Telegram allows incoming alerts.
-                                      </div>
+                                      {simulationResult.routing.deliveryError?.includes('Bot Token') ? (
+                                        <div className="text-[11px] text-amber-800 dark:text-amber-300 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/30">
+                                          <strong>Action Required:</strong> Enter your Telegram Bot Token (from <code>@BotFather</code>) in the <strong>&quot;Telegram Bot Token&quot;</strong> field below (under Advanced Rules) and click <em>Save All Settings</em>.
+                                        </div>
+                                      ) : simulationResult.routing.deliveryError?.includes('Chat ID') ? (
+                                        <div className="text-[11px] text-amber-800 dark:text-amber-300 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/30">
+                                          <strong>Action Required:</strong> Enter the numeric Telegram Chat ID for this staff member (obtained via <code>@userinfobot</code>) and click <em>Save All Settings</em>.
+                                        </div>
+                                      ) : (
+                                        <div className="text-[10px] text-slate-500 dark:text-gray-400 pt-1">
+                                          💡 Tip: The staff member must open the Telegram bot and click <strong>START</strong> (/start) first before Telegram allows incoming alerts.
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </div>
