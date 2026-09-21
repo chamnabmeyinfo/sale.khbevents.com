@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Phone, MessageCircle, Menu, X, ArrowRight, Sparkles } from 'lucide-react';
+import { UserNavButton } from '@/components/auth/UserNavButton';
 
 interface NavbarProps {
   phone?: string;
@@ -70,7 +71,9 @@ export default function Navbar({
             </Link>
           </nav>
 
-          <div className="hidden lg:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-3">
+            <UserNavButton />
+
             <a
               href={`https://wa.me/${whatsapp}?text=Hello%20KHB%20Events,%20I%20would%20like%20to%20inquire%20about%20event%20management%20and%20production%20services.`}
               target="_blank"
@@ -94,6 +97,7 @@ export default function Navbar({
           </div>
 
           <div className="flex md:hidden items-center gap-2">
+            <UserNavButton />
             <a
               href={`https://wa.me/${whatsapp}`}
               className="p-2 text-emerald-400 hover:text-emerald-300"
