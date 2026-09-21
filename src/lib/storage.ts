@@ -2,6 +2,23 @@ import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { DatabaseSchema, LandingPage, Lead, LeadStatus, SystemSettings } from './types';
+import { isSupabaseConfigured } from './supabase';
+import {
+  supabaseGetPages,
+  supabaseGetPageBySlug,
+  supabaseGetPageById,
+  supabaseSavePage,
+  supabaseDeletePage,
+  supabaseGetLeads,
+  supabaseGetLeadById,
+  supabaseCreateLead,
+  supabaseUpdateLeadStatus,
+  supabaseAddLeadNote,
+  supabaseDeleteLead,
+  supabaseGetSettings,
+  supabaseUpdateSettings,
+  supabaseRecordPageView,
+} from './supabase-store';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
@@ -354,25 +371,51 @@ export async function saveDatabase(data: DatabaseSchema): Promise<void> {
 }
 
 export async function getPages(): Promise<LandingPage[]> {
+  if (isSupabaseConfigured()) {
+    try {
+      const pages = await supabaseGetPages();
+      if (pages && pages.length > 0) return pages;
+    } catch (err) {
+      console.error('Supabase getPages error:', err);
+    }
+  }
   const db = await getDatabase();
   return db.pages;
 }
 
 export async function getPageBySlug(slug: string): Promise<LandingPage | null> {
+  const cleanSlug = slug.toLowerCase().trim();
+  if (isSupabaseConfigured()) {
+    try {
+      const page = await supabaseGetPageBySlug(cleanSlug);
+      if (page) return page;
+    } catch (err) {
+      console.error('Supabase getPageBySlug error:', err);
+    }
+  }
   const db = await getDatabase();
-  return db.pages.find((p) => p.slug === slug.toLowerCase().trim()) || null;
+  return db.pages.find((p) => p.slug === cleanSlug) || null;
 }
 
 export async function getPageById(id: string): Promise<LandingPage | null> {
+  if (isSupabaseConfigured()) {
+    try {
+      const page = await supabaseGetPageById(id);
+      if (page) return page;
+    } catch (err) {
+      console.error('Supabase getPageById error:', err);
+    }
+  }
   const db = await getDatabase();
   return db.pages.find((p) => p.id === id) || null;
 }
 
 export async function savePage(pageData: Partial<LandingPage> & { title: string; slug: string }): Promise<LandingPage> {
-  const db = await getDatabase();
   const slug = pageData.slug.toLowerCase().trim().replace(/[^a-z0-9-_]/g, '-');
   const now = new Date().toISOString();
 
+  let targetPage: LandingPage;
+  const db = await getDatabase();
   let existingIndex = -1;
   if (pageData.id) {
     existingIndex = db.pages.findIndex((p) => p.id === pageData.id);
@@ -381,18 +424,15 @@ export async function savePage(pageData: Partial<LandingPage> & { title: string;
   }
 
   if (existingIndex >= 0) {
-    const existing = db.pages[existingIndex];
-    const updated: LandingPage = {
-      ...existing,
+    targetPage = {
+      ...db.pages[existingIndex],
       ...pageData,
       slug,
       updatedAt: now
     };
-    db.pages[existingIndex] = updated;
-    await saveDatabase(db);
-    return updated;
+    db.pages[existingIndex] = targetPage;
   } else {
-    const newPage: LandingPage = {
+    targetPage = {
       id: pageData.id || `page-${Date.now()}`,
       slug,
       title: pageData.title,
@@ -430,13 +470,30 @@ export async function savePage(pageData: Partial<LandingPage> & { title: string;
       createdAt: now,
       updatedAt: now
     };
-    db.pages.unshift(newPage);
-    await saveDatabase(db);
-    return newPage;
+    db.pages.unshift(targetPage);
   }
+
+  await saveDatabase(db);
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseSavePage(targetPage);
+    } catch (err) {
+      console.error('Supabase savePage error:', err);
+    }
+  }
+
+  return targetPage;
 }
 
 export async function deletePage(id: string): Promise<boolean> {
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseDeletePage(id);
+    } catch (err) {
+      console.error('Supabase deletePage error:', err);
+    }
+  }
   const db = await getDatabase();
   const initialLen = db.pages.length;
   db.pages = db.pages.filter((p) => p.id !== id);
@@ -452,6 +509,14 @@ export async function getLeads(filter?: {
   status?: string;
   search?: string;
 }): Promise<Lead[]> {
+  if (isSupabaseConfigured()) {
+    try {
+      const leads = await supabaseGetLeads(filter);
+      if (leads && leads.length > 0) return leads;
+    } catch (err) {
+      console.error('Supabase getLeads error:', err);
+    }
+  }
   const db = await getDatabase();
   let leads = [...db.leads];
 
@@ -481,6 +546,14 @@ export async function getLeads(filter?: {
 }
 
 export async function getLeadById(id: string): Promise<Lead | null> {
+  if (isSupabaseConfigured()) {
+    try {
+      const lead = await supabaseGetLeadById(id);
+      if (lead) return lead;
+    } catch (err) {
+      console.error('Supabase getLeadById error:', err);
+    }
+  }
   const db = await getDatabase();
   return db.leads.find((l) => l.id === id) || null;
 }
@@ -546,6 +619,14 @@ export async function createLead(leadData: {
     updatedAt: now
   };
 
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseCreateLead(newLead);
+    } catch (err) {
+      console.error('Supabase createLead error:', err);
+    }
+  }
+
   db.leads.unshift(newLead);
   await saveDatabase(db);
 
@@ -563,6 +644,14 @@ export async function updateLeadStatus(
   status: LeadStatus,
   noteText?: string
 ): Promise<Lead | null> {
+  if (isSupabaseConfigured()) {
+    try {
+      const updated = await supabaseUpdateLeadStatus(id, status, noteText);
+      if (updated) return updated;
+    } catch (err) {
+      console.error('Supabase updateLeadStatus error:', err);
+    }
+  }
   const db = await getDatabase();
   const lead = db.leads.find((l) => l.id === id);
   if (!lead) return null;
@@ -588,6 +677,14 @@ export async function addLeadNote(
   text: string,
   author: string = 'Admin'
 ): Promise<Lead | null> {
+  if (isSupabaseConfigured()) {
+    try {
+      const updated = await supabaseAddLeadNote(id, text, author);
+      if (updated) return updated;
+    } catch (err) {
+      console.error('Supabase addLeadNote error:', err);
+    }
+  }
   const db = await getDatabase();
   const lead = db.leads.find((l) => l.id === id);
   if (!lead) return null;
@@ -605,6 +702,13 @@ export async function addLeadNote(
 }
 
 export async function deleteLead(id: string): Promise<boolean> {
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseDeleteLead(id);
+    } catch (err) {
+      console.error('Supabase deleteLead error:', err);
+    }
+  }
   const db = await getDatabase();
   const initialLen = db.leads.length;
   db.leads = db.leads.filter((l) => l.id !== id);
@@ -616,6 +720,14 @@ export async function deleteLead(id: string): Promise<boolean> {
 }
 
 export async function getSettings(): Promise<SystemSettings> {
+  if (isSupabaseConfigured()) {
+    try {
+      const settings = await supabaseGetSettings();
+      if (settings) return settings;
+    } catch (err) {
+      console.error('Supabase getSettings error:', err);
+    }
+  }
   const db = await getDatabase();
   return db.settings;
 }
@@ -623,6 +735,14 @@ export async function getSettings(): Promise<SystemSettings> {
 export async function updateSettings(
   partial: Partial<SystemSettings>
 ): Promise<SystemSettings> {
+  if (isSupabaseConfigured()) {
+    try {
+      const updated = await supabaseUpdateSettings(partial);
+      if (updated) return updated;
+    } catch (err) {
+      console.error('Supabase updateSettings error:', err);
+    }
+  }
   const db = await getDatabase();
   db.settings = { ...db.settings, ...partial };
   await saveDatabase(db);
@@ -630,6 +750,13 @@ export async function updateSettings(
 }
 
 export async function recordPageView(slug: string, referrer?: string): Promise<void> {
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseRecordPageView(slug, referrer);
+    } catch (err) {
+      console.error('Supabase recordPageView error:', err);
+    }
+  }
   const db = await getDatabase();
   const page = db.pages.find((p) => p.slug === slug);
   if (page) {
