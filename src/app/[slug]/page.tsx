@@ -2,12 +2,15 @@ import { notFound } from 'next/navigation';
 import { getPageBySlug, getSettings } from '@/lib/storage';
 import DynamicLandingPageView from '@/components/landing/DynamicLandingPageView';
 import SmartCityLandingPageView from '@/components/landing/SmartCityLandingPageView';
+import SmartCityAppView from '@/components/landing/SmartCityAppView';
+import SmartCityOptinView from '@/components/landing/SmartCityOptinView';
 import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -46,12 +49,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function CampaignPage({ params }: PageProps) {
+export default async function CampaignPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const cleanSlug = slug.toLowerCase().trim();
+  const sp = searchParams ? await searchParams : {};
+  const view = typeof sp.view === 'string' ? sp.view.toLowerCase() : '';
   const settings = await getSettings();
 
   if (cleanSlug === 'smart-city-tea-cafe') {
+    if (view === 'app') {
+      return <SmartCityAppView />;
+    }
+    if (view === 'optin') {
+      return <SmartCityOptinView />;
+    }
     return <SmartCityLandingPageView />;
   }
 
@@ -62,6 +73,12 @@ export default async function CampaignPage({ params }: PageProps) {
   }
 
   if (page.slug === 'smart-city-tea-cafe') {
+    if (view === 'app') {
+      return <SmartCityAppView />;
+    }
+    if (view === 'optin') {
+      return <SmartCityOptinView />;
+    }
     return <SmartCityLandingPageView />;
   }
 

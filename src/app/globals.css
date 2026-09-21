@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../styles/smart-city.css";
+@import "../styles/smart-city-app.css";
 
 @variant dark (&:where(.dark, .dark *));
 

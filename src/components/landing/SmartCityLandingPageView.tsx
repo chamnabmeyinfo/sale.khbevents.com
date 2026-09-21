@@ -642,6 +642,24 @@ export default function SmartCityLandingPageView() {
   const [submitting, setSubmitting] = useState(false);
   const [successSeat, setSuccessSeat] = useState(20);
   const [localClaimed, setLocalClaimed] = useState(GENERAL.claimedSeats);
+  const [utmParams, setUtmParams] = useState<Record<string, string>>({});
+
+  // ── Restore saved language & capture UTMs on mount
+  useEffect(() => {
+    try {
+      const savedLang = localStorage.getItem('khb_lang');
+      if (savedLang === 'kh' || savedLang === 'en') {
+        setLang(savedLang);
+      }
+      const params = new URLSearchParams(window.location.search);
+      const utm: Record<string, string> = {};
+      ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid', 'ttclid'].forEach(k => {
+        const v = params.get(k);
+        if (v) utm[k] = v;
+      });
+      setUtmParams(utm);
+    } catch { /* silent */ }
+  }, []);
 
   const c = CONTENT[lang];
   const tgUrl = GENERAL.contactTelegramUrl;
@@ -680,8 +698,11 @@ export default function SmartCityLandingPageView() {
     return () => clearInterval(iv);
   }, []);
 
-  // ── Language toggle
-  const switchLang = (l: 'en' | 'kh') => setLang(l);
+  // ── Language toggle with persistence
+  const switchLang = (l: 'en' | 'kh') => {
+    setLang(l);
+    try { localStorage.setItem('khb_lang', l); } catch {}
+  };
 
   // ── Seat select
   const handleSeatClick = (n: number) => {
@@ -707,7 +728,7 @@ export default function SmartCityLandingPageView() {
     }, 100);
   };
 
-  // ── Form submit
+  // ── Form submit with UTM attribution
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!regName.trim() || !regPhone.trim()) return;
@@ -717,12 +738,19 @@ export default function SmartCityLandingPageView() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: regName.trim(),
+          fullName: regName.trim(),
           phone: regPhone.trim(),
-          notes: `Seat #${regSeat} | Profile: ${regProfile}`,
+          message: `Seat #${regSeat} | Profile: ${regProfile}`,
+          packageInterest: isEarlyBird ? `Early Bird $${GENERAL.earlyBirdPrice}` : `Standard $${GENERAL.regularPrice}`,
           landingPageSlug: 'smart-city-tea-cafe',
           landingPageTitle: 'Smart City, Tea & Cafe Business Trip to Vietnam 2026',
           source: 'landing_page',
+          customFields: { seat: String(regSeat), profile: regProfile },
+          utmSource: utmParams.utm_source,
+          utmMedium: utmParams.utm_medium,
+          utmCampaign: utmParams.utm_campaign,
+          utmContent: utmParams.utm_content,
+          referrer: typeof document !== 'undefined' ? document.referrer : '',
         }),
       });
       const result = await res.json();
@@ -784,6 +812,9 @@ export default function SmartCityLandingPageView() {
             <li><a href="#faq" className="nav-link">{c.navFaq}</a></li>
           </ul>
           <div className="nav-actions">
+            <a href="/smart-city-tea-cafe/app" className="btn-app-chip" title="Switch to Mobile App View" style={{ fontSize: '0.8rem', padding: '6px 12px', border: '1px solid var(--border-subtle)', borderRadius: '999px', textDecoration: 'none', color: 'inherit', display: 'inline-flex', alignItems: 'center', gap: '5px', fontWeight: 600 }}>
+              📱 App View
+            </a>
             <div className="lang-switcher">
               <button className={`lang-btn${lang === 'en' ? ' active' : ''}`} onClick={() => switchLang('en')} title="English">EN</button>
               <button className={`lang-btn${lang === 'kh' ? ' active' : ''}`} onClick={() => switchLang('kh')} title="ភាសាខ្មែរ">ខ្មែរ</button>
@@ -810,6 +841,8 @@ export default function SmartCityLandingPageView() {
           <li><a href="#seats" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navSeats}</a></li>
           <li><a href="#pricing" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navPricing}</a></li>
           <li><a href="#faq" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navFaq}</a></li>
+          <li><a href="/smart-city-tea-cafe/app" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>📱 Mobile Native App</a></li>
+          <li><a href="/smart-city-tea-cafe/optin" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>⚡ Fast 30s Opt-in</a></li>
           <li><a href="#register" className="mobile-drawer-link highlight" onClick={() => setDrawerOpen(false)}>{c.navCtaMobile}</a></li>
         </ul>
         <div className="mobile-drawer-footer">
@@ -1562,6 +1595,8 @@ export default function SmartCityLandingPageView() {
             <li><a href="#seats">Seat Chart</a></li>
             <li><a href="#pricing">Pricing</a></li>
             <li><a href="#faq">FAQ</a></li>
+            <li><a href="/smart-city-tea-cafe/app">Mobile App Shell</a></li>
+            <li><a href="/smart-city-tea-cafe/optin">Fast Opt-in</a></li>
             <li><a href="/admin">Organizer CMS</a></li>
           </ul>
         </div>

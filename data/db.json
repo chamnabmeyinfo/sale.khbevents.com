@@ -3,140 +3,157 @@
     {
       "id": "page-smart-city",
       "slug": "smart-city-tea-cafe",
-      "title": "Vietnam B2B Business Delegation: Smart City, Tea & Cafe",
-      "subtitle": "Exclusive High-Level B2B Networking & Trade Delegation to Ho Chi Minh City & Da Lat",
-      "description": "Join Cambodia's elite business delegation to explore smart city technologies, tea plantations, specialty cafe investments, and top-tier trade connections.",
+      "title": "Smart City, Tea & Cafe Business Delegation 2026",
+      "subtitle": "Exclusive B2B Business Delegation to Hanoi & Halong Bay, Vietnam",
+      "description": "Join Cambodia's premier business delegation to explore Cafe Show Vietnam & Smart City Expo, direct factory visits, and business matchmaking in Hanoi & Halong Bay.",
       "category": "Trade Delegation",
-      "badge": "Exclusive 30 VIP Seats Only",
+      "badge": "Strictly 30 Seats Cohort",
       "status": "published",
-      "heroHeadline": "Vietnam Smart City, Tea & Cafe B2B Business Delegation 2026",
-      "heroSubheadline": "Connect with 100+ vetted enterprise partners, unlock high-margin import/export distribution agreements, and experience private factory tours across Vietnam.",
-      "heroCtaText": "Secure Your VIP Seat",
-      "heroCtaLink": "#booking-form",
-      "heroImage": "/images/events/photo_2026-09-16_22-01-09.jpg",
-      "eventDate": "2026-10-15",
-      "eventTime": "5 Days / 4 Nights",
-      "venue": "Ho Chi Minh City & Da Lat, Vietnam",
-      "venueAddress": "Sheraton Saigon Hotel & Lam Dong High-Tech Agricultural Park",
+      "heroHeadline": "Smart City, Tea & Cafe Business Trip to Vietnam 2026",
+      "heroSubheadline": "Come Home With Suppliers, Not Just Photos. Connect with leading manufacturers, explore Smart City Expo & Cafe Show Vietnam, and uncover high-value wholesale partnerships in Hanoi & Halong Bay.",
+      "heroCtaText": "Reserve Your Seat ($499)",
+      "heroCtaLink": "#register",
+      "heroImage": "/photos/photo_2026-09-16_22-01-09 (2).jpg",
+      "eventDate": "2026-10-08",
+      "eventTime": "4 Days / 3 Nights",
+      "venue": "Hanoi & Halong Bay, Vietnam",
+      "venueAddress": "Vietnam Exhibition Center & Halong Bay UNESCO World Heritage Site",
       "countdownEnabled": true,
       "highlights": [
         {
           "id": "h1",
-          "title": "Pre-Arranged 1-on-1 B2B Meetings",
-          "description": "Guaranteed private match-making sessions with leading Vietnamese manufacturers, tech pioneers, and franchise owners.",
-          "icon": "Handshake"
+          "title": "2 International Trade Expos",
+          "description": "VIP All-Access Passes to Cafe Show Vietnam & Smart City Expo 2026 in Hanoi.",
+          "icon": "Building2"
         },
         {
           "id": "h2",
-          "title": "High-Tech Tea & Coffee Farm Expeditions",
-          "description": "Exclusive access to organic plantations, automated roasteries, and wholesale packaging facilities.",
+          "title": "Direct Factory & Wholesale Visits",
+          "description": "Exclusive on-site inspections of coffee/tea processing facilities, roasteries, and wholesale hubs.",
           "icon": "Coffee"
         },
         {
           "id": "h3",
-          "title": "5-Star Luxury Hospitality & Logistics",
-          "description": "All-inclusive 5-star hotel accommodations, VIP coach transfers, bilingual business interpreters, and gala dinners.",
-          "icon": "Sparkles"
+          "title": "UNESCO Halong Bay Cruise",
+          "description": "Deluxe cruise along Halong Bay World Heritage Site with fresh seafood lunch on board.",
+          "icon": "Ship"
         },
         {
           "id": "h4",
-          "title": "Bilingual Business Facilitation",
-          "description": "Dedicated Khmer-Vietnamese-English commercial translators to facilitate negotiations and on-the-spot contract drafts.",
+          "title": "Trilingual Professional Guide",
+          "description": "Dedicated business facilitation and negotiation support fluent in Khmer, English, and Vietnamese.",
           "icon": "Languages"
         }
       ],
       "packages": [
         {
-          "id": "pkg-standard",
-          "name": "Executive Delegate Pass",
-          "price": "$1,450",
-          "period": "per delegate",
-          "description": "Ideal for solo business owners and procurement directors.",
-          "popular": false,
-          "features": [
-            "Full 5D4N business delegation itinerary",
-            "Shared 5-star luxury twin room",
-            "Access to all B2B symposiums & networking dinners",
-            "Bilingual business guide & translator support",
-            "Smart City Tech Expo pass",
-            "Airport and venue private transfers"
-          ],
-          "ctaText": "Select Executive Pass"
-        },
-        {
-          "id": "pkg-vip",
-          "name": "VIP Chairman Suite Pass",
-          "price": "$2,200",
-          "period": "per delegate",
-          "description": "Most popular choice for founders, CEOs, and government-connected dignitaries.",
+          "id": "pkg-early-bird",
+          "name": "Early Bird Admission",
+          "price": "$499",
+          "period": "per delegate (save $51 before Sept 8)",
+          "description": "Most popular choice for founders, importers, and F&B entrepreneurs.",
           "popular": true,
           "features": [
-            "Private 5-Star Executive Deluxe Suite",
-            "Front-row VIP seating at all keynotes & signings",
-            "Guaranteed 3 pre-arranged private B2B 1-on-1 meetings",
-            "Priority private limousine transfers",
-            "Exclusive VIP dinner with Chamber of Commerce leadership",
-            "Personal dedicated Khmer-Vietnamese business translator",
-            "Full digital photo & video recap package"
+            "Roundtrip Flight Tickets (Phnom Penh - Hanoi)",
+            "Hotel Stay (3 Nights / 4 Days, Twin Sharing)",
+            "Daily Hotel Buffet Breakfast",
+            "Private Air-Conditioned Coach in Vietnam",
+            "Trilingual Professional Guide (Khmer/Eng/Viet)",
+            "VIP All-Access Passes to 2 International Expos",
+            "Border & Customs Facilitation Assistance",
+            "Direct Factory & Wholesale Market Visits",
+            "UNESCO Halong Bay Cruise & Seafood Lunch"
           ],
-          "ctaText": "Reserve VIP Suite Pass"
+          "ctaText": "Lock In $499 Early Bird Rate"
         },
         {
-          "id": "pkg-corp",
-          "name": "Corporate Delegation (3 Seats)",
-          "price": "$4,800",
-          "period": "group of 3",
-          "description": "Cost-efficient package for enterprise leadership teams.",
+          "id": "pkg-standard",
+          "name": "Standard Admission",
+          "price": "$550",
+          "period": "per delegate (after Sept 8)",
+          "description": "Standard registration subject to remaining seat availability.",
           "popular": false,
           "features": [
-            "3 Full Executive Delegate Passes",
-            "Company profile spotlight in official program handbook",
-            "Private corporate meeting table during matching sessions",
-            "Custom industry visit tailored to your sector",
-            "Group airport pick-up & chauffeur service"
+            "Roundtrip Flight Tickets (Phnom Penh - Hanoi)",
+            "Hotel Stay (3 Nights / 4 Days, Twin Sharing)",
+            "Daily Hotel Buffet Breakfast",
+            "Private Air-Conditioned Coach in Vietnam",
+            "Trilingual Professional Guide (Khmer/Eng/Viet)",
+            "VIP All-Access Passes to 2 International Expos",
+            "Border & Customs Facilitation Assistance",
+            "Direct Factory & Wholesale Market Visits",
+            "UNESCO Halong Bay Cruise & Seafood Lunch"
           ],
-          "ctaText": "Book Corporate Group"
+          "ctaText": "Register Standard Seat ($550)"
         }
       ],
       "gallery": [
-        "/images/events/photo_2026-09-16_22-01-09 (2).jpg",
-        "/images/events/photo_2026-09-16_22-01-09 (3).jpg",
-        "/images/events/photo_2026-09-16_22-01-09 (4).jpg",
-        "/images/events/photo_2026-09-16_22-01-09 (5).jpg"
+        "/photos/photo_2026-09-16_22-01-09 (2).jpg",
+        "/photos/photo_2026-09-16_22-01-09 (7).jpg",
+        "/photos/photo_2026-09-16_22-01-09 (4).jpg",
+        "/photos/photo_2026-09-16_22-01-09 (6).jpg",
+        "/photos/photo_2026-09-16_22-01-09 (11).jpg",
+        "/photos/photo_2026-09-16_22-01-09 (9).jpg"
       ],
       "testimonials": [
         {
           "id": "t1",
-          "name": "Oknha Bunthan Seng",
-          "role": "Managing Director",
-          "company": "Apex Trading Corp",
-          "quote": "KHB Events executed our trip with exceptional precision. The match-making session alone resulted in 2 immediate distributorship contracts for us in Cambodia.",
+          "name": "Dara S.",
+          "role": "Cafe Chain CEO",
+          "company": "Phnom Penh Roastery Network",
+          "quote": "I met five roasters in one day and cut my bean sourcing cost by 30%. One container order paid for this trip twice over.",
+          "rating": 5
+        },
+        {
+          "id": "t2",
+          "name": "Sophea T.",
+          "role": "Beverage Importer",
+          "company": "Indochina Wholesale Goods",
+          "quote": "Seeing the factory floor with my own eyes built trust I could never get online. We signed an exclusive distribution deal for Cambodia.",
+          "rating": 5
+        },
+        {
+          "id": "t3",
+          "name": "Vuthy K.",
+          "role": "Retail Tech Investor",
+          "company": "Smart Retail Ventures",
+          "quote": "The trilingual guide handled every negotiation. We returned with two signed MOQ agreements and a new POS supplier.",
           "rating": 5
         }
       ],
       "faqs": [
         {
           "id": "f1",
-          "question": "What is included in the delegate pass fee?",
-          "answer": "The delegate fee includes 5-star hotel accommodations, internal executive transport in Vietnam, curated B2B matchmaking sessions, high-tech farm entries, all meals, and translation assistance."
+          "question": "Do I need a visa for Vietnam?",
+          "answer": "Cambodian passport holders can enter Vietnam visa-free for up to 30 days. Our team also handles arrival paperwork and customs facilitation."
         },
         {
           "id": "f2",
-          "question": "Do I need a visa to travel to Vietnam?",
-          "answer": "Cambodian passport holders enjoy visa-free entry to Vietnam for up to 30 days."
+          "question": "Do I have to pay today?",
+          "answer": "No. You reserve with just your name and phone number. Our coordinator calls you within 15 minutes, and you pay only after details are verified."
+        },
+        {
+          "id": "f3",
+          "question": "Can my company get an official invoice?",
+          "answer": "Yes. We issue corporate billing and official tax invoices — just request it during your confirmation call."
+        },
+        {
+          "id": "f4",
+          "question": "Is the hotel room private?",
+          "answer": "The package includes premium twin/double sharing. Single private rooms are available with a small supplement upon request."
         }
       ],
       "formConfig": {
-        "headline": "Reserve Your Delegate Spot",
-        "subheadline": "Limited to 30 delegates. Our business coordination team will contact you within 2 hours.",
-        "submitButtonText": "Submit Registration & Request Invoice",
-        "successMessage": "Thank you! Your seat reservation request has been received. A KHB Senior Event Director will contact you directly.",
+        "headline": "Reserve Your Delegation Seat",
+        "subheadline": "Strictly limited to 30 seats cohort. Our trip coordinator responds in under 15 minutes.",
+        "submitButtonText": "Reserve My Seat Now",
+        "successMessage": "Thank you! Your seat reservation request has been received. Our team will contact you shortly.",
         "fields": [
           {
             "id": "fullName",
             "label": "Full Name",
             "type": "text",
-            "placeholder": "e.g. Oknha Sokha Meng",
+            "placeholder": "e.g. Sok Sovann / Johnathan Doe",
             "required": true
           },
           {
@@ -148,15 +165,15 @@
           },
           {
             "id": "email",
-            "label": "Work Email",
+            "label": "Work Email (Optional)",
             "type": "email",
             "placeholder": "sokha@company.com.kh",
-            "required": true
+            "required": false
           }
         ]
       },
-      "metaTitle": "Vietnam B2B Business Delegation 2026 | KHB EVENTS",
-      "metaDescription": "Join KHB EVENTS for an exclusive business delegation to Vietnam. 1-on-1 business matching, smart city tech, high-end tea & cafe investments.",
+      "metaTitle": "Smart City, Tea & Cafe Business Delegation 2026 | KHB EVENTS",
+      "metaDescription": "Join the exclusive B2B Business Delegation to Hanoi and Halong Bay, Vietnam. Explore Cafe Show Vietnam & Smart City Expo, direct factory visits, and business matchmaking. Organized by KHB EVENTS.",
       "viewsCount": 342,
       "leadsCount": 21,
       "createdAt": "2026-09-21T04:22:10.310Z",
