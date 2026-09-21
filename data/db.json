@@ -539,6 +539,51 @@
   ],
   "leads": [
     {
+      "id": "lead-1790011359621-qnmo",
+      "landingPageId": "page-smart-city",
+      "landingPageSlug": "smart-city-tea-cafe",
+      "landingPageTitle": "Smart City, Tea & Cafe Business Delegation 2026",
+      "fullName": "Oknha Bunleng Heng",
+      "email": "sopheak.vong@capital.com.kh",
+      "phone": "+855 12 888 123",
+      "company": "Vong Capital Investment Group",
+      "eventType": "Smart City & Retail Tech",
+      "budgetRange": "$4,400 (2 Executive Passes)",
+      "packageInterest": "VIP Chairman Suite Pass",
+      "message": "[SIMULATION TEST] Looking for smart retail kiosk suppliers and digital payment integrations.",
+      "customFields": {
+        "simulation": "true",
+        "simulatedBy": "Admin Test Flight",
+        "campaignTags": "b2b-vietnam, tea-cafe-buyer, vip-delegation"
+      },
+      "tags": [
+        "b2b-vietnam",
+        "tea-cafe-buyer",
+        "vip-delegation"
+      ],
+      "status": "NEW",
+      "notes": [],
+      "utmSource": "simulation_tool",
+      "utmCampaign": "round_robin_test",
+      "ip": "::1",
+      "userAgent": "node",
+      "createdAt": "2026-09-21T17:22:39.157Z",
+      "updatedAt": "2026-09-21T17:22:39.157Z",
+      "routing": {
+        "staffId": "staff-2",
+        "staffName": "Dara Kim",
+        "staffTelegram": "darakim_khb",
+        "staffChatId": "",
+        "percentageWeight": 25,
+        "status": "FAILED",
+        "telegramResponse": "Staff member Dara Kim has no Telegram Chat ID configured",
+        "deliveryError": "Staff member Dara Kim has no Telegram Chat ID configured",
+        "fallbackChatId": "",
+        "routedAt": "2026-09-21T17:22:39.157Z",
+        "routeType": "FORM_SUBMISSION"
+      }
+    },
+    {
       "id": "lead-1790010931846-it3d",
       "landingPageId": "page-smart-city",
       "landingPageSlug": "smart-city-tea-cafe",
@@ -885,11 +930,11 @@
           "percentage": 25,
           "isActive": true,
           "phone": "+855 12 333 444",
-          "totalLeadsRouted": 2,
+          "totalLeadsRouted": 3,
           "totalDirectClicks": 1,
           "successfulDeliveries": 0,
-          "failedDeliveries": 2,
-          "lastAssignedAt": "2026-09-21T17:15:27.780Z"
+          "failedDeliveries": 3,
+          "lastAssignedAt": "2026-09-21T17:22:39.157Z"
         },
         {
           "id": "staff-3",
@@ -939,9 +984,10 @@
       "enableManagerNotification": true,
       "managerChatId": "",
       "directContactRoutingEnabled": true,
-      "lastAssignedIndex": 1,
+      "lastAssignedIndex": 2,
       "lastUpdated": "2026-09-21T16:57:31.763Z"
-    }
+    },
+    "telegramBotToken": "8902578278:AAGYBQTLf1TSbtqcGiMrZdRXNYpU-QrOp4E"
   },
   "pageViews": [
     {
@@ -980,6 +1026,26 @@
     }
   ],
   "roundRobinLogs": [
+    {
+      "id": "rr-log-1790011359621-f42m",
+      "timestamp": "2026-09-21T17:22:39.157Z",
+      "routeType": "FORM_SUBMISSION",
+      "pageSlug": "smart-city-tea-cafe",
+      "pageTitle": "Smart City, Tea & Cafe Business Delegation 2026",
+      "leadId": "lead-1790011359621-qnmo",
+      "clientName": "Oknha Bunleng Heng",
+      "clientPhone": "+855 12 888 123",
+      "clientCompany": "Vong Capital Investment Group",
+      "staffId": "staff-2",
+      "staffName": "Dara Kim",
+      "staffTelegram": "darakim_khb",
+      "staffChatId": "",
+      "percentageWeight": 25,
+      "status": "FAILED",
+      "deliveryError": "Staff member Dara Kim has no Telegram Chat ID configured",
+      "visitorIp": "::1",
+      "userAgent": "node"
+    },
     {
       "id": "rr-log-1790010931846-4hvd",
       "timestamp": "2026-09-21T17:15:31.580Z",
