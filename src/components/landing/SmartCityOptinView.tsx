@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { LandingPage, SystemSettings } from '@/lib/types';
+import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
 
 export default function SmartCityOptinView({ page, settings, initialLang }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh' } = {}) {
   const [lang, setLang] = useState<'en' | 'kh'>(initialLang || 'en');
@@ -50,6 +51,7 @@ export default function SmartCityOptinView({ page, settings, initialLang }: { pa
       const data = await res.json();
       if (res.ok && data.success) {
         setSubmitted(true);
+        trackLandingEvent(page, 'form_submit', { profile: 'Fast Opt-in', value: effEarlyBirdPrice }, lang);
       } else {
         alert(data.error || 'Submission failed. Please try again.');
       }
@@ -72,6 +74,7 @@ export default function SmartCityOptinView({ page, settings, initialLang }: { pa
       background: 'linear-gradient(160deg, #0F2E20 0%, #091E14 70%)',
       fontFamily: isKh ? "'Hanuman', 'Kantumruy Pro', sans-serif" : "'Plus Jakarta Sans', sans-serif"
     }}>
+      <LandingPageTracking page={page} lang={lang} />
       <div style={{ width: '100%', maxWidth: '440px' }}>
         <div style={{
           background: '#FFFFFF',

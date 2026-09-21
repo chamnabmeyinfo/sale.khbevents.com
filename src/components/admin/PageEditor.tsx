@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -36,6 +36,7 @@ import {
   Globe
 } from 'lucide-react';
 import KhmerTranslationEditor from './KhmerTranslationEditor';
+import TrackingAndPixelsEditor from './TrackingAndPixelsEditor';
 import { 
   LandingPage, 
   PackageTier, 
@@ -414,12 +415,22 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     | 'faqs' 
     | 'guarantee' 
     | 'form' 
-    | 'seo';
+    | 'seo'
+    | 'tracking';
 
   const [activeTab, setActiveTab] = useState<TabType>('general');
   const [langTab, setLangTab] = useState<'en' | 'kh'>('en');
   const [newGalleryUrl, setNewGalleryUrl] = useState('');
   const [newFeatureText, setNewFeatureText] = useState<{ [pkgIdx: number]: string }>({});
+
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const t = sp.get('tab');
+      if (t === 'tracking') setActiveTab('tracking');
+      else if (window.location.hash === '#tracking') setActiveTab('tracking');
+    } catch {}
+  }, []);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // SAVE HANDLER
@@ -1090,7 +1101,8 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     { id: 'faqs', label: 'FAQs', count: formData.faqs?.length },
     { id: 'guarantee', label: 'Guarantee', count: formData.guarantee?.points?.length },
     { id: 'form', label: 'Lead Form', count: formData.formConfig?.fields?.length },
-    { id: 'seo', label: 'SEO & Social' }
+    { id: 'seo', label: 'SEO & Social' },
+    { id: 'tracking', label: '📊 Tracking & Pixels', highlight: true }
   ];
 
   const tabs = [...baseTabs, ...templateTabs, ...commonTabs];
@@ -3293,6 +3305,11 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               />
             </div>
           </div>
+        )}
+
+        {/* 16. TRACKING & PIXELS */}
+        {activeTab === 'tracking' && (
+          <TrackingAndPixelsEditor formData={formData} setFormData={setFormData} />
         )}
 
         {/* Bottom Save bar */}

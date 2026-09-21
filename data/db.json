@@ -483,11 +483,22 @@
       "viewsCount": 342,
       "leadsCount": 22,
       "createdAt": "2026-09-21T04:22:10.31+00:00",
-      "updatedAt": "2026-09-21T09:03:33.364Z",
+      "updatedAt": "2026-09-21T09:23:09.535Z",
       "translations": {
         "kh": {
           "heroHeadline": "ដំណើរទស្សនកិច្ចពាណិជ្ជកម្ម Smart City ២០២៦ (តេស្តផ្ទាល់)"
         }
+      },
+      "tracking": {
+        "facebookPixelId": "102938475610293",
+        "facebookPixelEnabled": true,
+        "ga4MeasurementId": "G-KHB2026TEST",
+        "ga4Enabled": true,
+        "gtmContainerId": "GTM-KHB2026",
+        "gtmEnabled": true,
+        "tiktokPixelId": "C1029384756",
+        "tiktokPixelEnabled": true,
+        "customHeadScript": "console.log(\"KHB Custom Head Tracking Loaded\");"
       }
     }
   ],
@@ -601,5 +612,40 @@
     "adminEmail": "admin@khbevents.com",
     "adminPasswordHash": "83229271a10d3b01457d7210debcc3b53feb79b862dc5fa52a2d982483ae8194"
   },
-  "pageViews": []
+  "pageViews": [
+    {
+      "pageSlug": "smart-city-tea-cafe",
+      "timestamp": "2026-09-21T09:22:24.467Z",
+      "utmSource": "facebook",
+      "utmMedium": "cpc",
+      "utmCampaign": "hanoi_b2b",
+      "deviceType": "mobile",
+      "lang": "kh"
+    }
+  ],
+  "trackingEvents": [
+    {
+      "id": "evt-1789982544467-yoxbv",
+      "pageSlug": "smart-city-tea-cafe",
+      "sessionId": "anonymous",
+      "eventType": "page_view",
+      "utmSource": "facebook",
+      "utmMedium": "cpc",
+      "utmCampaign": "hanoi_b2b",
+      "deviceType": "mobile",
+      "lang": "kh",
+      "timestamp": "2026-09-21T09:22:24.467Z"
+    },
+    {
+      "id": "evt-1789982551933-uhu13",
+      "pageSlug": "smart-city-tea-cafe",
+      "sessionId": "anonymous",
+      "eventType": "scroll_depth",
+      "eventData": {
+        "depth": 50
+      },
+      "lang": "kh",
+      "timestamp": "2026-09-21T09:22:31.933Z"
+    }
+  ]
 }

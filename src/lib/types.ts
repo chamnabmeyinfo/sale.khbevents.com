@@ -207,6 +207,74 @@ export interface LandingPageTranslation {
   metaDescription?: string;
 }
 
+export interface ExternalTrackingConfig {
+  facebookPixelId?: string;
+  facebookPixelEnabled?: boolean;
+  gtmContainerId?: string;
+  gtmEnabled?: boolean;
+  ga4MeasurementId?: string;
+  ga4Enabled?: boolean;
+  tiktokPixelId?: string;
+  tiktokPixelEnabled?: boolean;
+  customHeadScript?: string;
+  customBodyScript?: string;
+}
+
+export type TrackingEventType = 
+  | 'page_view'
+  | 'scroll_depth'
+  | 'cta_click'
+  | 'telegram_click'
+  | 'seat_select'
+  | 'form_submit'
+  | 'lang_toggle';
+
+export interface TrackingEvent {
+  id: string;
+  pageSlug: string;
+  sessionId: string;
+  eventType: TrackingEventType;
+  eventData?: Record<string, any>;
+  referrer?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmContent?: string;
+  utmTerm?: string;
+  deviceType?: 'mobile' | 'desktop' | 'tablet';
+  browser?: string;
+  os?: string;
+  lang?: 'en' | 'kh';
+  timestamp: string;
+}
+
+export interface PageAnalyticsSummary {
+  pageSlug: string;
+  totalViews: number;
+  uniqueVisitors: number;
+  totalLeads: number;
+  conversionRate: number;
+  funnel: {
+    views: number;
+    scrolled50: number;
+    clickedCta: number;
+    telegramClicks: number;
+    leadsSubmitted: number;
+  };
+  topSources: Array<{ source: string; count: number; percentage: number }>;
+  topCampaigns: Array<{ campaign: string; count: number }>;
+  deviceBreakdown: {
+    mobile: number;
+    desktop: number;
+    tablet: number;
+  };
+  languageBreakdown: {
+    en: number;
+    kh: number;
+  };
+  recentEvents: TrackingEvent[];
+}
+
 export interface LandingPage {
   id: string;
   slug: string;
@@ -223,6 +291,9 @@ export interface LandingPage {
     kh?: LandingPageTranslation;
     [langCode: string]: LandingPageTranslation | undefined;
   };
+  
+  // Third-Party and Internal Tracking Configuration
+  tracking?: ExternalTrackingConfig;
   
   // Hero section
   heroHeadline: string;
@@ -354,5 +425,12 @@ export interface DatabaseSchema {
     pageSlug: string;
     timestamp: string;
     referrer?: string;
+    sessionId?: string;
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    deviceType?: string;
+    lang?: string;
   }>;
+  trackingEvents?: TrackingEvent[];
 }

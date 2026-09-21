@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { LandingPage, SystemSettings } from '@/lib/types';
+import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BILINGUAL CONTENT — exactly from old project content.json + app.js STR obj
@@ -843,6 +844,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
     if (n <= localClaimed) return;
     setSelectedSeat(n);
     setRegSeat(n);
+    trackLandingEvent(page, 'seat_select', { seat: n }, lang);
     setTimeout(() => {
       document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
@@ -892,6 +894,11 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
         setSuccessSeat(regSeat);
         setSubmitted(true);
         setLocalClaimed(prev => Math.min(prev + 1, effTotalSeats));
+        trackLandingEvent(page, 'form_submit', {
+          seat: regSeat,
+          profile: regProfile,
+          value: isEarlyBird ? effEarlyBirdPrice : effRegularPrice,
+        }, lang);
       } else {
         alert(result.error || 'Submission failed. Please try again.');
       }
@@ -914,6 +921,8 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
 
   return (
     <div className={`smart-city-landing${lang === 'kh' ? ' lang-kh' : ''}`}>
+      {/* ── Tracking Engine (Internal Analytics & External Pixels) ── */}
+      <LandingPageTracking page={page} lang={lang} />
 
       {/* ═══════════════════════════════════════════════
           STICKY URGENCY BAR
@@ -1811,14 +1820,28 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
       </footer>
 
       {/* Floating Telegram Button */}
-      <a href={tgUrl} target="_blank" rel="noreferrer" className="floating-telegram-btn" title="Quick Inquiry on Telegram" aria-label="Chat with KHB EVENTS on Telegram">
+      <a 
+        href={tgUrl} 
+        target="_blank" 
+        rel="noreferrer" 
+        className="floating-telegram-btn" 
+        title="Quick Inquiry on Telegram" 
+        aria-label="Chat with KHB EVENTS on Telegram"
+        onClick={() => trackLandingEvent(page, 'telegram_click', { placement: 'floating_button' }, lang)}
+      >
         {TG_ICON(30)}
       </a>
 
       {/* Mobile Sticky Bar */}
       <div className="mobile-sticky-bar">
         <div className="mobile-sticky-inner">
-          <a href={tgUrl} target="_blank" rel="noreferrer" className="btn-mobile-tg">
+          <a 
+            href={tgUrl} 
+            target="_blank" 
+            rel="noreferrer" 
+            className="btn-mobile-tg"
+            onClick={() => trackLandingEvent(page, 'telegram_click', { placement: 'mobile_sticky_bar' }, lang)}
+          >
             {TG_ICON(18)}<span>Telegram</span>
           </a>
           <a href="#register" className="btn-mobile-reg">

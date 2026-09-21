@@ -13,7 +13,8 @@ import {
   CopyCheck, 
   Eye, 
   Users, 
-  FileText
+  FileText,
+  Activity
 } from 'lucide-react';
 import { LandingPage } from '@/lib/types';
 
@@ -265,6 +266,14 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
                 </div>
 
                 <div className="flex items-center gap-1.5">
+                  <Link
+                    href={`/admin/pages/${page.id}?tab=tracking`}
+                    className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold flex items-center transition-colors"
+                    title="View Tracking & Pixels"
+                  >
+                    <Activity className="w-3.5 h-3.5" />
+                  </Link>
+
                   <Link
                     href={`/admin/pages/${page.id}`}
                     className="px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/30 border border-amber-300 dark:border-amber-500/40 text-xs font-semibold flex items-center gap-1 transition-colors"

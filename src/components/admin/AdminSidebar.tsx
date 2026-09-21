@@ -24,7 +24,8 @@ import {
   Building,
   Menu,
   X,
-  Sun
+  Sun,
+  Activity
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
@@ -98,6 +99,7 @@ export default function AdminSidebar() {
         { label: 'All Campaign Pages', href: '/admin/pages', icon: Layers },
         { label: '+ Create New Page', href: '/admin/pages/new', icon: PlusCircle, isHighlight: true },
         { label: 'Smart City B2B Delegation', href: '/admin/pages/page-smart-city', icon: Sparkles },
+        { label: '📊 Page Tracking & Analytics', href: '/admin/pages/page-smart-city/analytics', icon: Activity },
       ]
     },
     {

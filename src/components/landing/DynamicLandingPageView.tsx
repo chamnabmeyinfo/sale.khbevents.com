@@ -6,6 +6,7 @@ import FloatingContact from './FloatingContact';
 import Footer from './Footer';
 import LeadForm from './LeadForm';
 import { LandingPage, SystemSettings } from '@/lib/types';
+import LandingPageTracking from '@/components/common/LandingPageTracking';
 import { 
   Calendar, 
   MapPin, 
@@ -43,15 +44,6 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
   const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
 
   useEffect(() => {
-    fetch('/api/track', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        slug: page.slug,
-        referrer: typeof document !== 'undefined' ? document.referrer : ''
-      })
-    }).catch(() => {});
-
     if (page.countdownEnabled && (page.eventDate || page.urgency?.earlyBirdDeadline)) {
       const targetString = page.urgency?.earlyBirdDeadline || `${page.eventDate}T09:00:00`;
       const targetTime = new Date(targetString).getTime();
@@ -76,7 +68,7 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
       const interval = setInterval(updateCountdown, 1000);
       return () => clearInterval(interval);
     }
-  }, [page.slug, page.countdownEnabled, page.eventDate, page.urgency?.earlyBirdDeadline]);
+  }, [page.countdownEnabled, page.eventDate, page.urgency?.earlyBirdDeadline]);
 
   const handleSelectTier = (tierName: string, price: string) => {
     setSelectedPackage(`${tierName} (${price})`);
@@ -86,9 +78,9 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
     }
   };
 
-  const isVisible = (key: string) => {
+  const isVisible = (sectionKey: string) => {
     if (!page.sectionVisibility) return true;
-    return (page.sectionVisibility as any)[key] !== false;
+    return (page.sectionVisibility as any)[sectionKey] !== false;
   };
 
   const totalSeats = page.urgency?.totalSeats || 30;
@@ -97,6 +89,7 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#070D0A] text-slate-900 dark:text-gray-100 flex flex-col selection:bg-amber-400 selection:text-black transition-colors">
+      <LandingPageTracking page={page} />
       <Navbar phone={settings.phone} whatsapp={settings.whatsappNumber} />
 
       <main className="flex-1">

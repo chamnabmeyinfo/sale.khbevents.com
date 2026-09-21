@@ -1,14 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { recordPageView } from '@/lib/storage';
+import { recordTrackingEvent } from '@/lib/storage';
 
 export async function POST(req: NextRequest) {
   try {
-    const { slug, referrer } = await req.json();
+    let body: any = {};
+    const contentType = req.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      body = await req.json();
+    } else {
+      const text = await req.text();
+      try {
+        body = JSON.parse(text);
+      } catch {
+        body = {};
+      }
+    }
+
+    const { 
+      slug, 
+      eventType, 
+      sessionId, 
+      eventData, 
+      referrer, 
+      utmSource, 
+      utmMedium, 
+      utmCampaign, 
+      utmContent, 
+      utmTerm, 
+      deviceType, 
+      browser, 
+      os, 
+      lang 
+    } = body;
+
     if (slug) {
-      await recordPageView(slug, referrer);
+      await recordTrackingEvent({
+        slug,
+        eventType: eventType || 'page_view',
+        sessionId,
+        eventData,
+        referrer,
+        utmSource,
+        utmMedium,
+        utmCampaign,
+        utmContent,
+        utmTerm,
+        deviceType,
+        browser,
+        os,
+        lang,
+      });
     }
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ success: false }, { status: 200 });
+  } catch (err) {
+    return NextResponse.json({ success: false, error: (err as Error).message }, { status: 200 });
   }
 }

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { LandingPage, SystemSettings } from '@/lib/types';
+import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GENERAL CONSTANTS
@@ -412,6 +413,7 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
       if (res.ok && data.success) {
         setSubmitted(true);
         setClaimedSeats(prev => Math.min(prev + 1, effTotalSeats));
+        trackLandingEvent(page, 'form_submit', { seat: selectedSeat, profile: regProfile, value: effEarlyBirdPrice }, lang);
       } else {
         alert(data.error || 'Submission failed. Please try again.');
       }
@@ -427,6 +429,9 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
 
   return (
     <div className={`app-shell-root${lang === 'kh' ? ' lang-kh' : ''}`}>
+      {/* ── Tracking Engine (Internal Analytics & External Pixels) ── */}
+      <LandingPageTracking page={page} lang={lang} />
+
       {/* Fake Mobile Device Container */}
       <div className="mobile-frame">
 

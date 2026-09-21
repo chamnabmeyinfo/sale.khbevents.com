@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { Send, CheckCircle2, ShieldCheck, Sparkles, MessageCircle } from 'lucide-react';
+import { trackClientEvent } from '@/components/common/LandingPageTracking';
 
 interface LeadFormProps {
   landingPageSlug?: string;
@@ -96,6 +97,10 @@ function LeadFormInner({
       }
 
       setSubmitted(true);
+      trackClientEvent(landingPageSlug, 'form_submit', {
+        eventType: formData.eventType,
+        client: formData.fullName,
+      });
     } catch (err: any) {
       setErrorMessage(err.message || 'Something went wrong. Please call or WhatsApp us.');
     } finally {

@@ -43,6 +43,7 @@ function rowToLandingPage(row: any): LandingPage {
     faqs: Array.isArray(row.faqs) ? row.faqs : [],
     guarantee: row.guarantee || extra.guarantee || undefined,
     translations: row.translations || extra.translations || undefined,
+    tracking: row.tracking || extra.tracking || undefined,
     formConfig: {
       headline: row.form_config?.headline || 'Inquire or Register',
       subheadline: row.form_config?.subheadline || 'Fill in your details below and our team will get in touch.',
@@ -81,6 +82,7 @@ function landingPageToRow(page: LandingPage) {
       valueStack: page.valueStack,
       guarantee: page.guarantee,
       translations: page.translations,
+      tracking: page.tracking,
     }
   };
 
