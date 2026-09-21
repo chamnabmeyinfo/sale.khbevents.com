@@ -163,7 +163,7 @@ function rowToSettings(row: any): SystemSettings {
     brandTagline: row.brand_tagline || 'Cambodia\'s Premier Event Management, Staging & Exhibition Production',
     phone: row.phone || '+855 12 888 999',
     whatsappNumber: row.whatsapp_number || '85512888999',
-    telegramUsername: row.telegram_username || 'khbevents',
+    telegramUsername: row.telegram_username || 'khbevent_sale_bot',
     email: row.email || 'sale@khbevents.com',
     address: row.address || 'Diamond Island (Koh Pich), Phnom Penh, Cambodia',
     facebookUrl: row.facebook_url || 'https://facebook.com/khbevents',

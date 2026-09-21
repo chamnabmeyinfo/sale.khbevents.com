@@ -11,8 +11,8 @@ import PagePasswordGate from '@/components/common/PagePasswordGate';
 const GENERAL = {
   organizer: 'KHB EVENTS',
   contactPhone: '+855 12 345 678',
-  contactTelegramUrl: 'https://t.me/khbevents',
-  contactTelegramUsername: 'khbevents',
+  contactTelegramUrl: 'https://t.me/khbevent_sale_bot',
+  contactTelegramUsername: 'khbevent_sale_bot',
   totalSeats: 30,
   claimedSeats: 19,
   earlyBirdPrice: 499,
@@ -653,7 +653,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
   const effRegistrationDeadline = page?.urgency?.registrationDeadline || GENERAL.registrationDeadline;
   const effPhone = page?.isolatedSettings?.phone || settings?.phone || GENERAL.contactPhone;
   const effTgUsername = page?.isolatedSettings?.telegramUsername || settings?.telegramUsername || GENERAL.contactTelegramUsername;
-  const effTgUrl = page?.isolatedSettings?.telegramUrl || `/api/round-robin/route?page=${encodeURIComponent(page?.slug || 'smart-city-tea-cafe')}&redirect=true`;
+  const effTgUrl = `/api/round-robin/route?page=${encodeURIComponent(page?.slug || 'smart-city-tea-cafe')}&redirect=true`;
   const effWhatsApp = page?.isolatedSettings?.whatsapp || settings?.whatsappNumber;
 
   const [localClaimed, setLocalClaimed] = useState(effClaimedSeats);

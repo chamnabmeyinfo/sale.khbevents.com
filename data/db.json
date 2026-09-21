@@ -509,7 +509,6 @@
       },
       "isolatedSettings": {
         "whatsapp": "+855 12 999 888",
-        "telegramUrl": "https://t.me/khb_vietnam_b2b",
         "bankAccountName": "KHB EVENTS CO., LTD",
         "coordinatorName": "Sovann Meas",
         "searchEngineIndexing": "index",
@@ -521,7 +520,6 @@
         "partnerName": "Vietnam Tea Association & Smart City Alliance",
         "customCtaText": "Claim VIP Delegation Pass",
         "customThankYouMessage": "Thank you! Your seat reservation request has been received. Our coordinator Sovann Meas will contact you within 15 minutes.",
-        "telegramUsername": "@khb_vietnam_b2b",
         "postSubmitAction": "inline",
         "leadTags": [
           "b2b-vietnam",
@@ -1661,7 +1659,7 @@
     "brandTagline": "Cambodia's Premier Event Management, Staging & Exhibition Production",
     "phone": "+855 12 888 999",
     "whatsappNumber": "85512888999",
-    "telegramUsername": "khbevents",
+    "telegramUsername": "khbevent_sale_bot",
     "email": "sale@khbevents.com",
     "address": "Diamond Island (Koh Pich), Phnom Penh, Cambodia",
     "facebookUrl": "https://facebook.com/khbevents",
