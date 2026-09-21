@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/storage';
+import { selectNextStaff } from '@/lib/round-robin';
 
 /**
  * Telegram Bot Webhook Handler for @khb_sale_admin_bot
@@ -95,19 +96,29 @@ export async function POST(req: NextRequest) {
     if (text.startsWith('/start')) {
       const payload = text.replace('/start', '').trim();
 
-      // Plain /start without payload — general welcome
+      // Plain /start without payload — route to sales rep using round robin
       if (!payload) {
+        const rrSettings = db.settings.roundRobinSettings;
+        const selection = rrSettings?.enabled ? selectNextStaff(rrSettings) : null;
+        const rep = selection?.staff;
+        const repButtons: Array<Array<{ text: string; url?: string; callback_data?: string }>> = [
+          [{ text: '🎪 សាកសួរអំពីកម្មវិធី / Event Inquiry', url: 'https://sale.khbevents.com' }],
+        ];
+        if (rep?.telegramUsername) {
+          const cleanUser = rep.telegramUsername.replace(/^@/, '');
+          repButtons.push([
+            { text: `💬 ជជែកផ្ទាល់ជាមួយ ${rep.name} (ផ្នែកលក់)`, url: `https://t.me/${cleanUser}` }
+          ]);
+        }
         await sendTelegramMessage(botToken, chatId, 
           `👋 <b>សួស្តី ${escapeHtml(visitorName)}!</b>\n\n` +
           `សូមស្វាគមន៍មកកាន់ <b>KHB EVENTS</b> 🎪\n` +
           `Cambodia's Premier Event Management, Staging & Exhibition Production.\n\n` +
-          `📌 សូមប្រាប់ពួកយើងថាអ្នកចង់សាកសួរអំពីអ្វី ឬចុចប៊ូតុងខាងក្រោម៖`,
+          (rep ? `👤 <b>អ្នកប្រឹក្សាផ្នែកលក់របស់អ្នក៖</b> <b>${escapeHtml(rep.name)}</b>\n\n` : '') +
+          `📌 សូមចុចប៊ូតុងខាងក្រោមដើម្បីជជែកផ្ទាល់ ឬសាកសួរព័ត៌មាន៖`,
           {
             replyMarkup: {
-              inline_keyboard: [
-                [{ text: '🎪 សាកសួរអំពីកម្មវិធី / Event Inquiry', url: 'https://sale.khbevents.com' }],
-                [{ text: '📞 ទាក់ទងផ្នែកលក់ / Contact Sales', callback_data: 'contact_sales' }],
-              ]
+              inline_keyboard: repButtons
             }
           }
         );
@@ -144,11 +155,18 @@ export async function POST(req: NextRequest) {
       const pageTitle = page?.title || pageSlug || 'KHB Events';
       const pageCategory = page?.category || 'Event';
 
-      // Look up the assigned staff
+      // Look up the assigned staff, or select next via Round Robin
       const rrSettings = db.settings.roundRobinSettings;
-      const assignedStaff = staffId 
+      let assignedStaff = staffId 
         ? rrSettings?.staffList?.find((s) => s.id === staffId)
         : null;
+
+      if (!assignedStaff && rrSettings?.enabled) {
+        const sel = selectNextStaff(rrSettings);
+        if (sel) {
+          assignedStaff = sel.staff;
+        }
+      }
 
       // ─── Send welcome message to visitor ──────────────────────────
       const staffLine = assignedStaff 

@@ -1133,7 +1133,7 @@ export async function recordDirectContactRoute(params: {
     ? page.isolatedSettings.customRoundRobin
     : (db.settings.roundRobinSettings?.enabled ? db.settings.roundRobinSettings : null);
 
-  if (!rrSettings || !rrSettings.directContactRoutingEnabled) {
+  if (!rrSettings || rrSettings.directContactRoutingEnabled === false) {
     return null;
   }
 
@@ -1146,12 +1146,58 @@ export async function recordDirectContactRoute(params: {
 
   const now = new Date().toISOString();
   const logId = `rr-click-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-  const targetTelegramUrl = `https://t.me/khb_sale_admin_bot?start=khb_${params.pageSlug}_staff_${staff.id.replace('staff-', '')}_${logId}`;
+  const targetTelegramUrl = `https://t.me/${cleanUsername}`;
 
   // Update staff stats
   staff.totalDirectClicks = (staff.totalDirectClicks || 0) + 1;
   staff.lastAssignedAt = now;
   rrSettings.lastAssignedIndex = nextIndex;
+
+  const pageTitle = page?.title || params.pageSlug;
+  const botToken = db.settings.telegramBotToken;
+
+  // Dispatch alert to assigned staff member via Bot so they know the client is reaching out
+  if (botToken && staff.telegramChatId) {
+    const staffAlertText = `⚡ <b>មានអតិថិជនថ្មីទាក់ទងមកអ្នកតាម TELEGRAM! (ROUND ROBIN ROUTING)</b>
+━━━━━━━━━━━━━━━━━━━━
+📌 <b>យុទ្ធនាការ/ទំព័រ៖</b> <b>${pageTitle}</b>
+👤 <b>បុគ្គលិកទទួលបន្ទុក៖</b> <b>${staff.name}</b> (@${cleanUsername})
+📊 <b>ចំណែកភាគរយ (Weight)៖</b> ${effectivePercentage}%
+⏰ <b>ពេលវេលា៖</b> ${new Date().toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' })}
+━━━━━━━━━━━━━━━━━━━━
+<i>អតិថិជនទើបតែចុចប៊ូតុង Telegram នៅលើគេហទំព័រ ហើយត្រូវបានចាត់ចែងដោយស្វ័យប្រវត្តិតាមប្រព័ន្ធ Round Robin មកកាន់ Telegram របស់អ្នក (@${cleanUsername})។ សូមរៀបចំឆ្លើយតប!</i>`;
+
+    fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: staff.telegramChatId,
+        text: staffAlertText,
+        parse_mode: 'HTML'
+      })
+    }).catch((err) => console.error('Round Robin staff ping error:', err));
+  }
+
+  // Manager notification
+  const managerChatId = rrSettings.managerChatId || db.settings.telegramChatId;
+  if (botToken && rrSettings.enableManagerNotification && managerChatId && String(managerChatId) !== String(staff.telegramChatId)) {
+    const managerAlert = `🔔 <b>Round Robin: អតិថិជនចុច Telegram (CC សម្រាប់ Manager)</b>
+━━━━━━━━━━━━━━━━━━━━
+📌 <b>ទំព័រ៖</b> ${pageTitle}
+👤 <b>បុគ្គលិកទទួលបន្ទុក៖</b> <b>${staff.name}</b> (@${cleanUsername})
+📊 <b>ភាគរយ៖</b> ${effectivePercentage}%
+⏰ <b>ពេលវេលា៖</b> ${new Date().toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' })}`;
+
+    fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: managerChatId,
+        text: managerAlert,
+        parse_mode: 'HTML'
+      })
+    }).catch((err) => console.error('Round Robin manager ping error:', err));
+  }
 
   const logEntry: RoundRobinLog = {
     id: logId,

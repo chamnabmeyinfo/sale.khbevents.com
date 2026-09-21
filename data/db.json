@@ -1671,6 +1671,8 @@
     "roundRobinSettings": {
       "enabled": true,
       "algorithm": "weighted_percentage",
+      "directContactRoutingEnabled": true,
+      "enableManagerNotification": true,
       "staffList": [
         {
           "id": "staff-1",
