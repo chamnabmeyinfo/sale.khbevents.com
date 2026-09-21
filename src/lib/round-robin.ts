@@ -78,6 +78,69 @@ export const defaultStaffList: RoundRobinStaff[] = [
   }
 ];
 
+export const DEFAULT_KHMER_TELEGRAM_TEMPLATE = `🎯 <b>មានអតិថិជនថ្មីត្រូវបានចាត់ចែងជូនអ្នក!</b> (NEW LEAD ASSIGNED)
+━━━━━━━━━━━━━━━━━━━━
+👤 <b>បុគ្គលិកទទួលបន្ទុក៖</b> <b>{staffName}</b> ({staffTelegram})
+📊 <b>ចំណែកភាគរយ (Weight)៖</b> {weight}
+🏷️ <b>លេខសម្គាល់ Lead ID៖</b> <code>#{leadId}</code>
+📌 <b>យុទ្ធនាការ/ទំព័រ៖</b> <b>{pageTitle}</b>
+
+📋 <b>ព័ត៌មានលម្អិតរបស់អតិថិជន៖</b>
+• <b>ឈ្មោះអតិថិជន៖</b> <b>{clientName}</b>
+• <b>លេខទូរស័ព្ទ (Phone)៖</b> <code>{phone}</code>
+• <b>អ៊ីមែល (Email)៖</b> {email}
+• <b>ក្រុមហ៊ុន/ស្ថាប័ន៖</b> {company}
+• <b>ប្រភេទកម្មវិធី៖</b> {eventType}
+• <b>កាលបរិច្ឆេទរំពឹងទុក៖</b> {date}
+• <b>ចំនួនភ្ញៀវ/ទំហំ៖</b> {scale}
+• <b>កញ្ចប់សេវា / ថវិកា៖</b> {budget}
+• <b>សារ/សំណើបន្ថែម៖</b> <i>{note}</i>
+🌐 <b>ប្រភពចូលមើល៖</b> {source}
+⏰ <b>ពេលវេលាចាត់ចែង៖</b> {time}
+━━━━━━━━━━━━━━━━━━━━
+⚡ <b>សកម្មភាពរហ័ស (Quick Actions)៖</b>
+👉 {whatsappLink}
+👉 {crmLink}`;
+
+export const DEFAULT_ENGLISH_TELEGRAM_TEMPLATE = `🎯 <b>NEW PROSPECT ASSIGNED TO YOU!</b>
+━━━━━━━━━━━━━━━━━━━━
+👤 <b>Assigned Rep:</b> <b>{staffName}</b> ({staffTelegram})
+📊 <b>Allocation Weight:</b> {weight}
+🏷️ <b>Lead ID:</b> <code>#{leadId}</code>
+📌 <b>Campaign:</b> <b>{pageTitle}</b>
+
+📋 <b>PROSPECT DETAILS:</b>
+• <b>Client Name:</b> <b>{clientName}</b>
+• <b>Phone:</b> <code>{phone}</code>
+• <b>Email:</b> {email}
+• <b>Company:</b> {company}
+• <b>Event Type:</b> {eventType}
+• <b>Target Date:</b> {date}
+• <b>Scale:</b> {scale}
+• <b>Budget / Interest:</b> {budget}
+• <b>Client Note:</b> <i>{note}</i>
+🌐 <b>Source:</b> {source}
+⏰ <b>Routed At:</b> {time}
+━━━━━━━━━━━━━━━━━━━━
+⚡ <b>QUICK ACTIONS:</b>
+👉 {whatsappLink}
+👉 {crmLink}`;
+
+export const DEFAULT_COMPACT_TELEGRAM_TEMPLATE = `⚡ <b>អតិថិជនថ្មី (QUICK LEAD ALERT)</b>
+━━━━━━━━━━━━━━━━━━━━
+👤 <b>អ្នកទទួល៖</b> {staffName} ({weight})
+👤 <b>អតិថិជន៖</b> <b>{clientName}</b>
+📞 <b>ទូរស័ព្ទ៖</b> <code>{phone}</code>
+🏢 <b>ក្រុមហ៊ុន៖</b> {company}
+🎪 <b>កម្មវិធី៖</b> {eventType}
+💰 <b>ថវិកា៖</b> {budget}
+📌 <b>ទំព័រ៖</b> {pageTitle}
+📝 <b>សារ៖</b> <i>{note}</i>
+━━━━━━━━━━━━━━━━━━━━
+👉 {whatsappLink} | {crmLink}`;
+
+export const DEFAULT_KHMER_WHATSAPP_MESSAGE = `ជម្រាបសួរ {clientName}, ខ្ញុំបាទ/នាងខ្ញុំ {staffName} មកពី KHB Events ទាក់ទងនឹងការចុះឈ្មោះ/សាកសួរព័ត៌មានលើកម្មវិធី {pageTitle}។`;
+
 export const defaultRoundRobinSettings: RoundRobinSettings = {
   enabled: true,
   algorithm: 'weighted_percentage',
@@ -87,7 +150,9 @@ export const defaultRoundRobinSettings: RoundRobinSettings = {
   managerChatId: '',
   directContactRoutingEnabled: true,
   lastAssignedIndex: 0,
-  lastUpdated: new Date().toISOString()
+  lastUpdated: new Date().toISOString(),
+  customMessageTemplate: DEFAULT_KHMER_TELEGRAM_TEMPLATE,
+  customWhatsappMessage: DEFAULT_KHMER_WHATSAPP_MESSAGE
 };
 
 /**
@@ -163,6 +228,68 @@ function escapeHtml(str: string): string {
 }
 
 /**
+ * Renders a customizable Telegram message template with lead and staff variables
+ */
+export function renderLeadTemplate(
+  template: string,
+  lead: Lead,
+  staff: RoundRobinStaff,
+  options?: {
+    leadUrl?: string;
+    whatsappUrl?: string;
+  }
+): string {
+  const tpl = (template && template.trim()) ? template : DEFAULT_KHMER_TELEGRAM_TEMPLATE;
+  const cleanUsername = (staff.telegramUsername || '').replace(/^@/, '');
+  const staffTag = cleanUsername ? `@${cleanUsername}` : staff.name;
+  const leadUrl = options?.leadUrl || `https://sale.khbevents.com/admin/leads?id=${lead.id}`;
+  const whatsappUrl = options?.whatsappUrl || `https://wa.me/${(lead.phone || '').replace(/[^0-9]/g, '')}`;
+  const timeFormatted = new Date(lead.createdAt || Date.now()).toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' });
+
+  return tpl
+    .replace(/\{clientName\}/gi, escapeHtml(lead.fullName || 'N/A'))
+    .replace(/\{phone\}/gi, escapeHtml(lead.phone || 'N/A'))
+    .replace(/\{email\}/gi, escapeHtml(lead.email || 'មិនមាន'))
+    .replace(/\{company\}/gi, escapeHtml(lead.company || 'រូបវន្តបុគ្គល / ទូទៅ'))
+    .replace(/\{eventType\}/gi, escapeHtml(lead.eventType || 'N/A'))
+    .replace(/\{budget\}/gi, escapeHtml(lead.budgetRange || lead.packageInterest || 'មិនទាន់កំណត់'))
+    .replace(/\{package\}/gi, escapeHtml(lead.packageInterest || lead.budgetRange || 'មិនទាន់កំណត់'))
+    .replace(/\{date\}/gi, escapeHtml(lead.estimatedDate || 'មិនទាន់កំណត់'))
+    .replace(/\{scale\}/gi, escapeHtml(lead.guestCount || 'មិនទាន់កំណត់'))
+    .replace(/\{note\}/gi, escapeHtml(lead.message || 'មិនមាន'))
+    .replace(/\{pageTitle\}/gi, escapeHtml(lead.landingPageTitle || 'KHB Events'))
+    .replace(/\{pageSlug\}/gi, escapeHtml(lead.landingPageSlug || ''))
+    .replace(/\{staffName\}/gi, escapeHtml(staff.name || 'Staff'))
+    .replace(/\{staffTelegram\}/gi, escapeHtml(staffTag))
+    .replace(/\{weight\}/gi, `${staff.percentage || 0}%`)
+    .replace(/\{leadId\}/gi, escapeHtml(lead.id || ''))
+    .replace(/\{whatsappLink\}/gi, `<a href="${whatsappUrl}">💬 ចុចទីនេះដើម្បីផ្ញើសារ WhatsApp</a>`)
+    .replace(/\{whatsappUrl\}/gi, whatsappUrl)
+    .replace(/\{crmLink\}/gi, `<a href="${leadUrl}">📂 បើកមើលក្នុងប្រព័ន្ធ KHB Leads CRM</a>`)
+    .replace(/\{crmUrl\}/gi, leadUrl)
+    .replace(/\{source\}/gi, escapeHtml(lead.utmSource || 'Direct'))
+    .replace(/\{campaign\}/gi, escapeHtml(lead.utmCampaign || 'N/A'))
+    .replace(/\{time\}/gi, timeFormatted);
+}
+
+/**
+ * Renders a customizable WhatsApp pre-filled greeting text
+ */
+export function renderWhatsappGreeting(
+  template: string,
+  lead: Lead,
+  staff: RoundRobinStaff
+): string {
+  const tpl = (template && template.trim()) ? template : DEFAULT_KHMER_WHATSAPP_MESSAGE;
+  return tpl
+    .replace(/\{clientName\}/gi, lead.fullName || '')
+    .replace(/\{staffName\}/gi, staff.name || '')
+    .replace(/\{pageTitle\}/gi, lead.landingPageTitle || 'KHB Events')
+    .replace(/\{company\}/gi, lead.company || '')
+    .replace(/\{phone\}/gi, lead.phone || '');
+}
+
+/**
  * Dispatches a rich Lead alert card to a staff member's Telegram chat ID, verifying delivery
  */
 export async function sendLeadToStaffTelegram(
@@ -173,6 +300,8 @@ export async function sendLeadToStaffTelegram(
     fallbackChatId?: string;
     managerChatId?: string;
     enableManagerNotification?: boolean;
+    customTemplate?: string;
+    customWhatsappMessage?: string;
   }
 ): Promise<{
   status: RoutingDeliveryStatus;
@@ -193,33 +322,19 @@ export async function sendLeadToStaffTelegram(
   const staffTag = cleanUsername ? `@${cleanUsername}` : staff.name;
 
   const leadUrl = `https://sale.khbevents.com/admin/leads?id=${lead.id}`;
-  const whatsappUrl = `https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-    `ជម្រាបសួរ ${lead.fullName}, ខ្ញុំបាទ/នាងខ្ញុំ ${staff.name} មកពី KHB Events ទាក់ទងនឹងការចុះឈ្មោះ/សាកសួរព័ត៌មានលើកម្មវិធី ${lead.landingPageTitle}។`
-  )}`;
+  const whatsappGreeting = renderWhatsappGreeting(
+    options?.customWhatsappMessage || '',
+    lead,
+    staff
+  );
+  const whatsappUrl = `https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(whatsappGreeting)}`;
 
-  const text = `🎯 <b>មានអតិថិជនថ្មីត្រូវបានចាត់ចែងជូនអ្នក!</b> (NEW LEAD ASSIGNED)
-━━━━━━━━━━━━━━━━━━━━
-👤 <b>បុគ្គលិកទទួលបន្ទុក៖</b> <b>${escapeHtml(staff.name)}</b> (${escapeHtml(staffTag)})
-📊 <b>ចំណែកភាគរយ (Weight)៖</b> ${staff.percentage}%
-🏷️ <b>លេខសម្គាល់ Lead ID៖</b> <code>#${escapeHtml(lead.id)}</code>
-📌 <b>យុទ្ធនាការ/ទំព័រ៖</b> <b>${escapeHtml(lead.landingPageTitle)}</b>
-
-📋 <b>ព័ត៌មានលម្អិតរបស់អតិថិជន៖</b>
-• <b>ឈ្មោះអតិថិជន៖</b> <b>${escapeHtml(lead.fullName)}</b>
-• <b>លេខទូរស័ព្ទ (Phone)៖</b> <code>${escapeHtml(lead.phone)}</code>
-• <b>អ៊ីមែល (Email)៖</b> ${escapeHtml(lead.email || 'មិនមាន')}
-• <b>ក្រុមហ៊ុន/ស្ថាប័ន៖</b> ${escapeHtml(lead.company || 'រូបវន្តបុគ្គល / ទូទៅ')}
-• <b>ប្រភេទកម្មវិធី៖</b> ${escapeHtml(lead.eventType)}
-• <b>កាលបរិច្ឆេទរំពឹងទុក៖</b> ${escapeHtml(lead.estimatedDate || 'មិនទាន់កំណត់')}
-• <b>ចំនួនភ្ញៀវ/ទំហំ៖</b> ${escapeHtml(lead.guestCount || 'មិនទាន់កំណត់')}
-• <b>កញ្ចប់សេវា / ថវិកា៖</b> ${escapeHtml(lead.budgetRange || lead.packageInterest || 'មិនទាន់កំណត់')}
-${lead.message ? `• <b>សារ/សំណើបន្ថែម៖</b> <i>${escapeHtml(lead.message)}</i>\n` : ''}${lead.tags && lead.tags.length > 0 ? `🏷️ <b>ស្លាកសម្គាល់ (Tags)៖</b> ${lead.tags.map(t => `#${escapeHtml(t)}`).join(' ')}\n` : ''}
-🌐 <b>ប្រភពចូលមើល៖</b> ${escapeHtml(lead.utmSource || 'Direct')} ${lead.utmCampaign ? `(${escapeHtml(lead.utmCampaign)})` : ''}
-⏰ <b>ពេលវេលាចាត់ចែង៖</b> ${new Date().toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' })}
-━━━━━━━━━━━━━━━━━━━━
-⚡ <b>សកម្មភាពរហ័ស (Quick Actions)៖</b>
-👉 <a href="${whatsappUrl}">💬 ចុចទីនេះដើម្បីផ្ញើសារ WhatsApp ទៅកាន់អតិថិជន</a>
-👉 <a href="${leadUrl}">📂 បើកមើលក្នុងប្រព័ន្ធ KHB Leads CRM</a>`;
+  const text = renderLeadTemplate(
+    options?.customTemplate || '',
+    lead,
+    staff,
+    { leadUrl, whatsappUrl }
+  );
 
   const telegramApiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
@@ -318,13 +433,14 @@ Lead <b>#${escapeHtml(lead.id)}</b> ពីទំព័រ <b>${escapeHtml(lead.l
 }
 
 /**
- * Test a Telegram account connection by sending a verification ping
+ * Test a Telegram account connection by sending a verification ping or custom template preview
  */
 export async function testStaffTelegramConnection(
   botToken: string,
   chatId: string,
   staffName: string,
-  username?: string
+  username?: string,
+  customTemplate?: string
 ): Promise<{
   success: boolean;
   messageId?: number;
@@ -347,7 +463,45 @@ export async function testStaffTelegramConnection(
 
   const cleanUser = (username || '').replace(/^@/, '');
   const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-  const text = `🔔 <b>KHB EVENTS - តេស្តប្រព័ន្ធតភ្ជាប់ TELEGRAM</b>
+  
+  let text = '';
+  if (customTemplate && customTemplate.trim()) {
+    const sampleLead: Lead = {
+      id: 'lead-test-sample',
+      landingPageId: 'sample-page',
+      landingPageSlug: 'smart-city-tea-cafe',
+      landingPageTitle: 'Smart City, Tea & Cafe Delegation 2026',
+      fullName: 'ឧកញ៉ា ហេង ប៊ុនឡេង (Mr. Bunleng Heng)',
+      email: 'bunleng.heng@enterprise.com.kh',
+      phone: '+855 12 777 666',
+      company: 'Heng Global Logistics & Beverage',
+      eventType: 'VIP Trade Delegation',
+      budgetRange: '$6,600 (3 VIP Passes)',
+      packageInterest: 'VIP Chairman Suite Pass',
+      message: '[សារសាកល្បង] ចាប់អារម្មណ៍ទិញគ្រឿងម៉ាស៊ីនតែបៃតងស្វ័យប្រវត្តិ។',
+      status: 'NEW',
+      notes: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      utmSource: 'facebook_ads',
+      utmCampaign: 'vietnam_b2b_trade'
+    };
+    const sampleStaff: RoundRobinStaff = {
+      id: 'sample-staff',
+      name: staffName,
+      title: 'Sales Representative',
+      telegramUsername: username || 'khb_sales',
+      telegramChatId: chatId,
+      percentage: 20,
+      isActive: true,
+      totalLeadsRouted: 0,
+      totalDirectClicks: 0,
+      successfulDeliveries: 0,
+      failedDeliveries: 0
+    };
+    text = renderLeadTemplate(customTemplate, sampleLead, sampleStaff);
+  } else {
+    text = `🔔 <b>KHB EVENTS - តេស្តប្រព័ន្ធតភ្ជាប់ TELEGRAM</b>
 ━━━━━━━━━━━━━━━━━━━━
 ជម្រាបសួរ <b>${escapeHtml(staffName)}</b> ${cleanUser ? `(@${escapeHtml(cleanUser)})` : ''}!
 
@@ -357,6 +511,7 @@ export async function testStaffTelegramConnection(
 ⏱️ <b>ពេលវេលាផ្ទៀងផ្ទាត់៖</b> ${new Date().toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' })}
 ━━━━━━━━━━━━━━━━━━━━
 <i>KHB Events • Cambodia's Premier Event Production</i>`;
+  }
 
   try {
     const res = await fetch(url, {

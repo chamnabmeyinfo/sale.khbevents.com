@@ -567,7 +567,9 @@ export async function createLead(leadData: {
           {
             fallbackChatId: effectiveRrSettings.fallbackChatId || page?.isolatedSettings?.telegramChatId || db.settings.telegramChatId,
             managerChatId: effectiveRrSettings.managerChatId || page?.isolatedSettings?.telegramChatId || db.settings.telegramChatId,
-            enableManagerNotification: Boolean(effectiveRrSettings.enableManagerNotification)
+            enableManagerNotification: Boolean(effectiveRrSettings.enableManagerNotification),
+            customTemplate: effectiveRrSettings.customMessageTemplate,
+            customWhatsappMessage: effectiveRrSettings.customWhatsappMessage
           }
         );
       }

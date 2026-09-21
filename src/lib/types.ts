@@ -542,6 +542,8 @@ export interface RoundRobinSettings {
   directContactRoutingEnabled?: boolean; // Route landing page "Chat on Telegram" clicks
   lastAssignedIndex?: number;
   lastUpdated?: string;
+  customMessageTemplate?: string; // Customizable template for staff Telegram alerts
+  customWhatsappMessage?: string; // Customizable pre-filled WhatsApp greeting text
 }
 
 export type RoutingDeliveryStatus = 'DELIVERED' | 'FAILED' | 'FALLBACK' | 'PENDING';

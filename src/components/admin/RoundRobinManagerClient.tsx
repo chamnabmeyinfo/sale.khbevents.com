@@ -26,15 +26,29 @@ import {
   Dices,
   Zap,
   BarChart3,
-  Play
+  Play,
+  FileText,
+  Smartphone,
+  RotateCcw,
+  Code,
+  Copy
 } from 'lucide-react';
 import { 
   RoundRobinSettings, 
   RoundRobinStaff, 
   RoundRobinLog, 
   RoundRobinAlgorithm,
-  SystemSettings 
+  SystemSettings,
+  Lead
 } from '@/lib/types';
+import {
+  DEFAULT_KHMER_TELEGRAM_TEMPLATE,
+  DEFAULT_ENGLISH_TELEGRAM_TEMPLATE,
+  DEFAULT_COMPACT_TELEGRAM_TEMPLATE,
+  DEFAULT_KHMER_WHATSAPP_MESSAGE,
+  renderLeadTemplate,
+  renderWhatsappGreeting
+} from '@/lib/round-robin';
 
 interface RoundRobinManagerClientProps {
   initialSettings: RoundRobinSettings;
@@ -102,8 +116,29 @@ export default function RoundRobinManagerClient({
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Active tab in Round Robin Manager: 'config' | 'logs'
-  const [activeTab, setActiveTab] = useState<'config' | 'logs'>('config');
+  // Active tab in Round Robin Manager: 'config' | 'template' | 'logs'
+  const [activeTab, setActiveTab] = useState<'config' | 'template' | 'logs'>('config');
+
+  // Custom Message Alert Template State
+  const [customTemplate, setCustomTemplate] = useState<string>(
+    settings.customMessageTemplate || DEFAULT_KHMER_TELEGRAM_TEMPLATE
+  );
+  const [customWhatsappMessage, setCustomWhatsappMessage] = useState<string>(
+    settings.customWhatsappMessage || DEFAULT_KHMER_WHATSAPP_MESSAGE
+  );
+  const [selectedTestStaffId, setSelectedTestStaffId] = useState<string>(() => {
+    const configured = settings.staffList.find((s) => s.isActive && s.telegramChatId);
+    return configured ? configured.id : settings.staffList[0]?.id || '';
+  });
+  const [isTestingCustomTemplate, setIsTestingCustomTemplate] = useState(false);
+  const [customTemplateTestResult, setCustomTemplateTestResult] = useState<{
+    success?: boolean;
+    messageId?: number;
+    error?: string;
+    diagnostic?: string;
+  } | null>(null);
+  const [copiedTag, setCopiedTag] = useState<string | null>(null);
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   // Connection test statuses for each staff member: [staffId]: { testing, success, message, diagnostic }
   const [testResults, setTestResults] = useState<
@@ -242,7 +277,11 @@ export default function RoundRobinManagerClient({
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          settings,
+          settings: {
+            ...settings,
+            customMessageTemplate: customTemplate,
+            customWhatsappMessage: customWhatsappMessage
+          },
           botToken
         })
       });
@@ -250,6 +289,12 @@ export default function RoundRobinManagerClient({
       const data = await res.json();
       if (res.ok && data.success) {
         setSettings(data.settings);
+        if (data.settings.customMessageTemplate) {
+          setCustomTemplate(data.settings.customMessageTemplate);
+        }
+        if (data.settings.customWhatsappMessage) {
+          setCustomWhatsappMessage(data.settings.customWhatsappMessage);
+        }
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 4000);
       } else {
@@ -259,6 +304,156 @@ export default function RoundRobinManagerClient({
       alert('Error saving Round Robin settings');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Variable merge tags available for Telegram alert templates
+  const variablePills = [
+    { tag: '{clientName}', label: 'Client Name', khmer: 'ឈ្មោះអតិថិជន', icon: '👤' },
+    { tag: '{phone}', label: 'Phone Number', khmer: 'លេខទូរស័ព្ទ', icon: '📞' },
+    { tag: '{email}', label: 'Email Address', khmer: 'អ៊ីមែល', icon: '✉️' },
+    { tag: '{company}', label: 'Company / Org', khmer: 'ក្រុមហ៊ុន/ស្ថាប័ន', icon: '🏢' },
+    { tag: '{eventType}', label: 'Event Type', khmer: 'ប្រភេទកម្មវិធី', icon: '🎪' },
+    { tag: '{budget}', label: 'Budget / Package', khmer: 'កញ្ចប់ថវិកា', icon: '💰' },
+    { tag: '{date}', label: 'Target Date', khmer: 'កាលបរិច្ឆេទ', icon: '📅' },
+    { tag: '{scale}', label: 'Guest Scale', khmer: 'ចំនួនភ្ញៀវ', icon: '👥' },
+    { tag: '{note}', label: 'Client Message', khmer: 'សំណើ/សារបន្ថែម', icon: '📝' },
+    { tag: '{pageTitle}', label: 'Landing Page Title', khmer: 'ចំណងជើងទំព័រ', icon: '📌' },
+    { tag: '{pageSlug}', label: 'Landing Page Slug', khmer: 'Slug ទំព័រ', icon: '🔗' },
+    { tag: '{staffName}', label: 'Staff Rep Name', khmer: 'ឈ្មោះបុគ្គលិក', icon: '👔' },
+    { tag: '{staffTelegram}', label: 'Staff Telegram Tag', khmer: 'Telegram បុគ្គលិក', icon: '✈️' },
+    { tag: '{weight}', label: 'Staff Allocation %', khmer: 'ភាគរយ %', icon: '📊' },
+    { tag: '{leadId}', label: 'Lead ID', khmer: 'លេខកូដ Lead', icon: '🏷️' },
+    { tag: '{whatsappLink}', label: '1-Click WhatsApp Link', khmer: 'តំណភ្ជាប់ WhatsApp', icon: '💬' },
+    { tag: '{crmLink}', label: '1-Click CRM Link', khmer: 'តំណភ្ជាប់ CRM Lead', icon: '📂' },
+    { tag: '{source}', label: 'Traffic Source', khmer: 'ប្រភពផ្សាយ (UTM)', icon: '🌐' },
+    { tag: '{time}', label: 'Routed Time', khmer: 'ម៉ោងចាត់ចែង', icon: '⏰' }
+  ];
+
+  // Sample lead for live Telegram preview
+  const samplePreviewLead = useMemo<Lead>(() => ({
+    id: 'lead-preview-888',
+    landingPageSlug: 'smart-city-tea-cafe',
+    landingPageTitle: 'Smart City & Automated Beverage Expo 2026',
+    fullName: 'លោកឧកញ៉ា ហេង ប៊ុនឡេង',
+    email: 'bunleng.heng@enterprise.com.kh',
+    phone: '+855 12 777 666',
+    company: 'Heng Global Logistics & Beverage Co., Ltd.',
+    eventType: 'ពិព័រណ៍ពាណិជ្ជកម្មកម្រិត VIP (B2B Trade Delegation)',
+    estimatedDate: '15-18 តុលា 2026',
+    guestCount: 'គណៈប្រតិភូ ៥ នាក់',
+    budgetRange: '$6,600 (3 VIP Titanium Passes)',
+    packageInterest: 'VIP Chairman Suite Pass',
+    message: 'ចាប់អារម្មណ៍ទិញសិទ្ធិចែកចាយផ្តាច់មុខ និងគ្រឿងម៉ាស៊ីនតែបៃតងស្វ័យប្រវត្តិ។ សូមទាក់ទងមកបន្ទាន់។',
+    status: 'NEW',
+    notes: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    utmSource: 'facebook_lead_ad',
+    utmCampaign: 'vietnam_cambodia_trade_mission_2026'
+  }), []);
+
+  // Staff member selected for preview and live test dispatch
+  const currentTestStaff = useMemo<RoundRobinStaff>(() => {
+    const found = settings.staffList.find((s) => s.id === selectedTestStaffId);
+    if (found) return found;
+    return settings.staffList[0] || {
+      id: 'staff-1',
+      name: 'Chamnab Mey',
+      title: 'Senior Event Consultant',
+      telegramUsername: 'chamnabmey',
+      telegramChatId: '5746705393',
+      percentage: 25,
+      isActive: true,
+      totalLeadsRouted: 0,
+      totalDirectClicks: 0,
+      successfulDeliveries: 0,
+      failedDeliveries: 0
+    };
+  }, [settings.staffList, selectedTestStaffId]);
+
+  // Live Telegram message preview with HTML formatting
+  const previewHtml = useMemo(() => {
+    const rendered = renderLeadTemplate(customTemplate, samplePreviewLead, currentTestStaff, {
+      leadUrl: 'https://sale.khbevents.com/admin/leads?id=lead-preview-888',
+      whatsappUrl: `https://wa.me/85512777666?text=${encodeURIComponent(
+        renderWhatsappGreeting(customWhatsappMessage, samplePreviewLead, currentTestStaff)
+      )}`
+    });
+    return rendered.replace(/\n/g, '<br />');
+  }, [customTemplate, customWhatsappMessage, samplePreviewLead, currentTestStaff]);
+
+  // Pre-filled WhatsApp greeting preview
+  const previewWhatsappText = useMemo(() => {
+    return renderWhatsappGreeting(customWhatsappMessage, samplePreviewLead, currentTestStaff);
+  }, [customWhatsappMessage, samplePreviewLead, currentTestStaff]);
+
+  // Insert variable tag at cursor position in textarea
+  const handleInsertTag = (tag: string) => {
+    if (!textareaRef.current) {
+      setCustomTemplate((prev) => prev + ' ' + tag);
+      return;
+    }
+    const el = textareaRef.current;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const text = customTemplate;
+    const next = text.substring(0, start) + tag + text.substring(end);
+    setCustomTemplate(next);
+    setCopiedTag(tag);
+    setTimeout(() => setCopiedTag(null), 2000);
+
+    setTimeout(() => {
+      el.focus();
+      el.setSelectionRange(start + tag.length, start + tag.length);
+    }, 0);
+  };
+
+  // Apply template preset
+  const handleApplyPreset = (preset: 'khmer' | 'english' | 'compact') => {
+    if (preset === 'khmer') {
+      setCustomTemplate(DEFAULT_KHMER_TELEGRAM_TEMPLATE);
+      setCustomWhatsappMessage(DEFAULT_KHMER_WHATSAPP_MESSAGE);
+    } else if (preset === 'english') {
+      setCustomTemplate(DEFAULT_ENGLISH_TELEGRAM_TEMPLATE);
+    } else if (preset === 'compact') {
+      setCustomTemplate(DEFAULT_COMPACT_TELEGRAM_TEMPLATE);
+    }
+  };
+
+  // Test send custom alert directly to Telegram
+  const handleTestSendCustomTemplate = async () => {
+    if (!currentTestStaff || !currentTestStaff.telegramChatId) {
+      alert('សូមជ្រើសរើសបុគ្គលិកដែលមាន Telegram Chat ID (Please select a staff with a configured Telegram Chat ID).');
+      return;
+    }
+
+    setIsTestingCustomTemplate(true);
+    setCustomTemplateTestResult(null);
+
+    try {
+      const res = await fetch('/api/round-robin/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatId: currentTestStaff.telegramChatId,
+          staffName: currentTestStaff.name,
+          username: currentTestStaff.telegramUsername,
+          botToken,
+          customTemplate: customTemplate
+        })
+      });
+
+      const data = await res.json();
+      setCustomTemplateTestResult(data);
+    } catch (err: any) {
+      setCustomTemplateTestResult({
+        success: false,
+        error: err?.message || 'Failed to send test alert to Telegram',
+        diagnostic: 'Network error communicating with Telegram Bot API.'
+      });
+    } finally {
+      setIsTestingCustomTemplate(false);
     }
   };
 
@@ -493,6 +688,19 @@ export default function RoundRobinManagerClient({
         >
           <Sliders className="w-3.5 h-3.5" />
           <span>Staff Accounts & Percentage Allocation</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('template')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'template'
+              ? 'bg-amber-400 text-black shadow-xs'
+              : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-emerald-950/40'
+          }`}
+        >
+          <FileText className="w-3.5 h-3.5" />
+          <span>📝 Custom Alert Template (Telegram & WhatsApp)</span>
         </button>
 
         <button
@@ -950,6 +1158,373 @@ export default function RoundRobinManagerClient({
                   Carbon-Copy (CC) Lead Dispatch Alerts to Manager Group
                 </span>
               </label>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          CUSTOM ALERT TEMPLATE BUILDER (TELEGRAM & WHATSAPP)
+      ───────────────────────────────────────────────────────────── */}
+      {activeTab === 'template' && (
+        <div className="space-y-6">
+          {/* Header & Preset Selector Banner */}
+          <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-emerald-950/90 via-[#0A2218] to-slate-900 border border-emerald-500/30 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-xl">
+            <div className="flex items-start gap-4">
+              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-500 text-black shadow-lg shrink-0 mt-0.5">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-lg font-black text-white">
+                    Telegram &amp; WhatsApp Custom Alert Message Builder
+                  </h2>
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full font-black bg-amber-400 text-black uppercase tracking-wider">
+                    HTML Enabled
+                  </span>
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Live Preview
+                  </span>
+                </div>
+                <p className="text-xs text-gray-300 max-w-2xl leading-relaxed">
+                  រៀបចំទម្រង់សារជូនដំណឹងពេលមានអតិថិជនថ្មីចូលមកតាមពាក្យពេចន៍របស់អ្នក (ភាសាខ្មែរ រូបសញ្ញា Emojis និងទិន្នន័យអតិថិជនស្វ័យប្រវត្តិ)។ រាល់ការកែប្រែនឹងបង្ហាញក្នុងប្រអប់ Telegram Mockup ភ្លាមៗ។
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Template Presets */}
+            <div className="flex flex-wrap items-center gap-2 shrink-0 w-full md:w-auto bg-black/40 p-2 rounded-2xl border border-emerald-500/20">
+              <span className="text-[11px] font-bold text-gray-400 px-2">គំរូសាររហ័ស (Presets):</span>
+              <button
+                type="button"
+                onClick={() => handleApplyPreset('khmer')}
+                className="px-3 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-300 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                title="ប្រើប្រាស់គំរូភាសាខ្មែរពេញលេញ (Full Khmer standard)"
+              >
+                <span>🇰🇭 គំរូខ្មែរ (Default)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleApplyPreset('english')}
+                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                title="Switch to English standard template"
+              >
+                <span>🇬🇧 English</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleApplyPreset('compact')}
+                className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                title="ប្រើប្រាស់គំរូខ្លីរហ័ស (Compact format)"
+              >
+                <span>⚡ ខ្លីរហ័ស (Compact)</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 2-Column Layout: Editor on Left, Live Mockup on Right */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* LEFT COLUMN: Variable Tags + Editors */}
+            <div className="lg:col-span-7 space-y-5">
+              {/* Dynamic Variable Pills Palette */}
+              <div className="p-5 rounded-3xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/60 shadow-sm space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                      Dynamic Variable Tags (ចុចដើម្បីបញ្ចូល Tag ដោយស្វ័យប្រវត្តិ)
+                    </h3>
+                  </div>
+                  {copiedTag && (
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/30 animate-fadeIn flex items-center gap-1">
+                      <Check className="w-3 h-3" />
+                      <span>បញ្ចូល {copiedTag} រួចរាល់!</span>
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-[11px] text-slate-500 dark:text-gray-400">
+                  ចុចលើ Tag ណាមួយខាងក្រោមដើម្បីបញ្ចូលទៅកាន់ទីតាំងទស្សន៍ទ្រនិច (Cursor) ក្នុងប្រអប់អត្ថបទ៖
+                </p>
+
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {variablePills.map((p) => (
+                    <button
+                      key={p.tag}
+                      type="button"
+                      onClick={() => handleInsertTag(p.tag)}
+                      className="group inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-emerald-950/60 hover:bg-amber-400/20 dark:hover:bg-amber-400/20 border border-slate-200 dark:border-emerald-900/60 hover:border-amber-400/50 text-slate-800 dark:text-gray-200 hover:text-amber-600 dark:hover:text-amber-300 text-xs font-mono font-medium transition-all cursor-pointer shadow-2xs active:scale-95"
+                      title={`${p.khmer} (${p.label}) - ចុចដើម្បីបញ្ចូល`}
+                    >
+                      <span className="text-[11px]">{p.icon}</span>
+                      <strong className="text-[11px]">{p.tag}</strong>
+                      <span className="text-[10px] text-slate-400 dark:text-gray-400 font-sans group-hover:text-amber-700 dark:group-hover:text-amber-300">
+                        {p.khmer}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Telegram HTML Template Textarea */}
+              <div className="p-5 rounded-3xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/60 shadow-sm space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <label className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Smartphone className="w-4 h-4 text-sky-500" />
+                      <span>Telegram Alert Message Template (HTML Mode)</span>
+                    </label>
+                    <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5">
+                      សារនេះនឹងត្រូវ Bot ផ្ញើជូនបុគ្គលិកភ្លាមៗនៅពេលមាន Lead ថ្មី។
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1 text-[10px] font-mono text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-[#06100B] px-2.5 py-1 rounded-lg border border-slate-200 dark:border-emerald-950">
+                    <Code className="w-3 h-3 text-amber-500" />
+                    <span>Supports: &lt;b&gt;, &lt;i&gt;, &lt;code&gt;, &lt;a href&gt;</span>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <textarea
+                    ref={textareaRef}
+                    value={customTemplate}
+                    onChange={(e) => setCustomTemplate(e.target.value)}
+                    rows={16}
+                    className="w-full p-4 rounded-2xl bg-slate-900 dark:bg-[#06100B] text-slate-100 font-mono text-xs leading-relaxed border border-slate-700 dark:border-emerald-900/80 focus:border-amber-400 focus:outline-none shadow-inner resize-y"
+                    placeholder="បញ្ចូលទម្រង់សារ HTML សម្រាប់ Telegram..."
+                    spellCheck={false}
+                  />
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] text-slate-500 dark:text-gray-400">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">HTML Tags ដែលអាចប្រើបាន៖</span>
+                    <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-emerald-950 font-mono text-[10px] text-slate-800 dark:text-gray-200">&lt;b&gt;bold&lt;/b&gt;</code>
+                    <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-emerald-950 font-mono text-[10px] text-slate-800 dark:text-gray-200">&lt;i&gt;italic&lt;/i&gt;</code>
+                    <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-emerald-950 font-mono text-[10px] text-slate-800 dark:text-gray-200">&lt;code&gt;text&lt;/code&gt;</code>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPreset('khmer')}
+                    className="text-amber-600 dark:text-amber-400 hover:underline font-bold cursor-pointer inline-flex items-center gap-1"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>ស្តារគំរូដើម (Reset to Default)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* WhatsApp Pre-Filled Greeting Template */}
+              <div className="p-5 rounded-3xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/60 shadow-sm space-y-3">
+                <div>
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <MessageCircle className="w-4 h-4 text-emerald-500" />
+                    <span>WhatsApp Pre-filled Greeting Template (សារស្វាគមន៍ WhatsApp ជាមុន)</span>
+                  </label>
+                  <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5">
+                    អត្ថបទដែលបំពេញទុកជាមុននៅពេលបុគ្គលិកចុចប៊ូតុង "ផ្ញើសារ WhatsApp" ដើម្បីទាក់ទងទៅអតិថិជន។
+                  </p>
+                </div>
+
+                <textarea
+                  value={customWhatsappMessage}
+                  onChange={(e) => setCustomWhatsappMessage(e.target.value)}
+                  rows={3}
+                  className="w-full p-3.5 rounded-2xl bg-white dark:bg-[#06100B] text-slate-900 dark:text-white text-xs leading-relaxed border border-slate-200 dark:border-emerald-900/80 focus:border-amber-400 focus:outline-none"
+                  placeholder="ជម្រាបសួរ {clientName}..."
+                />
+
+                <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                  <span>Tags ដែលគាំទ្រ៖</span>
+                  <code className="font-mono text-emerald-600 dark:text-emerald-400">{'{clientName}'}</code>
+                  <code className="font-mono text-emerald-600 dark:text-emerald-400">{'{staffName}'}</code>
+                  <code className="font-mono text-emerald-600 dark:text-emerald-400">{'{pageTitle}'}</code>
+                  <code className="font-mono text-emerald-600 dark:text-emerald-400">{'{company}'}</code>
+                  <code className="font-mono text-emerald-600 dark:text-emerald-400">{'{phone}'}</code>
+                </div>
+              </div>
+
+              {/* Actions: Save & Live Test Section */}
+              <div className="p-5 rounded-3xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/60 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Zap className="w-4 h-4 text-amber-500" />
+                      <span>សាកល្បងផ្ញើ &amp; រក្សាទុក (Test &amp; Save Template)</span>
+                    </h3>
+                    <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5">
+                      ផ្ញើសារសាកល្បងជាមួយគំរូថ្មីនេះផ្ទាល់ទៅកាន់ Telegram បុគ្គលិក ដើម្បីពិនិត្យមើលរូបរាងពិតប្រាកដ។
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleSaveSettings}
+                    disabled={isSaving}
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs transition-all shadow-md cursor-pointer disabled:opacity-50"
+                  >
+                    {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    <span>{isSaving ? 'កំពុងរក្សាទុក...' : '💾 Save Custom Template'}</span>
+                  </button>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 dark:border-emerald-950/60 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <div className="flex-1">
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">
+                      ជ្រើសរើសបុគ្គលិកទទួលសារសាកល្បង៖
+                    </label>
+                    <select
+                      value={selectedTestStaffId}
+                      onChange={(e) => setSelectedTestStaffId(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-semibold focus:border-amber-400 focus:outline-none"
+                    >
+                      {settings.staffList.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} {s.telegramUsername ? `(@${s.telegramUsername})` : ''} {s.telegramChatId ? `[Chat ID: ${s.telegramChatId}]` : '[No Chat ID]'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="sm:self-end">
+                    <button
+                      type="button"
+                      onClick={handleTestSendCustomTemplate}
+                      disabled={isTestingCustomTemplate}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-black text-xs transition-all shadow-md cursor-pointer disabled:opacity-50"
+                    >
+                      {isTestingCustomTemplate ? (
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4" />
+                      )}
+                      <span>⚡ Test Send to Telegram</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Test Result Feedback */}
+                {customTemplateTestResult && (
+                  <div
+                    className={`p-4 rounded-2xl border text-xs animate-fadeIn ${
+                      customTemplateTestResult.success
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
+                        : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between font-bold">
+                      <div className="flex items-center gap-2">
+                        {customTemplateTestResult.success ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        ) : (
+                          <AlertTriangle className="w-4 h-4 text-rose-500" />
+                        )}
+                        <span>
+                          {customTemplateTestResult.success
+                            ? 'ការផ្ញើសារសាកល្បងទទួលបានជោគជ័យ ១០០%!'
+                            : 'ការផ្ញើសារសាកល្បងមិនបានជោគជ័យ'}
+                        </span>
+                      </div>
+                      {customTemplateTestResult.messageId && (
+                        <span className="font-mono text-[10px] opacity-75">
+                          Telegram Msg ID: #{customTemplateTestResult.messageId}
+                        </span>
+                      )}
+                    </div>
+                    {customTemplateTestResult.success ? (
+                      <p className="mt-1 text-[11px] opacity-90">
+                        សារសាកល្បងត្រូវបានបញ្ជូនទៅកាន់គណនី Telegram របស់ <strong>{currentTestStaff.name}</strong> រួចរាល់ហើយ។ សូមបើកមើល Telegram app របស់អ្នក!
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-[11px] opacity-90">
+                        កំហុស៖ {customTemplateTestResult.error || 'Unknown error'}.{' '}
+                        {customTemplateTestResult.diagnostic || ''}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN: Live Telegram Smartphone Bubble Mockup */}
+            <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-6">
+              <div className="rounded-3xl bg-[#0e1621] border border-slate-800 shadow-2xl overflow-hidden flex flex-col">
+                {/* Telegram App Header */}
+                <div className="px-4 py-3.5 bg-[#17212b] border-b border-slate-800/80 flex items-center justify-between text-white">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center font-black text-white text-sm shadow-md">
+                      <Send className="w-5 h-5 -ml-0.5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-xs text-white">KHB Events Lead Bot</span>
+                        <span className="w-3.5 h-3.5 rounded-full bg-sky-400 text-black text-[9px] flex items-center justify-center font-black" title="Verified Bot">
+                          ✓
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-sky-300/80">bot • @khbevent_sale_bot</div>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      LIVE PREVIEW
+                    </span>
+                    <div className="text-[9px] text-gray-400 mt-0.5">Recv: {currentTestStaff.name}</div>
+                  </div>
+                </div>
+
+                {/* Telegram Chat Wallpaper Area */}
+                <div className="p-4 sm:p-5 bg-[#0e1621] min-h-[420px] max-h-[640px] overflow-y-auto flex flex-col justify-end space-y-3">
+                  {/* Telegram Date Chip */}
+                  <div className="self-center">
+                    <span className="px-3 py-1 rounded-full bg-black/40 text-gray-300 text-[10px] font-semibold backdrop-blur-xs border border-white/5">
+                      ថ្ងៃនេះ • ពេលវេលាជាក់ស្តែង
+                    </span>
+                  </div>
+
+                  {/* Telegram Message Bubble */}
+                  <div className="self-start max-w-full sm:max-w-[94%] bg-[#182533] text-gray-100 rounded-2xl rounded-tl-sm p-4 shadow-lg border border-sky-900/30 text-xs leading-relaxed space-y-2.5">
+                    <div
+                      className="prose prose-invert max-w-none text-xs leading-relaxed break-words [&_b]:text-white [&_b]:font-black [&_strong]:text-white [&_code]:bg-black/40 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-amber-300 [&_code]:font-mono [&_a]:text-sky-400 [&_a]:font-bold [&_a]:underline"
+                      dangerouslySetInnerHTML={{ __html: previewHtml }}
+                    />
+
+                    {/* Timestamp & Seen status */}
+                    <div className="flex items-center justify-end gap-1 text-[10px] text-gray-400 pt-1 border-t border-white/5">
+                      <span>12:45 PM</span>
+                      <span className="text-sky-400 font-bold">✓✓</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Telegram Input Simulation Footer */}
+                <div className="p-3 bg-[#17212b] border-t border-slate-800/80 flex items-center gap-2 text-xs text-gray-400">
+                  <div className="flex-1 px-3.5 py-2 rounded-xl bg-[#0e1621] text-gray-500 text-[11px] border border-slate-800">
+                    សារស្វ័យប្រវត្តិនឹងផ្ញើជូនបុគ្គលិកនៅទីនេះ...
+                  </div>
+                  <div className="w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center">
+                    <Send className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+
+              {/* WhatsApp Greeting Preview Card */}
+              <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-emerald-400 flex items-center gap-1.5 text-[11px]">
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>WhatsApp Pre-filled Message Preview</span>
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono">
+                    wa.me
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl bg-[#0A2016] border border-emerald-900/60 text-emerald-100 text-[11px] italic font-sans">
+                  "{previewWhatsappText}"
+                </div>
+              </div>
             </div>
           </div>
         </div>

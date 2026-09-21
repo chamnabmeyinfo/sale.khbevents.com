@@ -32,7 +32,8 @@ export async function POST(req: NextRequest) {
       botToken,
       String(chatId).trim(),
       staffName || 'Staff Member',
-      username
+      username,
+      body.customTemplate
     );
 
     return NextResponse.json(result);
