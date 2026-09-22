@@ -4,6 +4,9 @@
 
 A high-performance, conversion-optimized Landing Page System and Lead Management CRM built for **KHB EVENTS**, Cambodia's premier event management, 4K LED staging, concert production, and exhibition agency.
 
+> 📖 **Architecture & Engineering Blueprint:**  
+> For complete system architecture, dual-tier persistence sync, Telegram bot workflows, round-robin rules, and SOPs for future updates, read [FEATURE_BLUEPRINT.md](FEATURE_BLUEPRINT.md).
+
 ---
 
 ## 🌟 Key Highlights & Features
