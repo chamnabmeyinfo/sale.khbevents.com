@@ -598,6 +598,113 @@ const GALLERY_ITEMS = [
   { src: '/photos/photo_2026-09-16_22-01-09 (8).jpg', alt: 'One Pillar Pagoda Hanoi', badge: 'One Pillar Pagoda' },
 ];
 
+const DEFAULT_SPEAKERS = [
+  {
+    id: 'speaker-1',
+    name: 'Dr. Nguyen Van Tuan',
+    title: 'Senior Vice President',
+    organization: 'Vietnam Coffee & Cocoa Association (VICOFA)',
+    topic: 'Supply Chain Optimization & Direct Roastery Sourcing for ASEAN Buyers',
+    track: 'F&B Trade Trends',
+    avatar: '/photos/photo_2026-09-16_22-01-09 (2).jpg',
+    sessionTime: 'Day 2 • 10:30 AM'
+  },
+  {
+    id: 'speaker-2',
+    name: 'Ms. Le Thi Mai',
+    title: 'Smart City Urban Integration Director',
+    organization: 'Vietnam IoT & Retail Tech Consortium',
+    topic: 'AI Surveillance, Automated POS & Next-Gen Smart City Infrastructure',
+    track: 'Smart Retail Tech',
+    avatar: '/photos/photo_2026-09-16_22-01-09 (6).jpg',
+    sessionTime: 'Day 2 • 02:00 PM'
+  },
+  {
+    id: 'speaker-3',
+    name: 'Oknha Bunleng Heng',
+    title: 'Chairman',
+    organization: 'Cambodia-Vietnam Bilateral Chamber of Commerce',
+    topic: 'Cross-Border Customs Clearance, Tariffs & Import Logistics 2026',
+    track: 'Trade Policy',
+    avatar: '/photos/photo_2026-09-16_22-01-09 (5).jpg',
+    sessionTime: 'Day 3 • 09:30 AM'
+  }
+];
+
+const DEFAULT_ARTISTS = [
+  {
+    id: 'artist-1',
+    name: 'Hanoi Heritage Instrumentalists',
+    role: 'Traditional Vietnamese Acoustic Ensemble',
+    genre: 'Traditional & Fusion Folk',
+    stageName: 'Welcome Banquet Gala',
+    stageTime: 'Day 1 • 07:30 PM',
+    image: '/photos/photo_2026-09-16_22-01-09 (4).jpg',
+    bio: 'Renowned folk masters performing authentic Vietnamese strings and percussion during the welcome delegation dinner.'
+  },
+  {
+    id: 'artist-2',
+    name: 'Halong Sunset Acoustic Duo',
+    role: 'Live Acoustic Performance',
+    genre: 'Smooth Jazz & Acoustic Pop',
+    stageName: 'UNESCO Halong Cruise Deck',
+    stageTime: 'Day 4 • 12:30 PM',
+    image: '/photos/photo_2026-09-16_22-01-09 (11).jpg',
+    bio: 'Soulful acoustic melodies accompanying VIP delegates along the breathtaking karst seascape of Halong Bay.'
+  }
+];
+
+const DEFAULT_EXPO_BOOTHS = [
+  {
+    id: 'booth-1',
+    name: 'Standard B2B Shell Scheme',
+    size: '9m² (3m x 3m)',
+    price: '$1,200',
+    availableCount: 4,
+    totalCount: 10,
+    popular: false,
+    inclusions: [
+      'Standard fascia board with company name & booth number',
+      '1 info counter & 2 folding chairs',
+      '2 fluorescent spotlights & 5A power plug',
+      'Official Trade Expo exhibitor badges (2x)',
+      'Listing in Official Trade Directory'
+    ]
+  },
+  {
+    id: 'booth-2',
+    name: 'Premium Corner Booth',
+    size: '18m² (6m x 3m)',
+    price: '$2,200',
+    availableCount: 2,
+    totalCount: 5,
+    popular: true,
+    inclusions: [
+      'Dual frontage corner position (High foot traffic)',
+      'Upgraded display counters & lockable storage',
+      '4 spotlight fixtures & dedicated 10A power',
+      'VIP Buyer business matching sessions (5x)',
+      'Half-page feature in delegation catalogue'
+    ]
+  },
+  {
+    id: 'booth-3',
+    name: 'Raw Space Island Pavilion',
+    size: '36m² (6m x 6m)',
+    price: '$3,800',
+    availableCount: 1,
+    totalCount: 2,
+    popular: false,
+    inclusions: [
+      'Four-side open island pavilion positioning',
+      'Full custom build & staging freedom',
+      '3-phase 30A industrial power connectivity',
+      'Dedicated bilateral matchmaking meeting lounge',
+      'Full-page feature in delegation catalogue & stage recognition'
+    ]
+  }
+];
+
 // SVG icons map
 const ICONS: Record<string, React.ReactNode> = {
   chart: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
@@ -689,9 +796,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
     isVisible('problems'),
     isVisible('audiences'),
     isMatchmakerVisible,
+    isVisible('speakers'),
+    isVisible('artists'),
     isVisible('valueStack'),
     isVisible('itinerary'),
     isVisible('gallery'),
+    isVisible('expoBooths'),
     isVisible('testimonials'),
     isVisible('packages'),
     isVisible('guarantee'),
@@ -724,6 +834,22 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
         badge: idx === 0 ? 'Featured' : `Photo ${idx + 1}`
       }))
     : GALLERY_ITEMS;
+
+  // Effective Booths, Speakers, Artists (fallback to rich defaults if not configured)
+  const formExtraBooths = (page?.formConfig as any)?._extra?.expoBooths;
+  const effectiveBooths = (page?.expoBooths && page.expoBooths.length > 0)
+    ? page.expoBooths
+    : (Array.isArray(formExtraBooths) && formExtraBooths.length > 0)
+    ? formExtraBooths
+    : DEFAULT_EXPO_BOOTHS;
+
+  const effectiveSpeakers = (page?.speakers && page.speakers.length > 0)
+    ? page.speakers
+    : DEFAULT_SPEAKERS;
+
+  const effectiveArtists = (page?.artists && page.artists.length > 0)
+    ? page.artists
+    : DEFAULT_ARTISTS;
 
   // ── Restore saved language & capture UTMs on mount
   useEffect(() => {
@@ -986,8 +1112,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
           <ul className="nav-links">
             {isVisible('problems') && <li><a href="#problem" className="nav-link">{c.navWhy}</a></li>}
             {isVisible('valueStack') && <li><a href="#value" className="nav-link">{c.navPackage}</a></li>}
+            {isVisible('speakers') && <li><a href="#speakers" className="nav-link">{lang === 'kh' ? 'វាគ្មិន' : 'Speakers'}</a></li>}
+            {isVisible('artists') && <li><a href="#artists" className="nav-link">{lang === 'kh' ? 'សិល្បករ' : 'Artists'}</a></li>}
             {isVisible('itinerary') && <li><a href="#itinerary" className="nav-link">{c.navItinerary}</a></li>}
+            {isVisible('gallery') && <li><a href="#gallery" className="nav-link">{lang === 'kh' ? 'កម្រងរូបភាព' : 'Gallery'}</a></li>}
             {isVisible('urgency') && <li><a href="#seats" className="nav-link">{c.navSeats}</a></li>}
+            {isVisible('expoBooths') && <li><a href="#expo-booths" className="nav-link">{lang === 'kh' ? 'ស្តង់ពិព័រណ៍' : 'Booths'}</a></li>}
             {isVisible('packages') && <li><a href="#pricing" className="nav-link">{c.navPricing}</a></li>}
             {isVisible('faqs') && <li><a href="#faq" className="nav-link">{c.navFaq}</a></li>}
           </ul>
@@ -1063,8 +1193,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
         <ul className="mobile-drawer-links">
           {isVisible('problems') && <li><a href="#problem" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navWhy}</a></li>}
           {isVisible('valueStack') && <li><a href="#value" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navPackage}</a></li>}
+          {isVisible('speakers') && <li><a href="#speakers" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'វាគ្មិនកិត្តិយស' : 'Speakers'}</a></li>}
+          {isVisible('artists') && <li><a href="#artists" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'សិល្បករ' : 'Artists'}</a></li>}
           {isVisible('itinerary') && <li><a href="#itinerary" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navItinerary}</a></li>}
+          {isVisible('gallery') && <li><a href="#gallery" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'កម្រងរូបភាព' : 'Gallery'}</a></li>}
           {isVisible('urgency') && <li><a href="#seats" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navSeats}</a></li>}
+          {isVisible('expoBooths') && <li><a href="#expo-booths" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'ស្តង់ពិព័រណ៍' : 'Booths'}</a></li>}
           {isVisible('packages') && <li><a href="#pricing" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navPricing}</a></li>}
           {isVisible('faqs') && <li><a href="#faq" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navFaq}</a></li>}
           <li><a href="/smart-city-tea-cafe/app" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>📱 Mobile Native App</a></li>
@@ -1385,31 +1519,197 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
         </section>
       )}
 
+      {isVisible('speakers') && (
+        <section className="section-padding speakers-section" id="speakers" style={{ background: '#0B132B' }}>
+          <div className="container">
+            <div className="section-header">
+              <span className="section-tag">{lang === 'kh' ? 'វាគ្មិនកិត្តិយស និងអ្នកជំនាញ' : 'Industry Leaders & Speakers'}</span>
+              <h2 className="section-title">{lang === 'kh' ? 'ជួបផ្ទាល់ជាមួយអ្នកជំនាញ និងថ្នាក់ដឹកនាំកំពូល' : 'Keynote Speakers & Industry Mentors'}</h2>
+              <p className="section-subtitle">
+                {lang === 'kh'
+                  ? 'ទទួលបានការចែករំលែកបទពិសោធន៍ផ្ទាល់ អំពីយុទ្ធសាស្ត្រនាំចេញ-នាំចូល និងបច្ចេកវិទ្យាអាជីវកម្ម'
+                  : 'Gain direct strategic insights on bilateral supply chains, import-export compliance, and smart retail tech.'}
+              </p>
+            </div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '24px',
+              marginTop: '40px'
+            }}>
+              {effectiveSpeakers.map((spk: any, sIdx: number) => (
+                <div key={spk.id || sIdx} style={{
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '16px',
+                  padding: '28px 24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  transition: 'transform 0.2s, border-color 0.2s'
+                }}>
+                  {spk.avatar ? (
+                    <img
+                      src={spk.avatar}
+                      alt={spk.name}
+                      style={{
+                        width: '100px',
+                        height: '100px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '3px solid #D97706',
+                        marginBottom: '18px'
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '100px',
+                      height: '100px',
+                      borderRadius: '50%',
+                      background: 'rgba(217, 119, 6, 0.2)',
+                      color: '#F59E0B',
+                      fontSize: '32px',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '3px solid #D97706',
+                      marginBottom: '18px'
+                    }}>
+                      {spk.name ? spk.name.slice(0, 2).toUpperCase() : 'SP'}
+                    </div>
+                  )}
+                  <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#FFFFFF', margin: '0 0 6px 0' }}>{spk.name}</h3>
+                  <div style={{ fontSize: '13px', color: '#F59E0B', fontWeight: 600, marginBottom: '4px' }}>{spk.title}</div>
+                  <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '14px' }}>{spk.organization || spk.company}</div>
+                  {spk.topic && (
+                    <div style={{
+                      fontSize: '13px',
+                      lineHeight: 1.5,
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      background: 'rgba(0, 0, 0, 0.25)',
+                      padding: '12px 14px',
+                      borderRadius: '8px',
+                      width: '100%',
+                      marginTop: 'auto'
+                    }}>
+                      <strong style={{ color: '#F59E0B', display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+                        {spk.track || 'Session Topic'}
+                      </strong>
+                      &ldquo;{spk.topic}&rdquo;
+                    </div>
+                  )}
+                  {spk.sessionTime && (
+                    <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>🕒</span> {spk.sessionTime}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ═══════════════════════════════════════════════
-          ITINERARY + GALLERY
+          ARTIST & CULTURAL ENTERTAINMENT
+      ═══════════════════════════════════════════════ */}
+      {isVisible('artists') && (
+        <section className="section-padding artists-section" id="artists" style={{ background: '#070D1E' }}>
+          <div className="container">
+            <div className="section-header">
+              <span className="section-tag">{lang === 'kh' ? 'កម្មវិធីសិល្បៈ និងកម្សាន្ត' : 'Cultural Entertainment'}</span>
+              <h2 className="section-title">{lang === 'kh' ? 'សិល្បករ និងការសម្តែងក្នុងពិធីជួបជុំ' : 'Featured Performers & Cultural Gala'}</h2>
+              <p className="section-subtitle">
+                {lang === 'kh'
+                  ? 'រីករាយជាមួយការសម្តែងតន្ត្រីប្រពៃណី និងសហសម័យ ក្នុងអំឡុងពេលពិធីលៀងសាយភាយ និងដំណើរកម្សាន្ត'
+                  : 'Experience authentic cultural music, live gala acoustics, and networking entertainment.'}
+              </p>
+            </div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '24px',
+              marginTop: '40px'
+            }}>
+              {effectiveArtists.map((art: any, aIdx: number) => (
+                <div key={art.id || aIdx} style={{
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}>
+                  {art.image && (
+                    <div style={{ width: '100%', height: '200px', overflow: 'hidden', position: 'relative' }}>
+                      <img
+                        src={art.image}
+                        alt={art.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                      {art.genre && (
+                        <span style={{
+                          position: 'absolute',
+                          top: '12px',
+                          right: '12px',
+                          background: 'rgba(0, 0, 0, 0.75)',
+                          color: '#F59E0B',
+                          padding: '4px 10px',
+                          borderRadius: '20px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          backdropFilter: 'blur(4px)'
+                        }}>
+                          {art.genre}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+                      <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>{art.name}</h3>
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#10B981', fontWeight: 600, marginBottom: '12px' }}>{art.role}</div>
+                    {art.bio && (
+                      <p style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)', lineHeight: 1.6, marginBottom: '16px', flex: 1 }}>
+                        {art.bio}
+                      </p>
+                    )}
+                    {(art.stageName || art.stageTime) && (
+                      <div style={{
+                        marginTop: 'auto',
+                        paddingTop: '12px',
+                        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                        fontSize: '12px',
+                        color: 'rgba(255, 255, 255, 0.5)',
+                        display: 'flex',
+                        justifyContent: 'space-between'
+                      }}>
+                        {art.stageName && <span>📍 {art.stageName}</span>}
+                        {art.stageTime && <span>🕒 {art.stageTime}</span>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ═══════════════════════════════════════════════
+          ITINERARY
       ═══════════════════════════════════════════════ */}
       {isVisible('itinerary') && (
         <section className="section-padding" id="itinerary">
           <div className="container">
             <div className="section-header">
-              <span className="section-tag">Agenda &amp; Visual Experience</span>
+              <span className="section-tag">Agenda &amp; Schedule</span>
               <h2 className="section-title">{c.itineraryTitle}</h2>
               <p className="section-subtitle">{c.itinerarySubtitle}</p>
             </div>
-
-            {/* Gallery banner */}
-            {isVisible('gallery') && (
-              <div className="photo-gallery-banner">
-                <div className="gallery-track">
-                  {[...galleryItems, ...galleryItems].map((item, i) => (
-                    <div key={i} className="gallery-item">
-                      <img src={item.src} alt={item.alt} width={400} height={240} loading="lazy" decoding="async" />
-                      <div className="gallery-badge">{item.badge}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Itinerary tabs */}
             <div className="itinerary-tabs-nav">
@@ -1439,6 +1739,35 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ═══════════════════════════════════════════════
+          PHOTO GALLERY (STANDALONE)
+      ═══════════════════════════════════════════════ */}
+      {isVisible('gallery') && (
+        <section className="section-padding gallery-section" id="gallery" style={{ overflow: 'hidden' }}>
+          <div className="container">
+            <div className="section-header">
+              <span className="section-tag">{lang === 'kh' ? 'កម្រងរូបភាពទស្សនកិច្ច' : 'Photo Gallery & Highlights'}</span>
+              <h2 className="section-title">{lang === 'kh' ? 'សកម្មភាពជាក់ស្តែងនៃដំណើរទស្សនកិច្ចពាណិជ្ជកម្ម' : 'Live Delegation Highlights & Impressions'}</h2>
+              <p className="section-subtitle">
+                {lang === 'kh'
+                  ? 'ទិដ្ឋភាពនៃការចូលរួមពិព័រណ៍អន្តរជាតិ ការចុះពិនិត្យរោងចក្រផ្ទាល់ និងដំណើរកម្សាន្ត Halong Bay'
+                  : 'Glimpses of international trade expos, private factory inspections, and UNESCO Halong Bay executive cruise.'}
+              </p>
+            </div>
+            <div className="photo-gallery-banner" style={{ margin: '0 auto', maxWidth: '100%' }}>
+              <div className="gallery-track">
+                {[...galleryItems, ...galleryItems].map((item, i) => (
+                  <div key={i} className="gallery-item">
+                    <img src={item.src} alt={item.alt} width={400} height={240} loading="lazy" decoding="async" />
+                    <div className="gallery-badge">{item.badge}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -1524,6 +1853,103 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ═══════════════════════════════════════════════
+          EXHIBITION BOOTHS
+      ═══════════════════════════════════════════════ */}
+      {isVisible('expoBooths') && (
+        <section className="section-padding booths-section" id="expo-booths" style={{ background: '#0B132B' }}>
+          <div className="container">
+            <div className="section-header">
+              <span className="section-tag">{lang === 'kh' ? 'ស្តង់ពិព័រណ៍ពាណិជ្ជកម្ម' : 'Exhibitor Packages'}</span>
+              <h2 className="section-title">{lang === 'kh' ? 'ឱកាសតាំងបង្ហាញផលិតផល និងសេវាកម្ម' : 'Exhibition Booths & Commercial Stalls'}</h2>
+              <p className="section-subtitle">
+                {lang === 'kh'
+                  ? 'ពង្រីកទីផ្សារទៅកាន់ប្រទេសវៀតណាម និងតំបន់អាស៊ី តាមរយៈស្តង់ពិព័រណ៍ស្តង់ដារអន្តរជាតិ'
+                  : 'Showcase your brand directly to thousands of regional buyers, distributors, and franchise operators.'}
+              </p>
+            </div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '24px',
+              marginTop: '40px'
+            }}>
+              {effectiveBooths.map((booth: any, bIdx: number) => (
+                <div key={booth.id || bIdx} style={{
+                  background: booth.popular ? 'linear-gradient(180deg, rgba(217, 119, 6, 0.15) 0%, rgba(255, 255, 255, 0.04) 100%)' : 'rgba(255, 255, 255, 0.04)',
+                  border: booth.popular ? '2px solid #D97706' : '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '16px',
+                  padding: '32px 24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  position: 'relative'
+                }}>
+                  {booth.popular && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-13px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                      color: '#000',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      padding: '4px 14px',
+                      borderRadius: '20px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      boxShadow: '0 4px 12px rgba(217, 119, 6, 0.4)'
+                    }}>
+                      {lang === 'kh' ? 'ពេញនិយមបំផុត' : 'Most Popular'}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <h3 style={{ fontSize: '19px', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>{booth.name}</h3>
+                    {booth.size && (
+                      <span style={{ fontSize: '12px', background: 'rgba(255, 255, 255, 0.1)', padding: '2px 8px', borderRadius: '6px', color: '#FCD34D' }}>
+                        {booth.size}
+                      </span>
+                    )}
+                  </div>
+                  {booth.availableCount !== undefined && (
+                    <div style={{ fontSize: '12px', color: '#10B981', marginBottom: '16px' }}>
+                      🔥 {booth.availableCount} {lang === 'kh' ? 'ស្តង់នៅសល់' : 'booths available'}
+                    </div>
+                  )}
+                  <div style={{ marginBottom: '20px' }}>
+                    <span style={{ fontSize: '32px', fontWeight: 800, color: '#FFFFFF' }}>{booth.price}</span>
+                    <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginLeft: '6px' }}>/ full expo duration</span>
+                  </div>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
+                    {booth.inclusions?.map((inc: string, iIdx: number) => (
+                      <li key={iIdx} style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.8)', display: 'flex', alignItems: 'flex-start', gap: '8px', lineHeight: 1.5 }}>
+                        <span style={{ color: '#10B981', fontWeight: 700 }}>✓</span>
+                        <span>{inc}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <a href="#register" style={{
+                    display: 'block',
+                    textAlign: 'center',
+                    padding: '12px 20px',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    fontSize: '14px',
+                    background: booth.popular ? 'linear-gradient(135deg, #F59E0B, #D97706)' : 'rgba(255, 255, 255, 0.1)',
+                    color: booth.popular ? '#000000' : '#FFFFFF',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s',
+                    marginTop: 'auto'
+                  }}>
+                    {lang === 'kh' ? 'កក់ស្តង់នេះ' : `Book ${booth.name}`}
+                  </a>
+                </div>
+              ))}
             </div>
           </div>
         </section>

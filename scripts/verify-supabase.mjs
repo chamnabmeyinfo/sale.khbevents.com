@@ -36,8 +36,17 @@ async function verify() {
   const { data: adminLeads, error: err2 } = await adminClient.from('leads').select('full_name, company, status, phone');
   console.log('Admin Leads Result:', err2 || adminLeads);
 
-  const { data: adminSettings, error: err3 } = await adminClient.from('system_settings').select('company_name, phone, email, address');
-  console.log('Admin Settings Result:', err3 || adminSettings);
+  const { data: pageData, error: pageErr } = await adminClient.from('landing_pages').select('*').eq('slug', 'smart-city-tea-cafe').maybeSingle();
+  console.log('\n--- smart-city-tea-cafe Inspection ---');
+  if (pageErr) console.error('Error:', pageErr);
+  else if (pageData) {
+    console.log('Template:', pageData.template);
+    console.log('Section Visibility:', JSON.stringify(pageData.form_config?._extra?.sectionVisibility, null, 2));
+    console.log('Speakers length:', pageData.speakers?.length, pageData.speakers);
+    console.log('Artists length:', pageData.artists?.length, pageData.artists);
+    console.log('Expo Booths length:', (pageData.expo_booths || pageData.form_config?._extra?.expoBooths)?.length);
+    console.log('Gallery length:', pageData.gallery?.length, pageData.gallery);
+  }
 }
 
 verify().catch(console.error);
