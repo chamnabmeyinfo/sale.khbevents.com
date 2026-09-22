@@ -128,8 +128,10 @@ export interface SectionVisibility {
   hero?: boolean;
   urgency?: boolean;
   coreValues?: boolean;
+  highlights?: boolean;
   problems?: boolean;
   audiences?: boolean;
+  matchmaker?: boolean;
   itinerary?: boolean;
   valueStack?: boolean;
   packages?: boolean;

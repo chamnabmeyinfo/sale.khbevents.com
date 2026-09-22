@@ -84,6 +84,26 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
     return (page.sectionVisibility as any)[sectionKey] !== false;
   };
 
+  const isAnySectionVisible = [
+    isVisible('hero'),
+    isVisible('urgency') && !!page.urgency,
+    isVisible('coreValues') && !!page.coreValues?.length,
+    isVisible('highlights') && !!page.highlights?.length,
+    isVisible('problems') && !!page.problems?.length,
+    isVisible('audiences') && !!page.audiences?.length,
+    isVisible('speakers') && !!page.speakers?.length,
+    isVisible('artists') && !!page.artists?.length,
+    isVisible('itinerary') && !!page.itinerary?.length,
+    isVisible('valueStack') && !!page.valueStack?.inclusions?.length,
+    isVisible('expoBooths') && !!page.expoBooths?.length,
+    isVisible('packages') && !!page.packages?.length,
+    isVisible('gallery') && !!page.gallery?.length,
+    isVisible('testimonials') && !!page.testimonials?.length,
+    isVisible('guarantee') && !!page.guarantee?.points?.length,
+    isVisible('form'),
+    isVisible('faqs') && !!page.faqs?.length,
+  ].some(Boolean);
+
   const totalSeats = page.urgency?.totalSeats || 30;
   const claimedSeats = page.urgency?.claimedSeats || 19;
   const seatsRemaining = Math.max(0, totalSeats - claimedSeats);
@@ -1003,6 +1023,28 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {!isAnySectionVisible && (
+          <section className="py-24 flex items-center justify-center">
+            <div className="max-w-md mx-auto px-4 text-center">
+              <div className="p-8 rounded-3xl bg-white dark:bg-[#0B1711] border border-slate-200 dark:border-emerald-900/50 shadow-xl">
+                <div className="text-4xl mb-4">⚙️</div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                  All Sections Currently Hidden
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400 mb-5 leading-relaxed">
+                  All sections for this campaign have been toggled off in the CMS Section Display Toggles. Enable desired sections in the Admin portal to display content.
+                </p>
+                <a
+                  href="/admin/pages"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold shadow-md transition-colors"
+                >
+                  Open Admin CMS
+                </a>
               </div>
             </div>
           </section>

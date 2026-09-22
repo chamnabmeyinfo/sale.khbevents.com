@@ -90,7 +90,67 @@ export default function SmartCityOptinView({ page, settings, initialLang }: { pa
           boxShadow: '0 24px 60px rgba(0,0,0,0.35)'
         }}>
 
-          {!submitted ? (
+          {page?.sectionVisibility && page.sectionVisibility.form === false ? (
+            <div style={{ textAlign: 'center', padding: '16px 0' }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                margin: '0 auto 16px',
+                background: '#FEF3C7',
+                color: '#D97706',
+                fontSize: '2rem',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                ⏸️
+              </div>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#091E14', marginBottom: '10px' }}>
+                {isKh ? 'ការចុះឈ្មោះត្រូវបានផ្អាកបណ្តោះអាសន្ន' : 'Registrations Currently Paused'}
+              </h2>
+              <p style={{ fontSize: '0.88rem', color: '#5E7166', lineHeight: 1.6, marginBottom: '24px' }}>
+                {isKh
+                  ? 'ទម្រង់បែបបទចុះឈ្មោះសម្រាប់កម្មវិធីនេះត្រូវបានបិទជាបណ្តោះអាសន្ន។ សូមទាក់ទងមកក្រុមការងារយើងខ្ញុំតាម Telegram ដោយផ្ទាល់។'
+                  : 'Online registration for this delegation is currently paused. Please contact our coordination team directly on Telegram.'}
+              </p>
+              <a
+                href={effTgUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  width: '100%',
+                  background: '#24A1DE',
+                  color: '#ffffff',
+                  padding: '14px 20px',
+                  borderRadius: '999px',
+                  textDecoration: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  marginBottom: '12px'
+                }}
+              >
+                <span>✈️ {isKh ? 'ជជែកតាម Telegram ផ្ទាល់' : 'Chat on Telegram Directly'}</span>
+              </a>
+              <Link
+                href={`/${page?.slug || 'smart-city-tea-cafe'}`}
+                style={{
+                  display: 'block',
+                  color: '#1E5E44',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  marginTop: '12px'
+                }}
+              >
+                ← {isKh ? 'ត្រឡប់ទៅទំព័រដើម' : 'Back to Overview'}
+              </Link>
+            </div>
+          ) : !submitted ? (
             <div>
               <div style={{
                 display: 'inline-block',

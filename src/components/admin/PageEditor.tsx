@@ -535,6 +535,19 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     setFormData({ ...formData, sectionVisibility: updated });
   };
 
+  const setAllSections = (visible: boolean) => {
+    const allKeys: (keyof SectionVisibility)[] = [
+      'hero', 'urgency', 'coreValues', 'highlights', 'problems', 'audiences', 'matchmaker',
+      'itinerary', 'valueStack', 'expoBooths', 'artists', 'speakers', 'packages', 'gallery',
+      'testimonials', 'faqs', 'guarantee', 'form'
+    ];
+    const updated: SectionVisibility = {};
+    allKeys.forEach((k) => {
+      updated[k] = visible;
+    });
+    setFormData({ ...formData, sectionVisibility: updated });
+  };
+
   // ─────────────────────────────────────────────────────────────────────────────
   // PACKAGES CRUD
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1410,7 +1423,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
             {/* SECTION VISIBILITY TOGGLES PANEL */}
             <div className="pt-4 border-t border-slate-200 dark:border-emerald-900/50 space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <Layers className="w-4 h-4 text-amber-500" />
@@ -1420,6 +1433,22 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                     Easily turn individual landing page sections on or off to tailor the page flow.
                   </p>
                 </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAllSections(true)}
+                    className="px-3 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors"
+                  >
+                    Enable All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAllSections(false)}
+                    className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    Disable All
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -1427,8 +1456,10 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   { key: 'hero', label: 'Hero Banner' },
                   { key: 'urgency', label: 'Urgency & Quota Bar' },
                   { key: 'coreValues', label: 'Core Values' },
+                  { key: 'highlights', label: '⭐ Key Highlights / Stats' },
                   { key: 'problems', label: 'Problem vs Solution' },
                   { key: 'audiences', label: 'Target Audience' },
+                  { key: 'matchmaker', label: '🎯 ROI Matchmaker' },
                   { key: 'itinerary', label: 'Itinerary / Timetable' },
                   { key: 'valueStack', label: 'Value Stack (9-in-1)' },
                   { key: 'expoBooths', label: '🎪 Exhibition Booths' },

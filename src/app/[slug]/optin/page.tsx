@@ -1,11 +1,13 @@
 import SmartCityOptinView from '@/components/landing/SmartCityOptinView';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { getPageBySlug, getSettings } from '@/lib/storage';
 
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -19,10 +21,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: 'Fast Opt-in | KHB EVENTS' };
 }
 
-export default async function SlugOptinPage({ params }: PageProps) {
+export default async function SlugOptinPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
-  if (slug.toLowerCase().trim() !== 'smart-city-tea-cafe') {
+  const cleanSlug = slug.toLowerCase().trim();
+  if (cleanSlug !== 'smart-city-tea-cafe') {
     notFound();
   }
-  return <SmartCityOptinView />;
+  const sp = searchParams ? await searchParams : {};
+  const initialLang: 'en' | 'kh' = sp.lang === 'kh' ? 'kh' : 'en';
+  const page = await getPageBySlug(cleanSlug);
+  const settings = await getSettings();
+
+  return <SmartCityOptinView page={page || undefined} settings={settings} initialLang={initialLang} />;
 }
+

@@ -672,11 +672,32 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
     return (page.sectionVisibility as any)[key] !== false;
   };
 
+  const isHighlightsVisible = page?.sectionVisibility?.highlights !== undefined
+    ? isVisible('highlights')
+    : (isVisible('coreValues') || isVisible('valueStack'));
+
+  const isMatchmakerVisible = page?.sectionVisibility?.matchmaker !== undefined
+    ? isVisible('matchmaker')
+    : (isVisible('audiences') || isVisible('valueStack'));
+
   // Check if at least one core section is enabled
   const isAnySectionVisible = [
-    'hero', 'urgency', 'coreValues', 'problems', 'audiences', 'valueStack',
-    'itinerary', 'gallery', 'testimonials', 'packages', 'guarantee', 'form', 'faqs'
-  ].some(k => isVisible(k));
+    isVisible('hero'),
+    isVisible('urgency'),
+    isVisible('coreValues'),
+    isHighlightsVisible,
+    isVisible('problems'),
+    isVisible('audiences'),
+    isMatchmakerVisible,
+    isVisible('valueStack'),
+    isVisible('itinerary'),
+    isVisible('gallery'),
+    isVisible('testimonials'),
+    isVisible('packages'),
+    isVisible('guarantee'),
+    isVisible('form'),
+    isVisible('faqs')
+  ].some(Boolean);
 
   // Date formatter for display
   const formatDeadlineText = (isoStr?: string) => {
@@ -1161,7 +1182,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
       {/* ═══════════════════════════════════════════════
           STATS STRIP
       ═══════════════════════════════════════════════ */}
-      {(isVisible('coreValues') || isVisible('valueStack')) && (
+      {isHighlightsVisible && (
         page?.highlights && page.highlights.length > 0 ? (
           <section className="stats-section">
             <div className="container stats-grid" style={{ gridTemplateColumns: `repeat(${Math.min(page.highlights.length, 4)}, 1fr)` }}>
@@ -1288,7 +1309,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
       {/* ═══════════════════════════════════════════════
           ROI MATCHMAKER
       ═══════════════════════════════════════════════ */}
-      {(isVisible('audiences') || isVisible('valueStack')) && (
+      {isMatchmakerVisible && (
         <section className="section-padding matchmaker-section" id="matchmaker">
           <div className="container">
             <div className="section-header">
@@ -1937,28 +1958,30 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
       </a>
 
       {/* Mobile Sticky Bar */}
-      <div className="mobile-sticky-bar">
-        <div className="mobile-sticky-inner">
-          <a 
-            href={tgUrl} 
-            target="_blank" 
-            rel="noreferrer" 
-            className="btn-mobile-tg"
-            onClick={() => trackLandingEvent(page, 'telegram_click', { placement: 'mobile_sticky_bar' }, lang)}
-          >
-            {TG_ICON(18)}<span>Telegram</span>
-          </a>
-          {(isVisible('form') || isVisible('packages')) ? (
-            <a href="#register" className="btn-mobile-reg">
-              <span>VIP Pass (${effEarlyBirdPrice})</span>
+      {isAnySectionVisible && (
+        <div className="mobile-sticky-bar">
+          <div className="mobile-sticky-inner">
+            <a 
+              href={tgUrl} 
+              target="_blank" 
+              rel="noreferrer" 
+              className="btn-mobile-tg"
+              onClick={() => trackLandingEvent(page, 'telegram_click', { placement: 'mobile_sticky_bar' }, lang)}
+            >
+              {TG_ICON(18)}<span>Telegram</span>
             </a>
-          ) : (
-            <a href={tgUrl} target="_blank" rel="noreferrer" className="btn-mobile-reg">
-              <span>{lang === 'kh' ? 'ជជែក Telegram' : 'Chat on Telegram'}</span>
-            </a>
-          )}
+            {(isVisible('form') || isVisible('packages')) ? (
+              <a href="#register" className="btn-mobile-reg">
+                <span>VIP Pass (${effEarlyBirdPrice})</span>
+              </a>
+            ) : (
+              <a href={tgUrl} target="_blank" rel="noreferrer" className="btn-mobile-reg">
+                <span>{lang === 'kh' ? 'ជជែក Telegram' : 'Chat on Telegram'}</span>
+              </a>
+            )}
+          </div>
         </div>
-      </div>
+      )}
       </div>
     </PagePasswordGate>
   );

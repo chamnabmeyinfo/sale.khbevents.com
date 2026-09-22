@@ -432,6 +432,48 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
   const passName = regName.trim() ? regName.toUpperCase() : (lang === 'kh' ? 'ភ្ញៀវប្រតិភូ' : 'GUEST DELEGATE');
   const availableSeats = Array.from({ length: effTotalSeats }, (_, i) => i + 1).filter(n => n > claimedSeats);
 
+  const isVisible = (key: string) => {
+    if (!page?.sectionVisibility) return true;
+    return (page.sectionVisibility as any)[key] !== false;
+  };
+
+  const isHighlightsVisible = page?.sectionVisibility?.highlights !== undefined
+    ? isVisible('highlights')
+    : (isVisible('coreValues') || isVisible('valueStack'));
+
+  const isMatchmakerVisible = page?.sectionVisibility?.matchmaker !== undefined
+    ? isVisible('matchmaker')
+    : (isVisible('audiences') || isVisible('valueStack'));
+
+  const isAnySectionVisible = [
+    isVisible('hero'),
+    isVisible('urgency'),
+    isVisible('coreValues'),
+    isHighlightsVisible,
+    isVisible('problems'),
+    isVisible('audiences'),
+    isMatchmakerVisible,
+    isVisible('valueStack'),
+    isVisible('itinerary'),
+    isVisible('gallery'),
+    isVisible('testimonials'),
+    isVisible('packages'),
+    isVisible('guarantee'),
+    isVisible('form'),
+    isVisible('faqs')
+  ].some(Boolean);
+
+  const isHomeVisible = [
+    isVisible('hero'),
+    isVisible('coreValues'),
+    isVisible('urgency'),
+    isVisible('valueStack'),
+    isMatchmakerVisible,
+    isVisible('guarantee'),
+    isVisible('testimonials'),
+    isVisible('faqs')
+  ].some(Boolean);
+
   return (
     <PagePasswordGate page={page}>
       <div className={`app-shell-root${lang === 'kh' ? ' lang-kh' : ''}`}>
@@ -485,232 +527,291 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
         ═══════════════════════════════════════════ */}
         <main className="app-main">
 
+          {!isAnySectionVisible && (
+            <div style={{ padding: '60px 20px', textAlign: 'center', minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>⚙️</div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#091E14', marginBottom: '8px' }}>
+                {lang === 'kh' ? 'ផ្នែកទាំងអស់ត្រូវបានលាក់' : 'All Sections Currently Hidden'}
+              </h3>
+              <p style={{ fontSize: '0.82rem', color: '#5E7166', lineHeight: 1.6, maxWidth: '280px', margin: '0 auto 20px' }}>
+                {lang === 'kh'
+                  ? 'ផ្នែកទាំងអស់សម្រាប់យុទ្ធនាការនេះត្រូវបានបិទនៅក្នុង CMS Section Toggles។'
+                  : 'All sections for this campaign have been toggled off in the CMS Section Display Toggles.'}
+              </p>
+              <a
+                href={effTgUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="app-cta pressable"
+                style={{ width: 'auto', padding: '12px 24px', fontSize: '0.85rem' }}
+              >
+                <span>✈️ Telegram Support</span>
+              </a>
+            </div>
+          )}
+
           {/* ────────── TAB: HOME ────────── */}
-          {activeTab === 'home' && (
+          {isAnySectionVisible && activeTab === 'home' && (
             <section className="app-page active" id="page-home">
               {/* Mini Hero */}
-              <div className="app-hero">
-                <div className="app-hero-slider">
-                  {heroSlides.map((src, idx) => (
-                    <div
-                      key={idx}
-                      className={`app-hero-slide${heroSlide === idx ? ' active' : ''}`}
-                      style={{ backgroundImage: `url('${src}')` }}
-                    />
-                  ))}
-                </div>
-                <div className="app-hero-overlay" />
-                <div className="app-hero-body">
-                  <span className="app-hero-badge">
-                    <i className="dot" />
-                    <span>{lang === 'kh' ? (page?.translations?.kh?.badge || s.heroBadge) : (page?.badge || s.heroBadge)}</span>
-                  </span>
-                  <h1>{lang === 'kh' ? (page?.translations?.kh?.heroHeadline || page?.translations?.kh?.title || s.heroTitle) : (page?.heroHeadline || page?.title || s.heroTitle)}</h1>
-                  <p className="app-hero-sub">{lang === 'kh' ? (page?.translations?.kh?.heroSubheadline || page?.translations?.kh?.description || s.heroSub) : (page?.heroSubheadline || page?.description || s.heroSub)}</p>
-                  <div className="app-price-chip">
-                    <s>${effRegularPrice}</s>
-                    <b>${effEarlyBirdPrice}</b>
-                    <span className="chip-save">save ${Math.max(0, effRegularPrice - effEarlyBirdPrice)}</span>
+              {isVisible('hero') && (
+                <div className="app-hero">
+                  <div className="app-hero-slider">
+                    {heroSlides.map((src, idx) => (
+                      <div
+                        key={idx}
+                        className={`app-hero-slide${heroSlide === idx ? ' active' : ''}`}
+                        style={{ backgroundImage: `url('${src}')` }}
+                      />
+                    ))}
                   </div>
-                  <button className="app-cta pressable" onClick={() => openBooking()}>
-                    <span>{s.homeBook}</span>
-                  </button>
-                  <button className="app-link pressable" onClick={() => setActiveTab('trip')}>
-                    {lang === 'kh' ? 'មើលកាលវិភាគពេញលេញ →' : 'See the full itinerary →'}
-                  </button>
+                  <div className="app-hero-overlay" />
+                  <div className="app-hero-body">
+                    <span className="app-hero-badge">
+                      <i className="dot" />
+                      <span>{lang === 'kh' ? (page?.translations?.kh?.badge || s.heroBadge) : (page?.badge || s.heroBadge)}</span>
+                    </span>
+                    <h1>{lang === 'kh' ? (page?.translations?.kh?.heroHeadline || page?.translations?.kh?.title || s.heroTitle) : (page?.heroHeadline || page?.title || s.heroTitle)}</h1>
+                    <p className="app-hero-sub">{lang === 'kh' ? (page?.translations?.kh?.heroSubheadline || page?.translations?.kh?.description || s.heroSub) : (page?.heroSubheadline || page?.description || s.heroSub)}</p>
+                    <div className="app-price-chip">
+                      <s>${effRegularPrice}</s>
+                      <b>${effEarlyBirdPrice}</b>
+                      <span className="chip-save">save ${Math.max(0, effRegularPrice - effEarlyBirdPrice)}</span>
+                    </div>
+                    {(isVisible('form') || isVisible('packages')) && (
+                      <button className="app-cta pressable" onClick={() => openBooking()}>
+                        <span>{s.homeBook}</span>
+                      </button>
+                    )}
+                    {(isVisible('itinerary') || isVisible('gallery')) && (
+                      <button className="app-link pressable" onClick={() => setActiveTab('trip')}>
+                        {lang === 'kh' ? 'មើលកាលវិភាគពេញលេញ →' : 'See the full itinerary →'}
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Core Value Horizontal Snap Cards */}
-              <div className="app-section">
-                <div className="app-section-head">
-                  <h2>{s.coreTitle}</h2>
+              {isVisible('coreValues') && (
+                <div className="app-section">
+                  <div className="app-section-head">
+                    <h2>{s.coreTitle}</h2>
+                  </div>
+                  <div className="h-scroll">
+                    {s.coreValues.map((v, i) => (
+                      <div key={i} className="core-card-v pressable">
+                        <span className="core-num-badge">{v.num}</span>
+                        <h4>{v.title}</h4>
+                        <p>{v.desc}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="h-scroll">
-                  {s.coreValues.map((v, i) => (
-                    <div key={i} className="core-card-v pressable">
-                      <span className="core-num-badge">{v.num}</span>
-                      <h4>{v.title}</h4>
-                      <p>{v.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              )}
 
               {/* Proof strip */}
-              <div className="app-proof">
-                <div className="app-avatar-stack">
-                  {['DS', 'ST', 'VK', 'MR', 'KL'].map((init, i) => (
-                    <span key={i} className="avatar-chip">{init}</span>
-                  ))}
+              {isVisible('urgency') && (
+                <div className="app-proof">
+                  <div className="app-avatar-stack">
+                    {['DS', 'ST', 'VK', 'MR', 'KL'].map((init, i) => (
+                      <span key={i} className="avatar-chip">{init}</span>
+                    ))}
+                  </div>
+                  <p><b>{claimedSeats}</b> <span>{s.proofText}</span></p>
                 </div>
-                <p><b>{claimedSeats}</b> <span>{s.proofText}</span></p>
-              </div>
+              )}
 
               {/* Value stack */}
-              <div className="app-section">
-                <div className="app-section-head">
-                  <span className="app-tag">{s.valueTag}</span>
-                  <h2>{s.valueTitle}</h2>
-                </div>
-                <div className="v-list">
-                  {s.inclusions.map(item => (
-                    <div key={item.id} className="v-item">
-                      <div className="v-num">{item.id}</div>
-                      <div className="v-body">
-                        <b>{item.title}</b>
-                        <p>{item.desc}</p>
+              {isVisible('valueStack') && (
+                <div className="app-section">
+                  <div className="app-section-head">
+                    <span className="app-tag">{s.valueTag}</span>
+                    <h2>{s.valueTitle}</h2>
+                  </div>
+                  <div className="v-list">
+                    {s.inclusions.map(item => (
+                      <div key={item.id} className="v-item">
+                        <div className="v-num">{item.id}</div>
+                        <div className="v-body">
+                          <b>{item.title}</b>
+                          <p>{item.desc}</p>
+                        </div>
+                        <div className="v-val">${item.val}</div>
                       </div>
-                      <div className="v-val">${item.val}</div>
+                    ))}
+                  </div>
+                  <div className="app-total-card">
+                    <div className="total-row">
+                      <span>{s.valueNote}</span>
+                      <s>{s.valueTotal}</s>
                     </div>
-                  ))}
-                </div>
-                <div className="app-total-card">
-                  <div className="total-row">
-                    <span>{s.valueNote}</span>
-                    <s>{s.valueTotal}</s>
+                    <div className="total-row main">
+                      <span>{lang === 'kh' ? 'តម្លៃ Early Bird របស់អ្នក' : 'Your early bird price'}</span>
+                      <b>${GENERAL.earlyBirdPrice}</b>
+                    </div>
+                    {(isVisible('form') || isVisible('packages')) && (
+                      <button className="app-cta pressable" onClick={() => openBooking()}>
+                        <span>{s.totalBook}</span>
+                      </button>
+                    )}
+                    <p className="secure-note">{s.secureNote}</p>
                   </div>
-                  <div className="total-row main">
-                    <span>{lang === 'kh' ? 'តម្លៃ Early Bird របស់អ្នក' : 'Your early bird price'}</span>
-                    <b>${GENERAL.earlyBirdPrice}</b>
-                  </div>
-                  <button className="app-cta pressable" onClick={() => openBooking()}>
-                    <span>{s.totalBook}</span>
-                  </button>
-                  <p className="secure-note">{s.secureNote}</p>
                 </div>
-              </div>
+              )}
 
               {/* ROI Matchmaker */}
-              <div className="app-section dark">
-                <div className="app-section-head">
-                  <span className="app-tag gold">{s.matchTag}</span>
-                  <h2>{s.matchTitle}</h2>
-                </div>
-                <div className="seg">
-                  <button className={`seg-btn${activeProfile === 'cafe' ? ' active' : ''}`} onClick={() => setActiveProfile('cafe')}>☕ Cafe</button>
-                  <button className={`seg-btn${activeProfile === 'tech' ? ' active' : ''}`} onClick={() => setActiveProfile('tech')}>🏙 Tech</button>
-                  <button className={`seg-btn${activeProfile === 'distributor' ? ' active' : ''}`} onClick={() => setActiveProfile('distributor')}>🏭 Wholesale</button>
-                </div>
-                <div className="match-panel">
-                  <div className="mp-group">
-                    <h5>🏭 {s.suppliersTitle}</h5>
-                    <ul>
-                      {match.suppliers.map((item, i) => (
-                        <li key={i}>✓ {item}</li>
-                      ))}
-                    </ul>
+              {isMatchmakerVisible && (
+                <div className="app-section dark">
+                  <div className="app-section-head">
+                    <span className="app-tag gold">{s.matchTag}</span>
+                    <h2>{s.matchTitle}</h2>
                   </div>
-                  <div className="mp-group">
-                    <h5>📈 {s.roiTitle}</h5>
-                    <ul>
-                      {match.roi.map((item, i) => (
-                        <li key={i}>⚡ {item}</li>
-                      ))}
-                    </ul>
+                  <div className="seg">
+                    <button className={`seg-btn${activeProfile === 'cafe' ? ' active' : ''}`} onClick={() => setActiveProfile('cafe')}>☕ Cafe</button>
+                    <button className={`seg-btn${activeProfile === 'tech' ? ' active' : ''}`} onClick={() => setActiveProfile('tech')}>🏙 Tech</button>
+                    <button className={`seg-btn${activeProfile === 'distributor' ? ' active' : ''}`} onClick={() => setActiveProfile('distributor')}>🏭 Wholesale</button>
                   </div>
-                  <div className="mp-group">
-                    <h5>🤝 {s.sessionsTitle}</h5>
-                    <ul>
-                      {match.sessions.map((item, i) => (
-                        <li key={i}>🎯 {item}</li>
-                      ))}
-                    </ul>
+                  <div className="match-panel">
+                    <div className="mp-group">
+                      <h5>🏭 {s.suppliersTitle}</h5>
+                      <ul>
+                        {match.suppliers.map((item, i) => (
+                          <li key={i}>✓ {item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="mp-group">
+                      <h5>📈 {s.roiTitle}</h5>
+                      <ul>
+                        {match.roi.map((item, i) => (
+                          <li key={i}>⚡ {item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="mp-group">
+                      <h5>🤝 {s.sessionsTitle}</h5>
+                      <ul>
+                        {match.sessions.map((item, i) => (
+                          <li key={i}>🎯 {item}</li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
+                  {(isVisible('form') || isVisible('packages')) && (
+                    <button className="app-cta outline pressable" onClick={() => openBooking()}>
+                      <span>{s.matchLock}</span>
+                    </button>
+                  )}
                 </div>
-                <button className="app-cta outline pressable" onClick={() => openBooking()}>
-                  <span>{s.matchLock}</span>
-                </button>
-              </div>
+              )}
 
               {/* Steps */}
-              <div className="app-section">
-                <div className="app-section-head">
-                  <h2>{s.stepsTitle}</h2>
-                </div>
-                <div className="steps-mini">
-                  {s.steps.map(step => (
-                    <div key={step.num} className="step-chip">
-                      <span className="s-num">{step.num}</span>
-                      <div>
-                        <b>{step.title}</b>
-                        <p>{step.desc}</p>
+              {isVisible('guarantee') && (
+                <div className="app-section">
+                  <div className="app-section-head">
+                    <h2>{s.stepsTitle}</h2>
+                  </div>
+                  <div className="steps-mini">
+                    {s.steps.map(step => (
+                      <div key={step.num} className="step-chip">
+                        <span className="s-num">{step.num}</span>
+                        <div>
+                          <b>{step.title}</b>
+                          <p>{step.desc}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Guarantee */}
-              <div className="app-guarantee">
-                <div className="g-icon">🛡️</div>
-                <div>
-                  <h3>{s.guaranteeTitle}</h3>
-                  <p>{s.guaranteeText}</p>
+              {isVisible('guarantee') && (
+                <div className="app-guarantee">
+                  <div className="g-icon">🛡️</div>
+                  <div>
+                    <h3>{s.guaranteeTitle}</h3>
+                    <p>{s.guaranteeText}</p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Testimonials */}
-              <div className="app-section">
-                <div className="app-section-head">
-                  <h2>{s.testiTitle}</h2>
-                </div>
-                <div className="h-scroll">
-                  {s.testimonials.map((t, idx) => (
-                    <div key={idx} className="testi-card">
-                      <div className="stars">★★★★★</div>
-                      <p>&ldquo;{t.quote}&rdquo;</p>
-                      <div className="testi-meta">
-                        <b>{t.name}</b>
-                        <small>{t.role}</small>
+              {isVisible('testimonials') && (
+                <div className="app-section">
+                  <div className="app-section-head">
+                    <h2>{s.testiTitle}</h2>
+                  </div>
+                  <div className="h-scroll">
+                    {s.testimonials.map((t, idx) => (
+                      <div key={idx} className="testi-card">
+                        <div className="stars">★★★★★</div>
+                        <p>&ldquo;{t.quote}&rdquo;</p>
+                        <div className="testi-meta">
+                          <b>{t.name}</b>
+                          <small>{t.role}</small>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* FAQ */}
-              <div className="app-section">
-                <div className="app-section-head">
-                  <h2>{s.faqTitle}</h2>
+              {isVisible('faqs') && (
+                <div className="app-section">
+                  <div className="app-section-head">
+                    <h2>{s.faqTitle}</h2>
+                  </div>
+                  <div className="faq-list">
+                    {s.faqs.map((f, i) => (
+                      <div key={i} className={`faq-item${faqOpen === i ? ' open' : ''}`}>
+                        <button className="faq-q" onClick={() => setFaqOpen(faqOpen === i ? null : i)}>
+                          <span>{f.q}</span>
+                          <span>{faqOpen === i ? '−' : '+'}</span>
+                        </button>
+                        {faqOpen === i && <div className="faq-a">{f.a}</div>}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="faq-list">
-                  {s.faqs.map((f, i) => (
-                    <div key={i} className={`faq-item${faqOpen === i ? ' open' : ''}`}>
-                      <button className="faq-q" onClick={() => setFaqOpen(faqOpen === i ? null : i)}>
-                        <span>{f.q}</span>
-                        <span>{faqOpen === i ? '−' : '+'}</span>
-                      </button>
-                      {faqOpen === i && <div className="faq-a">{f.a}</div>}
-                    </div>
-                  ))}
-                </div>
-              </div>
+              )}
 
               {/* Final CTA */}
-              <div className="app-final">
-                <div className="final-fire">🔥</div>
-                <h2>{s.finalTitle}</h2>
-                <p>{s.finalSub}</p>
-                <button className="app-cta pressable" onClick={() => openBooking()}>
-                  <span>{s.finalBook}</span>
-                </button>
-              </div>
+              {(isVisible('urgency') || isVisible('form') || isVisible('packages')) && (
+                <div className="app-final">
+                  <div className="final-fire">🔥</div>
+                  <h2>{s.finalTitle}</h2>
+                  <p>{s.finalSub}</p>
+                  <button className="app-cta pressable" onClick={() => openBooking()}>
+                    <span>{s.finalBook}</span>
+                  </button>
+                </div>
+              )}
 
               {/* Trust */}
-              <div className="app-trust">
-                <img src="/images/khb-logo.png" className="trust-logo" alt="KHB EVENTS" width={140} height={35} />
-                <p>{s.trustDesc}</p>
-                <div className="trust-links">
-                  <a href={`tel:${GENERAL.contactPhone.replace(/\s/g, '')}`} className="trust-pill pressable">📞 Hotline</a>
-                  <a href={effTgUrl} target="_blank" rel="noreferrer" className="trust-pill pressable">✈️ Telegram</a>
+              {(isVisible('guarantee') || isVisible('form') || isVisible('coreValues') || isVisible('hero')) && (
+                <div className="app-trust">
+                  <img src="/images/khb-logo.png" className="trust-logo" alt="KHB EVENTS" width={140} height={35} />
+                  <p>{s.trustDesc}</p>
+                  <div className="trust-links">
+                    <a href={`tel:${GENERAL.contactPhone.replace(/\s/g, '')}`} className="trust-pill pressable">📞 Hotline</a>
+                    <a href={effTgUrl} target="_blank" rel="noreferrer" className="trust-pill pressable">✈️ Telegram</a>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {!isHomeVisible && (
+                <div style={{ padding: '60px 20px', textAlign: 'center', color: '#5E7166' }}>
+                  <p>{lang === 'kh' ? 'ព័ត៌មានទូទៅកំពុងរៀបចំ។' : 'General overview is currently being updated.'}</p>
+                </div>
+              )}
             </section>
           )}
 
           {/* ────────── TAB: TRIP (Itinerary) ────────── */}
-          {activeTab === 'trip' && (
+          {isAnySectionVisible && activeTab === 'trip' && (
             <section className="app-page active" id="page-trip">
               <div className="app-page-head">
                 <h1>{s.tripTitle}</h1>
@@ -718,104 +819,125 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
               </div>
 
               {/* Gallery Grid */}
-              <div className="gallery-grid">
-                {s.gallery.map((g, i) => (
-                  <div key={i} className="gallery-card">
-                    <img src={g.img} alt={g.badge} loading="lazy" />
-                    <span className="g-badge">{g.badge}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Day segments */}
-              <div className="seg seg-days">
-                {s.days.map((d, i) => (
-                  <button key={d.day} className={`seg-btn${activeDay === i ? ' active' : ''}`} onClick={() => setActiveDay(i)}>
-                    Day {d.day}
-                  </button>
-                ))}
-              </div>
-
-              {/* Day details */}
-              <div className="day-card">
-                <div className="day-head">
-                  <span className="day-badge">{s.days[activeDay].date}</span>
-                  <h3>{s.days[activeDay].title}</h3>
-                </div>
-                <ul className="day-events">
-                  {s.days[activeDay].events.map((ev, ei) => (
-                    <li key={ei} className="day-act">
-                      <span className="dot" />
-                      <span>{ev}</span>
-                    </li>
+              {isVisible('gallery') && (
+                <div className="gallery-grid">
+                  {s.gallery.map((g, i) => (
+                    <div key={i} className="gallery-card">
+                      <img src={g.img} alt={g.badge} loading="lazy" />
+                      <span className="g-badge">{g.badge}</span>
+                    </div>
                   ))}
-                </ul>
-              </div>
+                </div>
+              )}
 
-              <button className="app-cta pressable" onClick={() => openBooking()} style={{ margin: '20px 16px 28px' }}>
-                <span>{s.tripBook}</span>
-              </button>
+              {/* Day segments & Day details */}
+              {isVisible('itinerary') && (
+                <>
+                  <div className="seg seg-days">
+                    {s.days.map((d, i) => (
+                      <button key={d.day} className={`seg-btn${activeDay === i ? ' active' : ''}`} onClick={() => setActiveDay(i)}>
+                        Day {d.day}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="day-card">
+                    <div className="day-head">
+                      <span className="day-badge">{s.days[activeDay].date}</span>
+                      <h3>{s.days[activeDay].title}</h3>
+                    </div>
+                    <ul className="day-events">
+                      {s.days[activeDay].events.map((ev, ei) => (
+                        <li key={ei} className="day-act">
+                          <span className="dot" />
+                          <span>{ev}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
+              )}
+
+              {(!isVisible('gallery') && !isVisible('itinerary')) && (
+                <div style={{ padding: '60px 20px', textAlign: 'center', color: '#5E7166' }}>
+                  <p>{lang === 'kh' ? 'កាលវិភាគដំណើរកម្សាន្តកំពុងរៀបចំ។' : 'Trip itinerary is currently being finalized.'}</p>
+                </div>
+              )}
+
+              {(isVisible('form') || isVisible('packages')) && (
+                <button className="app-cta pressable" onClick={() => openBooking()} style={{ margin: '20px 16px 28px' }}>
+                  <span>{s.tripBook}</span>
+                </button>
+              )}
             </section>
           )}
 
           {/* ────────── TAB: SEATS ────────── */}
-          {activeTab === 'seats' && (
+          {isAnySectionVisible && activeTab === 'seats' && (
             <section className="app-page active" id="page-seats">
               <div className="app-page-head">
                 <h1>{s.seatsTitle}</h1>
                 <p>{s.seatsSub}</p>
               </div>
 
-              {/* Urgency countdown */}
-              <div className="urgency-card">
-                <div className="u-head">
-                  <span className="u-fire">🔥</span>
-                  <div>
-                    <b>{s.earlyLabel}</b>
-                    <small>{s.earlySub}</small>
+              {isVisible('urgency') ? (
+                <>
+                  {/* Urgency countdown */}
+                  <div className="urgency-card">
+                    <div className="u-head">
+                      <span className="u-fire">🔥</span>
+                      <div>
+                        <b>{s.earlyLabel}</b>
+                        <small>{s.earlySub}</small>
+                      </div>
+                    </div>
+                    <div className="u-timer">
+                      <div className="u-box"><b>{countdown.d}</b><span>Days</span></div>
+                      <div className="u-box"><b>{countdown.h}</b><span>Hrs</span></div>
+                      <div className="u-box"><b>{countdown.m}</b><span>Min</span></div>
+                      <div className="u-box"><b>{countdown.s}</b><span>Sec</span></div>
+                    </div>
                   </div>
-                </div>
-                <div className="u-timer">
-                  <div className="u-box"><b>{countdown.d}</b><span>Days</span></div>
-                  <div className="u-box"><b>{countdown.h}</b><span>Hrs</span></div>
-                  <div className="u-box"><b>{countdown.m}</b><span>Min</span></div>
-                  <div className="u-box"><b>{countdown.s}</b><span>Sec</span></div>
-                </div>
-              </div>
 
-              {/* Seat Cabin */}
-              <div className="seat-card">
-                <div className="seat-stats">
-                  <span className="ss reserved"><i /><span>{s.resStat(claimedSeats)}</span></span>
-                  <span className="ss available"><i /><span>{s.availStat(Math.max(0, effTotalSeats - claimedSeats))}</span></span>
-                </div>
-                <div className="seat-grid">
-                  {Array.from({ length: effTotalSeats }, (_, i) => i + 1).map(n => {
-                    const isReserved = n <= claimedSeats;
-                    const isSelected = !isReserved && n === selectedSeat;
-                    const cls = `s-box ${isReserved ? 'reserved' : isSelected ? 'selected' : 'available'}`;
-                    return (
-                      <button
-                        key={n}
-                        className={cls}
-                        onClick={() => !isReserved && setSelectedSeat(n)}
-                        disabled={isReserved}
-                      >
-                        <b>#{n}</b>
-                        <small>{isReserved ? s.reservedLabel : isSelected ? s.selectedLabel : s.availableLabel}</small>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+                  {/* Seat Cabin */}
+                  <div className="seat-card">
+                    <div className="seat-stats">
+                      <span className="ss reserved"><i /><span>{s.resStat(claimedSeats)}</span></span>
+                      <span className="ss available"><i /><span>{s.availStat(Math.max(0, effTotalSeats - claimedSeats))}</span></span>
+                    </div>
+                    <div className="seat-grid">
+                      {Array.from({ length: effTotalSeats }, (_, i) => i + 1).map(n => {
+                        const isReserved = n <= claimedSeats;
+                        const isSelected = !isReserved && n === selectedSeat;
+                        const cls = `s-box ${isReserved ? 'reserved' : isSelected ? 'selected' : 'available'}`;
+                        return (
+                          <button
+                            key={n}
+                            className={cls}
+                            onClick={() => !isReserved && setSelectedSeat(n)}
+                            disabled={isReserved}
+                          >
+                            <b>#{n}</b>
+                            <small>{isReserved ? s.reservedLabel : isSelected ? s.selectedLabel : s.availableLabel}</small>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-              {/* Selected bar */}
-              <div className="selected-bar">
-                <span dangerouslySetInnerHTML={{ __html: s.selected(selectedSeat) }} />
-                <button className="app-cta small pressable" onClick={() => openBooking(selectedSeat)}>
-                  {s.seatBook}
-                </button>
-              </div>
+                  {/* Selected bar */}
+                  <div className="selected-bar">
+                    <span dangerouslySetInnerHTML={{ __html: s.selected(selectedSeat) }} />
+                    <button className="app-cta small pressable" onClick={() => openBooking(selectedSeat)}>
+                      {s.seatBook}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div style={{ padding: '60px 20px', textAlign: 'center', color: '#5E7166' }}>
+                  <p>{lang === 'kh' ? 'តារាងកៅអីត្រូវបានផ្អាកបណ្តោះអាសន្ន។ សូមទាក់ទងមកក្រុមការងារយើងខ្ញុំតាម Telegram។' : 'Seat board is currently paused. Please reach out via Telegram.'}</p>
+                </div>
+              )}
             </section>
           )}
 
@@ -824,44 +946,56 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
         {/* ═══════════════════════════════════════════
             STICKY BOOKING BAR
         ═══════════════════════════════════════════ */}
-        <div className="book-bar">
-          <div className="bar-price">
-            <s>${effRegularPrice}</s>
-            <b>${effEarlyBirdPrice}</b>
-            <small>save ${Math.max(0, effRegularPrice - effEarlyBirdPrice)}</small>
+        {isAnySectionVisible && (isVisible('form') || isVisible('packages')) && (
+          <div className="book-bar">
+            <div className="bar-price">
+              <s>${effRegularPrice}</s>
+              <b>${effEarlyBirdPrice}</b>
+              <small>save ${Math.max(0, effRegularPrice - effEarlyBirdPrice)}</small>
+            </div>
+            <button className="bar-btn pressable" onClick={() => openBooking()}>
+              <span>{s.barBtn}</span>
+            </button>
           </div>
-          <button className="bar-btn pressable" onClick={() => openBooking()}>
-            <span>{s.barBtn}</span>
-          </button>
-        </div>
+        )}
 
         {/* ═══════════════════════════════════════════
             BOTTOM TAB BAR
         ═══════════════════════════════════════════ */}
-        <nav className="tab-bar">
-          <button className={`tab-item${activeTab === 'home' ? ' active' : ''}`} onClick={() => setActiveTab('home')}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9.5L12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z"/></svg>
-            <span>{s.tabHome}</span>
-          </button>
-          <button className={`tab-item${activeTab === 'trip' ? ' active' : ''}`} onClick={() => setActiveTab('trip')}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 20l-5.5-2.5V4L9 6.5 15 4l5.5 2.5V20L15 17.5 9 20z"/><path d="M9 6.5V20M15 4v13.5"/></svg>
-            <span>{s.tabTrip}</span>
-          </button>
-          <button className="tab-item tab-book" onClick={() => openBooking()} aria-label="Book now">
-            <span className="book-fab">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M2.5 19.5L21 12 2.5 4.5l2.5 6-2.5 9z" transform="rotate(45 12 12)"/></svg>
-            </span>
-            <span>{s.tabBook}</span>
-          </button>
-          <button className={`tab-item${activeTab === 'seats' ? ' active' : ''}`} onClick={() => setActiveTab('seats')}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>
-            <span>{s.tabSeats}</span>
-          </button>
-          <a className="tab-item" href={effTgUrl} target="_blank" rel="noreferrer">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.77-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .27z"/></svg>
-            <span>{s.tabChat}</span>
-          </a>
-        </nav>
+        {isAnySectionVisible && (
+          <nav className="tab-bar">
+            {isHomeVisible && (
+              <button className={`tab-item${activeTab === 'home' ? ' active' : ''}`} onClick={() => setActiveTab('home')}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9.5L12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z"/></svg>
+                <span>{s.tabHome}</span>
+              </button>
+            )}
+            {(isVisible('itinerary') || isVisible('gallery')) && (
+              <button className={`tab-item${activeTab === 'trip' ? ' active' : ''}`} onClick={() => setActiveTab('trip')}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 20l-5.5-2.5V4L9 6.5 15 4l5.5 2.5V20L15 17.5 9 20z"/><path d="M9 6.5V20M15 4v13.5"/></svg>
+                <span>{s.tabTrip}</span>
+              </button>
+            )}
+            {(isVisible('form') || isVisible('packages')) && (
+              <button className="tab-item tab-book" onClick={() => openBooking()} aria-label="Book now">
+                <span className="book-fab">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M2.5 19.5L21 12 2.5 4.5l2.5 6-2.5 9z" transform="rotate(45 12 12)"/></svg>
+                </span>
+                <span>{s.tabBook}</span>
+              </button>
+            )}
+            {isVisible('urgency') && (
+              <button className={`tab-item${activeTab === 'seats' ? ' active' : ''}`} onClick={() => setActiveTab('seats')}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>
+                <span>{s.tabSeats}</span>
+              </button>
+            )}
+            <a className="tab-item" href={effTgUrl} target="_blank" rel="noreferrer">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.77-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .27z"/></svg>
+              <span>{s.tabChat}</span>
+            </a>
+          </nav>
+        )}
 
         {/* ═══════════════════════════════════════════
             BOOKING BOTTOM SHEET
