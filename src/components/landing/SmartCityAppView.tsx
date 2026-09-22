@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { LandingPage, SystemSettings } from '@/lib/types';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
 import PagePasswordGate from '@/components/common/PagePasswordGate';
+import FlagIcon from '@/components/common/FlagIcon';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GENERAL CONSTANTS
@@ -459,7 +460,9 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
                 onClick={() => setLang('en')}
                 title="English"
               >
-                <span className="lang-flag" aria-hidden="true">🇬🇧</span>
+                <span className="lang-flag" aria-hidden="true">
+                  <FlagIcon country="en" width={18} height={12} />
+                </span>
                 <span>EN</span>
               </button>
               <button 
@@ -468,7 +471,9 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
                 onClick={() => setLang('kh')}
                 title="ភាសាខ្មែរ"
               >
-                <span className="lang-flag" aria-hidden="true">🇰🇭</span>
+                <span className="lang-flag" aria-hidden="true">
+                  <FlagIcon country="kh" width={18} height={12} />
+                </span>
                 <span>ខ្មែរ</span>
               </button>
             </div>

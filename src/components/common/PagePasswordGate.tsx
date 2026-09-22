@@ -17,7 +17,7 @@ export default function PagePasswordGate({ page, children }: PagePasswordGatePro
   const [unlocked, setUnlocked] = useState(!isProtected);
   const [pinInput, setPinInput] = useState('');
   const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(isProtected));
 
   useEffect(() => {
     if (!isProtected) {

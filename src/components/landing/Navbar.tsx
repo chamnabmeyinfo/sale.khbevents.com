@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Phone, MessageCircle, Menu, X, ArrowRight, Sparkles } from 'lucide-react';
 import { UserNavButton } from '@/components/auth/UserNavButton';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
+import FlagIcon from '@/components/common/FlagIcon';
 
 interface NavbarProps {
   phone?: string;
@@ -106,7 +107,9 @@ export default function Navbar({
                 onClick={() => switchLang('en')} 
                 title="English"
               >
-                <span className="lang-flag" aria-hidden="true">🇬🇧</span>
+                <span className="lang-flag" aria-hidden="true">
+                  <FlagIcon country="en" width={18} height={12} />
+                </span>
                 <span>EN</span>
               </button>
               <button 
@@ -115,7 +118,9 @@ export default function Navbar({
                 onClick={() => switchLang('kh')} 
                 title="ភាសាខ្មែរ"
               >
-                <span className="lang-flag" aria-hidden="true">🇰🇭</span>
+                <span className="lang-flag" aria-hidden="true">
+                  <FlagIcon country="kh" width={18} height={12} />
+                </span>
                 <span>ខ្មែរ</span>
               </button>
             </div>
@@ -213,7 +218,9 @@ export default function Navbar({
                   className={`lang-btn${currentLang === 'en' ? ' active' : ''}`}
                   title="English"
                 >
-                  <span className="lang-flag" aria-hidden="true">🇬🇧</span>
+                  <span className="lang-flag" aria-hidden="true">
+                    <FlagIcon country="en" width={18} height={12} />
+                  </span>
                   <span>EN</span>
                 </button>
                 <button
@@ -222,7 +229,9 @@ export default function Navbar({
                   className={`lang-btn${currentLang === 'kh' ? ' active' : ''}`}
                   title="ភាសាខ្មែរ"
                 >
-                  <span className="lang-flag" aria-hidden="true">🇰🇭</span>
+                  <span className="lang-flag" aria-hidden="true">
+                    <FlagIcon country="kh" width={18} height={12} />
+                  </span>
                   <span>ខ្មែរ</span>
                 </button>
               </div>

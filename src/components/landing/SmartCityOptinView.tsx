@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { LandingPage, SystemSettings } from '@/lib/types';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
 import PagePasswordGate from '@/components/common/PagePasswordGate';
+import FlagIcon from '@/components/common/FlagIcon';
 
 export default function SmartCityOptinView({ page, settings, initialLang }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh' } = {}) {
   const [lang, setLang] = useState<'en' | 'kh'>(initialLang || 'en');
@@ -297,7 +298,9 @@ export default function SmartCityOptinView({ page, settings, initialLang }: { pa
                   gap: '6px'
                 }}
               >
-                <span className="lang-flag" aria-hidden="true">🇬🇧</span>
+                <span className="lang-flag" aria-hidden="true">
+                  <FlagIcon country="en" width={18} height={12} />
+                </span>
                 <span>EN</span>
               </button>
               <button
@@ -319,7 +322,9 @@ export default function SmartCityOptinView({ page, settings, initialLang }: { pa
                   gap: '6px'
                 }}
               >
-                <span className="lang-flag" aria-hidden="true">🇰🇭</span>
+                <span className="lang-flag" aria-hidden="true">
+                  <FlagIcon country="kh" width={18} height={12} />
+                </span>
                 <span>ខ្មែរ</span>
               </button>
             </div>

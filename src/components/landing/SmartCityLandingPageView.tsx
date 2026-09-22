@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { LandingPage, SystemSettings } from '@/lib/types';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
 import PagePasswordGate from '@/components/common/PagePasswordGate';
+import FlagIcon from '@/components/common/FlagIcon';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BILINGUAL CONTENT — exactly from old project content.json + app.js STR obj
@@ -974,7 +975,9 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                 onClick={() => switchLang('en')} 
                 title="English"
               >
-                <span className="lang-flag" aria-hidden="true">🇬🇧</span>
+                <span className="lang-flag" aria-hidden="true">
+                  <FlagIcon country="en" width={18} height={12} />
+                </span>
                 <span>EN</span>
               </button>
               <button 
@@ -983,7 +986,9 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                 onClick={() => switchLang('kh')} 
                 title="ភាសាខ្មែរ"
               >
-                <span className="lang-flag" aria-hidden="true">🇰🇭</span>
+                <span className="lang-flag" aria-hidden="true">
+                  <FlagIcon country="kh" width={18} height={12} />
+                </span>
                 <span>ខ្មែរ</span>
               </button>
             </div>
@@ -1007,7 +1012,9 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
               onClick={() => { switchLang('en'); setDrawerOpen(false); }} 
               title="English"
             >
-              <span className="lang-flag" aria-hidden="true">🇬🇧</span>
+              <span className="lang-flag" aria-hidden="true">
+                <FlagIcon country="en" width={18} height={12} />
+              </span>
               <span>EN</span>
             </button>
             <button 
@@ -1016,7 +1023,9 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
               onClick={() => { switchLang('kh'); setDrawerOpen(false); }} 
               title="ភាសាខ្មែរ"
             >
-              <span className="lang-flag" aria-hidden="true">🇰🇭</span>
+              <span className="lang-flag" aria-hidden="true">
+                <FlagIcon country="kh" width={18} height={12} />
+              </span>
               <span>ខ្មែរ</span>
             </button>
           </div>

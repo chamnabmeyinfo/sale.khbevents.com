@@ -1,12 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import AdminSidebar from './AdminSidebar';
 import Link from 'next/link';
 import { ExternalLink } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
+import FlagIcon from '@/components/common/FlagIcon';
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -28,6 +29,23 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     if (pathname.startsWith('/admin/settings')) return 'Settings & Security';
     if (pathname.startsWith('/admin/guide')) return 'Operator User Guide & Blueprint';
     return 'Admin';
+  };
+
+  const [adminLang, setAdminLang] = useState<'en' | 'kh'>('en');
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('khb_admin_lang') || localStorage.getItem('khb_lang');
+      if (saved === 'kh' || saved === 'en') setAdminLang(saved);
+    } catch {}
+  }, []);
+
+  const handleSwitchLang = (lang: 'en' | 'kh') => {
+    setAdminLang(lang);
+    try {
+      localStorage.setItem('khb_admin_lang', lang);
+      localStorage.setItem('khb_lang', lang);
+    } catch {}
   };
 
   const cleanEmail = (user?.email || '').toLowerCase().trim();
@@ -57,6 +75,32 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Language Switcher */}
+            <div className="lang-switcher">
+              <button 
+                type="button"
+                className={`lang-btn${adminLang === 'en' ? ' active' : ''}`} 
+                onClick={() => handleSwitchLang('en')} 
+                title="English"
+              >
+                <span className="lang-flag" aria-hidden="true">
+                  <FlagIcon country="en" width={18} height={12} />
+                </span>
+                <span>EN</span>
+              </button>
+              <button 
+                type="button"
+                className={`lang-btn${adminLang === 'kh' ? ' active' : ''}`} 
+                onClick={() => handleSwitchLang('kh')} 
+                title="ភាសាខ្មែរ"
+              >
+                <span className="lang-flag" aria-hidden="true">
+                  <FlagIcon country="kh" width={18} height={12} />
+                </span>
+                <span>ខ្មែរ</span>
+              </button>
+            </div>
+
             {/* Theme Switcher: Light / Dark / Auto */}
             <ThemeSwitcher />
 
