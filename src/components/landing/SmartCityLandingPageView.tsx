@@ -1161,7 +1161,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
       {/* ═══════════════════════════════════════════════
           STATS STRIP
       ═══════════════════════════════════════════════ */}
-      {(isVisible('coreValues') || isVisible('highlights') || isVisible('valueStack')) && (
+      {(isVisible('coreValues') || isVisible('valueStack')) && (
         page?.highlights && page.highlights.length > 0 ? (
           <section className="stats-section">
             <div className="container stats-grid" style={{ gridTemplateColumns: `repeat(${Math.min(page.highlights.length, 4)}, 1fr)` }}>
