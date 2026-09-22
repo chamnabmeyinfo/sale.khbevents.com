@@ -1098,17 +1098,17 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     );
   }
 
-  // Allow editing template sections if they have items even under other templates
-  if (currentTemplate !== 'b2b-delegation' && (formData.itinerary?.length || 0) > 0) {
+  // Allow editing template sections if enabled in visibility OR if they have items
+  if (currentTemplate !== 'b2b-delegation' && ((formData.itinerary?.length || 0) > 0 || formData.sectionVisibility?.itinerary)) {
     templateTabs.push({ id: 'itinerary', label: 'Itinerary / Schedule', count: formData.itinerary?.length });
   }
-  if (currentTemplate !== 'trade-expo' && (formData.expoBooths?.length || 0) > 0) {
+  if (currentTemplate !== 'trade-expo' && ((formData.expoBooths?.length || 0) > 0 || formData.sectionVisibility?.expoBooths)) {
     templateTabs.push({ id: 'expoBooths', label: 'Booth Tiers', count: formData.expoBooths?.length });
   }
-  if (currentTemplate !== 'concert-festival' && (formData.artists?.length || 0) > 0) {
+  if (currentTemplate !== 'concert-festival' && ((formData.artists?.length || 0) > 0 || formData.sectionVisibility?.artists)) {
     templateTabs.push({ id: 'artists', label: 'Artists', count: formData.artists?.length });
   }
-  if (currentTemplate !== 'corporate-summit' && (formData.speakers?.length || 0) > 0) {
+  if (currentTemplate !== 'corporate-summit' && ((formData.speakers?.length || 0) > 0 || formData.sectionVisibility?.speakers)) {
     templateTabs.push({ id: 'speakers', label: 'Speakers', count: formData.speakers?.length });
   }
 

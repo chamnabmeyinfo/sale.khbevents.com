@@ -1933,19 +1933,24 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                       </li>
                     ))}
                   </ul>
-                  <a href="#register" style={{
-                    display: 'block',
-                    textAlign: 'center',
-                    padding: '12px 20px',
-                    borderRadius: '8px',
-                    fontWeight: 700,
-                    fontSize: '14px',
-                    background: booth.popular ? 'linear-gradient(135deg, #F59E0B, #D97706)' : 'rgba(255, 255, 255, 0.1)',
-                    color: booth.popular ? '#000000' : '#FFFFFF',
-                    textDecoration: 'none',
-                    transition: 'all 0.2s',
-                    marginTop: 'auto'
-                  }}>
+                  <a 
+                    href={isVisible('form') ? '#register' : tgUrl} 
+                    target={isVisible('form') ? undefined : '_blank'} 
+                    rel={isVisible('form') ? undefined : 'noreferrer'}
+                    style={{
+                      display: 'block',
+                      textAlign: 'center',
+                      padding: '12px 20px',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      fontSize: '14px',
+                      background: booth.popular ? 'linear-gradient(135deg, #F59E0B, #D97706)' : 'rgba(255, 255, 255, 0.1)',
+                      color: booth.popular ? '#000000' : '#FFFFFF',
+                      textDecoration: 'none',
+                      transition: 'all 0.2s',
+                      marginTop: 'auto'
+                    }}
+                  >
                     {lang === 'kh' ? 'កក់ស្តង់នេះ' : `Book ${booth.name}`}
                   </a>
                 </div>
