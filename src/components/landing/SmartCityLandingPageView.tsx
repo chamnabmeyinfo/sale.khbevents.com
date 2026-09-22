@@ -1122,9 +1122,6 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             {isVisible('faqs') && <li><a href="#faq" className="nav-link">{c.navFaq}</a></li>}
           </ul>
           <div className="nav-actions">
-            <a href="/smart-city-tea-cafe/app" className="btn-app-chip" title="Switch to Mobile App View" style={{ fontSize: '0.8rem', padding: '6px 12px', border: '1px solid var(--border-subtle)', borderRadius: '999px', textDecoration: 'none', color: 'inherit', display: 'inline-flex', alignItems: 'center', gap: '5px', fontWeight: 600 }}>
-              📱 App View
-            </a>
             <div className="lang-switcher">
               <button 
                 type="button"
@@ -1201,7 +1198,6 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
           {isVisible('expoBooths') && <li><a href="#expo-booths" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'ស្តង់ពិព័រណ៍' : 'Booths'}</a></li>}
           {isVisible('packages') && <li><a href="#pricing" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navPricing}</a></li>}
           {isVisible('faqs') && <li><a href="#faq" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navFaq}</a></li>}
-          <li><a href="/smart-city-tea-cafe/app" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>📱 Mobile Native App</a></li>
           <li><a href="/smart-city-tea-cafe/optin" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>⚡ Fast 30s Opt-in</a></li>
           {(isVisible('form') || isVisible('packages')) && <li><a href="#register" className="mobile-drawer-link highlight" onClick={() => setDrawerOpen(false)}>{c.navCtaMobile}</a></li>}
         </ul>
