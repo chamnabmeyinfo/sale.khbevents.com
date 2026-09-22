@@ -773,41 +773,53 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
     }
   }, [page?.urgency?.claimedSeats]);
 
+  const SMART_CITY_DEFAULT_ORDER = [
+    'hero',
+    'coreValues',
+    'highlights',
+    'problems',
+    'audiences',
+    'valueStack',
+    'matchmaker',
+    'speakers',
+    'artists',
+    'itinerary',
+    'gallery',
+    'urgency',
+    'testimonials',
+    'expoBooths',
+    'packages',
+    'guarantee',
+    'form',
+    'faqs',
+  ];
+
+  const effectiveSectionOrder = React.useMemo(() => {
+    if (Array.isArray(page?.sectionOrder)) {
+      return page.sectionOrder;
+    }
+    return SMART_CITY_DEFAULT_ORDER;
+  }, [page?.sectionOrder]);
+
   // Section visibility helper
   const isVisible = (key: string) => {
+    // If sectionOrder is explicitly configured as an array, the section must be present in it
+    if (Array.isArray(page?.sectionOrder) && !effectiveSectionOrder.includes(key)) {
+      return false;
+    }
     if (!page?.sectionVisibility) return true;
     return (page.sectionVisibility as any)[key] !== false;
   };
 
-  const isHighlightsVisible = page?.sectionVisibility?.highlights !== undefined
-    ? isVisible('highlights')
-    : (isVisible('coreValues') || isVisible('valueStack'));
-
-  const isMatchmakerVisible = page?.sectionVisibility?.matchmaker !== undefined
-    ? isVisible('matchmaker')
-    : (isVisible('audiences') || isVisible('valueStack'));
+  const isHighlightsVisible = isVisible('highlights');
+  const isMatchmakerVisible = isVisible('matchmaker');
 
   // Check if at least one core section is enabled
-  const isAnySectionVisible = [
-    isVisible('hero'),
-    isVisible('urgency'),
-    isVisible('coreValues'),
-    isHighlightsVisible,
-    isVisible('problems'),
-    isVisible('audiences'),
-    isMatchmakerVisible,
-    isVisible('speakers'),
-    isVisible('artists'),
-    isVisible('valueStack'),
-    isVisible('itinerary'),
-    isVisible('gallery'),
-    isVisible('expoBooths'),
-    isVisible('testimonials'),
-    isVisible('packages'),
-    isVisible('guarantee'),
-    isVisible('form'),
-    isVisible('faqs')
-  ].some(Boolean);
+  const isAnySectionVisible = effectiveSectionOrder.some((key) => {
+    if (key === 'highlights') return isHighlightsVisible;
+    if (key === 'matchmaker') return isMatchmakerVisible;
+    return isVisible(key);
+  });
 
   // Date formatter for display
   const formatDeadlineText = (isoStr?: string) => {
@@ -1080,33 +1092,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
   const tgConciergeUrl = `${tgUrl}?text=${tgMsg}`;
 
 
-  const SMART_CITY_DEFAULT_ORDER = [
-    'hero',
-    'coreValues',
-    'highlights',
-    'problems',
-    'audiences',
-    'valueStack',
-    'matchmaker',
-    'speakers',
-    'artists',
-    'itinerary',
-    'gallery',
-    'urgency',
-    'testimonials',
-    'expoBooths',
-    'packages',
-    'guarantee',
-    'form',
-    'faqs',
-  ];
 
-  const effectiveSectionOrder = React.useMemo(() => {
-    if (page?.sectionOrder && page.sectionOrder.length > 0) {
-      return page.sectionOrder;
-    }
-    return SMART_CITY_DEFAULT_ORDER;
-  }, [page?.sectionOrder]);
 
   const renderSection = (sectionKey: string): React.ReactNode => {
     switch (sectionKey) {

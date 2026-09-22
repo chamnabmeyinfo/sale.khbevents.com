@@ -106,6 +106,8 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
 
   const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
 
+
+
   useEffect(() => {
     if (page.countdownEnabled && (page.eventDate || page.urgency?.earlyBirdDeadline)) {
       const targetString = page.urgency?.earlyBirdDeadline || `${page.eventDate}T09:00:00`;
@@ -141,17 +143,20 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
     }
   };
 
-  const isVisible = (sectionKey: string) => {
-    if (!page.sectionVisibility) return true;
-    return (page.sectionVisibility as any)[sectionKey] !== false;
-  };
-
   const effectiveSectionOrder = React.useMemo(() => {
-    if (page.sectionOrder && page.sectionOrder.length > 0) {
+    if (Array.isArray(page.sectionOrder)) {
       return page.sectionOrder;
     }
     return DEFAULT_SECTION_ORDER;
   }, [page.sectionOrder]);
+
+  const isVisible = (sectionKey: string) => {
+    if (Array.isArray(page.sectionOrder) && !effectiveSectionOrder.includes(sectionKey)) {
+      return false;
+    }
+    if (!page.sectionVisibility) return true;
+    return (page.sectionVisibility as any)[sectionKey] !== false;
+  };
 
   const isAnySectionVisible = effectiveSectionOrder.some((key: string) => {
     if (!isVisible(key)) return false;

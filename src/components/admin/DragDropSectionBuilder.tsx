@@ -92,8 +92,8 @@ export default function DragDropSectionBuilder({
   onJumpToTab,
   currentTemplate,
 }: DragDropSectionBuilderProps) {
-  // Ensure we have a working active order (fallback to default order if empty)
-  const activeKeys = sectionOrder && sectionOrder.length > 0 ? sectionOrder : DEFAULT_SECTION_ORDER;
+  // Ensure we have a working active order (respect empty array if user cleared sections)
+  const activeKeys = Array.isArray(sectionOrder) ? sectionOrder : DEFAULT_SECTION_ORDER;
 
   // Drag & drop state
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -184,19 +184,23 @@ export default function DragDropSectionBuilder({
     const updated = [...activeKeys, key];
     onChangeOrder(updated);
 
-    // If visibility is currently false, turn it on
-    if (sectionVisibility[key as keyof SectionVisibility] === false) {
-      onChangeVisibility({
-        ...sectionVisibility,
-        [key]: true,
-      });
-    }
+    // Turn visibility on when added
+    onChangeVisibility({
+      ...sectionVisibility,
+      [key]: true,
+    });
   };
 
   // ── Remove Item from Active Layout
   const removeItem = (key: string) => {
     const updated = activeKeys.filter(k => k !== key);
     onChangeOrder(updated);
+
+    // Sync visibility off when removed from layout flow
+    onChangeVisibility({
+      ...sectionVisibility,
+      [key]: false,
+    });
   };
 
   // ── Toggle Visibility
@@ -206,6 +210,32 @@ export default function DragDropSectionBuilder({
       ...sectionVisibility,
       [key]: !currentVal,
     });
+  };
+
+  // ── Bulk Visibility & Flow Helpers
+  const handleEnableAll = () => {
+    const updatedVis: SectionVisibility = { ...sectionVisibility };
+    activeKeys.forEach(k => {
+      updatedVis[k as keyof SectionVisibility] = true;
+    });
+    onChangeVisibility(updatedVis);
+  };
+
+  const handleDisableAll = () => {
+    const updatedVis: SectionVisibility = { ...sectionVisibility };
+    SECTION_CATALOG.forEach(item => {
+      updatedVis[item.key as keyof SectionVisibility] = false;
+    });
+    onChangeVisibility(updatedVis);
+  };
+
+  const handleClearFlow = () => {
+    onChangeOrder([]);
+    const updatedVis: SectionVisibility = { ...sectionVisibility };
+    SECTION_CATALOG.forEach(item => {
+      updatedVis[item.key as keyof SectionVisibility] = false;
+    });
+    onChangeVisibility(updatedVis);
   };
 
   // ── Apply Preset Flow
@@ -306,7 +336,7 @@ export default function DragDropSectionBuilder({
       <div className="grid lg:grid-cols-12 gap-6">
         {/* ── LEFT PANEL: ACTIVE PAGE FLOW (DRAGGABLE CANVAS) ── */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-emerald-900/40">
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-slate-200 dark:border-emerald-900/40">
             <div>
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                 <Layers className="w-4 h-4 text-emerald-500" />
@@ -316,9 +346,32 @@ export default function DragDropSectionBuilder({
                 Drag the grip handles (⋮⋮) or use (▲/▼) to reorder sections. Order on this list is exact visitor display sequence.
               </p>
             </div>
-            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
-              Live Flow
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleEnableAll}
+                className="px-2.5 py-1 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors cursor-pointer"
+                title="Enable all sections in the flow"
+              >
+                Enable All
+              </button>
+              <button
+                type="button"
+                onClick={handleDisableAll}
+                className="px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                title="Hide all sections"
+              >
+                Disable All
+              </button>
+              <button
+                type="button"
+                onClick={handleClearFlow}
+                className="px-2.5 py-1 rounded-lg border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-semibold hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors cursor-pointer"
+                title="Remove all sections from the page layout"
+              >
+                Clear Flow
+              </button>
+            </div>
           </div>
 
           {activeItems.length === 0 ? (

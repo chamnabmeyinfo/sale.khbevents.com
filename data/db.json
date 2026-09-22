@@ -34,14 +34,19 @@
         "faqs": true,
         "form": true,
         "hero": true,
+        "artists": true,
         "gallery": true,
         "urgency": true,
         "packages": true,
         "problems": true,
+        "speakers": true,
         "audiences": true,
         "guarantee": true,
         "itinerary": true,
         "coreValues": true,
+        "expoBooths": true,
+        "highlights": true,
+        "matchmaker": true,
         "valueStack": true,
         "testimonials": true
       },
@@ -490,7 +495,7 @@
       "viewsCount": 342,
       "leadsCount": 24,
       "createdAt": "2026-09-21T04:22:10.31+00:00",
-      "updatedAt": "2026-09-21T14:38:42.929Z",
+      "updatedAt": "2026-09-22T09:45:48.073Z",
       "translations": {
         "kh": {
           "heroHeadline": "ដំណើរទស្សនកិ�្�ពាណិជ្ជកម្ម Smart City ២០២៦ (តេស្តផ្ទាល់)"
@@ -508,31 +513,51 @@
         "facebookPixelEnabled": true
       },
       "isolatedSettings": {
-        "whatsapp": "+855 12 999 888",
-        "bankAccountName": "KHB EVENTS CO., LTD",
-        "coordinatorName": "Sovann Meas",
-        "searchEngineIndexing": "index",
-        "acceptedPaymentMethods": [
-          "khqr",
-          "bank_transfer"
-        ],
-        "accentColor": "#10B981",
-        "partnerName": "Vietnam Tea Association & Smart City Alliance",
-        "customCtaText": "Claim VIP Delegation Pass",
-        "customThankYouMessage": "Thank you! Your seat reservation request has been received. Our coordinator Sovann Meas will contact you within 15 minutes.",
-        "postSubmitAction": "inline",
+        "phone": "+855 12 999 888",
+        "bankName": "ABA Bank",
         "leadTags": [
           "b2b-vietnam",
           "tea-cafe-buyer",
           "vip-delegation"
         ],
-        "bankAccountNumber": "000 123 456",
+        "whatsapp": "+855 12 999 888",
+        "accentColor": "#10B981",
+        "partnerName": "Vietnam Tea Association & Smart City Alliance",
+        "customCtaText": "Claim VIP Delegation Pass",
+        "bankAccountName": "KHB EVENTS CO., LTD",
+        "coordinatorName": "Sovann Meas",
         "coordinatorRole": "Senior B2B Mission Director",
-        "enableTelegramAlerts": true,
         "accessProtection": "public",
-        "phone": "+855 12 999 888",
-        "bankName": "ABA Bank"
-      }
+        "postSubmitAction": "inline",
+        "bankAccountNumber": "000 123 456",
+        "enableTelegramAlerts": true,
+        "searchEngineIndexing": "index",
+        "customThankYouMessage": "Thank you! Your seat reservation request has been received. Our coordinator Sovann Meas will contact you within 15 minutes.",
+        "acceptedPaymentMethods": [
+          "khqr",
+          "bank_transfer"
+        ]
+      },
+      "sectionOrder": [
+        "hero",
+        "urgency",
+        "coreValues",
+        "highlights",
+        "problems",
+        "audiences",
+        "matchmaker",
+        "speakers",
+        "artists",
+        "valueStack",
+        "itinerary",
+        "gallery",
+        "expoBooths",
+        "testimonials",
+        "packages",
+        "guarantee",
+        "form",
+        "faqs"
+      ]
     },
     {
       "id": "page-korea-b2b-2026",

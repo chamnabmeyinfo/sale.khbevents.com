@@ -542,12 +542,16 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
   // SECTION VISIBILITY TOGGLES
   // ─────────────────────────────────────────────────────────────────────────────
   const toggleSection = (sectionKey: keyof SectionVisibility) => {
-    const current = formData.sectionVisibility || {};
-    const updated = {
-      ...current,
-      [sectionKey]: current[sectionKey] === false ? true : false
-    };
-    setFormData({ ...formData, sectionVisibility: updated });
+    setFormData(prev => {
+      const current = prev.sectionVisibility || {};
+      return {
+        ...prev,
+        sectionVisibility: {
+          ...current,
+          [sectionKey]: current[sectionKey] === false ? true : false
+        }
+      };
+    });
   };
 
   const setAllSections = (visible: boolean) => {
@@ -560,7 +564,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     allKeys.forEach((k) => {
       updated[k] = visible;
     });
-    setFormData({ ...formData, sectionVisibility: updated });
+    setFormData(prev => ({ ...prev, sectionVisibility: updated }));
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1469,10 +1473,10 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
               <div className="pt-2">
                 <DragDropSectionBuilder
-                  sectionOrder={formData.sectionOrder || DEFAULT_SECTION_ORDER}
+                  sectionOrder={Array.isArray(formData.sectionOrder) ? formData.sectionOrder : DEFAULT_SECTION_ORDER}
                   sectionVisibility={formData.sectionVisibility || {}}
-                  onChangeOrder={(newOrder) => setFormData({ ...formData, sectionOrder: newOrder })}
-                  onChangeVisibility={(newVis) => setFormData({ ...formData, sectionVisibility: newVis })}
+                  onChangeOrder={(newOrder) => setFormData(prev => ({ ...prev, sectionOrder: newOrder }))}
+                  onChangeVisibility={(newVis) => setFormData(prev => ({ ...prev, sectionVisibility: newVis }))}
                   onJumpToTab={(tabId) => setActiveTab(tabId as TabType)}
                   currentTemplate={formData.template}
                 />
@@ -1484,25 +1488,43 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
         {/* 1B. PAGE LAYOUT & SECTIONS (DRAG & DROP CANVAS) */}
         {activeTab === 'layout' && (
           <div className="space-y-6">
-            <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 rounded-2xl p-5 flex items-start gap-3 shadow-xs">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-sm">
-                <Layers className="w-5 h-5" />
+            <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 rounded-2xl p-5 flex items-start justify-between gap-3 shadow-xs">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <Layers className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-emerald-950 dark:text-emerald-100">
+                    Interactive Drag-and-Drop Page Layout Builder
+                  </h3>
+                  <p className="text-xs text-emerald-800/80 dark:text-emerald-300/80 mt-0.5 leading-relaxed">
+                    Design the exact visitor journey for this landing page. Drag any section by its handle to position it higher or lower, add missing components from the library, or apply 1-click recommended flows.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-emerald-950 dark:text-emerald-100">
-                  Interactive Drag-and-Drop Page Layout Builder
-                </h3>
-                <p className="text-xs text-emerald-800/80 dark:text-emerald-300/80 mt-0.5 leading-relaxed">
-                  Design the exact visitor journey for this landing page. Drag any section by its handle to position it higher or lower, add missing components from the library, or apply 1-click recommended flows.
-                </p>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setAllSections(true)}
+                  className="px-3 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors cursor-pointer"
+                >
+                  Enable All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAllSections(false)}
+                  className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                >
+                  Disable All
+                </button>
               </div>
             </div>
 
             <DragDropSectionBuilder
-              sectionOrder={formData.sectionOrder || DEFAULT_SECTION_ORDER}
+              sectionOrder={Array.isArray(formData.sectionOrder) ? formData.sectionOrder : DEFAULT_SECTION_ORDER}
               sectionVisibility={formData.sectionVisibility || {}}
-              onChangeOrder={(newOrder) => setFormData({ ...formData, sectionOrder: newOrder })}
-              onChangeVisibility={(newVis) => setFormData({ ...formData, sectionVisibility: newVis })}
+              onChangeOrder={(newOrder) => setFormData(prev => ({ ...prev, sectionOrder: newOrder }))}
+              onChangeVisibility={(newVis) => setFormData(prev => ({ ...prev, sectionVisibility: newVis }))}
               onJumpToTab={(tabId) => setActiveTab(tabId as TabType)}
               currentTemplate={formData.template}
             />

@@ -433,6 +433,9 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
   const availableSeats = Array.from({ length: effTotalSeats }, (_, i) => i + 1).filter(n => n > claimedSeats);
 
   const isVisible = (key: string) => {
+    if (Array.isArray(page?.sectionOrder) && !page.sectionOrder.includes(key)) {
+      return false;
+    }
     if (!page?.sectionVisibility) return true;
     return (page.sectionVisibility as any)[key] !== false;
   };
