@@ -26,7 +26,8 @@ import {
   X,
   Sun,
   Activity,
-  Sliders
+  Sliders,
+  BookOpen
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
@@ -60,7 +61,8 @@ export default function AdminSidebar() {
     pages: pathname.startsWith('/admin/pages'),
     leads: pathname.startsWith('/admin/leads'),
     roundRobin: pathname.startsWith('/admin/round-robin'),
-    settings: pathname.startsWith('/admin/settings')
+    settings: pathname.startsWith('/admin/settings'),
+    guide: pathname.startsWith('/admin/guide')
   });
 
   const toggleExpand = (key: string) => {
@@ -139,6 +141,20 @@ export default function AdminSidebar() {
         { label: 'Theme & Appearance', href: '/admin/settings#appearance', icon: Sun },
         { label: 'Telegram Alert Bot', href: '/admin/settings#telegram', icon: Bell },
         { label: 'Owner & Super Admin', href: '/admin/settings#security', icon: ShieldCheck },
+      ]
+    },
+    {
+      id: 'guide',
+      label: 'User Guide & Blueprint',
+      icon: BookOpen,
+      href: '/admin/guide',
+      isActive: pathname.startsWith('/admin/guide'),
+      subItems: [
+        { label: '📖 Complete User Guide', href: '/admin/guide', icon: BookOpen, isHighlight: true, badge: 'Guide' },
+        { label: 'Creating Landing Pages', href: '/admin/guide#landing-pages', icon: FileText },
+        { label: 'Managing Leads CRM', href: '/admin/guide#leads-crm', icon: Users },
+        { label: 'Round-Robin Setup', href: '/admin/guide#round-robin', icon: Sliders },
+        { label: 'Operator FAQs', href: '/admin/guide#faqs', icon: Sparkles },
       ]
     }
   ];

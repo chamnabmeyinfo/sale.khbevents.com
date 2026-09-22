@@ -18,7 +18,8 @@ import {
   CheckCircle2,
   PhoneCall,
   Search,
-  Filter
+  Filter,
+  BookOpen
 } from 'lucide-react';
 import { LandingPage, Lead } from '@/lib/types';
 
@@ -93,6 +94,13 @@ export default function DashboardOverviewClient({ pages, leads }: DashboardOverv
           >
             <Users className="w-4 h-4 text-amber-500 dark:text-amber-400" />
             <span>CRM Pipeline ({newLeads} New)</span>
+          </Link>
+          <Link
+            href="/admin/guide"
+            className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-900/60 dark:bg-emerald-950 hover:bg-emerald-800 border border-emerald-600/50 text-emerald-200 text-xs font-bold transition-all shadow-sm"
+          >
+            <BookOpen className="w-4 h-4 text-amber-400" />
+            <span>Operator Guide</span>
           </Link>
         </div>
       </div>
