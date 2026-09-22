@@ -968,8 +968,24 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
               📱 App View
             </a>
             <div className="lang-switcher">
-              <button className={`lang-btn${lang === 'en' ? ' active' : ''}`} onClick={() => switchLang('en')} title="English">EN</button>
-              <button className={`lang-btn${lang === 'kh' ? ' active' : ''}`} onClick={() => switchLang('kh')} title="ភាសាខ្មែរ">ខ្មែរ</button>
+              <button 
+                type="button"
+                className={`lang-btn${lang === 'en' ? ' active' : ''}`} 
+                onClick={() => switchLang('en')} 
+                title="English"
+              >
+                <span className="lang-flag" aria-hidden="true">🇬🇧</span>
+                <span>EN</span>
+              </button>
+              <button 
+                type="button"
+                className={`lang-btn${lang === 'kh' ? ' active' : ''}`} 
+                onClick={() => switchLang('kh')} 
+                title="ភាសាខ្មែរ"
+              >
+                <span className="lang-flag" aria-hidden="true">🇰🇭</span>
+                <span>ខ្មែរ</span>
+              </button>
             </div>
             <a href="#register" className="btn-nav-cta">{c.navCta}</a>
             <button className="mobile-nav-toggle" onClick={() => setDrawerOpen(true)} aria-label="Toggle navigation">☰</button>
@@ -983,6 +999,26 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
         <div className="mobile-drawer-header">
           <div className="brand-logo">
             <img src="/images/khb-logo.png" alt="KHB EVENTS" className="logo-img" width={163} height={40} />
+          </div>
+          <div className="lang-switcher" style={{ margin: '0 8px' }}>
+            <button 
+              type="button"
+              className={`lang-btn${lang === 'en' ? ' active' : ''}`} 
+              onClick={() => { switchLang('en'); setDrawerOpen(false); }} 
+              title="English"
+            >
+              <span className="lang-flag" aria-hidden="true">🇬🇧</span>
+              <span>EN</span>
+            </button>
+            <button 
+              type="button"
+              className={`lang-btn${lang === 'kh' ? ' active' : ''}`} 
+              onClick={() => { switchLang('kh'); setDrawerOpen(false); }} 
+              title="ភាសាខ្មែរ"
+            >
+              <span className="lang-flag" aria-hidden="true">🇰🇭</span>
+              <span>ខ្មែរ</span>
+            </button>
           </div>
           <button className="btn-close-drawer" onClick={() => setDrawerOpen(false)} aria-label="Close navigation">✕</button>
         </div>

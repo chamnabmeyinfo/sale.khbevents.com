@@ -276,37 +276,53 @@ export default function SmartCityOptinView({ page, settings, initialLang }: { pa
           )}
 
           {/* Language Switcher */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '24px' }}>
-            <button
-              onClick={() => setLang('en')}
-              style={{
-                background: lang === 'en' ? '#091E14' : '#F4F0E8',
-                color: lang === 'en' ? '#FFFFFF' : '#5E7166',
-                border: 'none',
-                borderRadius: '999px',
-                padding: '6px 14px',
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                cursor: 'pointer'
-              }}
-            >
-              EN
-            </button>
-            <button
-              onClick={() => setLang('kh')}
-              style={{
-                background: lang === 'kh' ? '#091E14' : '#F4F0E8',
-                color: lang === 'kh' ? '#FFFFFF' : '#5E7166',
-                border: 'none',
-                borderRadius: '999px',
-                padding: '6px 14px',
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                cursor: 'pointer'
-              }}
-            >
-              ភាសាខ្មែរ
-            </button>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
+            <div className="lang-switcher" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: '#F4F0E8', padding: '3px', borderRadius: '999px', border: '1px solid #E7E2D6' }}>
+              <button
+                type="button"
+                className={`lang-btn${lang === 'en' ? ' active' : ''}`}
+                onClick={() => setLang('en')}
+                title="English"
+                style={{
+                  background: lang === 'en' ? '#091E14' : 'transparent',
+                  color: lang === 'en' ? '#FFFFFF' : '#5E7166',
+                  border: 'none',
+                  borderRadius: '999px',
+                  padding: '6px 14px',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span className="lang-flag" aria-hidden="true">🇬🇧</span>
+                <span>EN</span>
+              </button>
+              <button
+                type="button"
+                className={`lang-btn${lang === 'kh' ? ' active' : ''}`}
+                onClick={() => setLang('kh')}
+                title="ភាសាខ្មែរ"
+                style={{
+                  background: lang === 'kh' ? '#091E14' : 'transparent',
+                  color: lang === 'kh' ? '#FFFFFF' : '#5E7166',
+                  border: 'none',
+                  borderRadius: '999px',
+                  padding: '6px 14px',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span className="lang-flag" aria-hidden="true">🇰🇭</span>
+                <span>ខ្មែរ</span>
+              </button>
+            </div>
           </div>
 
         </div>

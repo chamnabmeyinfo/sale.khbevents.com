@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Phone, MessageCircle, Menu, X, ArrowRight, Sparkles } from 'lucide-react';
@@ -17,6 +17,32 @@ export default function Navbar({
   whatsapp = '85512888999'
 }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentLang, setCurrentLang] = useState<'en' | 'kh'>('en');
+
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const l = sp.get('lang');
+      if (l === 'kh' || l === 'en') {
+        setCurrentLang(l);
+      } else {
+        const saved = localStorage.getItem('khb_lang');
+        if (saved === 'kh' || saved === 'en') {
+          setCurrentLang(saved);
+        }
+      }
+    } catch {}
+  }, []);
+
+  const switchLang = (target: 'en' | 'kh') => {
+    setCurrentLang(target);
+    try {
+      localStorage.setItem('khb_lang', target);
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', target);
+      window.location.href = url.toString();
+    } catch {}
+  };
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur-md bg-white/90 dark:bg-[#09140E]/85 border-b border-slate-200 dark:border-emerald-900/30 transition-all">
@@ -73,6 +99,27 @@ export default function Navbar({
           </nav>
 
           <div className="hidden lg:flex items-center gap-3">
+            <div className="lang-switcher">
+              <button 
+                type="button"
+                className={`lang-btn${currentLang === 'en' ? ' active' : ''}`} 
+                onClick={() => switchLang('en')} 
+                title="English"
+              >
+                <span className="lang-flag" aria-hidden="true">🇬🇧</span>
+                <span>EN</span>
+              </button>
+              <button 
+                type="button"
+                className={`lang-btn${currentLang === 'kh' ? ' active' : ''}`} 
+                onClick={() => switchLang('kh')} 
+                title="ភាសាខ្មែរ"
+              >
+                <span className="lang-flag" aria-hidden="true">🇰🇭</span>
+                <span>ខ្មែរ</span>
+              </button>
+            </div>
+
             <ThemeSwitcher compact={true} />
             <UserNavButton />
 
@@ -157,6 +204,29 @@ export default function Navbar({
             Frequently Asked Questions
           </Link>
           <div className="pt-4 border-t border-slate-200 dark:border-emerald-900/50 flex flex-col gap-2.5">
+            <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-emerald-950/40 rounded-xl border border-slate-200 dark:border-emerald-800/40">
+              <span className="text-xs font-semibold text-slate-600 dark:text-gray-300">Language / ភាសា</span>
+              <div className="lang-switcher">
+                <button
+                  type="button"
+                  onClick={() => { switchLang('en'); setMobileMenuOpen(false); }}
+                  className={`lang-btn${currentLang === 'en' ? ' active' : ''}`}
+                  title="English"
+                >
+                  <span className="lang-flag" aria-hidden="true">🇬🇧</span>
+                  <span>EN</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { switchLang('kh'); setMobileMenuOpen(false); }}
+                  className={`lang-btn${currentLang === 'kh' ? ' active' : ''}`}
+                  title="ភាសាខ្មែរ"
+                >
+                  <span className="lang-flag" aria-hidden="true">🇰🇭</span>
+                  <span>ខ្មែរ</span>
+                </button>
+              </div>
+            </div>
             <a
               href="#inquiry-form"
               onClick={() => setMobileMenuOpen(false)}

@@ -452,9 +452,25 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
             <Link href="/smart-city-tea-cafe" className="bar-btn-chip" title="Switch to Full Web Landing Page">
               🌐 Web View
             </Link>
-            <div className="app-lang-switch">
-              <button className={`l-btn${lang === 'en' ? ' active' : ''}`} onClick={() => setLang('en')}>EN</button>
-              <button className={`l-btn${lang === 'kh' ? ' active' : ''}`} onClick={() => setLang('kh')}>ខ្មែរ</button>
+            <div className="lang-switcher app-lang-switch">
+              <button 
+                type="button"
+                className={`l-btn lang-btn${lang === 'en' ? ' active' : ''}`} 
+                onClick={() => setLang('en')}
+                title="English"
+              >
+                <span className="lang-flag" aria-hidden="true">🇬🇧</span>
+                <span>EN</span>
+              </button>
+              <button 
+                type="button"
+                className={`l-btn lang-btn${lang === 'kh' ? ' active' : ''}`} 
+                onClick={() => setLang('kh')}
+                title="ភាសាខ្មែរ"
+              >
+                <span className="lang-flag" aria-hidden="true">🇰🇭</span>
+                <span>ខ្មែរ</span>
+              </button>
             </div>
           </div>
         </header>
