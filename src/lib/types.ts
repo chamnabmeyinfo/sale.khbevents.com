@@ -145,6 +145,285 @@ export interface SectionVisibility {
   form?: boolean;
 }
 
+export interface SectionCatalogItem {
+  key: string;
+  label: string;
+  khLabel: string;
+  description: string;
+  category: 'hero' | 'offer' | 'program' | 'proof' | 'conversion';
+  icon: string;
+  tabId: string;
+  defaultVisible: boolean;
+}
+
+export const SECTION_CATALOG: SectionCatalogItem[] = [
+  {
+    key: 'hero',
+    label: 'Hero Banner & Headline',
+    khLabel: 'បដាធំ និងចំណងជើងចម្បង',
+    description: 'High-impact value proposition, event date/venue badges, hero background slider, and main CTA.',
+    category: 'hero',
+    icon: 'LayoutTemplate',
+    tabId: 'hero',
+    defaultVisible: true,
+  },
+  {
+    key: 'urgency',
+    label: 'Urgency Bar & Quota',
+    khLabel: 'របារបន្ទាន់ & កូតាកៅអី',
+    description: 'Live claimed seat count, avatar social proof stack, and early bird price savings notification.',
+    category: 'conversion',
+    icon: 'Flame',
+    tabId: 'event',
+    defaultVisible: true,
+  },
+  {
+    key: 'coreValues',
+    label: '4 Core Value Pillars',
+    khLabel: 'សសរស្តម្ភតម្លៃស្នូលទាំង ៤',
+    description: 'Direct factory pricing, bilateral networking, market intelligence, and executive logistics.',
+    category: 'offer',
+    icon: 'Gem',
+    tabId: 'values',
+    defaultVisible: true,
+  },
+  {
+    key: 'highlights',
+    label: 'Key Highlights & Verification',
+    khLabel: 'ស្ថិតិ & ចំណុចលេចធ្លោសំខាន់ៗ',
+    description: 'Verified numbers: 2 international expos, direct factory inspections, and UNESCO cruise.',
+    category: 'proof',
+    icon: 'TrendingUp',
+    tabId: 'values',
+    defaultVisible: true,
+  },
+  {
+    key: 'problems',
+    label: 'Problem vs Solution',
+    khLabel: 'បញ្ហាប្រឈម & ដំណោះស្រាយ',
+    description: 'Why sourcing online costs 25-35% more vs. direct face-to-face factory representation.',
+    category: 'offer',
+    icon: 'AlertTriangle',
+    tabId: 'problems',
+    defaultVisible: true,
+  },
+  {
+    key: 'audiences',
+    label: 'Target Audience & Cohort',
+    khLabel: 'ទស្សនិកជនគោលដៅ',
+    description: 'Profiles of who should join: Cafe & tea brand owners, retailers, tech founders, and distributors.',
+    category: 'offer',
+    icon: 'Users',
+    tabId: 'audiences',
+    defaultVisible: true,
+  },
+  {
+    key: 'matchmaker',
+    label: 'Interactive ROI Matchmaker',
+    khLabel: 'ការផ្គូផ្គងផលចំណេញអាជីវកម្ម',
+    description: 'Interactive track selector showing suppliers met, margins captured, and prepared sessions.',
+    category: 'offer',
+    icon: 'Target',
+    tabId: 'audiences',
+    defaultVisible: true,
+  },
+  {
+    key: 'speakers',
+    label: 'Keynote Speakers & Mentors',
+    khLabel: 'វាគ្មិនកិត្តិយស & អ្នកជំនាញ',
+    description: 'Chamber leaders, trade compliance directors, and regional corporate executives.',
+    category: 'program',
+    icon: 'Mic',
+    tabId: 'speakers',
+    defaultVisible: false,
+  },
+  {
+    key: 'artists',
+    label: 'Artist Lineup & Cultural Gala',
+    khLabel: 'សិល្បករ & កម្មវិធីកម្សាន្ត',
+    description: 'Acoustic performers, authentic cultural ensembles, and networking banquet entertainment.',
+    category: 'program',
+    icon: 'Music',
+    tabId: 'artists',
+    defaultVisible: false,
+  },
+  {
+    key: 'valueStack',
+    label: '9-in-1 Turnkey Value Stack',
+    khLabel: 'កញ្ចប់អត្ថប្រយោជន៍ ៩-ក្នុង-១',
+    description: 'Itemized value calculation: Flights, 5-star hotel, expo VIP passes, cruise, meals, guide.',
+    category: 'offer',
+    icon: 'Layers',
+    tabId: 'valueStack',
+    defaultVisible: true,
+  },
+  {
+    key: 'itinerary',
+    label: '4D3N Agenda & Itinerary',
+    khLabel: 'កាលវិភាគ ៤ថ្ងៃ/៣យប់',
+    description: 'Hour-by-hour delegation schedule across trade expos, factory tours, and UNESCO Halong Bay.',
+    category: 'program',
+    icon: 'Calendar',
+    tabId: 'itinerary',
+    defaultVisible: true,
+  },
+  {
+    key: 'gallery',
+    label: 'Visual Photo Gallery',
+    khLabel: 'កម្រងរូបភាពសកម្មភាព',
+    description: 'Live delegation impressions, conference floors, factory inspections, and executive events.',
+    category: 'proof',
+    icon: 'Image',
+    tabId: 'gallery',
+    defaultVisible: true,
+  },
+  {
+    key: 'expoBooths',
+    label: 'Exhibition Booth Tiers',
+    khLabel: 'ស្តង់ពិព័រណ៍ពាណិជ្ជកម្ម',
+    description: 'Commercial booth packages: Shell schemes, corner booths, and raw island pavilions with pricing.',
+    category: 'program',
+    icon: 'Store',
+    tabId: 'expoBooths',
+    defaultVisible: false,
+  },
+  {
+    key: 'testimonials',
+    label: 'Executive Testimonials',
+    khLabel: 'មតិកែលម្អពីប្រតិភូមុនៗ',
+    description: 'Verified 5-star reviews and quotes from enterprise CEOs and beverage importers.',
+    category: 'proof',
+    icon: 'MessageSquareQuote',
+    tabId: 'testimonials',
+    defaultVisible: true,
+  },
+  {
+    key: 'packages',
+    label: 'Pricing Passes & Investment',
+    khLabel: 'កញ្ចប់តម្លៃ & ការវិនិយោគ',
+    description: 'Tiered passes with early bird rates, inclusions, features, and countdown timer.',
+    category: 'conversion',
+    icon: 'CreditCard',
+    tabId: 'packages',
+    defaultVisible: true,
+  },
+  {
+    key: 'guarantee',
+    label: 'Zero-Risk Guarantee & Steps',
+    khLabel: 'ការធានាសុវត្ថិភាព & ៣ជំហាន',
+    description: '3-step frictionless reservation flow, money-back pledge, and invoice support.',
+    category: 'proof',
+    icon: 'ShieldCheck',
+    tabId: 'guarantee',
+    defaultVisible: true,
+  },
+  {
+    key: 'form',
+    label: 'VIP Boarding Pass & Form',
+    khLabel: 'សំបុត្រឡើងយន្តហោះ VIP & ទម្រង់បែបបទ',
+    description: 'Live interactive VIP boarding pass preview synced with instant seat reservation form.',
+    category: 'conversion',
+    icon: 'FileText',
+    tabId: 'form',
+    defaultVisible: true,
+  },
+  {
+    key: 'faqs',
+    label: 'Frequently Asked Questions',
+    khLabel: 'សំណួរដែលសួរញឹកញាប់',
+    description: 'Accordions addressing visa-free entry, corporate billing, single rooms, and payment terms.',
+    category: 'proof',
+    icon: 'HelpCircle',
+    tabId: 'faqs',
+    defaultVisible: true,
+  },
+];
+
+export const DEFAULT_SECTION_ORDER = [
+  'hero',
+  'urgency',
+  'coreValues',
+  'highlights',
+  'problems',
+  'audiences',
+  'matchmaker',
+  'speakers',
+  'artists',
+  'valueStack',
+  'itinerary',
+  'gallery',
+  'expoBooths',
+  'testimonials',
+  'packages',
+  'guarantee',
+  'form',
+  'faqs',
+];
+
+export const B2B_DELEGATION_ORDER = [
+  'hero',
+  'urgency',
+  'coreValues',
+  'highlights',
+  'problems',
+  'audiences',
+  'matchmaker',
+  'valueStack',
+  'itinerary',
+  'gallery',
+  'testimonials',
+  'packages',
+  'guarantee',
+  'form',
+  'faqs',
+];
+
+export const TRADE_EXPO_ORDER = [
+  'hero',
+  'highlights',
+  'expoBooths',
+  'speakers',
+  'itinerary',
+  'gallery',
+  'packages',
+  'testimonials',
+  'form',
+  'faqs',
+];
+
+export const CORPORATE_SUMMIT_ORDER = [
+  'hero',
+  'urgency',
+  'speakers',
+  'highlights',
+  'itinerary',
+  'packages',
+  'testimonials',
+  'guarantee',
+  'form',
+  'faqs',
+];
+
+export const CONCERT_FESTIVAL_ORDER = [
+  'hero',
+  'urgency',
+  'artists',
+  'gallery',
+  'packages',
+  'testimonials',
+  'faqs',
+  'form',
+];
+
+export const MINIMAL_LEAD_ORDER = [
+  'hero',
+  'urgency',
+  'highlights',
+  'packages',
+  'form',
+  'faqs',
+];
+
 export type PageTemplateType = 
   | "b2b-delegation" 
   | "trade-expo" 
@@ -381,8 +660,9 @@ export interface LandingPage {
   // Quota & Urgency
   urgency?: UrgencyConfig;
 
-  // Section visibility toggles
+  // Section visibility toggles & dynamic ordering
   sectionVisibility?: SectionVisibility;
+  sectionOrder?: string[];
 
   // Structured content sections
   highlights: HighlightItem[];

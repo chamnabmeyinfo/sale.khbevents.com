@@ -1079,139 +1079,41 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
   const tgMsg = encodeURIComponent(`Hello KHB Events, I want to reserve Seat #${regSeat} for the Vietnam Delegation 2026. My name is ${regName.trim() || 'Guest'}.`);
   const tgConciergeUrl = `${tgUrl}?text=${tgMsg}`;
 
-  return (
-    <PagePasswordGate page={page}>
-      <div className={`smart-city-landing${lang === 'kh' ? ' lang-kh' : ''}`}>
-        {/* ── Tracking Engine (Internal Analytics & External Pixels) ── */}
-        <LandingPageTracking page={page} lang={lang} />
 
-      {/* ═══════════════════════════════════════════════
-          STICKY URGENCY BAR
-      ═══════════════════════════════════════════════ */}
-      {isVisible('urgency') && (
-        <div className="urgency-bar">
-          <div className="container urgency-inner">
-            <span className="urgency-fire">🔥</span>
-            <span className="urgency-msg">{c.earlyBirdNotice}</span>
-            <span className="urgency-countdown" aria-hidden="true">
-              <b>{countdown.d}</b>d&nbsp;<b>{countdown.h}</b>h&nbsp;<b>{countdown.m}</b>m&nbsp;<b>{countdown.s}</b>s
-            </span>
-            <a href="#register" className="urgency-cta">Claim ${effEarlyBirdPrice} →</a>
-          </div>
-        </div>
-      )}
+  const SMART_CITY_DEFAULT_ORDER = [
+    'hero',
+    'coreValues',
+    'highlights',
+    'problems',
+    'audiences',
+    'valueStack',
+    'matchmaker',
+    'speakers',
+    'artists',
+    'itinerary',
+    'gallery',
+    'urgency',
+    'testimonials',
+    'expoBooths',
+    'packages',
+    'guarantee',
+    'form',
+    'faqs',
+  ];
 
-      {/* ═══════════════════════════════════════════════
-          HEADER
-      ═══════════════════════════════════════════════ */}
-      <header className="site-header">
-        <div className="container navbar">
-          <a href="#" className="brand-logo">
-            <img src="/images/khb-logo.png" alt="KHB EVENTS" className="logo-img" width={163} height={40} />
-          </a>
-          <ul className="nav-links">
-            {isVisible('problems') && <li><a href="#problem" className="nav-link">{c.navWhy}</a></li>}
-            {isVisible('valueStack') && <li><a href="#value" className="nav-link">{c.navPackage}</a></li>}
-            {isVisible('speakers') && <li><a href="#speakers" className="nav-link">{lang === 'kh' ? 'វាគ្មិន' : 'Speakers'}</a></li>}
-            {isVisible('artists') && <li><a href="#artists" className="nav-link">{lang === 'kh' ? 'សិល្បករ' : 'Artists'}</a></li>}
-            {isVisible('itinerary') && <li><a href="#itinerary" className="nav-link">{c.navItinerary}</a></li>}
-            {isVisible('gallery') && <li><a href="#gallery" className="nav-link">{lang === 'kh' ? 'កម្រងរូបភាព' : 'Gallery'}</a></li>}
-            {isVisible('urgency') && <li><a href="#seats" className="nav-link">{c.navSeats}</a></li>}
-            {isVisible('expoBooths') && <li><a href="#expo-booths" className="nav-link">{lang === 'kh' ? 'ស្តង់ពិព័រណ៍' : 'Booths'}</a></li>}
-            {isVisible('packages') && <li><a href="#pricing" className="nav-link">{c.navPricing}</a></li>}
-            {isVisible('faqs') && <li><a href="#faq" className="nav-link">{c.navFaq}</a></li>}
-          </ul>
-          <div className="nav-actions">
-            <div className="lang-switcher">
-              <button 
-                type="button"
-                className={`lang-btn${lang === 'en' ? ' active' : ''}`} 
-                onClick={() => switchLang('en')} 
-                title="English"
-              >
-                <span className="lang-flag" aria-hidden="true">
-                  <FlagIcon country="en" width={18} height={12} />
-                </span>
-                <span>EN</span>
-              </button>
-              <button 
-                type="button"
-                className={`lang-btn${lang === 'kh' ? ' active' : ''}`} 
-                onClick={() => switchLang('kh')} 
-                title="ភាសាខ្មែរ"
-              >
-                <span className="lang-flag" aria-hidden="true">
-                  <FlagIcon country="kh" width={18} height={12} />
-                </span>
-                <span>ខ្មែរ</span>
-              </button>
-            </div>
-            {(isVisible('form') || isVisible('packages')) && (
-              <a href="#register" className="btn-nav-cta">{c.navCta}</a>
-            )}
-            <button className="mobile-nav-toggle" onClick={() => setDrawerOpen(true)} aria-label="Toggle navigation">☰</button>
-          </div>
-        </div>
-      </header>
+  const effectiveSectionOrder = React.useMemo(() => {
+    if (page?.sectionOrder && page.sectionOrder.length > 0) {
+      return page.sectionOrder;
+    }
+    return SMART_CITY_DEFAULT_ORDER;
+  }, [page?.sectionOrder]);
 
-      {/* Mobile Drawer */}
-      <div className={`mobile-drawer-backdrop${drawerOpen ? ' active' : ''}`} onClick={() => setDrawerOpen(false)} />
-      <aside className={`mobile-nav-drawer${drawerOpen ? ' active' : ''}`} aria-label="Mobile Navigation">
-        <div className="mobile-drawer-header">
-          <div className="brand-logo">
-            <img src="/images/khb-logo.png" alt="KHB EVENTS" className="logo-img" width={163} height={40} />
-          </div>
-          <div className="lang-switcher" style={{ margin: '0 8px' }}>
-            <button 
-              type="button"
-              className={`lang-btn${lang === 'en' ? ' active' : ''}`} 
-              onClick={() => { switchLang('en'); setDrawerOpen(false); }} 
-              title="English"
-            >
-              <span className="lang-flag" aria-hidden="true">
-                <FlagIcon country="en" width={18} height={12} />
-              </span>
-              <span>EN</span>
-            </button>
-            <button 
-              type="button"
-              className={`lang-btn${lang === 'kh' ? ' active' : ''}`} 
-              onClick={() => { switchLang('kh'); setDrawerOpen(false); }} 
-              title="ភាសាខ្មែរ"
-            >
-              <span className="lang-flag" aria-hidden="true">
-                <FlagIcon country="kh" width={18} height={12} />
-              </span>
-              <span>ខ្មែរ</span>
-            </button>
-          </div>
-          <button className="btn-close-drawer" onClick={() => setDrawerOpen(false)} aria-label="Close navigation">✕</button>
-        </div>
-        <ul className="mobile-drawer-links">
-          {isVisible('problems') && <li><a href="#problem" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navWhy}</a></li>}
-          {isVisible('valueStack') && <li><a href="#value" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navPackage}</a></li>}
-          {isVisible('speakers') && <li><a href="#speakers" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'វាគ្មិនកិត្តិយស' : 'Speakers'}</a></li>}
-          {isVisible('artists') && <li><a href="#artists" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'សិល្បករ' : 'Artists'}</a></li>}
-          {isVisible('itinerary') && <li><a href="#itinerary" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navItinerary}</a></li>}
-          {isVisible('gallery') && <li><a href="#gallery" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'កម្រងរូបភាព' : 'Gallery'}</a></li>}
-          {isVisible('urgency') && <li><a href="#seats" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navSeats}</a></li>}
-          {isVisible('expoBooths') && <li><a href="#expo-booths" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'ស្តង់ពិព័រណ៍' : 'Booths'}</a></li>}
-          {isVisible('packages') && <li><a href="#pricing" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navPricing}</a></li>}
-          {isVisible('faqs') && <li><a href="#faq" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navFaq}</a></li>}
-          <li><a href="/smart-city-tea-cafe/optin" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>⚡ Fast 30s Opt-in</a></li>
-          {(isVisible('form') || isVisible('packages')) && <li><a href="#register" className="mobile-drawer-link highlight" onClick={() => setDrawerOpen(false)}>{c.navCtaMobile}</a></li>}
-        </ul>
-        <div className="mobile-drawer-footer">
-          <a href={tgUrl} target="_blank" rel="noreferrer" className="btn-drawer-tg">
-            {TG_ICON(18)}<span>Telegram VIP Concierge</span>
-          </a>
-        </div>
-      </aside>
-
-      {/* ═══════════════════════════════════════════════
-          HERO
-      ═══════════════════════════════════════════════ */}
-      {isVisible('hero') && (
+  const renderSection = (sectionKey: string): React.ReactNode => {
+    switch (sectionKey) {
+      case 'hero':
+        // HERO
+        if (!isVisible('hero')) return null;
+        return (
         <section className="hero-section" id="overview">
           <div className="hero-slider">
             {heroSlides.map((src, i) => (
@@ -1254,12 +1156,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
-      )}
+        );
 
-      {/* ═══════════════════════════════════════════════
-          CORE VALUE
-      ═══════════════════════════════════════════════ */}
-      {isVisible('coreValues') && (
+      case 'coreValues':
+        // COREVALUES
+        if (!isVisible('coreValues')) return null;
+        return (
         <section className="section-padding core-value-section" id="core-value">
           <div className="container">
             <div className="section-header">
@@ -1283,11 +1185,13 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
-      )}
+        );
 
-      {/* ═══════════════════════════════════════════════
-          SOCIAL PROOF STRIP
-      ═══════════════════════════════════════════════ */}
+      case 'highlights':
+        // HIGHLIGHTS & PROOF STRIP
+        if (!isHighlightsVisible) return null;
+        return (
+          <React.Fragment>
       {isVisible('urgency') && (
         <section className="proof-strip-section">
           <div className="container proof-strip-inner">
@@ -1338,10 +1242,13 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
         )
       )}
 
-      {/* ═══════════════════════════════════════════════
-          PROBLEM → SOLUTION
-      ═══════════════════════════════════════════════ */}
-      {isVisible('problems') && (
+          </React.Fragment>
+        );
+
+      case 'problems':
+        // PROBLEMS
+        if (!isVisible('problems')) return null;
+        return (
         <section className="section-padding problem-section" id="problem">
           <div className="container">
             <div className="section-header">
@@ -1364,12 +1271,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
-      )}
+        );
 
-      {/* ═══════════════════════════════════════════════
-          WHO SHOULD JOIN
-      ═══════════════════════════════════════════════ */}
-      {isVisible('audiences') && (
+      case 'audiences':
+        // AUDIENCES
+        if (!isVisible('audiences')) return null;
+        return (
         <section className="section-padding audience-section" id="audience">
           <div className="container">
             <div className="section-header">
@@ -1388,12 +1295,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
-      )}
+        );
 
-      {/* ═══════════════════════════════════════════════
-          VALUE STACK
-      ═══════════════════════════════════════════════ */}
-      {isVisible('valueStack') && (
+      case 'valueStack':
+        // VALUESTACK
+        if (!isVisible('valueStack')) return null;
+        return (
         <section className="section-padding value-section" id="value">
           <div className="container">
             <div className="section-header">
@@ -1434,12 +1341,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
-      )}
+        );
 
-      {/* ═══════════════════════════════════════════════
-          ROI MATCHMAKER
-      ═══════════════════════════════════════════════ */}
-      {isMatchmakerVisible && (
+      case 'matchmaker':
+        // MATCHMAKER
+        if (!isMatchmakerVisible) return null;
+        return (
         <section className="section-padding matchmaker-section" id="matchmaker">
           <div className="container">
             <div className="section-header">
@@ -1513,9 +1420,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
-      )}
+        );
 
-      {isVisible('speakers') && (
+      case 'speakers':
+        // SPEAKERS
+        if (!isVisible('speakers')) return null;
+        return (
         <section className="section-padding speakers-section" id="speakers" style={{ background: '#0B132B' }}>
           <div className="container">
             <div className="section-header">
@@ -1606,12 +1516,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
-      )}
+        );
 
-      {/* ═══════════════════════════════════════════════
-          ARTIST & CULTURAL ENTERTAINMENT
-      ═══════════════════════════════════════════════ */}
-      {isVisible('artists') && (
+      case 'artists':
+        // ARTISTS
+        if (!isVisible('artists')) return null;
+        return (
         <section className="section-padding artists-section" id="artists" style={{ background: '#070D1E' }}>
           <div className="container">
             <div className="section-header">
@@ -1693,12 +1603,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
-      )}
+        );
 
-      {/* ═══════════════════════════════════════════════
-          ITINERARY
-      ═══════════════════════════════════════════════ */}
-      {isVisible('itinerary') && (
+      case 'itinerary':
+        // ITINERARY
+        if (!isVisible('itinerary')) return null;
+        return (
         <section className="section-padding" id="itinerary">
           <div className="container">
             <div className="section-header">
@@ -1738,12 +1648,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
-      )}
+        );
 
-      {/* ═══════════════════════════════════════════════
-          PHOTO GALLERY (STANDALONE)
-      ═══════════════════════════════════════════════ */}
-      {isVisible('gallery') && (
+      case 'gallery':
+        // GALLERY
+        if (!isVisible('gallery')) return null;
+        return (
         <section className="section-padding gallery-section" id="gallery" style={{ overflow: 'hidden' }}>
           <div className="container">
             <div className="section-header">
@@ -1767,12 +1677,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
-      )}
+        );
 
-      {/* ═══════════════════════════════════════════════
-          CABIN SEATS BOARD
-      ═══════════════════════════════════════════════ */}
-      {isVisible('urgency') && (
+      case 'urgency':
+        // URGENCY
+        if (!isVisible('urgency')) return null;
+        return (
         <section className="section-padding seat-board-section" id="seats">
           <div className="container">
             <div className="section-header">
@@ -1819,12 +1729,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
-      )}
+        );
 
-      {/* ═══════════════════════════════════════════════
-          TESTIMONIALS
-      ═══════════════════════════════════════════════ */}
-      {isVisible('testimonials') && (
+      case 'testimonials':
+        // TESTIMONIALS
+        if (!isVisible('testimonials')) return null;
+        return (
         <section className="section-padding testimonials-section" id="testimonials">
           <div className="container">
             <div className="section-header">
@@ -1852,12 +1762,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
-      )}
+        );
 
-      {/* ═══════════════════════════════════════════════
-          EXHIBITION BOOTHS
-      ═══════════════════════════════════════════════ */}
-      {isVisible('expoBooths') && (
+      case 'expoBooths':
+        // EXPOBOOTHS
+        if (!isVisible('expoBooths')) return null;
+        return (
         <section className="section-padding booths-section" id="expo-booths" style={{ background: '#0B132B' }}>
           <div className="container">
             <div className="section-header">
@@ -1954,12 +1864,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
-      )}
+        );
 
-      {/* ═══════════════════════════════════════════════
-          PRICING
-      ═══════════════════════════════════════════════ */}
-      {isVisible('packages') && (
+      case 'packages':
+        // PACKAGES
+        if (!isVisible('packages')) return null;
+        return (
         <section className="section-padding pricing-section" id="pricing">
           <div className="container">
             <div className="section-header">
@@ -2067,12 +1977,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
-      )}
+        );
 
-      {/* ═══════════════════════════════════════════════
-          STEPS + GUARANTEE
-      ═══════════════════════════════════════════════ */}
-      {isVisible('guarantee') && (
+      case 'guarantee':
+        // GUARANTEE
+        if (!isVisible('guarantee')) return null;
+        return (
         <section className="section-padding steps-section" id="steps">
           <div className="container">
             <div className="section-header">
@@ -2101,12 +2011,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
-      )}
+        );
 
-      {/* ═══════════════════════════════════════════════
-          REGISTRATION — Live VIP Pass + Form
-      ═══════════════════════════════════════════════ */}
-      {isVisible('form') && (
+      case 'form':
+        // FORM
+        if (!isVisible('form')) return null;
+        return (
         <section className="section-padding registration-section" id="register">
           <div className="container">
             <div className="section-header">
@@ -2259,12 +2169,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
-      )}
+        );
 
-      {/* ═══════════════════════════════════════════════
-          FAQ
-      ═══════════════════════════════════════════════ */}
-      {isVisible('faqs') && (
+      case 'faqs':
+        // FAQS
+        if (!isVisible('faqs')) return null;
+        return (
         <section className="section-padding faq-section" id="faq">
           <div className="container faq-container">
             <div className="section-header">
@@ -2285,7 +2195,148 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             </div>
           </div>
         </section>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <PagePasswordGate page={page}>
+      <div className={`smart-city-landing${lang === 'kh' ? ' lang-kh' : ''}`}>
+        {/* ── Tracking Engine (Internal Analytics & External Pixels) ── */}
+        <LandingPageTracking page={page} lang={lang} />
+
+      {/* ═══════════════════════════════════════════════
+          STICKY URGENCY BAR
+      ═══════════════════════════════════════════════ */}
+      {isVisible('urgency') && (
+        <div className="urgency-bar">
+          <div className="container urgency-inner">
+            <span className="urgency-fire">🔥</span>
+            <span className="urgency-msg">{c.earlyBirdNotice}</span>
+            <span className="urgency-countdown" aria-hidden="true">
+              <b>{countdown.d}</b>d&nbsp;<b>{countdown.h}</b>h&nbsp;<b>{countdown.m}</b>m&nbsp;<b>{countdown.s}</b>s
+            </span>
+            <a href="#register" className="urgency-cta">Claim ${effEarlyBirdPrice} →</a>
+          </div>
+        </div>
       )}
+
+      {/* ═══════════════════════════════════════════════
+          HEADER
+      ═══════════════════════════════════════════════ */}
+      <header className="site-header">
+        <div className="container navbar">
+          <a href="#" className="brand-logo">
+            <img src="/images/khb-logo.png" alt="KHB EVENTS" className="logo-img" width={163} height={40} />
+          </a>
+          <ul className="nav-links">
+            {isVisible('problems') && <li><a href="#problem" className="nav-link">{c.navWhy}</a></li>}
+            {isVisible('valueStack') && <li><a href="#value" className="nav-link">{c.navPackage}</a></li>}
+            {isVisible('speakers') && <li><a href="#speakers" className="nav-link">{lang === 'kh' ? 'វាគ្មិន' : 'Speakers'}</a></li>}
+            {isVisible('artists') && <li><a href="#artists" className="nav-link">{lang === 'kh' ? 'សិល្បករ' : 'Artists'}</a></li>}
+            {isVisible('itinerary') && <li><a href="#itinerary" className="nav-link">{c.navItinerary}</a></li>}
+            {isVisible('gallery') && <li><a href="#gallery" className="nav-link">{lang === 'kh' ? 'កម្រងរូបភាព' : 'Gallery'}</a></li>}
+            {isVisible('urgency') && <li><a href="#seats" className="nav-link">{c.navSeats}</a></li>}
+            {isVisible('expoBooths') && <li><a href="#expo-booths" className="nav-link">{lang === 'kh' ? 'ស្តង់ពិព័រណ៍' : 'Booths'}</a></li>}
+            {isVisible('packages') && <li><a href="#pricing" className="nav-link">{c.navPricing}</a></li>}
+            {isVisible('faqs') && <li><a href="#faq" className="nav-link">{c.navFaq}</a></li>}
+          </ul>
+          <div className="nav-actions">
+            <div className="lang-switcher">
+              <button 
+                type="button"
+                className={`lang-btn${lang === 'en' ? ' active' : ''}`} 
+                onClick={() => switchLang('en')} 
+                title="English"
+              >
+                <span className="lang-flag" aria-hidden="true">
+                  <FlagIcon country="en" width={18} height={12} />
+                </span>
+                <span>EN</span>
+              </button>
+              <button 
+                type="button"
+                className={`lang-btn${lang === 'kh' ? ' active' : ''}`} 
+                onClick={() => switchLang('kh')} 
+                title="ភាសាខ្មែរ"
+              >
+                <span className="lang-flag" aria-hidden="true">
+                  <FlagIcon country="kh" width={18} height={12} />
+                </span>
+                <span>ខ្មែរ</span>
+              </button>
+            </div>
+            {(isVisible('form') || isVisible('packages')) && (
+              <a href="#register" className="btn-nav-cta">{c.navCta}</a>
+            )}
+            <button className="mobile-nav-toggle" onClick={() => setDrawerOpen(true)} aria-label="Toggle navigation">☰</button>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Drawer */}
+      <div className={`mobile-drawer-backdrop${drawerOpen ? ' active' : ''}`} onClick={() => setDrawerOpen(false)} />
+      <aside className={`mobile-nav-drawer${drawerOpen ? ' active' : ''}`} aria-label="Mobile Navigation">
+        <div className="mobile-drawer-header">
+          <div className="brand-logo">
+            <img src="/images/khb-logo.png" alt="KHB EVENTS" className="logo-img" width={163} height={40} />
+          </div>
+          <div className="lang-switcher" style={{ margin: '0 8px' }}>
+            <button 
+              type="button"
+              className={`lang-btn${lang === 'en' ? ' active' : ''}`} 
+              onClick={() => { switchLang('en'); setDrawerOpen(false); }} 
+              title="English"
+            >
+              <span className="lang-flag" aria-hidden="true">
+                <FlagIcon country="en" width={18} height={12} />
+              </span>
+              <span>EN</span>
+            </button>
+            <button 
+              type="button"
+              className={`lang-btn${lang === 'kh' ? ' active' : ''}`} 
+              onClick={() => { switchLang('kh'); setDrawerOpen(false); }} 
+              title="ភាសាខ្មែរ"
+            >
+              <span className="lang-flag" aria-hidden="true">
+                <FlagIcon country="kh" width={18} height={12} />
+              </span>
+              <span>ខ្មែរ</span>
+            </button>
+          </div>
+          <button className="btn-close-drawer" onClick={() => setDrawerOpen(false)} aria-label="Close navigation">✕</button>
+        </div>
+        <ul className="mobile-drawer-links">
+          {isVisible('problems') && <li><a href="#problem" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navWhy}</a></li>}
+          {isVisible('valueStack') && <li><a href="#value" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navPackage}</a></li>}
+          {isVisible('speakers') && <li><a href="#speakers" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'វាគ្មិនកិត្តិយស' : 'Speakers'}</a></li>}
+          {isVisible('artists') && <li><a href="#artists" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'សិល្បករ' : 'Artists'}</a></li>}
+          {isVisible('itinerary') && <li><a href="#itinerary" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navItinerary}</a></li>}
+          {isVisible('gallery') && <li><a href="#gallery" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'កម្រងរូបភាព' : 'Gallery'}</a></li>}
+          {isVisible('urgency') && <li><a href="#seats" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navSeats}</a></li>}
+          {isVisible('expoBooths') && <li><a href="#expo-booths" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'ស្តង់ពិព័រណ៍' : 'Booths'}</a></li>}
+          {isVisible('packages') && <li><a href="#pricing" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navPricing}</a></li>}
+          {isVisible('faqs') && <li><a href="#faq" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navFaq}</a></li>}
+          <li><a href="/smart-city-tea-cafe/optin" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>⚡ Fast 30s Opt-in</a></li>
+          {(isVisible('form') || isVisible('packages')) && <li><a href="#register" className="mobile-drawer-link highlight" onClick={() => setDrawerOpen(false)}>{c.navCtaMobile}</a></li>}
+        </ul>
+        <div className="mobile-drawer-footer">
+          <a href={tgUrl} target="_blank" rel="noreferrer" className="btn-drawer-tg">
+            {TG_ICON(18)}<span>Telegram VIP Concierge</span>
+          </a>
+        </div>
+      </aside>
+
+
+      {/* ── Dynamic Page Flow Dispatcher ── */}
+      {effectiveSectionOrder.map((sectionKey: string) => {
+        const content = renderSection(sectionKey);
+        if (!content) return null;
+        return <React.Fragment key={sectionKey}>{content}</React.Fragment>;
+      })}
 
       {/* ═══════════════════════════════════════════════
           FINAL CTA
@@ -2413,3 +2464,4 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
     </PagePasswordGate>
   );
 }
+

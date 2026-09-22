@@ -54,8 +54,15 @@ import {
   PageTemplateType,
   ExpoBoothTier,
   ArtistItem,
-  SpeakerItem
+  SpeakerItem,
+  DEFAULT_SECTION_ORDER,
+  B2B_DELEGATION_ORDER,
+  TRADE_EXPO_ORDER,
+  CORPORATE_SUMMIT_ORDER,
+  CONCERT_FESTIVAL_ORDER,
+  MINIMAL_LEAD_ORDER
 } from '@/lib/types';
+import DragDropSectionBuilder from './DragDropSectionBuilder';
 
 interface PageEditorProps {
   initialData?: Partial<LandingPage>;
@@ -309,6 +316,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
       guarantee: true,
       form: true
     },
+    sectionOrder: initialData?.sectionOrder || DEFAULT_SECTION_ORDER,
     expoBooths: initialData?.expoBooths || [],
     artists: initialData?.artists || [],
     speakers: initialData?.speakers || [],
@@ -401,6 +409,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
   
   type TabType = 
     | 'general' 
+    | 'layout'
     | 'hero' 
     | 'event' 
     | 'packages' 
@@ -498,26 +507,32 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
       if (!updated.expoBooths || updated.expoBooths.length === 0) {
         updated.expoBooths = DEFAULT_EXPO_BOOTHS;
       }
+      updated.sectionOrder = TRADE_EXPO_ORDER;
       updated.sectionVisibility = {
         ...(updated.sectionVisibility || {}),
-        expoBooths: true
+        expoBooths: true,
+        speakers: true,
       };
     } else if (tmpl.id === 'concert-festival') {
       if (!updated.artists || updated.artists.length === 0) {
         updated.artists = DEFAULT_FESTIVAL_ARTISTS;
       }
+      updated.sectionOrder = CONCERT_FESTIVAL_ORDER;
       updated.sectionVisibility = {
         ...(updated.sectionVisibility || {}),
-        artists: true
+        artists: true,
       };
     } else if (tmpl.id === 'corporate-summit') {
       if (!updated.speakers || updated.speakers.length === 0) {
         updated.speakers = DEFAULT_SUMMIT_SPEAKERS;
       }
+      updated.sectionOrder = CORPORATE_SUMMIT_ORDER;
       updated.sectionVisibility = {
         ...(updated.sectionVisibility || {}),
-        speakers: true
+        speakers: true,
       };
+    } else if (tmpl.id === 'b2b-delegation') {
+      updated.sectionOrder = B2B_DELEGATION_ORDER;
     }
 
     setFormData(updated);
@@ -1061,6 +1076,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
   const baseTabs: { id: TabType; label: string; count?: number; highlight?: boolean }[] = [
     { id: 'general', label: 'General & Template' },
+    { id: 'layout', label: '🧩 Page Layout & Sections', count: formData.sectionOrder?.length, highlight: true },
     { id: 'hero', label: 'Hero Section' },
     { id: 'event', label: 'Date & Venue' }
   ];
@@ -1451,50 +1467,45 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {[
-                  { key: 'hero', label: 'Hero Banner' },
-                  { key: 'urgency', label: 'Urgency & Quota Bar' },
-                  { key: 'coreValues', label: 'Core Values' },
-                  { key: 'highlights', label: '⭐ Key Highlights / Stats' },
-                  { key: 'problems', label: 'Problem vs Solution' },
-                  { key: 'audiences', label: 'Target Audience' },
-                  { key: 'matchmaker', label: '🎯 ROI Matchmaker' },
-                  { key: 'itinerary', label: 'Itinerary / Timetable' },
-                  { key: 'valueStack', label: 'Value Stack (9-in-1)' },
-                  { key: 'expoBooths', label: '🎪 Exhibition Booths' },
-                  { key: 'artists', label: '🎵 Artist Lineup' },
-                  { key: 'speakers', label: '🎤 Keynote Speakers' },
-                  { key: 'packages', label: 'Pricing Passes' },
-                  { key: 'gallery', label: 'Photo Gallery' },
-                  { key: 'testimonials', label: 'Testimonials' },
-                  { key: 'faqs', label: 'FAQs' },
-                  { key: 'guarantee', label: 'Risk-Free Guarantee' },
-                  { key: 'form', label: 'Lead Capture Form' }
-                ].map((s) => {
-                  const isVisible = formData.sectionVisibility?.[s.key as keyof SectionVisibility] !== false;
-                  return (
-                    <button
-                      key={s.key}
-                      type="button"
-                      onClick={() => toggleSection(s.key as keyof SectionVisibility)}
-                      className={`p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-                        isVisible
-                          ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200'
-                          : 'bg-slate-50 dark:bg-[#060D0A] border-slate-200 dark:border-emerald-950 text-slate-400 dark:text-gray-500 opacity-60'
-                      }`}
-                    >
-                      <span className="text-xs font-bold">{s.label}</span>
-                      {isVisible ? (
-                        <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      ) : (
-                        <EyeOff className="w-4 h-4 text-slate-400 shrink-0" />
-                      )}
-                    </button>
-                  );
-                })}
+              <div className="pt-2">
+                <DragDropSectionBuilder
+                  sectionOrder={formData.sectionOrder || DEFAULT_SECTION_ORDER}
+                  sectionVisibility={formData.sectionVisibility || {}}
+                  onChangeOrder={(newOrder) => setFormData({ ...formData, sectionOrder: newOrder })}
+                  onChangeVisibility={(newVis) => setFormData({ ...formData, sectionVisibility: newVis })}
+                  onJumpToTab={(tabId) => setActiveTab(tabId as TabType)}
+                  currentTemplate={formData.template}
+                />
               </div>
             </div>
+          </div>
+        )}
+
+        {/* 1B. PAGE LAYOUT & SECTIONS (DRAG & DROP CANVAS) */}
+        {activeTab === 'layout' && (
+          <div className="space-y-6">
+            <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 rounded-2xl p-5 flex items-start gap-3 shadow-xs">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <Layers className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-emerald-950 dark:text-emerald-100">
+                  Interactive Drag-and-Drop Page Layout Builder
+                </h3>
+                <p className="text-xs text-emerald-800/80 dark:text-emerald-300/80 mt-0.5 leading-relaxed">
+                  Design the exact visitor journey for this landing page. Drag any section by its handle to position it higher or lower, add missing components from the library, or apply 1-click recommended flows.
+                </p>
+              </div>
+            </div>
+
+            <DragDropSectionBuilder
+              sectionOrder={formData.sectionOrder || DEFAULT_SECTION_ORDER}
+              sectionVisibility={formData.sectionVisibility || {}}
+              onChangeOrder={(newOrder) => setFormData({ ...formData, sectionOrder: newOrder })}
+              onChangeVisibility={(newVis) => setFormData({ ...formData, sectionVisibility: newVis })}
+              onJumpToTab={(tabId) => setActiveTab(tabId as TabType)}
+              currentTemplate={formData.template}
+            />
           </div>
         )}
 
