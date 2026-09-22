@@ -672,6 +672,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
     return (page.sectionVisibility as any)[key] !== false;
   };
 
+  // Check if at least one core section is enabled
+  const isAnySectionVisible = [
+    'hero', 'urgency', 'coreValues', 'problems', 'audiences', 'valueStack',
+    'itinerary', 'gallery', 'testimonials', 'packages', 'guarantee', 'form', 'faqs'
+  ].some(k => isVisible(k));
+
   // Date formatter for display
   const formatDeadlineText = (isoStr?: string) => {
     if (!isoStr) return 'Sept 8, 2026';
@@ -957,12 +963,12 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             <img src="/images/khb-logo.png" alt="KHB EVENTS" className="logo-img" width={163} height={40} />
           </a>
           <ul className="nav-links">
-            <li><a href="#problem" className="nav-link">{c.navWhy}</a></li>
-            <li><a href="#value" className="nav-link">{c.navPackage}</a></li>
-            <li><a href="#itinerary" className="nav-link">{c.navItinerary}</a></li>
-            <li><a href="#seats" className="nav-link">{c.navSeats}</a></li>
-            <li><a href="#pricing" className="nav-link">{c.navPricing}</a></li>
-            <li><a href="#faq" className="nav-link">{c.navFaq}</a></li>
+            {isVisible('problems') && <li><a href="#problem" className="nav-link">{c.navWhy}</a></li>}
+            {isVisible('valueStack') && <li><a href="#value" className="nav-link">{c.navPackage}</a></li>}
+            {isVisible('itinerary') && <li><a href="#itinerary" className="nav-link">{c.navItinerary}</a></li>}
+            {isVisible('urgency') && <li><a href="#seats" className="nav-link">{c.navSeats}</a></li>}
+            {isVisible('packages') && <li><a href="#pricing" className="nav-link">{c.navPricing}</a></li>}
+            {isVisible('faqs') && <li><a href="#faq" className="nav-link">{c.navFaq}</a></li>}
           </ul>
           <div className="nav-actions">
             <a href="/smart-city-tea-cafe/app" className="btn-app-chip" title="Switch to Mobile App View" style={{ fontSize: '0.8rem', padding: '6px 12px', border: '1px solid var(--border-subtle)', borderRadius: '999px', textDecoration: 'none', color: 'inherit', display: 'inline-flex', alignItems: 'center', gap: '5px', fontWeight: 600 }}>
@@ -992,7 +998,9 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                 <span>ខ្មែរ</span>
               </button>
             </div>
-            <a href="#register" className="btn-nav-cta">{c.navCta}</a>
+            {(isVisible('form') || isVisible('packages')) && (
+              <a href="#register" className="btn-nav-cta">{c.navCta}</a>
+            )}
             <button className="mobile-nav-toggle" onClick={() => setDrawerOpen(true)} aria-label="Toggle navigation">☰</button>
           </div>
         </div>
@@ -1032,15 +1040,15 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
           <button className="btn-close-drawer" onClick={() => setDrawerOpen(false)} aria-label="Close navigation">✕</button>
         </div>
         <ul className="mobile-drawer-links">
-          <li><a href="#problem" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navWhy}</a></li>
-          <li><a href="#value" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navPackage}</a></li>
-          <li><a href="#itinerary" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navItinerary}</a></li>
-          <li><a href="#seats" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navSeats}</a></li>
-          <li><a href="#pricing" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navPricing}</a></li>
-          <li><a href="#faq" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navFaq}</a></li>
+          {isVisible('problems') && <li><a href="#problem" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navWhy}</a></li>}
+          {isVisible('valueStack') && <li><a href="#value" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navPackage}</a></li>}
+          {isVisible('itinerary') && <li><a href="#itinerary" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navItinerary}</a></li>}
+          {isVisible('urgency') && <li><a href="#seats" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navSeats}</a></li>}
+          {isVisible('packages') && <li><a href="#pricing" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navPricing}</a></li>}
+          {isVisible('faqs') && <li><a href="#faq" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navFaq}</a></li>}
           <li><a href="/smart-city-tea-cafe/app" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>📱 Mobile Native App</a></li>
           <li><a href="/smart-city-tea-cafe/optin" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>⚡ Fast 30s Opt-in</a></li>
-          <li><a href="#register" className="mobile-drawer-link highlight" onClick={() => setDrawerOpen(false)}>{c.navCtaMobile}</a></li>
+          {(isVisible('form') || isVisible('packages')) && <li><a href="#register" className="mobile-drawer-link highlight" onClick={() => setDrawerOpen(false)}>{c.navCtaMobile}</a></li>}
         </ul>
         <div className="mobile-drawer-footer">
           <a href={tgUrl} target="_blank" rel="noreferrer" className="btn-drawer-tg">
@@ -1129,50 +1137,54 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
       {/* ═══════════════════════════════════════════════
           SOCIAL PROOF STRIP
       ═══════════════════════════════════════════════ */}
-      <section className="proof-strip-section">
-        <div className="container proof-strip-inner">
-          <div className="avatar-stack">
-            {['DS', 'ST', 'VK', 'MR', 'KL'].map((init, i) => (
-              <div key={i} className="avatar-chip" style={{ zIndex: 5 - i }}>{init}</div>
-            ))}
+      {isVisible('urgency') && (
+        <section className="proof-strip-section">
+          <div className="container proof-strip-inner">
+            <div className="avatar-stack">
+              {['DS', 'ST', 'VK', 'MR', 'KL'].map((init, i) => (
+                <div key={i} className="avatar-chip" style={{ zIndex: 5 - i }}>{init}</div>
+              ))}
+            </div>
+            <div className="proof-copy">
+              <strong>{localClaimed}</strong>
+              <span>{c.proofStripText}</span>
+            </div>
+            <div className="proof-tags">
+              {c.proofStripTags.map((tag, i) => (
+                <span key={i} className="proof-tag">{tag}</span>
+              ))}
+            </div>
           </div>
-          <div className="proof-copy">
-            <strong>{localClaimed}</strong>
-            <span>{c.proofStripText}</span>
-          </div>
-          <div className="proof-tags">
-            {c.proofStripTags.map((tag, i) => (
-              <span key={i} className="proof-tag">{tag}</span>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
           STATS STRIP
       ═══════════════════════════════════════════════ */}
-      {page?.highlights && page.highlights.length > 0 ? (
-        <section className="stats-section">
-          <div className="container stats-grid" style={{ gridTemplateColumns: `repeat(${Math.min(page.highlights.length, 4)}, 1fr)` }}>
-            {page.highlights.map((h, i) => (
-              <div key={h.id || i} className="stats-card">
-                <div className="stats-value" style={{ fontSize: '1.25rem' }}>{h.title}</div>
-                <div className="stats-label">{h.description}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : (
-        <section className="stats-section">
-          <div className="container stats-grid">
-            {c.statsStrip.map((s, i) => (
-              <div key={i} className="stats-card">
-                <div className="stats-value">{s.value}</div>
-                <div className="stats-label">{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </section>
+      {(isVisible('coreValues') || isVisible('highlights') || isVisible('valueStack')) && (
+        page?.highlights && page.highlights.length > 0 ? (
+          <section className="stats-section">
+            <div className="container stats-grid" style={{ gridTemplateColumns: `repeat(${Math.min(page.highlights.length, 4)}, 1fr)` }}>
+              {page.highlights.map((h, i) => (
+                <div key={h.id || i} className="stats-card">
+                  <div className="stats-value" style={{ fontSize: '1.25rem' }}>{h.title}</div>
+                  <div className="stats-label">{h.description}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : (
+          <section className="stats-section">
+            <div className="container stats-grid">
+              {c.statsStrip.map((s, i) => (
+                <div key={i} className="stats-card">
+                  <div className="stats-value">{s.value}</div>
+                  <div className="stats-label">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )
       )}
 
       {/* ═══════════════════════════════════════════════
@@ -1276,79 +1288,81 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
       {/* ═══════════════════════════════════════════════
           ROI MATCHMAKER
       ═══════════════════════════════════════════════ */}
-      <section className="section-padding matchmaker-section" id="matchmaker">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-tag">{c.matchmakerTag}</span>
-            <h2 className="section-title">{c.matchmakerTitle}</h2>
-            <p className="section-subtitle">{c.matchmakerSub}</p>
-          </div>
-          <div className="matchmaker-tabs">
-            <button className={`match-tab-btn${activeMatchProfile === 'cafe' ? ' active' : ''}`} onClick={() => setActiveMatchProfile('cafe')}>
-              <span className="tab-icon">☕</span>
-              <span className="tab-title">Cafe &amp; Tea Brand Owners</span>
-            </button>
-            <button className={`match-tab-btn${activeMatchProfile === 'tech' ? ' active' : ''}`} onClick={() => setActiveMatchProfile('tech')}>
-              <span className="tab-icon">🏙️</span>
-              <span className="tab-title">Smart City &amp; Retail Tech</span>
-            </button>
-            <button className={`match-tab-btn${activeMatchProfile === 'distributor' ? ' active' : ''}`} onClick={() => setActiveMatchProfile('distributor')}>
-              <span className="tab-icon">🏭</span>
-              <span className="tab-title">Wholesalers &amp; Distributors</span>
-            </button>
-          </div>
-          <div className="matchmaker-display-card">
-            {(() => {
-              const profile = MATCHMAKER_DATA[activeMatchProfile][lang];
-              return (
-                <>
-                  <div className="matchmaker-grid">
-                    <div className="match-col">
-                      <div className="match-col-header">
-                        <div className="match-col-icon">🏭</div>
-                        <div className="match-col-title">{c.matchSuppliersTitle}</div>
+      {(isVisible('audiences') || isVisible('valueStack')) && (
+        <section className="section-padding matchmaker-section" id="matchmaker">
+          <div className="container">
+            <div className="section-header">
+              <span className="section-tag">{c.matchmakerTag}</span>
+              <h2 className="section-title">{c.matchmakerTitle}</h2>
+              <p className="section-subtitle">{c.matchmakerSub}</p>
+            </div>
+            <div className="matchmaker-tabs">
+              <button className={`match-tab-btn${activeMatchProfile === 'cafe' ? ' active' : ''}`} onClick={() => setActiveMatchProfile('cafe')}>
+                <span className="tab-icon">☕</span>
+                <span className="tab-title">Cafe &amp; Tea Brand Owners</span>
+              </button>
+              <button className={`match-tab-btn${activeMatchProfile === 'tech' ? ' active' : ''}`} onClick={() => setActiveMatchProfile('tech')}>
+                <span className="tab-icon">🏙️</span>
+                <span className="tab-title">Smart City &amp; Retail Tech</span>
+              </button>
+              <button className={`match-tab-btn${activeMatchProfile === 'distributor' ? ' active' : ''}`} onClick={() => setActiveMatchProfile('distributor')}>
+                <span className="tab-icon">🏭</span>
+                <span className="tab-title">Wholesalers &amp; Distributors</span>
+              </button>
+            </div>
+            <div className="matchmaker-display-card">
+              {(() => {
+                const profile = MATCHMAKER_DATA[activeMatchProfile][lang];
+                return (
+                  <>
+                    <div className="matchmaker-grid">
+                      <div className="match-col">
+                        <div className="match-col-header">
+                          <div className="match-col-icon">🏭</div>
+                          <div className="match-col-title">{c.matchSuppliersTitle}</div>
+                        </div>
+                        <ul className="match-item-list">
+                          {profile.suppliers.map((item, i) => (
+                            <li key={i}><span>✓</span><div dangerouslySetInnerHTML={{ __html: item }} /></li>
+                          ))}
+                        </ul>
                       </div>
-                      <ul className="match-item-list">
-                        {profile.suppliers.map((item, i) => (
-                          <li key={i}><span>✓</span><div dangerouslySetInnerHTML={{ __html: item }} /></li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="match-col">
-                      <div className="match-col-header">
-                        <div className="match-col-icon">📈</div>
-                        <div className="match-col-title">{c.matchRoiTitle}</div>
+                      <div className="match-col">
+                        <div className="match-col-header">
+                          <div className="match-col-icon">📈</div>
+                          <div className="match-col-title">{c.matchRoiTitle}</div>
+                        </div>
+                        <ul className="match-item-list">
+                          {profile.roi.map((item, i) => (
+                            <li key={i}><span>⚡</span><div dangerouslySetInnerHTML={{ __html: item }} /></li>
+                          ))}
+                        </ul>
                       </div>
-                      <ul className="match-item-list">
-                        {profile.roi.map((item, i) => (
-                          <li key={i}><span>⚡</span><div dangerouslySetInnerHTML={{ __html: item }} /></li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="match-col">
-                      <div className="match-col-header">
-                        <div className="match-col-icon">🤝</div>
-                        <div className="match-col-title">{c.matchSessionsTitle}</div>
+                      <div className="match-col">
+                        <div className="match-col-header">
+                          <div className="match-col-icon">🤝</div>
+                          <div className="match-col-title">{c.matchSessionsTitle}</div>
+                        </div>
+                        <ul className="match-item-list">
+                          {profile.sessions.map((item, i) => (
+                            <li key={i}><span>🎯</span><div>{item}</div></li>
+                          ))}
+                        </ul>
                       </div>
-                      <ul className="match-item-list">
-                        {profile.sessions.map((item, i) => (
-                          <li key={i}><span>🎯</span><div>{item}</div></li>
-                        ))}
-                      </ul>
                     </div>
-                  </div>
-                  <div className="matchmaker-cta-bar">
-                    <div className="matchmaker-cta-text" dangerouslySetInnerHTML={{ __html: c.ctaBarText(profile.title) }} />
-                    <button className="btn-select-profile" onClick={() => chooseProfile(activeMatchProfile)}>
-                      <span>{c.matchCtaBtn}</span>
-                    </button>
-                  </div>
-                </>
-              );
-            })()}
+                    <div className="matchmaker-cta-bar">
+                      <div className="matchmaker-cta-text" dangerouslySetInnerHTML={{ __html: c.ctaBarText(profile.title) }} />
+                      <button className="btn-select-profile" onClick={() => chooseProfile(activeMatchProfile)}>
+                        <span>{c.matchCtaBtn}</span>
+                      </button>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
           ITINERARY + GALLERY
@@ -1828,37 +1842,67 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
       {/* ═══════════════════════════════════════════════
           FINAL CTA
       ═══════════════════════════════════════════════ */}
-      <section className="final-cta-section" id="final-cta">
-        <div className="container final-cta-inner">
-          <div className="final-cta-badge">🔥 {c.heroPriceAnchorNote}</div>
-          <h2 className="final-cta-title">{c.ctaTitle}</h2>
-          <p className="final-cta-sub">{c.ctaSub}</p>
-          <a href="#register" className="btn-final-cta">{c.finalCtaBtn}</a>
-          <div className="final-cta-risk">{c.heroRiskNote}</div>
-        </div>
-      </section>
+      {(isVisible('urgency') || isVisible('form') || isVisible('packages')) && (
+        <section className="final-cta-section" id="final-cta">
+          <div className="container final-cta-inner">
+            <div className="final-cta-badge">🔥 {c.heroPriceAnchorNote}</div>
+            <h2 className="final-cta-title">{c.ctaTitle}</h2>
+            <p className="final-cta-sub">{c.ctaSub}</p>
+            <a href="#register" className="btn-final-cta">{c.finalCtaBtn}</a>
+            <div className="final-cta-risk">{c.heroRiskNote}</div>
+          </div>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
           ORGANIZER TRUST
       ═══════════════════════════════════════════════ */}
-      <section className="section-padding trust-section">
-        <div className="container">
-          <div className="trust-card">
-            <div className="trust-info">
-              <h3>{c.trustTitle}</h3>
-              <p>{c.trustDesc}</p>
+      {(isVisible('guarantee') || isVisible('form') || isVisible('coreValues') || isVisible('hero')) && (
+        <section className="section-padding trust-section">
+          <div className="container">
+            <div className="trust-card">
+              <div className="trust-info">
+                <h3>{c.trustTitle}</h3>
+                <p>{c.trustDesc}</p>
+              </div>
+              <div className="trust-contacts">
+                <a href={`tel:${effPhone.replace(/\s/g, '')}`} className="trust-contact-pill">
+                  <span>📞 Hotline: {effPhone}</span>
+                </a>
+                <a href={tgUrl} target="_blank" rel="noreferrer" className="trust-contact-pill">
+                  <span>✈️ Telegram: @{effTgUsername}</span>
+                </a>
+              </div>
             </div>
-            <div className="trust-contacts">
-              <a href={`tel:${effPhone.replace(/\s/g, '')}`} className="trust-contact-pill">
-                <span>📞 Hotline: {effPhone}</span>
-              </a>
-              <a href={tgUrl} target="_blank" rel="noreferrer" className="trust-contact-pill">
-                <span>✈️ Telegram: @{effTgUsername}</span>
+          </div>
+        </section>
+      )}
+
+      {/* Empty State Banner when all sections are toggled off */}
+      {!isAnySectionVisible && (
+        <section className="section-padding" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="container" style={{ maxWidth: '600px', textAlign: 'center' }}>
+            <div style={{ padding: '40px 24px', background: 'var(--surface-subtle)', borderRadius: '24px', border: '1px solid var(--border-subtle)' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>⚙️</div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '8px' }}>
+                {lang === 'kh' ? 'ផ្នែកទាំងអស់ត្រូវបានបិទបណ្តោះអាសន្ន' : 'All Sections Currently Hidden'}
+              </h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '20px' }}>
+                {lang === 'kh'
+                  ? 'អ្នកគ្រប់គ្រងបានបិទការបង្ហាញផ្នែកទាំងអស់តាមរយៈ CMS Section Display Toggles។ សូមចូលទៅផ្ទាំងគ្រប់គ្រង Admin ដើម្បីបើកផ្នែកដែលចង់បង្ហាញឡើងវិញ។'
+                  : 'All sections for this campaign have been toggled off in the CMS Section Display Toggles. Enable desired sections in the Admin portal to display content.'}
+              </p>
+              <a
+                href="/admin/pages"
+                className="btn-nav-cta"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
+              >
+                <span>{lang === 'kh' ? 'ចូលទៅ Admin CMS' : 'Open Admin CMS'}</span>
               </a>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════
           FOOTER
@@ -1867,11 +1911,11 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
         <div className="container footer-content">
           <div>{c.footerText}</div>
           <ul className="footer-links">
-            <li><a href="#value">9-in-1 Package</a></li>
-            <li><a href="#itinerary">Itinerary</a></li>
-            <li><a href="#seats">Seat Chart</a></li>
-            <li><a href="#pricing">Pricing</a></li>
-            <li><a href="#faq">FAQ</a></li>
+            {isVisible('valueStack') && <li><a href="#value">9-in-1 Package</a></li>}
+            {isVisible('itinerary') && <li><a href="#itinerary">Itinerary</a></li>}
+            {isVisible('urgency') && <li><a href="#seats">Seat Chart</a></li>}
+            {isVisible('packages') && <li><a href="#pricing">Pricing</a></li>}
+            {isVisible('faqs') && <li><a href="#faq">FAQ</a></li>}
             <li><a href="/smart-city-tea-cafe/app">Mobile App Shell</a></li>
             <li><a href="/smart-city-tea-cafe/optin">Fast Opt-in</a></li>
             <li><a href="/admin">Organizer CMS</a></li>
@@ -1904,9 +1948,15 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
           >
             {TG_ICON(18)}<span>Telegram</span>
           </a>
-          <a href="#register" className="btn-mobile-reg">
-            <span>VIP Pass (${effEarlyBirdPrice})</span>
-          </a>
+          {(isVisible('form') || isVisible('packages')) ? (
+            <a href="#register" className="btn-mobile-reg">
+              <span>VIP Pass (${effEarlyBirdPrice})</span>
+            </a>
+          ) : (
+            <a href={tgUrl} target="_blank" rel="noreferrer" className="btn-mobile-reg">
+              <span>{lang === 'kh' ? 'ជជែក Telegram' : 'Chat on Telegram'}</span>
+            </a>
+          )}
         </div>
       </div>
       </div>
