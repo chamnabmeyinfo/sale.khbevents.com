@@ -1,399 +1,323 @@
-# KHB EVENTS — System Feature Blueprint & Architecture Guide
+# KHB EVENTS — System User Guide & Operator Blueprint
 
 > **Platform:** `sale.khbevents.com`  
-> **Repository:** `sale.khbevents.com`  
+> **Target Audience:** Event Directors, Marketing Managers, Sales Team & System Operators  
 > **Version:** 2.4.0 (Production)  
 > **Updated:** September 2026  
-> **Author:** KHB EVENTS Engineering & Product Team
 
 ---
 
-## 1. Executive Overview & Mission
+## 📌 Table of Contents
 
-The **KHB EVENTS Sales & Landing Portal** is an enterprise-grade, conversion-optimized multi-campaign landing engine and lead management CRM tailored for Cambodia's premier event management, staging, exhibition, and trade delegation agency.
-
-### Core Objectives
-1. **High-Converting Public Face (`/`):** Showcase turnkey event production (4K LED displays, line-array audio, 3D staging, corporate galas, concerts, festivals) with an interactive budget estimator.
-2. **Dynamic Campaign Engine (`/[slug]`):** Host isolated, high-converting landing pages for high-ticket B2B delegations (e.g., Vietnam, South Korea), expos, and VIP pass bookings.
-3. **Automated Lead Routing:** Distribute inbound prospects through an intelligent Round-Robin engine with weighted quotas, floating Telegram direct redirection, and instant sales staff notifications.
-4. **Resilient Dual-Tier Persistence:** Serverless-first architecture combining **Supabase PostgreSQL (Cloud)** with a **Bundled Self-Healing Fallback (`data/db.json`)** to eliminate runtime cold-start and missing-record failures.
-5. **Integrated Operator CRM (`/admin`):** End-to-end pipeline management from `NEW` to `WON`/`LOST`, complete with 1-click WhatsApp/Telegram dialers, internal notes, visitor geolocation, and export capabilities.
-
----
-
-## 2. High-Level System Architecture
-
-```mermaid
-flowchart TB
-    subgraph Traffic["Inbound Visitors & Buyers"]
-        V1["Desktop / Mobile Browser"]
-        V2["Paid Ad (FB / TikTok / Google)"]
-        V3["Direct Link / QR Code"]
-    end
-
-    subgraph Edge["Edge Layer (Vercel)"]
-        Headers["Visitor Geo Detection\n(Country, City, Region, IP)"]
-        Router["Next.js App Router\n(Turbopack)"]
-    end
-
-    subgraph Pages["Frontend Routes"]
-        Home["/ (Home Sales Portal)"]
-        Camp["/[slug] (Dynamic Campaign)"]
-        CampApp["/[slug]/app (Mobile App View)"]
-        CampOpt["/[slug]/optin (Minimal Opt-in)"]
-        Admin["/admin (Protected CRM & CMS)"]
-    end
-
-    subgraph Routing["Lead & Round-Robin Engine"]
-        RR["Round-Robin Allocator\n(Weighted Staff Rotation)"]
-        FloatingBtn["Floating Telegram Button\n(Direct Sales Rep Routing)"]
-        LeadForm["Lead Booking Form\n(/api/leads)"]
-    end
-
-    subgraph Notifications["Telegram Alert Pipeline"]
-        Bot["@khb_sale_admin_bot"]
-        StaffDirect["Assigned Sales Rep\n(Private Telegram Chat)"]
-        MgrDirect["Event Director / Manager\n(Chat ID: 5746705393)"]
-    end
-
-    subgraph Storage["Dual-Tier Persistence Layer"]
-        Supabase["Cloud: Supabase PostgreSQL\n(landing_pages, leads, settings)"]
-        Bundled["Bundled Fallback: data/db.json\n(Self-Healing Auto-Sync)"]
-    end
-
-    Traffic --> Headers --> Router
-    Router --> Home
-    Router --> Camp
-    Router --> CampApp
-    Router --> CampOpt
-    Router --> Admin
-
-    Camp --> FloatingBtn
-    Camp --> LeadForm
-    FloatingBtn --> RR
-    LeadForm --> RR
-
-    RR --> Bot
-    Bot --> StaffDirect
-    Bot --> MgrDirect
-
-    Router <--> Storage
-    Storage <--> Supabase
-    Storage <--> Bundled
-```
+1. [Quick Start: Logging In & Navigation](#1-quick-start-logging-in--navigation)
+2. [How to Create & Launch a New Landing Page](#2-how-to-create--launch-a-new-landing-page)
+3. [How to Manage Inbound Leads in the CRM](#3-how-to-manage-inbound-leads-in-the-crm)
+4. [How to Manage the Round-Robin Sales Team](#4-how-to-manage-the-round-robin-sales-team)
+5. [How to Configure Telegram Alerts & System Settings](#5-how-to-configure-telegram-alerts--system-settings)
+6. [Frontend Experience Guide for Visitors](#6-frontend-experience-guide-for-visitors)
+7. [Operator "How Do I..." Cheat Sheet & Troubleshooting](#7-operator-how-do-i-cheat-sheet--troubleshooting)
 
 ---
 
-## 3. Core Subsystems & Feature Breakdown
+## 1. Quick Start: Logging In & Navigation
 
-### 3.1. Landing Page Engine & Template System (`/[slug]`)
+### 1.1. Accessing the Admin Portal
+- **Login URL:** [`https://sale.khbevents.com/admin/login`](https://sale.khbevents.com/admin/login) (or `/admin`)
+- **Default Email:** `admin@khbevents.com`
+- **Default Password:** `khbevents2026`  
+  *(Can be updated anytime in Settings $\rightarrow$ Security)*
 
-Every campaign lives under a dedicated slug (e.g., `/smart-city-tea-cafe`, `/korea-b2b-trip-2026`).
+### 1.2. Main Navigation Overview
+Once logged in, use the left sidebar to navigate:
 
-- **Dynamic Template Renderer:** Rendered via `DynamicLandingPageView.tsx`.
-- **Alternate Views:**
-  - `/[slug]?view=app` or `/[slug]/app`: App-like interface with sticky navigation bars for embedded webviews.
-  - `/[slug]?view=optin` or `/[slug]/optin`: Ultra-fast minimal lead capture page for paid ad traffic.
-- **Bilingual Support (Khmer & English):**
-  - Full toggle between English (`Plus Jakarta Sans`) and Khmer (`Hanuman`, `Kantumruy Pro`).
-  - Supports `?lang=kh` or `?lang=en` URL parameters.
-  - Khmer text includes customized line-height (`1.8`) for clean typography.
-
----
-
-### 3.2. Standard 15-Section Dynamic Hierarchy
-
-`DynamicLandingPageView` natively parses and renders any combination of the following sections based on the landing page data:
-
-| # | Section | Purpose | Data Source |
-|---|---|---|---|
-| 1 | **Hero Section** | High-impact headline, badge, CTA, and official dates/venue | `heroHeadline`, `heroSubheadline`, `heroImage`, `badge` |
-| 2 | **Urgency & Scarcity Strip** | Live countdown timer & seats remaining counter (e.g. 11/30 left) | `countdownEnabled`, `urgency` |
-| 3 | **Core Values First** | 3 foundational value pillars delivering immediate clarity | `coreValues[]` |
-| 4 | **3-Column Problems & Solutions** | Pain points of solo travel vs. KHB B2B group solutions | `problems[]` |
-| 5 | **Target Audience** | Breakdown of who should attend (wholesalers, owners, directors) | `audiences[]` |
-| 6 | **Interactive Multi-Day Itinerary** | Day-by-day expandable schedule with timeline nodes | `itinerary[]` |
-| 7 | **Value Stack** | Complete checklist of all inclusions with individual dollar values | `valueStack` |
-| 8 | **Highlights Grid** | Core features (1-on-1 meetings, factory visits, VIP passes) | `highlights[]` |
-| 9 | **Pricing Packages & Passes** | Tier cards (Early Bird, Standard, VIP Suite, Corporate) | `packages[]` |
-| 10 | **Photo & Video Gallery** | Grid of high-res past event and delegation imagery | `gallery[]`, `videoUrl` |
-| 11 | **Testimonials & Social Proof** | Verified quotes from business leaders and Oknha | `testimonials[]` |
-| 12 | **100% Risk-Free Guarantee** | Trust badge and reassurance commitments | `guarantee` |
-| 13 | **Lead Booking Form** | Direct inquiry form with pre-filled package interest | `formConfig` |
-| 14 | **FAQ Accordion** | Frequently asked questions with smooth expand/collapse | `faqs[]` |
-| 15 | **Floating Concierge** | Floating WhatsApp / Telegram button connected to Round-Robin | `isolatedSettings`, `settings` |
+| Section | Route | What You Do Here |
+|---|---|---|
+| **Dashboard** | `/admin` | Overview KPIs: Total leads, active campaigns, page views, and conversion rates. |
+| **Landing Pages** | `/admin/pages` | View, create, duplicate, edit, preview, and archive campaign landing pages. |
+| **Leads CRM** | `/admin/leads` | Process incoming inquiries, update pipeline stages, 1-click WhatsApp chat, add team notes, export to CSV. |
+| **Round Robin Sales** | `/admin/round-robin` | Add/remove sales reps, set rotation weights, turn staff ON/OFF when on leave, view allocation logs. |
+| **Settings** | `/admin/settings` | Company hotline, WhatsApp, Telegram bot tokens, manager notification Chat ID, admin password. |
 
 ---
 
-### 3.3. Isolated Campaign Settings (`isolatedSettings`)
+## 2. How to Create & Launch a New Landing Page
 
-Each landing page can override global system settings to remain completely self-contained:
+You can create unlimited landing pages for business delegations, trade expos, concerts, or summits.
 
-```typescript
-isolatedSettings: {
-  phone: "+855 12 888 999",
-  whatsapp: "+85512888999",
-  whatsappNumber: "85512888999",
-  telegramUsername: "khb_sale_admin_bot",
-  coordinatorName: "Chamnab Mey",
-  coordinatorRole: "Senior Trade Mission Director",
-  partnerName: "Korea Trade Alliance & Seoul Exhibition Bureau",
-  customCtaText: "កក់កៅអី VIP ទៅកូរ៉េ ($750)",
-  customThankYouMessage: "សូមអរគុណ! ការកក់កៅអីត្រូវបានទទួលជោគជ័យ...",
-  postSubmitAction: "inline", // "inline" | "redirect"
-  leadTags: ["b2b-korea", "camping-outdoor", "eyewear-optics", "office-gifts"],
-  enableTelegramAlerts: true,
-  accessProtection: "public", // "public" | "password"
-  accentColor: "#2563EB"
-}
-```
+### Step 1: Open the Page Creator
+1. Click **Landing Pages** in the left sidebar.
+2. Click the **"+ New Page"** button in the top-right corner (or duplicate an existing page to save time).
 
----
+### Step 2: Choose a Campaign Template
+Select from 5 industry-specific presets:
+- **B2B Trade Delegation (Default):** Built for business missions (like Vietnam or Korea). Includes multi-day itinerary, value stack, 1-on-1 business matching, and pass tiers.
+- **Trade Expo & Exhibition:** Includes interactive booth tiers (Shell Scheme, Corner, Island Pavilion), floor specs, and exhibitor registration.
+- **Concert & Music Festival:** Includes artist/DJ lineups, set times, VIP pit passes, and festival gallery.
+- **Corporate Summit & Conference:** Includes keynote speakers, panel tracks, and corporate tables.
+- **Custom Campaign:** Blank canvas with toggleable sections.
 
-### 3.4. Dual-Tier Persistence & Self-Healing Sync
+### Step 3: Fill in Core Information (`General` Tab)
+- **Campaign Title:** Display name (e.g. `Korea B2B Business Delegation 2026 (Seoul)`).
+- **URL Slug:** The web address (e.g. `korea-b2b-trip-2026` becomes `sale.khbevents.com/korea-b2b-trip-2026`).
+- **Category:** e.g., `Trade Delegation`, `Expo`, `Concert`.
+- **Badge:** Top pill label (e.g., `VIP Korea • Limited to 30 Seats`).
+- **Status:** 
+  - `Published`: Live and visible to the public and in the homepage campaign showcase.
+  - `Draft`: Hidden from the homepage while editing.
+  - `Archived`: Deactivated and returns a 404.
 
-```mermaid
-flowchart LR
-    Request["Incoming Request\n(getPages / getPageBySlug)"]
-    CheckSupabase{"Is Supabase\nConfigured?"}
-    FetchRemote["Fetch from Supabase PostgreSQL"]
-    Compare{"Are Local/Bundled\nPages Missing?"}
-    AutoSync["Auto-Upsert Missing Pages\nto Supabase (supabaseSavePage)"]
-    ReturnMerged["Return Complete Page Set"]
-    Fallback["Return Local/Bundled db.json"]
+### Step 4: Configure Hero Banner & Dates (`Hero` & `Event` Tabs)
+- **Hero Headline:** Catchy main headline in English or Khmer.
+- **Hero Subheadline:** 2–3 sentences highlighting the return-on-investment and benefits.
+- **CTA Button Text:** e.g., `Secure Your Pass ($750)` or `Reserve Seat Now`.
+- **CTA Link:** Keep `#booking-form` so clicking scrolls smoothly to the lead form.
+- **Hero Image:** Select from pre-loaded event photos or paste an image URL.
+- **Event Dates & Duration:** e.g., `2026-11-25` and `4 Days / 3 Nights`.
+- **Venue & Address:** Hotel or convention center name (e.g., `COEX & KINTEX, Seoul, South Korea`).
 
-    Request --> CheckSupabase
-    CheckSupabase -- Yes --> FetchRemote --> Compare
-    Compare -- Yes --> AutoSync --> ReturnMerged
-    Compare -- No --> ReturnMerged
-    CheckSupabase -- No --> Fallback
-```
+### Step 5: Set Up Urgency & Countdown Timer
+1. Check **Enable Countdown Timer**.
+2. **Total Seats vs. Claimed Seats:** e.g., Total `30`, Claimed `19` $\rightarrow$ system displays *"Only 11 seats remaining!"*.
+3. **Early Bird Price:** e.g., `$750` (displayed with a highlighted badge).
+4. **Regular Price:** e.g., `$799` (displayed as a struck-through comparison).
+5. **Early Bird Deadline:** Date & time when the Early Bird discount expires.
 
-#### Why This Is Critical
-1. **Serverless Bundling:** `bundledDbJson` is imported directly in `src/lib/storage.ts`, ensuring Turbopack/Webpack embeds all pages into the JavaScript bundle. Filesystem read errors (`ENOENT`) on Vercel are impossible.
-2. **Self-Healing Cloud Seeding:** When a developer or agent adds a new page to `data/db.json`, the first visitor or admin call to `getPages()` or `getPageBySlug()` automatically detects that the slug is missing in Supabase, calls `supabaseSavePage(localPage)`, and synchronizes it permanently to Supabase cloud.
-3. **No Migration Bottleneck:** Non-standard fields (`urgency`, `itinerary`, `coreValues`, `valueStack`, `translations`, `isolatedSettings`) are automatically packaged inside `form_config._extra` when writing to Supabase, and unpacked on retrieval. No manual SQL `ALTER TABLE` is required.
+### Step 6: Pricing Packages & Passes (`Packages` Tab)
+Add 1 to 4 pass tiers (e.g., *Executive Delegate Pass*, *VIP Chairman Pass*, *Corporate Delegation*):
+- **Pass Name & Price:** e.g., `Early Bird Pass` $\rightarrow$ `$750`.
+- **Period / Unit:** e.g., `per delegate`.
+- **Highlight Features:** Bullet points of inclusions (Return flights, 4-star hotel, expo pass, translator).
+- **Popular Badge:** Toggle "Most Popular" to highlight the tier in gold.
 
----
+### Step 7: Multi-Day Interactive Itinerary (`Itinerary` Tab)
+Add daily schedules for delegates:
+- **Day Number & Date:** e.g. Day 1 (Nov 25, 2026).
+- **Day Title:** e.g. `Arrival & VIP Welcome Dinner in Seoul`.
+- **Schedule Items:** Add time and activity (e.g. `09:30 - Departure from Phnom Penh`, `17:00 - Hotel Check-in`, `19:00 - Gala Dinner`).
 
-### 3.5. Round-Robin Sales Allocation & Routing Engine
+### Step 8: Value Stack & Inclusions (`Value Stack` Tab)
+List all items included with individual dollar values to show massive savings:
+- E.g. *Round-Trip Flight ($450 value)*, *4-Star Hotel 3 Nights ($300 value)*, *3 Expo VIP Passes ($150 value)*, *Korean-Khmer Translator ($200 value)*.
+- System automatically shows: **Total Value $1,100+ $\rightarrow$ You Pay Only $750**.
 
-Located in `src/lib/round-robin.ts`.
+### Step 9: FAQs, Guarantee & Testimonials
+- **FAQs:** Common traveler questions (visas, meals, airport transfers).
+- **Guarantee:** 100% Risk-Free commitment (e.g. *No payment today until team consultation*).
+- **Testimonials:** Real quotes from previous attendees or Oknha with 5-star ratings.
 
-- **Equal or Weighted Distribution:** Each active sales rep is allocated a percentage weight (e.g. 5 reps @ 20% each).
-- **Sequential Pointer (`currentIndex`):** Maintains rotation index across requests.
-- **Floating Contact Routing (`/api/round-robin/route`):**
-  - When a visitor clicks the floating Telegram icon on a campaign page, the endpoint assigns the next sales rep, logs the lead click, fires a real-time Telegram notification, and immediately redirects the user to `https://t.me/<assigned_staff_username>`.
-- **API Endpoints:**
-  - `GET /api/round-robin`: Current settings and roster.
-  - `POST /api/round-robin/route?page=<slug>&redirect=true`: Allocation and direct redirect.
-  - `POST /api/round-robin/test`: Test dispatch to staff Telegram chats.
-  - `POST /api/round-robin/simulate`: Preview simulated distribution of 100 leads.
-  - `GET /api/round-robin/logs`: Audit log of all lead allocations.
+### Step 10: Khmer Language Version (`Khmer Translation` Tab)
+Click the **Khmer Tab (ខ្មែរ)** in the editor to provide native Khmer translations:
+- Khmer Headline, Subheadline, Itinerary, and Value Stack.
+- When visitors toggle language or visit `?lang=kh`, the page renders with optimized Khmer typography (`Hanuman` / `Kantumruy Pro`).
 
----
+### Step 11: Isolated Campaign Settings (`Isolated Settings` Tab)
+*(Optional customization per campaign)*:
+- **Custom Hotline Phone & WhatsApp:** Route inquiries to a specific department.
+- **Custom Sales Coordinator:** Name and title shown on the page (e.g. *Chamnab Mey - Senior Trade Director*).
+- **Campaign Tags:** Add tags automatically attached to leads (e.g. `b2b-korea, camping-gear`).
+- **Access Password:** If private/secret, enter a PIN password required to view the page.
 
-### 3.6. Telegram Sales Bot Integration
-
-- **Official Bot:** `@khb_sale_admin_bot`
-- **Bot Token:** Configured in environment `TELEGRAM_BOT_TOKEN` or Admin Settings.
-- **Delivery Workflow:**
-  1. **Assigned Sales Rep:** Receives private Telegram alert with client name, phone, email, package interest, and 1-click WhatsApp/CRM action buttons.
-  2. **Event Director / Manager Fallback (`5746705393`):** Receives the lead summary ensuring no buyer inquiry is lost even if a sales rep is offline.
-- **Webhook Endpoint:** `/api/telegram/webhook` (configured via `/api/telegram/setup-webhook`).
-
----
-
-### 3.7. Automatic Visitor Demographics & Geolocation
-
-Located in `src/app/api/leads/route.ts` and `src/lib/storage.ts`.
-
-Inbound requests automatically inspect edge headers:
-- `x-vercel-ip-country` or `cf-ipcountry` $\rightarrow$ Visitor Country (e.g. `KH`, `VN`, `KR`, `US`).
-- `x-vercel-ip-city` $\rightarrow$ Visitor City (e.g. `Phnom Penh`, `Ho Chi Minh City`, `Seoul`).
-- `x-vercel-ip-country-region` $\rightarrow$ Visitor Region.
-- `x-forwarded-for` / `x-real-ip` $\rightarrow$ IP Address.
-
-The CRM automatically formats country flags:
-- 🇰🇭 Cambodia (`KH`)
-- 🇻🇳 Vietnam (`VN`)
-- 🇰🇷 South Korea (`KR`)
-- 🇺🇸 United States (`US`)
-- 🇨🇳 China (`CN`)
+### Step 12: Save & Publish
+Click **"Save Landing Page"** at the top right:
+- Instant live link is generated: `https://sale.khbevents.com/<slug>`.
+- The page immediately appears in the **Featured Campaigns** showcase on the homepage.
 
 ---
 
-### 3.8. Operator CRM & Admin Portal (`/admin`)
+## 3. How to Manage Inbound Leads in the CRM
 
-- **Authentication:** Protected session cookies, SHA-256 hashed credentials.
-- **Dashboard Overview (`/admin`):** KPIs for total leads, active campaigns, tracked page views, and conversion rates.
-- **Lead Pipeline CRM (`/admin/leads`):**
-  - **Status Transitions:** `NEW` $\rightarrow$ `CONTACTED` $\rightarrow$ `PROPOSAL_SENT` $\rightarrow$ `NEGOTIATING` $\rightarrow$ `WON` $\rightarrow$ `LOST`.
-  - **Direct Actions:** 1-Click WhatsApp chat with pre-filled message, phone dialer.
-  - **Notes History:** Chronological team notes per lead.
-  - **Lead Deletion:** Safely deletes from both Supabase PostgreSQL and local storage.
-  - **CSV Export:** 1-click export for Excel or Google Sheets.
-- **Landing Page CMS (`/admin/pages`):**
-  - View all active/archived pages, create new pages, duplicate, edit, or delete.
-  - Per-page analytics: conversion rate, view count, leads count.
-- **Round-Robin Manager (`/admin/round-robin`):**
-  - Add/remove sales staff, toggle active status, adjust percentage weights.
-- **System Settings (`/admin/settings`):**
-  - Contact info, company address, bot credentials, password changes.
+Navigate to [`/admin/leads`](https://sale.khbevents.com/admin/leads).
 
----
-
-## 4. Current Active Campaign Registry
-
-| Campaign Name | Slug | Sector / Target | Event Dates | Pricing | Status |
-|---|---|---|---|---|---|
-| **Vietnam Smart City, Tea & Cafe** | `smart-city-tea-cafe` | Smart City Tech, High-Tech Agriculture, Cafe Franchise | Oct 8-11, 2026 (4D3N) | Early Bird: $499<br>Standard: $550 | Published |
-| **Korea B2B Business Delegation** | `korea-b2b-trip-2026` | Camping & Outdoor (GOCAF), Eyewear (K-Optics), Premium Gifts (SIPREMIUM) | Nov 25-28, 2026 (4D3N) | Early Bird: $750<br>Standard: $799 | Published |
-
----
-
-## 5. Codebase Directory Map
+### 3.1. Understanding the Lead Pipeline
+Incoming buyer inquiries flow through 6 stages:
 
 ```text
-sale.khbevents.com/
-├── data/
-│   └── db.json                       <-- Bundled seed database (pages, leads, settings)
-├── public/
-│   ├── images/                       <-- Static graphic assets & banners
-│   └── photos/                       <-- High-res event & delegation photography
-├── scripts/
-│   ├── sync-to-supabase.mjs          <-- Manual database sync script
-│   └── verify-supabase.mjs           <-- Supabase connection & anon/service verification
-├── src/
-│   ├── app/
-│   │   ├── [slug]/                   <-- Dynamic campaign landing route
-│   │   │   ├── page.tsx              <-- Server component & metadata generator
-│   │   │   ├── app/page.tsx          <-- Mobile app webview mode
-│   │   │   └── optin/page.tsx        <-- Fast opt-in mode
-│   │   ├── admin/                    <-- Admin portal routes
-│   │   │   ├── leads/page.tsx        <-- Lead CRM pipeline & CSV export
-│   │   │   ├── pages/page.tsx        <-- Landing page CMS list
-│   │   │   ├── round-robin/page.tsx  <-- Sales distribution manager
-│   │   │   ├── settings/page.tsx     <-- System settings & bot config
-│   │   │   └── page.tsx              <-- Admin overview dashboard
-│   │   ├── api/
-│   │   │   ├── leads/                <-- Lead capture & deletion endpoints
-│   │   │   ├── pages/                <-- Landing page CRUD endpoints
-│   │   │   ├── round-robin/          <-- Round-Robin routing & test endpoints
-│   │   │   └── telegram/             <-- Telegram bot webhook endpoints
-│   │   ├── layout.tsx                <-- Root layout with fonts & providers
-│   │   └── page.tsx                  <-- Flagship home sales portal
-│   ├── components/
-│   │   ├── admin/                    <-- Admin UI components
-│   │   └── landing/                  <-- Dynamic & static landing page components
-│   │       ├── DynamicLandingPageView.tsx  <-- Primary dynamic page engine
-│   │       ├── FloatingContact.tsx         <-- Telegram/WhatsApp floating routing
-│   │       ├── LeadForm.tsx                <-- Lead capture form
-│   │       ├── CampaignsShowcase.tsx       <-- Home featured campaigns grid
-│   │       └── ...
-│   └── lib/
-│       ├── round-robin.ts            <-- Round-Robin algorithm & Telegram dispatches
-│       ├── storage.ts                <-- Unified storage engine with auto-sync
-│       ├── supabase-store.ts         <-- Supabase CRUD operations & row mappers
-│       ├── supabase.ts               <-- Supabase client singleton
-│       └── types.ts                  <-- TypeScript interfaces & domain schemas
-├── supabase/
-│   └── schema.sql                    <-- PostgreSQL schema definition & indexes
-├── FEATURE_BLUEPRINT.md              <-- This authoritative architecture guide
-└── README.md                         <-- Project quickstart documentation
+[ NEW ] ──> [ CONTACTED ] ──> [ PROPOSAL_SENT ] ──> [ NEGOTIATING ] ──> [ WON ] (Deposit Paid)
+                                                                    └──> [ LOST ] (Declined)
 ```
 
----
+| Status | Badge Color | What It Means & Required Action |
+|---|---|---|
+| **NEW** | 🟡 Solid Gold | **Fresh Inquiry!** Consultant must contact within **15 minutes**. |
+| **CONTACTED** | 🔵 Blue | Spoke with client via phone or Telegram; qualifications verified. |
+| **PROPOSAL_SENT** | 🟣 Purple | Sent official delegation itinerary, invoice, or sponsorship deck. |
+| **NEGOTIATING** | 🟠 Orange | Discussing custom seats, corporate group discounts, or flight upgrades. |
+| **WON** | 🟢 Emerald Green | **Closed Deal!** Deposit or full payment received. |
+| **LOST** | ⚪ Gray | Client cancelled or not traveling this cohort. |
 
-## 6. Standard Operating Procedures (SOPs) for System Updates
+### 3.2. Filtering & Finding Leads
+- **Filter by Status:** Click any status pill at the top (`ALL`, `NEW`, `WON`, etc.).
+- **Filter by Campaign:** Dropdown filter to view only `Korea B2B Trip` or `Smart City Vietnam`.
+- **Search Bar:** Instantly search by client name, company, phone number, or keywords in notes.
 
-### SOP 1: How to Add a New Landing Page / Business Delegation
+### 3.3. Reviewing Visitor Demographics & Location
+Open any lead card to see edge-detected visitor intelligence:
+- **Country Flag & Name:** 🇰🇭 Cambodia, 🇻🇳 Vietnam, 🇰🇷 South Korea, 🇺🇸 United States, 🇨🇳 China.
+- **Detected City:** e.g., `Phnom Penh`, `Ho Chi Minh City`, `Siem Reap`.
+- **Marketing Source (UTM):** Shows if the lead came from Facebook Ads, TikTok, Google, or direct referral.
 
-When creating a new business delegation (e.g. Japan, Germany, China):
+### 3.4. Contacting the Client in 1-Click
+Inside the lead drawer:
+- **Click "WhatsApp Chat":** Automatically opens WhatsApp with a pre-filled professional greeting in Khmer or English.
+- **Click "Call":** Dials the client's phone number directly.
 
-1. **Add Page Object to `data/db.json`:**
-   - Provide a unique `id` (`page-<destination>-<year>`) and `slug` (`destination-b2b-trip-<year>`).
-   - Fill in bilingual content, 4 itinerary days, 8 value stack inclusions, pricing packages, FAQs, and `isolatedSettings`.
-2. **Execute Supabase Sync Script:**
-   ```bash
-   node scripts/sync-to-supabase.mjs
-   ```
-   *(Note: Even if this step is skipped, the auto-sync logic in `src/lib/storage.ts` will automatically push the new page to Supabase on first access).*
-3. **Verify Supabase Status:**
-   ```bash
-   node scripts/verify-supabase.mjs
-   ```
-4. **Run Build Verification:**
-   ```bash
-   npm run build
-   ```
-5. **Commit and Deploy:**
-   ```bash
-   git add -A
-   git commit -m "feat(landing): add <Destination> B2B Business Delegation landing page"
-   git push origin main
-   ```
-   *Vercel will auto-deploy the page live within 60 seconds.*
+### 3.5. Adding Team Notes & History
+Keep team communication organized:
+1. Scroll down to the **Notes** box inside the lead drawer.
+2. Type an update (e.g., *"Called Oknha at 2:00 PM. Requested invoice for 2 VIP passes"*).
+3. Click **Add Note**.
+4. The note is timestamped and visible to all sales staff.
 
----
+### 3.6. Deleting Spam / Test Leads
+1. Click on the test lead.
+2. Click the red **"Delete Lead"** button at the bottom.
+3. Confirm deletion in the pop-up modal. The lead is permanently removed.
 
-### SOP 2: How to Add or Update Sales Team Members in Round-Robin
-
-1. **Via Admin Dashboard (Recommended):**
-   - Navigate to `https://sale.khbevents.com/admin/round-robin`.
-   - Add new staff member with their **Name**, **Telegram Username** (without `@`), and **Percentage Weight**.
-   - Ensure the total weights sum to 100%.
-2. **Via Code/Database (`data/db.json`):**
-   - Update `settings.roundRobinSettings.staffList` in `data/db.json`.
-   - Run `node scripts/sync-to-supabase.mjs` and deploy.
+### 3.7. Exporting to CSV (Excel / Google Sheets)
+Click the **"Export CSV"** button in the top-right toolbar:
+- Downloads an immediate spreadsheet file containing all lead names, phone numbers, emails, companies, packages, UTM sources, and creation dates.
 
 ---
 
-### SOP 3: How to Update or Rotate Telegram Bot Tokens
+## 4. How to Manage the Round-Robin Sales Team
 
-If the Telegram Bot token needs to be replaced:
+Navigate to [`/admin/round-robin`](https://sale.khbevents.com/admin/round-robin).
 
-1. Obtain new token from `@BotFather`.
-2. Update the token in `.env.local`:
-   ```env
-   TELEGRAM_BOT_TOKEN="<new-bot-token>"
+The Round-Robin engine ensures that inquiries and floating Telegram clicks are shared fairly and systematically among your sales representatives.
+
+### 4.1. How Inbound Routing Works
+1. When a client submits a form or clicks the floating **Telegram** button on any landing page:
+2. The system checks the active sales roster.
+3. The lead is assigned to the next eligible sales representative.
+4. **Direct Visitor Redirection:** The visitor's Telegram app opens directly into a chat with that specific sales rep (`https://t.me/<staff_telegram>`).
+5. **Simultaneous Bot Alert:** `@khb_sale_admin_bot` alerts both the assigned rep and the Event Director.
+
+### 4.2. Adding a New Sales Representative
+1. Go to `/admin/round-robin` and click **"+ Add Sales Rep"**.
+2. Fill in:
+   - **Full Name:** e.g., `Sokha Chen`.
+   - **Job Title:** e.g., `Senior B2B Consultant`.
+   - **Telegram Username:** Staff's username **WITHOUT** the `@` symbol (e.g., `sokhachen_khb`).
+   - **Phone Number:** e.g., `+855 12 111 222`.
+   - **Percentage Weight:** Allocation share (e.g., `20%`).
+3. Click **Save**.
+
+### 4.3. What to Do When a Staff Member Is on Leave (Active Toggle)
+If a sales rep is sick, on holiday, or traveling:
+1. Find their card in the roster.
+2. Toggle their **Active Status** to **OFF** (gray).
+3. Click **"Rebalance Weights"** so the remaining active reps automatically share 100% of leads.
+4. When the staff member returns, toggle them back **ON**.
+
+### 4.4. Testing & Simulating Sales Distribution
+- **Simulate 100 Leads:** Click **"Simulate 100 Leads"** to preview how many leads each rep will receive based on current percentage weights.
+- **Send Test Dispatch:** Click **"Send Test Dispatch"** to send a test notification through Telegram to verify that the bot is delivering alerts.
+
+### 4.5. Viewing Routing Audit Logs
+Scroll to the **Round Robin Logs** section to see:
+- Exact date and time of every lead allocation.
+- Which staff member received it.
+- Whether it was triggered by a **Form Submission** or a **Floating Telegram Click**.
+- Delivery confirmation status (`DELIVERED` or `DIRECT_ROUTED`).
+
+---
+
+## 5. How to Configure Telegram Alerts & System Settings
+
+Navigate to [`/admin/settings`](https://sale.khbevents.com/admin/settings).
+
+### 5.1. Company Profile & Hotlines
+Update your global contact info:
+- **Company Name:** `KHB EVENTS`
+- **Official Hotline:** e.g., `+855 12 888 999`
+- **WhatsApp Number:** International format without plus (e.g., `85512888999`)
+- **Default Telegram Username:** `khb_sale_admin_bot`
+- **Office Address:** `Diamond Island (Koh Pich), Phnom Penh, Cambodia`
+
+### 5.2. Setting Up the Telegram Alert Bot
+To receive real-time phone alerts whenever a buyer submits an inquiry:
+1. Open the **Telegram Alerts** tab in Settings.
+2. Toggle **Enable Telegram Alerts** to **ON**.
+3. **Telegram Bot Token:**
+   ```text
+   8808252369:AAH-avDR3sXatJoHx6qOFfsN2p9lpNyXqkw
    ```
-3. Update Vercel Environment Variables:
-   - Go to Vercel Project Settings $\rightarrow$ Environment Variables.
-   - Update `TELEGRAM_BOT_TOKEN`.
-4. Run Webhook Setup:
-   ```bash
-   curl -X POST https://sale.khbevents.com/api/telegram/setup-webhook
+   *(Managed by `@khb_sale_admin_bot`)*
+4. **Manager / Director Chat ID:**
+   ```text
+   5746705393
    ```
+   *(Or any group chat ID where the team wants lead copies)*
+5. Click **"Save Settings"**.
+
+### 5.3. Changing Admin Password
+1. Click the **Security** tab in Settings.
+2. Enter your **New Password** (minimum 6 characters).
+3. Re-enter in **Confirm Password**.
+4. Click **"Update Password"**. Next time you log in, use the new password.
+
+### 5.4. Appearance (Dark Mode / Light Mode)
+Toggle the sun/moon icon in the sidebar or Settings to switch between:
+- **Dark Mode (Default):** Premium obsidian black with emerald & gold accents.
+- **Light Mode:** Crisp executive paper aesthetic.
 
 ---
 
-### SOP 4: How to Deploy and Verify Production
+## 6. Frontend Experience Guide for Visitors
 
-1. Always run `npm run build` locally before pushing to prevent deployment breaks.
-2. After pushing to `main`, verify:
-   - Production API: `https://sale.khbevents.com/api/pages` returns all published pages.
-   - New Landing Page: `https://sale.khbevents.com/<slug>` returns HTTP 200.
-   - Homepage: `https://sale.khbevents.com/#campaigns` includes the campaign card.
+### 6.1. Homepage Portal (`sale.khbevents.com`)
+- **Hero Section:** KHB Events positioning and branding.
+- **Featured Campaigns Showcase:** Live cards for all published landing pages (e.g. Vietnam and Korea trips).
+- **Interactive Budget Calculator:** Clients choose event type, expected audience size (100–10,000+ guests), and equipment options (4K LED walls, concert sound, lighting) to calculate an instant estimated budget.
+- **Lead Booking Form:** Direct flagship inquiry submission.
+- **Floating Concierge:** Direct WhatsApp and Telegram contact buttons.
+
+### 6.2. Campaign Landing Pages (`sale.khbevents.com/[slug]`)
+- **Interactive Pass Selector:** Visitors click *"Select Pass"* on any tier; the page smoothly scrolls to the form and pre-fills their chosen package.
+- **Scarcity Strip:** Live countdown and seats counter.
+- **Day-by-Day Itinerary:** Interactive tabs where visitors view what happens on Day 1, Day 2, Day 3, and Day 4.
+- **Floating Contact Routing:** When clicked, automatically connects the visitor to their designated sales rep.
+
+### 6.3. Special URL Modes for Marketing
+- **Mobile Webview App View:** Add `?view=app` (e.g. `sale.khbevents.com/korea-b2b-trip-2026?view=app`) for a native app layout with bottom action bars.
+- **Minimal Fast Opt-In View:** Add `?view=optin` (e.g. `sale.khbevents.com/korea-b2b-trip-2026?view=optin`) for an ultra-fast opt-in page ideal for paid ads.
+- **Khmer Language Forcing:** Add `?lang=kh` (e.g. `sale.khbevents.com/korea-b2b-trip-2026?lang=kh`) to load the page in Khmer by default.
 
 ---
 
-## 7. Environment Variables Reference
+## 7. Operator "How Do I..." Cheat Sheet & Troubleshooting
 
-| Variable Name | Environment | Description | Example |
-|---|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Client & Server | Supabase project endpoint URL | `https://xyz.supabase.co` |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server Only | High-privilege key for CRM bypass of RLS | `eyJh...` |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Client & Server | Public anon key for visitor reads | `eyJh...` |
-| `TELEGRAM_BOT_TOKEN` | Server Only | HTTP API Token from `@BotFather` | `8808252369:AAH...` |
-| `TELEGRAM_CHAT_ID` | Server Only | Default manager chat or group ID | `5746705393` |
-| `NEXT_PUBLIC_BASE_URL` | Client & Server | Canonical domain of the application | `https://sale.khbevents.com` |
+### Q1: How do I change the Early Bird price or extend the deadline?
+1. Go to **Landing Pages** (`/admin/pages`).
+2. Click **Edit** on the campaign.
+3. In the **Event & Urgency** tab, update **Early Bird Price** and **Early Bird Deadline**.
+4. Click **Save Landing Page**. The change is live immediately.
+
+### Q2: How do I mark a campaign as "Sold Out"?
+1. Edit the landing page.
+2. Go to the **Isolated Settings** tab.
+3. Toggle **"Mark as Sold Out"** to **ON**.
+4. Enter your custom message (e.g., *"All 30 seats are booked! Join the waiting list for the next cohort."*).
+5. Save. The booking button will automatically disable or switch to a waiting list.
+
+### Q3: A sales rep is not receiving Telegram alerts. What should I check?
+1. Make sure they have opened Telegram, searched for `@khb_sale_admin_bot`, and clicked **Start** (`/start`). A bot cannot message a user who hasn't clicked Start first.
+2. Verify their **Telegram Username** in `/admin/round-robin` is typed accurately without `@` or spaces.
+3. Check that their status is toggled **Active (ON)**.
+
+### Q4: How do I create a new trip for a new country (e.g. Japan or Germany)?
+1. Go to `/admin/pages` and click **"+ New Page"** (or click **Duplicate** on `/korea-b2b-trip-2026`).
+2. Change the title, slug (`japan-b2b-trip-2026`), dates, venue, and itinerary.
+3. Update the package pricing.
+4. Click **Save**.
+5. Test your new link at `https://sale.khbevents.com/japan-b2b-trip-2026`.
+
+### Q5: How do I export all our leads for a sales meeting?
+1. Go to `/admin/leads`.
+2. (Optional) Filter by the campaign or status you want to discuss.
+3. Click the **"Export CSV"** button.
+4. Open the downloaded file in Microsoft Excel, Apple Numbers, or Google Sheets.
 
 ---
 
-## 8. Design Guardrails & Anti-Patterns
-
-1. ❌ **DO NOT** use generic tech purple/pink gradients; strictly stick to KHB Events' **Emerald Forest** (`#091E14`, `#0F2E20`, `#277856`), **Champagne Gold** (`#E5A93C`), and **Deep Obsidian Black**.
-2. ❌ **DO NOT** bypass `storage.ts` by writing ad-hoc filesystem calls in route files; always use `getPages()`, `savePage()`, and `createLead()`.
-3. ❌ **DO NOT** remove `form_config._extra` packing in `supabase-store.ts`; it is the linchpin that allows rich dynamic features without brittle database migrations.
-4. ✅ **ALWAYS** verify bilingual rendering (Khmer font scaling and line spacing) when adding or modifying landing page components.
+*This guide is maintained by the KHB EVENTS team. For technical escalations, contact `admin@khbevents.com`.*
