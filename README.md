@@ -110,3 +110,12 @@ After deploying a change that touches security or the Telegram bot:
 ## 📁 Deployment to cPanel (alternative)
 
 See detailed instructions in [CPANEL_DEPLOYMENT.md](CPANEL_DEPLOYMENT.md).
+
+## Content packs
+
+Landing-page copy lives in git as a content pack, `content/pages/<slug>.json`, holding only the fields it owns (headline, sections, FAQ, form text, Khmer translations). Two things apply a pack to the CMS with the same rules (`src/lib/content-pack.ts`): nested settings merge key by key, lists replace whole, and identity fields are ignored.
+
+- **Production build**: after `next build` succeeds, `npm run build` runs `scripts/sync-content-packs.mjs`, which applies each pack once per file version (a `content_pack:<slug>` marker in `system_settings` remembers the applied hash, and `content_pack_backup:<slug>` keeps the page as it was before). It only writes during a Vercel production build and never fails the build.
+- **Admin → Pages → Import JSON**: applies a pack on demand.
+
+Regenerate the Smart City pack from the copy module with `npm run content:pack`.

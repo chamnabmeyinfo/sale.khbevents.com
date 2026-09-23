@@ -4,13 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node scripts/sync-content-packs.mjs",
     "start": "next start",
     "start:cpanel": "node server.js",
     "db:sync": "node scripts/sync-to-supabase.mjs",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "sync:content": "node scripts/sync-content-packs.mjs",
+    "content:pack": "node scripts/build-smart-city-content-pack.mts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

@@ -77,9 +77,14 @@ formulas and worked examples are in `references/business-trip-page.md`.
 - `src/components/landing/SmartCityLandingPageView.tsx`: merges CMS page data
   over those defaults. CMS wins where set. Read the `c = {...}` block before
   changing a key so you know whether the CMS can override it.
-- `data/db.json`: the bundled fallback page data. Production reads Supabase, so
-  a CMS copy change ships as a JSON content pack the admin imports from
-  Admin, Pages, "Import JSON", not as a code change.
+- `content/pages/<slug>.json`: the content pack for a page. Production reads
+  Supabase, so CMS copy ships as a pack, never as an admin edit you ask the
+  user to type. After a successful production build, each pack is applied once
+  per file version, with a backup of the previous page (`scripts/sync-content-packs.ts`); Admin, Pages, "Import JSON" applies one on
+  demand. A pack carries only the fields it owns; whatever it leaves out
+  (deadlines, seat counts, phone numbers, bank details) stays the admin's.
+- `data/db.json`: the bundled fallback page data; the pack builder merges the
+  same fields into it.
 - `LandingPageTranslation` in `src/lib/types.ts` lists which fields the CMS can
   translate to Khmer. Anything outside it is code-only copy.
 

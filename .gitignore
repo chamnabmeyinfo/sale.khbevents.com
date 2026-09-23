@@ -47,3 +47,6 @@ next-env.d.ts
 # database temp files and corrupt-file backups
 /data/*.tmp
 /data/*.corrupt-*
+
+# content-pack sync bundle built at build time
+/.sync/
