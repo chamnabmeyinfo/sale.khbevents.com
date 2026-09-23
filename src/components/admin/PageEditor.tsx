@@ -26,6 +26,7 @@ import KhmerTranslationEditor from './KhmerTranslationEditor';
 import TrackingAndPixelsEditor from './TrackingAndPixelsEditor';
 import IsolatedSettingsEditor from './IsolatedSettingsEditor';
 import ImageManager from './ImageManager';
+import ImageField from './ImageField';
 import {
   LandingPage,
   PackageTier,
@@ -2194,16 +2195,14 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                         className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
                       />
                     </div>
-                    <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Photo Image URL</label>
-                      <input
-                        type="text"
-                        value={artist.image || ''}
-                        onChange={(e) => updateArtist(idx, 'image', e.target.value)}
-                        placeholder="/images/events/photo_2026-09-16_22-01-09 (6).jpg"
-                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
-                      />
-                    </div>
+                    <ImageField
+                      compact
+                      label="Photo"
+                      value={artist.image || ''}
+                      onChange={url => updateArtist(idx, 'image', url)}
+                      placeholder="Upload a photo or paste a URL"
+                      maxEdge={1200}
+                    />
                   </div>
 
                   <div>
@@ -2330,16 +2329,15 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                         className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-amber-600 dark:text-amber-400 font-mono text-xs"
                       />
                     </div>
-                    <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Avatar Photo URL</label>
-                      <input
-                        type="text"
-                        value={speaker.avatar || ''}
-                        onChange={(e) => updateSpeaker(idx, 'avatar', e.target.value)}
-                        placeholder="/images/events/photo_2026-09-16_22-01-09 (2).jpg"
-                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
-                      />
-                    </div>
+                    <ImageField
+                      compact
+                      label="Portrait"
+                      value={speaker.avatar || ''}
+                      onChange={url => updateSpeaker(idx, 'avatar', url)}
+                      placeholder="Upload a portrait or paste a URL"
+                      preview="square"
+                      maxEdge={800}
+                    />
                   </div>
 
                   <div>
@@ -3261,15 +3259,12 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                Open Graph / Social Share Image URL
-              </label>
-              <input
-                type="text"
+              <ImageField
+                label="Social share image (Facebook, Telegram link preview)"
                 value={formData.ogImage || ''}
-                onChange={(e) => setFormData({ ...formData, ogImage: e.target.value })}
-                placeholder="/images/events/photo_2026-09-16_22-01-09 (2).jpg"
-                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
+                onChange={url => setFormData({ ...formData, ogImage: url })}
+                placeholder="Upload a 1200×630 image or paste a URL"
+                hint="Shown when the page link is shared. Leave empty to use the hero cover."
               />
             </div>
           </div>

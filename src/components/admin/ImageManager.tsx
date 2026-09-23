@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, GripVertical, ImagePlus, Link2, Loader2, Star, Trash2, Upload } from 'lucide-react';
+import { uploadImage } from '@/lib/image-upload-client';
 
 /**
  * Ordered photo list with upload, drag-to-arrange, arrow buttons, "make cover",
@@ -21,42 +22,6 @@ interface ImageManagerProps {
 }
 
 interface UploadedFile { url: string; name: string; createdAt?: string }
-
-/** Longest edge after downscaling. Hero photos never render wider than this. */
-const MAX_EDGE = 1920;
-
-/**
- * Shrink a photo in the browser before upload: at most 1920px on the long edge, WebP
- * (JPEG where WebP encoding is unavailable). GIFs keep their animation and are sent as is.
- * Anything the browser cannot decode is sent untouched and the server decides.
- */
-async function prepareForUpload(file: File): Promise<File> {
-  if (file.type === 'image/gif' || !file.type.startsWith('image/')) return file;
-  try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
-    const width = Math.max(1, Math.round(bitmap.width * scale));
-    const height = Math.max(1, Math.round(bitmap.height * scale));
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return file;
-    ctx.drawImage(bitmap, 0, 0, width, height);
-    bitmap.close();
-    const encode = (type: string, quality: number) =>
-      new Promise<Blob | null>(resolve => canvas.toBlob(resolve, type, quality));
-    let blob = await encode('image/webp', 0.85);
-    if (!blob || blob.type !== 'image/webp') blob = await encode('image/jpeg', 0.86);
-    if (!blob) return file;
-    // Keep the original when re-encoding would not make it smaller and it was not resized.
-    if (scale === 1 && blob.size >= file.size) return file;
-    const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
-    return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.' + ext, { type: blob.type });
-  } catch {
-    return file;
-  }
-}
 
 function move<T>(list: T[], from: number, to: number): T[] {
   if (from === to || from < 0 || to < 0 || from >= list.length || to >= list.length) return list;
@@ -100,12 +65,7 @@ export default function ImageManager({ images, onChange, library = [], title = '
     const added: string[] = [];
     for (const original of list) {
       try {
-        const file = await prepareForUpload(original);
-        const body = new FormData();
-        body.append('file', file, file.name);
-        const res = await fetch('/api/uploads', { method: 'POST', body });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data.url) throw new Error(data.error || `Upload failed (${res.status})`);
+        const data = await uploadImage(original);
         added.push(data.url);
         setUploaded(prev => [{ url: data.url, name: data.name }, ...prev]);
       } catch (e) {

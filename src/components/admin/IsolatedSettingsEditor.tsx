@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import ImageField from './ImageField';
 import { 
   LandingPage, 
   IsolatedPageSettings 
@@ -234,16 +235,15 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs"
                 />
               </div>
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">Avatar Image URL</label>
-                <input
-                  type="text"
-                  value={settings.coordinatorAvatar || ''}
-                  onChange={e => updateSetting('coordinatorAvatar', e.target.value)}
-                  placeholder="/images/events/photo_2026-09-16_22-01-09 (2).jpg"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs"
-                />
-              </div>
+              <ImageField
+                compact
+                label="Coordinator photo"
+                value={settings.coordinatorAvatar || ''}
+                onChange={url => updateSetting('coordinatorAvatar', url)}
+                placeholder="Upload a portrait or paste a URL"
+                preview="square"
+                maxEdge={512}
+              />
             </div>
           </div>
         </div>
@@ -599,15 +599,14 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">
-                  Partner Logo URL
-                </label>
-                <input
-                  type="text"
+                <ImageField
+                  compact
+                  label="Partner logo"
                   value={settings.partnerLogo || ''}
-                  onChange={e => updateSetting('partnerLogo', e.target.value)}
-                  placeholder="https://example.com/partner-logo.png"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs"
+                  onChange={url => updateSetting('partnerLogo', url)}
+                  placeholder="Upload a logo (PNG keeps transparency) or paste a URL"
+                  preview="contain"
+                  maxEdge={800}
                 />
               </div>
             </div>
@@ -768,25 +767,17 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
             </div>
           </div>
 
-          {/* KHQR Image URL */}
+          {/* KHQR image */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1.5">
-              Campaign KHQR QR Code Image URL
-            </label>
-            <div className="flex gap-3 items-center">
-              <input
-                type="text"
-                value={settings.khqrImageUrl || ''}
-                onChange={e => updateSetting('khqrImageUrl', e.target.value)}
-                placeholder="/images/events/khqr-delegation.png"
-                className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs font-mono"
-              />
-              {settings.khqrImageUrl && (
-                <div className="w-10 h-10 rounded-lg overflow-hidden border border-emerald-500/40 shrink-0 bg-white p-0.5">
-                  <img src={settings.khqrImageUrl} alt="KHQR Preview" className="w-full h-full object-contain" />
-                </div>
-              )}
-            </div>
+            <ImageField
+              compact
+              label="QR code image"
+              value={settings.khqrImageUrl || ''}
+              onChange={url => updateSetting('khqrImageUrl', url)}
+              placeholder="Upload the KHQR image (PNG) or paste a URL"
+              preview="contain"
+              maxEdge={1200}
+            />
           </div>
 
           {/* Bank Account Wire Information */}
