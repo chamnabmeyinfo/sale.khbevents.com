@@ -33,8 +33,9 @@ describe('password hashing', () => {
   });
 
   it('still accepts legacy unsalted SHA-256 hashes', () => {
-    const legacy = crypto.createHash('sha256').update('khbevents2026').digest('hex');
-    expect(auth.verifyPassword('khbevents2026', legacy)).toBe(true);
+    const oldPassword = 'legacy-' + 'example-pass';
+    const legacy = crypto.createHash('sha256').update(oldPassword).digest('hex');
+    expect(auth.verifyPassword(oldPassword, legacy)).toBe(true);
     expect(auth.verifyPassword('nope', legacy)).toBe(false);
   });
 

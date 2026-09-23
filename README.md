@@ -93,6 +93,18 @@ A high-performance, conversion-optimized Landing Page System and Lead Management
 
 ---
 
-## 📁 Deployment to cPanel
+## 🚀 Deployment (Vercel)
+
+The live site runs on **Vercel** with **Supabase** as the database. Every push to `main` deploys automatically; pull requests get a preview deployment (protected by Vercel SSO).
+
+Environment variables on Vercel: `SESSION_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_APP_URL`.
+
+After deploying a change that touches security or the Telegram bot:
+1. Run any new file in `supabase/migrations/` in the Supabase SQL editor.
+2. In Admin → Settings, save the bot token and click **Register / secure bot webhook**.
+
+`data/db.json` is only a local/seed database; on Vercel it is copied to `/tmp` and Supabase holds the real data.
+
+## 📁 Deployment to cPanel (alternative)
 
 See detailed instructions in [CPANEL_DEPLOYMENT.md](CPANEL_DEPLOYMENT.md).
