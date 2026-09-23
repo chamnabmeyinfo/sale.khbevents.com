@@ -6,6 +6,8 @@ import {
   getRoundRobinSettings 
 } from '@/lib/storage';
 import { selectNextStaff } from '@/lib/round-robin';
+import { RoundRobinStaff } from '@/lib/types';
+import { errorMessage } from '@/lib/errors';
 
 const sampleClients = [
   {
@@ -158,7 +160,7 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      const distributionCounts: Record<string, { staff: any; assignedCount: number }> = {};
+      const distributionCounts: Record<string, { staff: RoundRobinStaff; assignedCount: number }> = {};
       activeStaff.forEach((s) => {
         distributionCounts[s.id] = { staff: s, assignedCount: 0 };
       });
@@ -205,10 +207,10 @@ export async function POST(req: NextRequest) {
       { success: false, error: `Invalid simulation mode: ${mode}` },
       { status: 400 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error('Simulation error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Simulation process failed' },
+      { success: false, error: errorMessage(error, 'Simulation process failed') },
       { status: 500 }
     );
   }

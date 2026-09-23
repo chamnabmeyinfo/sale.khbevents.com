@@ -90,7 +90,6 @@ export default function DragDropSectionBuilder({
   onChangeOrder,
   onChangeVisibility,
   onJumpToTab,
-  currentTemplate,
 }: DragDropSectionBuilderProps) {
   // Ensure we have a working active order (respect empty array if user cleared sections)
   const activeKeys = Array.isArray(sectionOrder) ? sectionOrder : DEFAULT_SECTION_ORDER;

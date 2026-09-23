@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { LandingPage, SystemSettings } from '@/lib/types';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
-import PagePasswordGate from '@/components/common/PagePasswordGate';
 import FlagIcon from '@/components/common/FlagIcon';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -119,12 +118,12 @@ const STR = {
     tripTitle: 'The 4-Day Experience',
     tripSub: 'Business matchmaking, expo discovery & UNESCO wonders.',
     gallery: [
-      { img: '/photos/photo_2026-09-16_22-01-09 (2).jpg', badge: 'Hanoi Cafe Culture' },
-      { img: '/photos/photo_2026-09-16_22-01-09 (7).jpg', badge: 'Halong Bay Cruise' },
-      { img: '/photos/photo_2026-09-16_22-01-09 (4).jpg', badge: 'VIP Coach' },
-      { img: '/photos/photo_2026-09-16_22-01-09 (6).jpg', badge: 'Sung Sot Cave' },
-      { img: '/photos/photo_2026-09-16_22-01-09 (11).jpg', badge: 'Old Quarter' },
-      { img: '/photos/photo_2026-09-16_22-01-09 (9).jpg', badge: 'Hoan Kiem Lake' }
+      { img: '/images/events/photo_2026-09-16_22-01-09 (2).jpg', badge: 'Hanoi Cafe Culture' },
+      { img: '/images/events/photo_2026-09-16_22-01-09 (7).jpg', badge: 'Halong Bay Cruise' },
+      { img: '/images/events/photo_2026-09-16_22-01-09 (4).jpg', badge: 'VIP Coach' },
+      { img: '/images/events/photo_2026-09-16_22-01-09 (6).jpg', badge: 'Sung Sot Cave' },
+      { img: '/images/events/photo_2026-09-16_22-01-09 (11).jpg', badge: 'Old Quarter' },
+      { img: '/images/events/photo_2026-09-16_22-01-09 (9).jpg', badge: 'Hoan Kiem Lake' }
     ],
     days: [
       { day: 1, title: 'Phnom Penh to Hanoi', date: 'Oct 8', events: ['17:45 Flight to Hanoi', '22:30 Hotel Check-in', '23:00 Hanoi Night Life'] },
@@ -228,12 +227,12 @@ const STR = {
     tripTitle: 'បទពិសោធន៍ ៤ ថ្ងៃ ៣ យប់',
     tripSub: 'ជំនួបពាណិជ្ជកម្ម ពិព័រណ៍អន្តរជាតិ និងតំបន់ UNESCO។',
     gallery: [
-      { img: '/photos/photo_2026-09-16_22-01-09 (2).jpg', badge: 'វប្បធម៌កាហ្វេហាណូយ' },
-      { img: '/photos/photo_2026-09-16_22-01-09 (7).jpg', badge: 'កប៉ាល់ហាឡុងបេ' },
-      { img: '/photos/photo_2026-09-16_22-01-09 (4).jpg', badge: 'រថយន្ត VIP' },
-      { img: '/photos/photo_2026-09-16_22-01-09 (6).jpg', badge: 'រូងភ្នំ Sung Sot' },
-      { img: '/photos/photo_2026-09-16_22-01-09 (11).jpg', badge: 'ផ្លូវបុរាណហាណូយ' },
-      { img: '/photos/photo_2026-09-16_22-01-09 (9).jpg', badge: 'បឹង Hoan Kiem' }
+      { img: '/images/events/photo_2026-09-16_22-01-09 (2).jpg', badge: 'វប្បធម៌កាហ្វេហាណូយ' },
+      { img: '/images/events/photo_2026-09-16_22-01-09 (7).jpg', badge: 'កប៉ាល់ហាឡុងបេ' },
+      { img: '/images/events/photo_2026-09-16_22-01-09 (4).jpg', badge: 'រថយន្ត VIP' },
+      { img: '/images/events/photo_2026-09-16_22-01-09 (6).jpg', badge: 'រូងភ្នំ Sung Sot' },
+      { img: '/images/events/photo_2026-09-16_22-01-09 (11).jpg', badge: 'ផ្លូវបុរាណហាណូយ' },
+      { img: '/images/events/photo_2026-09-16_22-01-09 (9).jpg', badge: 'បឹង Hoan Kiem' }
     ],
     days: [
       { day: 1, title: 'ភ្នំពេញ ទៅ ហាណូយ', date: '៨ តុលា', events: ['17:45 ហោះហើរទៅហាណូយ', '22:30 Check-in សណ្ឋាគារ', '23:00 ដើរទស្សនារាត្រី'] },
@@ -287,13 +286,13 @@ const MATCH_DATA = {
 };
 
 const HERO_SLIDES = [
-  '/photos/photo_2026-09-16_22-01-09 (2).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (7).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (4).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (6).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (2).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (7).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (4).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (6).jpg',
 ];
 
-export default function SmartCityAppView({ page, settings, initialLang }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh' } = {}) {
+export default function SmartCityAppView({ page, initialLang }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh' } = {}) {
   const [lang, setLang] = useState<'en' | 'kh'>(initialLang || 'en');
   const [activeTab, setActiveTab] = useState<'home' | 'trip' | 'seats'>('home');
   const [heroSlide, setHeroSlide] = useState(0);
@@ -307,32 +306,12 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
   const effEarlyBirdPrice = page?.urgency?.earlyBirdPrice ? (Number(page.urgency.earlyBirdPrice) || GENERAL.earlyBirdPrice) : GENERAL.earlyBirdPrice;
   const effRegularPrice = page?.urgency?.regularPrice ? (Number(page.urgency.regularPrice) || GENERAL.regularPrice) : GENERAL.regularPrice;
   const effEarlyBirdDeadline = page?.urgency?.earlyBirdDeadline || GENERAL.earlyBirdDeadline;
-  const effTgUsername = page?.isolatedSettings?.telegramUsername || settings?.telegramUsername || GENERAL.contactTelegramUsername;
-  const effPhone = page?.isolatedSettings?.phone || settings?.phone || GENERAL.contactPhone;
   const effTgUrl = `/api/round-robin?page=${encodeURIComponent(page?.slug || 'smart-city-tea-cafe')}&redirect=true`;
 
-  const [claimedSeats, setClaimedSeats] = useState(effClaimedSeats);
-
-  useEffect(() => {
-    if (page?.urgency?.claimedSeats !== undefined) {
-      setClaimedSeats(page.urgency.claimedSeats);
-    }
-  }, [page?.urgency?.claimedSeats]);
-
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const urlLang = params.get('lang');
-      if (urlLang === 'kh' || urlLang === 'en') {
-        setLang(urlLang);
-      } else if (initialLang) {
-        setLang(initialLang);
-      } else {
-        const saved = localStorage.getItem('khb_lang');
-        if (saved === 'kh' || saved === 'en') setLang(saved);
-      }
-    } catch {}
-  }, []);
+  // Seats booked from this browser are added on top of the CMS count, so an
+  // updated count from the server still shows through.
+  const [localBookings, setLocalBookings] = useState(0);
+  const claimedSeats = Math.min(effClaimedSeats + localBookings, effTotalSeats);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
@@ -411,7 +390,7 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
       const data = await res.json();
       if (res.ok && data.success) {
         setSubmitted(true);
-        setClaimedSeats(prev => Math.min(prev + 1, effTotalSeats));
+        setLocalBookings(prev => prev + 1);
         trackLandingEvent(page, 'form_submit', { seat: selectedSeat, profile: regProfile, value: effEarlyBirdPrice }, lang);
 
         if (page?.isolatedSettings?.postSubmitAction === 'redirect' && page?.isolatedSettings?.redirectUrl) {
@@ -437,7 +416,7 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
       return false;
     }
     if (!page?.sectionVisibility) return true;
-    return (page.sectionVisibility as any)[key] !== false;
+    return (page.sectionVisibility as Record<string, boolean | undefined>)[key] !== false;
   };
 
   const isHighlightsVisible = page?.sectionVisibility?.highlights !== undefined
@@ -484,7 +463,6 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
   ].some(Boolean);
 
   return (
-    <PagePasswordGate page={page}>
       <div className={`app-shell-root${lang === 'kh' ? ' lang-kh' : ''}`}>
         {/* ── Tracking Engine (Internal Analytics & External Pixels) ── */}
         <LandingPageTracking page={page} lang={lang} />
@@ -1129,6 +1107,5 @@ export default function SmartCityAppView({ page, settings, initialLang }: { page
 
       </div>
     </div>
-    </PagePasswordGate>
   );
 }

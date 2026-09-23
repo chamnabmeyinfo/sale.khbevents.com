@@ -85,8 +85,10 @@ Once deployed:
 | **Admin CMS & CRM** | `https://sale.khbevents.com/admin` | Page builder, leads pipeline & Telegram settings |
 
 - **Default Admin Email:** `admin@khbevents.com`
-- **Default Password:** `khbevents2026`
-*(You can change email and password anytime from Admin $\rightarrow$ Settings & Alerts)*
+- **Default Password:** `khbevents2026` — **change it immediately** in Admin $\rightarrow$ Settings & Alerts. New passwords are stored salted (scrypt); changing the password signs out every other admin session.
+
+### 🔒 Required: set `SESSION_SECRET`
+In **Setup Node.js App → Environment variables**, add `SESSION_SECRET` with a long random value (e.g. the output of `openssl rand -hex 32`), then restart the app. It signs admin sessions and page-unlock cookies; without it a publicly known fallback is used.
 
 ---
 
@@ -97,3 +99,10 @@ Once deployed:
 3. Paste your **Telegram Bot Token** and **Chat ID / Group ID**.
 4. Click **Save All Settings**.
 Whenever a client submits an event inquiry or delegate reservation, your sales team will receive an instant notification on Telegram!
+
+### Register the bot webhook (once, and again after changing the bot token)
+The webhook only accepts calls that carry a secret Telegram sends back, so it must be registered by the app. While logged in to `/admin`, open the browser console and run:
+```js
+fetch('/api/telegram/setup-webhook', { method: 'POST' }).then(r => r.json()).then(console.log)
+```
+It should print `Webhook registered successfully!`.

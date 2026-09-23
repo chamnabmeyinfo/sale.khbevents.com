@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { getRoundRobinSettings, updateRoundRobinSettings, getSettings, updateSettings } from '@/lib/storage';
 import { normalizeStaffPercentages } from '@/lib/round-robin';
+import { errorMessage } from '@/lib/errors';
 
 export async function GET() {
   const unauthorized = await requireAdmin();
@@ -19,9 +20,9 @@ export async function GET() {
         ? `${systemSettings.telegramBotToken.slice(0, 7)}...${systemSettings.telegramBotToken.slice(-4)}`
         : null
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to get settings' },
+      { success: false, error: errorMessage(error, 'Failed to get settings') },
       { status: 500 }
     );
   }
@@ -62,9 +63,9 @@ export async function PUT(req: NextRequest) {
       settings: updated,
       message: 'Round robin configuration saved successfully'
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to update settings' },
+      { success: false, error: errorMessage(error, 'Failed to update settings') },
       { status: 500 }
     );
   }

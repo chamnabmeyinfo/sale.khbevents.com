@@ -496,6 +496,39 @@ export async function supabaseUpdateRoundRobinSettings(
   return settings;
 }
 
+// Deleted-page tombstones, stored as a JSON row in system_settings like the round robin data.
+export async function supabaseGetDeletedPages(): Promise<string[] | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('system_settings')
+    .select('brand_tagline')
+    .eq('id', 'deleted_pages')
+    .maybeSingle();
+  if (error) return null;
+  if (!data?.brand_tagline) return [];
+  try {
+    const list = JSON.parse(data.brand_tagline);
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function supabaseSaveDeletedPages(list: string[]): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  const { error } = await supabase
+    .from('system_settings')
+    .upsert({
+      id: 'deleted_pages',
+      brand_tagline: JSON.stringify(list),
+      updated_at: new Date().toISOString()
+    });
+  if (error) console.error('Supabase saveDeletedPages error:', error);
+  return !error;
+}
+
 export async function supabaseGetRoundRobinLogs(limit: number = 100): Promise<RoundRobinLog[] | null> {
   const supabase = getSupabase();
   if (!supabase) return null;

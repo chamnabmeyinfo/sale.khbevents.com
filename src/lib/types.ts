@@ -515,7 +515,7 @@ export interface TrackingEvent {
   pageSlug: string;
   sessionId: string;
   eventType: TrackingEventType;
-  eventData?: Record<string, any>;
+  eventData?: Record<string, unknown>;
   referrer?: string;
   utmSource?: string;
   utmMedium?: string;
@@ -789,6 +789,8 @@ export interface DatabaseSchema {
   }>;
   trackingEvents?: TrackingEvent[];
   roundRobinLogs?: RoundRobinLog[];
+  // Tombstones (`id:<id>` / `slug:<slug>`) so deleted pages are not re-seeded from the bundled db.json.
+  deletedPages?: string[];
 }
 
 export interface RoundRobinStaff {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { getSettings } from '@/lib/storage';
 import { testStaffTelegramConnection } from '@/lib/round-robin';
+import { errorMessage } from '@/lib/errors';
 
 export async function POST(req: NextRequest) {
   const unauthorized = await requireAdmin();
@@ -42,12 +43,12 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json(result);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Test telegram connection error:', error);
     return NextResponse.json(
       { 
         success: false, 
-        error: error.message || 'Verification test failed',
+        error: errorMessage(error, 'Verification test failed'),
         diagnostic: 'Failed to connect to Telegram API servers.' 
       },
       { status: 500 }

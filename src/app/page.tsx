@@ -1,4 +1,5 @@
 import { getPages, getPublicSettings } from '@/lib/storage';
+import { getPagePin, toPublicPage } from '@/lib/page-access';
 import MainSalesView from '@/components/landing/MainSalesView';
 import { Metadata } from 'next';
 
@@ -18,7 +19,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const pages = await getPages();
+  // Only published, non-passcode pages are listed publicly.
+  const pages = (await getPages())
+    .filter((p) => p.status === 'published' && !getPagePin(p))
+    .map(toPublicPage);
   const settings = await getPublicSettings();
 
   return <MainSalesView pages={pages} settings={settings} />;

@@ -75,14 +75,21 @@ A high-performance, conversion-optimized Landing Page System and Lead Management
    npm start
    ```
 
+4. **Checks** (run before pushing):
+   ```bash
+   npm run typecheck
+   npm run lint
+   npm test
+   ```
+
 ---
 
 ## 🔐 Admin Credentials
 
 - **URL:** `http://localhost:3000/admin` (or `https://sale.khbevents.com/admin`)
 - **Default Email:** `admin@khbevents.com`
-- **Default Password:** `khbevents2026`
-*(Can be updated anytime in the Admin Settings panel)*
+- **Default Password:** `khbevents2026` — change it right after the first login (Admin Settings panel).
+- Set a random `SESSION_SECRET` in production; see [CPANEL_DEPLOYMENT.md](CPANEL_DEPLOYMENT.md).
 
 ---
 

@@ -2,22 +2,19 @@ import { redirect, notFound } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth';
 import { getPageById, getPageAnalytics } from '@/lib/storage';
 import Link from 'next/link';
-import { 
-  ArrowLeft, 
-  ExternalLink, 
-  Activity, 
-  Users, 
-  Eye, 
-  TrendingUp, 
-  Smartphone, 
-  Monitor, 
-  Tablet, 
-  Clock, 
-  Globe, 
-  ShieldCheck, 
-  Sparkles,
-  Layers,
-  FileText
+import {
+  ArrowLeft,
+  ExternalLink,
+  Activity,
+  Users,
+  Eye,
+  TrendingUp,
+  Smartphone,
+  Monitor,
+  Clock,
+  Globe,
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';

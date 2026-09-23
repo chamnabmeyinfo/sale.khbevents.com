@@ -4,6 +4,7 @@ import {
   RoutingDeliveryStatus, 
   Lead 
 } from './types';
+import { errorMessage } from '@/lib/errors';
 
 export const defaultStaffList: RoundRobinStaff[] = [
   {
@@ -451,11 +452,11 @@ Lead <b>#${escapeHtml(lead.id)}</b> ពីទំព័រ <b>${escapeHtml(lead.l
       error: errorDesc,
       fallbackSent
     };
-  } catch (err: any) {
+  } catch (err) {
     console.error('Round Robin Telegram dispatch error:', err);
     return {
       status: 'FAILED',
-      error: err?.message || 'Network error connecting to Telegram'
+      error: errorMessage(err, 'Network error connecting to Telegram')
     };
   }
 }
@@ -580,10 +581,10 @@ export async function testStaffTelegramConnection(
       error: desc,
       diagnostic
     };
-  } catch (err: any) {
+  } catch (err) {
     return {
       success: false,
-      error: err?.message || 'Network failure reaching api.telegram.org',
+      error: errorMessage(err, 'Network failure reaching api.telegram.org'),
       diagnostic: 'Network error or timeout reaching Telegram servers.'
     };
   }

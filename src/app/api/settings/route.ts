@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSettings, getPublicSettings, updateSettings } from '@/lib/storage';
 import { isAuthenticated, hashPassword, setAdminSession } from '@/lib/auth';
+import { SystemSettings } from '@/lib/types';
 
 export async function GET() {
   const authed = await isAuthenticated();
@@ -25,7 +26,7 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const updateData: Record<string, any> = {};
+    const updateData: Partial<SystemSettings> = {};
 
     if (body.companyName) updateData.companyName = body.companyName;
     if (body.brandTagline) updateData.brandTagline = body.brandTagline;

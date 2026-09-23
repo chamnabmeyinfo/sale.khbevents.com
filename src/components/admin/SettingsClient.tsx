@@ -1,24 +1,23 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Settings, 
-  Save, 
-  Bell, 
-  Lock, 
-  Building, 
+import {
+  Settings,
+  Save,
+  Bell,
+  Building,
   CheckCircle2,
   Share2,
   ShieldCheck,
   Crown,
   Key,
-  Smartphone,
   Sun,
   Moon,
   Laptop
 } from 'lucide-react';
 import { SystemSettings } from '@/lib/types';
 import { useTheme } from '@/context/ThemeContext';
+import { errorMessage } from '@/lib/errors';
 
 interface SettingsClientProps {
   initialSettings: SystemSettings;
@@ -66,7 +65,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
 
   const handleTabChange = (tab: SettingsTab) => {
     setActiveTab(tab);
-    window.location.hash = tab;
+    window.history.replaceState(null, '', `#${tab}`);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -94,8 +93,8 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
       setFormData((prev) => ({ ...prev, newPassword: '', confirmPassword: '' }));
-    } catch (err: any) {
-      setError(err.message || 'Error saving settings');
+    } catch (err) {
+      setError(errorMessage(err, 'Error saving settings'));
     } finally {
       setSaving(false);
     }

@@ -1,103 +1,72 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { recordDirectContactRoute, getRoundRobinSettings } from '@/lib/storage';
+import { recordDirectContactRoute } from '@/lib/storage';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
+
+const FALLBACK_BOT_USERNAME = 'khb_sale_admin_bot';
+
+function fallbackUrl(slug: string) {
+  // Telegram deep-link payloads only allow [A-Za-z0-9_-], max 64 chars.
+  const payload = `khb_${slug}`.replace(/[^A-Za-z0-9_-]/g, '-').slice(0, 64);
+  return `https://t.me/${FALLBACK_BOT_USERNAME}?start=${payload}`;
+}
+
+async function route(req: NextRequest, slug: string, redirectMode: boolean) {
+  const visitorIp = getClientIp(req.headers);
+  const userAgent = req.headers.get('user-agent') || undefined;
+
+  // Every routed click alerts staff on Telegram and writes a log entry, so
+  // repeat clickers are sent to the bot without re-triggering the alerts.
+  const limit = rateLimit(`rr-click:${visitorIp}`, 10, 10 * 60 * 1000);
+  const routeResult = limit.allowed
+    ? await recordDirectContactRoute({ pageSlug: slug, visitorIp, userAgent })
+    : null;
+
+  if (routeResult) {
+    if (redirectMode) {
+      return NextResponse.redirect(routeResult.targetTelegramUrl);
+    }
+    return NextResponse.json({
+      success: true,
+      routed: true,
+      targetTelegramUrl: routeResult.targetTelegramUrl,
+      staff: {
+        id: routeResult.staff.id,
+        name: routeResult.staff.name,
+        username: routeResult.staff.telegramUsername,
+        role: routeResult.staff.title
+      },
+      logId: routeResult.logId
+    });
+  }
+
+  const targetTelegramUrl = fallbackUrl(slug);
+  if (redirectMode) {
+    return NextResponse.redirect(targetTelegramUrl);
+  }
+  return NextResponse.json({
+    success: true,
+    routed: false,
+    targetTelegramUrl,
+    note: 'Round robin not active or direct contact routing disabled, used default Telegram'
+  });
+}
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const slug = searchParams.get('page') || 'home';
-    const redirectMode = searchParams.get('redirect') === 'true';
-
-    const forwarded = req.headers.get('x-forwarded-for');
-    const visitorIp = forwarded ? forwarded.split(',')[0].trim() : '127.0.0.1';
-    const userAgent = req.headers.get('user-agent') || undefined;
-
-    const routeResult = await recordDirectContactRoute({
-      pageSlug: slug,
-      visitorIp,
-      userAgent
-    });
-
-    if (routeResult) {
-      if (redirectMode) {
-        return NextResponse.redirect(routeResult.targetTelegramUrl);
-      }
-      return NextResponse.json({
-        success: true,
-        routed: true,
-        targetTelegramUrl: routeResult.targetTelegramUrl,
-        staff: {
-          id: routeResult.staff.id,
-          name: routeResult.staff.name,
-          username: routeResult.staff.telegramUsername,
-          role: routeResult.staff.title
-        },
-        logId: routeResult.logId
-      });
-    }
-
-    // Fallback to default Telegram channel / support
-    const settings = await getRoundRobinSettings();
-    const defaultUsername = 'khb_sale_admin_bot';
-    const fallbackUrl = `https://t.me/${defaultUsername}?start=khb_${slug}`;
-
-    if (redirectMode) {
-      return NextResponse.redirect(fallbackUrl);
-    }
-
-    return NextResponse.json({
-      success: true,
-      routed: false,
-      targetTelegramUrl: fallbackUrl,
-      note: 'Round robin not active or direct contact routing disabled, used default Telegram'
-    });
-  } catch (error: any) {
+    return await route(req, searchParams.get('page') || 'home', searchParams.get('redirect') === 'true');
+  } catch (error) {
     console.error('Round Robin route error:', error);
-    return NextResponse.json(
-      { success: false, error: error.message || 'Routing failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Routing failed' }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const slug = body.page || 'home';
-
-    const forwarded = req.headers.get('x-forwarded-for');
-    const visitorIp = forwarded ? forwarded.split(',')[0].trim() : '127.0.0.1';
-    const userAgent = req.headers.get('user-agent') || undefined;
-
-    const routeResult = await recordDirectContactRoute({
-      pageSlug: slug,
-      visitorIp,
-      userAgent
-    });
-
-    if (routeResult) {
-      return NextResponse.json({
-        success: true,
-        routed: true,
-        targetTelegramUrl: routeResult.targetTelegramUrl,
-        staff: {
-          id: routeResult.staff.id,
-          name: routeResult.staff.name,
-          username: routeResult.staff.telegramUsername,
-          role: routeResult.staff.title
-        },
-        logId: routeResult.logId
-      });
-    }
-
-    return NextResponse.json({
-      success: true,
-      routed: false,
-      targetTelegramUrl: `https://t.me/khb_sale_admin_bot?start=khb_${slug}`
-    });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || 'Routing failed' },
-      { status: 500 }
-    );
+    const body = await req.json().catch(() => ({}));
+    return await route(req, body.page || 'home', false);
+  } catch (error) {
+    console.error('Round Robin route error:', error);
+    return NextResponse.json({ success: false, error: 'Routing failed' }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, getTelegramWebhookSecret } from '@/lib/auth';
 import { getDatabase } from '@/lib/storage';
+import { errorMessage } from '@/lib/errors';
 
 /**
  * One-time setup: Register or check the Telegram Bot webhook URL.
@@ -41,8 +42,8 @@ export async function GET() {
       webhookInfo: data.result,
       isActive: Boolean(data.result?.url),
     });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: errorMessage(error, 'Telegram request failed') }, { status: 500 });
   }
 }
 
@@ -99,8 +100,8 @@ export async function POST(req: NextRequest) {
       error: data.description || 'Failed to set webhook',
       telegramResponse: data,
     }, { status: 400 });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: errorMessage(error, 'Telegram request failed') }, { status: 500 });
   }
 }
 
@@ -129,7 +130,7 @@ export async function DELETE() {
       success: data.ok,
       message: data.ok ? 'Webhook removed' : data.description,
     });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: errorMessage(error, 'Telegram request failed') }, { status: 500 });
   }
 }

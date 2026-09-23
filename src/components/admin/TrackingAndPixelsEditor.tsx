@@ -1,24 +1,23 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Activity, 
-  Check, 
-  Copy, 
-  ExternalLink, 
-  Globe, 
-  ShieldCheck, 
-  Sparkles, 
-  Code, 
-  BarChart3, 
-  Users, 
-  TrendingUp, 
-  Smartphone, 
+import {
+  Activity,
+  Check,
+  Copy,
+  ExternalLink,
+  Globe,
+  ShieldCheck,
+  Sparkles,
+  Code,
+  BarChart3,
+  Users,
+  TrendingUp,
+  Smartphone,
   Monitor,
-  RefreshCw,
-  AlertCircle
+  RefreshCw
 } from 'lucide-react';
-import { LandingPage, PageAnalyticsSummary } from '@/lib/types';
+import { LandingPage, PageAnalyticsSummary, ExternalTrackingConfig } from '@/lib/types';
 
 interface TrackingAndPixelsEditorProps {
   formData: Partial<LandingPage>;
@@ -37,9 +36,9 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
 
   // Analytics Snapshot state
   const [analytics, setAnalytics] = useState<PageAnalyticsSummary | null>(null);
-  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(Boolean(formData.id || formData.slug));
 
-  const updateTracking = (key: string, value: any) => {
+  const updateTracking = <K extends keyof ExternalTrackingConfig>(key: K, value: ExternalTrackingConfig[K]) => {
     setFormData((prev) => ({
       ...prev,
       tracking: {
@@ -66,29 +65,33 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Fetch real-time analytics summary
-  const fetchAnalytics = async () => {
-    if (!formData.id && !formData.slug) return;
-    setLoadingAnalytics(true);
-    try {
-      const pageKey = formData.id || formData.slug;
-      const res = await fetch(`/api/pages/${pageKey}/analytics`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.analytics) {
-          setAnalytics(data.analytics);
-        }
-      }
-    } catch {
-      // silent fallback
-    } finally {
-      setLoadingAnalytics(false);
-    }
-  };
+  // Fetch real-time analytics summary; bumping analyticsVersion refetches.
+  const pageKey = formData.id || formData.slug;
+  const [analyticsVersion, setAnalyticsVersion] = useState(0);
 
   useEffect(() => {
-    fetchAnalytics();
-  }, [formData.id, formData.slug]);
+    if (!pageKey) return;
+    let cancelled = false;
+    fetch(`/api/pages/${pageKey}/analytics`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.success && data.analytics) setAnalytics(data.analytics);
+      })
+      .catch(() => {
+        // silent fallback
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingAnalytics(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pageKey, analyticsVersion]);
+
+  const fetchAnalytics = () => {
+    setLoadingAnalytics(true);
+    setAnalyticsVersion((v) => v + 1);
+  };
 
   return (
     <div className="space-y-8">

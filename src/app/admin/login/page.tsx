@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Lock, Mail, ArrowRight, KeyRound } from 'lucide-react';
+import { errorMessage } from '@/lib/errors';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -31,8 +33,8 @@ export default function AdminLoginPage() {
 
       router.push('/admin');
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || 'Login failed. Please check credentials.');
+    } catch (err) {
+      setError(errorMessage(err, 'Login failed. Please check credentials.'));
     } finally {
       setLoading(false);
     }
@@ -134,9 +136,9 @@ export default function AdminLoginPage() {
           </div>
 
           <div className="text-center">
-            <a href="/" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
+            <Link href="/" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
               ← Return to public website
-            </a>
+            </Link>
           </div>
 
         </div>

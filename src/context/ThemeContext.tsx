@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
+import { useStoredChoice, usePrefersDark } from '@/lib/use-browser-state';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -14,61 +15,29 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const THEME_STORAGE_KEY = 'khb-portal-theme';
 
+const THEME_MODES = ['light', 'dark', 'system'] as const;
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>('system');
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
-  const [mounted, setMounted] = useState(false);
-
-  const getSystemTheme = (): 'light' | 'dark' => {
-    if (typeof window === 'undefined') return 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  };
-
-  const applyTheme = (mode: ThemeMode) => {
-    if (typeof window === 'undefined') return;
-    const root = document.documentElement;
-    const effective = mode === 'system' ? getSystemTheme() : mode;
-
-    setResolvedTheme(effective);
-
-    if (effective === 'dark') {
-      root.classList.add('dark');
-      root.classList.remove('light');
-      root.style.colorScheme = 'dark';
-    } else {
-      root.classList.add('light');
-      root.classList.remove('dark');
-      root.style.colorScheme = 'light';
-    }
-  };
+  // The inline script in app/layout.tsx applies the saved theme before first
+  // paint; this keeps React's view of it in sync afterwards.
+  const [theme, setTheme] = useStoredChoice<ThemeMode>(THEME_STORAGE_KEY, THEME_MODES, 'system');
+  const prefersDark = usePrefersDark();
+  const resolvedTheme: 'light' | 'dark' = theme === 'system' ? (prefersDark ? 'dark' : 'light') : theme;
 
   useEffect(() => {
-    setMounted(true);
-    const saved = (localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode) || 'system';
-    setThemeState(saved);
-    applyTheme(saved);
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleSystemChange = () => {
-      const currentSaved = (localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode) || 'system';
-      if (currentSaved === 'system') {
-        applyTheme('system');
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleSystemChange);
-    return () => mediaQuery.removeEventListener('change', handleSystemChange);
-  }, []);
-
-  const setTheme = (mode: ThemeMode) => {
-    setThemeState(mode);
+    // Read the live preference rather than `resolvedTheme`: during hydration the
+    // render still holds the server placeholder, and applying that would flash.
+    let saved: string | null = null;
     try {
-      localStorage.setItem(THEME_STORAGE_KEY, mode);
-    } catch {
-      // Ignore local storage errors
-    }
-    applyTheme(mode);
-  };
+      saved = localStorage.getItem(THEME_STORAGE_KEY);
+    } catch {}
+    const mode = (THEME_MODES as readonly string[]).includes(saved ?? '') ? saved : 'system';
+    const isDark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const root = document.documentElement;
+    root.classList.toggle('dark', isDark);
+    root.classList.toggle('light', !isDark);
+    root.style.colorScheme = isDark ? 'dark' : 'light';
+  }, [resolvedTheme]);
 
   return (
     <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>

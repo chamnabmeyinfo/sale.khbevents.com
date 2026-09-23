@@ -146,7 +146,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
 
   const kh = formData.translations?.kh || {};
 
-  const updateField = (field: keyof LandingPageTranslation, val: any) => {
+  const updateField = <K extends keyof LandingPageTranslation>(field: K, val: LandingPageTranslation[K]) => {
     setFormData(prev => ({
       ...prev,
       translations: {
@@ -223,7 +223,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
             <button
               key={tab.id}
               type="button"
-              onClick={() => setActiveSubTab(tab.id as any)}
+              onClick={() => setActiveSubTab(tab.id as typeof activeSubTab)}
               className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 isActive
                   ? 'bg-emerald-600 text-white shadow-md'

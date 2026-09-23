@@ -1,24 +1,23 @@
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
-import { 
-  DatabaseSchema, 
-  LandingPage, 
-  Lead, 
-  LeadStatus, 
-  SystemSettings, 
-  PageAnalyticsSummary, 
-  TrackingEvent, 
+import {
+  DatabaseSchema,
+  LandingPage,
+  Lead,
+  LeadStatus,
+  SystemSettings,
+  PageAnalyticsSummary,
   TrackingEventType,
   RoundRobinStaff,
   RoundRobinSettings,
   RoundRobinLog,
   RoutingDeliveryStatus
 } from './types';
-import { 
-  defaultRoundRobinSettings, 
-  selectNextStaff, 
-  sendLeadToStaffTelegram 
+import {
+  defaultRoundRobinSettings,
+  selectNextStaff,
+  sendLeadToStaffTelegram
 } from './round-robin';
 import { isSupabaseConfigured } from './supabase';
 import {
@@ -40,6 +39,8 @@ import {
   supabaseUpdateRoundRobinSettings,
   supabaseGetRoundRobinLogs,
   supabaseSaveRoundRobinLog,
+  supabaseGetDeletedPages,
+  supabaseSaveDeletedPages
 } from './supabase-store';
 import bundledDbJson from '../../data/db.json';
 
@@ -50,8 +51,10 @@ const BUNDLED_DB_FILE = path.join(process.cwd(), 'data', 'db.json');
 const DATA_DIR = IS_SERVERLESS ? '/tmp' : path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 
-// Global in-memory cache to ensure consistency across serverless invocations
-let memoryDb: DatabaseSchema | null = null;
+// In-memory copy of the database. It lives on globalThis because Next.js bundles
+// route handlers and pages separately, each with its own copy of this module;
+// a module-level variable would let API writes go unseen by page renders.
+const dbCache = globalThis as typeof globalThis & { __khbMemoryDb?: DatabaseSchema | null };
 
 const defaultSettings: SystemSettings = {
   companyName: 'KHB EVENTS',
@@ -242,8 +245,8 @@ const defaultLeads: Lead[] = [
 ];
 
 export async function getDatabase(): Promise<DatabaseSchema> {
-  if (memoryDb) {
-    return memoryDb;
+  if (dbCache.__khbMemoryDb) {
+    return dbCache.__khbMemoryDb;
   }
   try {
     let content = '';
@@ -263,7 +266,9 @@ export async function getDatabase(): Promise<DatabaseSchema> {
     }
     const db = JSON.parse(content) as DatabaseSchema;
     if (bundledDb?.pages) {
+      const deleted = new Set(db.deletedPages || []);
       for (const bp of bundledDb.pages) {
+        if (isDeletedPage(bp, deleted)) continue;
         if (!db.pages.some((p) => p.slug === bp.slug || p.id === bp.id)) {
           db.pages.push(bp);
         }
@@ -275,7 +280,7 @@ export async function getDatabase(): Promise<DatabaseSchema> {
     if (!db.roundRobinLogs) {
       db.roundRobinLogs = [];
     }
-    memoryDb = db;
+    dbCache.__khbMemoryDb = db;
     return db;
   } catch {
     const initialDb: DatabaseSchema = {
@@ -291,13 +296,13 @@ export async function getDatabase(): Promise<DatabaseSchema> {
     } catch {
       // Ignore write errors in read-only serverless environments
     }
-    memoryDb = initialDb;
+    dbCache.__khbMemoryDb = initialDb;
     return initialDb;
   }
 }
 
 export async function saveDatabase(data: DatabaseSchema): Promise<void> {
-  memoryDb = data;
+  dbCache.__khbMemoryDb = data;
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
     await fs.writeFile(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
@@ -308,9 +313,52 @@ export async function saveDatabase(data: DatabaseSchema): Promise<void> {
   }
 }
 
+function isDeletedPage(page: Pick<LandingPage, 'id' | 'slug'>, deleted: Set<string>): boolean {
+  return deleted.has(`id:${page.id}`) || deleted.has(`slug:${page.slug}`);
+}
+
+async function getDeletedPageKeys(): Promise<Set<string>> {
+  const db = await getDatabase();
+  const keys = new Set(db.deletedPages || []);
+  if (isSupabaseConfigured()) {
+    try {
+      for (const key of (await supabaseGetDeletedPages()) || []) keys.add(key);
+    } catch (err) {
+      console.error('Supabase getDeletedPages error:', err);
+    }
+  }
+  return keys;
+}
+
+async function updateDeletedPageKeys(add: string[], remove: string[]): Promise<void> {
+  const keys = await getDeletedPageKeys();
+  const changed = add.some((k) => !keys.has(k)) || remove.some((k) => keys.has(k));
+  if (!changed) return;
+  for (const k of add) keys.add(k);
+  for (const k of remove) keys.delete(k);
+  const list = [...keys];
+  const db = await getDatabase();
+  db.deletedPages = list;
+  await saveDatabase(db);
+  if (isSupabaseConfigured()) {
+    await supabaseSaveDeletedPages(list).catch(() => false);
+  }
+}
+
+/**
+ * Drops pages the admin has deleted (they may still be in the bundled db.json).
+ * Tombstones are only fetched when there is something to filter, so the common
+ * path of serving a page straight from Supabase costs no extra query.
+ */
+async function withoutDeleted(pages: LandingPage[]): Promise<LandingPage[]> {
+  if (pages.length === 0) return pages;
+  const deleted = await getDeletedPageKeys();
+  return pages.filter((p) => !isDeletedPage(p, deleted));
+}
+
 export async function getPages(): Promise<LandingPage[]> {
   const db = await getDatabase();
-  const localPages = db.pages || [];
+  const allLocalPages = db.pages || [];
 
   if (isSupabaseConfigured()) {
     try {
@@ -318,7 +366,9 @@ export async function getPages(): Promise<LandingPage[]> {
       if (remotePages && remotePages.length > 0) {
         // Check if any local/bundled pages are missing in Supabase
         const remoteSlugs = new Set(remotePages.map((p) => p.slug.toLowerCase().trim()));
-        const missingPages = localPages.filter((lp) => !remoteSlugs.has(lp.slug.toLowerCase().trim()));
+        const missingPages = await withoutDeleted(
+          allLocalPages.filter((lp) => !remoteSlugs.has(lp.slug.toLowerCase().trim()))
+        );
 
         if (missingPages.length > 0) {
           for (const page of missingPages) {
@@ -332,7 +382,9 @@ export async function getPages(): Promise<LandingPage[]> {
           }
         }
         return remotePages;
-      } else if (localPages.length > 0) {
+      }
+      const localPages = await withoutDeleted(allLocalPages);
+      if (localPages.length > 0) {
         // If Supabase is empty, seed all local pages to Supabase
         for (const page of localPages) {
           try {
@@ -347,13 +399,14 @@ export async function getPages(): Promise<LandingPage[]> {
       console.error('Supabase getPages error:', err);
     }
   }
-  return localPages;
+  return withoutDeleted(allLocalPages);
 }
 
 export async function getPageBySlug(slug: string): Promise<LandingPage | null> {
   const cleanSlug = slug.toLowerCase().trim();
   const db = await getDatabase();
-  const localPage = db.pages.find((p) => p.slug === cleanSlug) || null;
+  const localMatch = db.pages.find((p) => p.slug === cleanSlug);
+  const [localPage = null] = await withoutDeleted(localMatch ? [localMatch] : []);
 
   if (isSupabaseConfigured()) {
     try {
@@ -379,7 +432,8 @@ export async function getPageBySlug(slug: string): Promise<LandingPage | null> {
 
 export async function getPageById(id: string): Promise<LandingPage | null> {
   const db = await getDatabase();
-  const localPage = db.pages.find((p) => p.id === id) || null;
+  const localMatch = db.pages.find((p) => p.id === id);
+  const [localPage = null] = await withoutDeleted(localMatch ? [localMatch] : []);
 
   if (isSupabaseConfigured()) {
     try {
@@ -481,6 +535,8 @@ export async function savePage(pageData: Partial<LandingPage> & { title: string;
   }
 
   await saveDatabase(db);
+  // Re-creating a page with a previously deleted id or slug brings it back.
+  await updateDeletedPageKeys([], [`id:${targetPage.id}`, `slug:${targetPage.slug}`]);
 
   if (isSupabaseConfigured()) {
     try {
@@ -494,6 +550,7 @@ export async function savePage(pageData: Partial<LandingPage> & { title: string;
 }
 
 export async function deletePage(id: string): Promise<boolean> {
+  const existing = await getPageById(id);
   let supabaseDeleted = false;
   if (isSupabaseConfigured()) {
     try {
@@ -509,7 +566,13 @@ export async function deletePage(id: string): Promise<boolean> {
   if (localDeleted) {
     await saveDatabase(db);
   }
-  return supabaseDeleted || localDeleted;
+  const deleted = supabaseDeleted || localDeleted;
+  if (deleted) {
+    // Remember the deletion so the page is not re-seeded from the bundled db.json
+    // or re-synced to Supabase on the next restart.
+    await updateDeletedPageKeys([`id:${id}`, ...(existing ? [`slug:${existing.slug}`] : [])], []);
+  }
+  return deleted;
 }
 
 export async function getLeads(filter?: {
@@ -899,7 +962,7 @@ export interface RecordTrackingPayload {
   slug: string;
   eventType?: TrackingEventType;
   sessionId?: string;
-  eventData?: Record<string, any>;
+  eventData?: Record<string, unknown>;
   referrer?: string;
   utmSource?: string;
   utmMedium?: string;

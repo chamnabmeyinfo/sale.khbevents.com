@@ -15,6 +15,10 @@ import {
   Tag
 } from 'lucide-react';
 import { Lead, LeadStatus, LandingPage } from '@/lib/types';
+import { useUrlParam } from '@/lib/use-browser-state';
+import { errorMessage } from '@/lib/errors';
+
+const STATUS_FILTERS = ['ALL', 'NEW', 'CONTACTED', 'PROPOSAL_SENT', 'NEGOTIATING', 'WON', 'LOST'];
 
 interface LeadsCrmClientProps {
   initialLeads: Lead[];
@@ -46,23 +50,15 @@ const statusColors: Record<LeadStatus, { bg: string; text: string; border: strin
 export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientProps) {
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [search, setSearch] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
+  // ?status=NEW (e.g. from the dashboard) sets the starting filter until the user picks one.
+  const urlStatus = useUrlParam('status');
+  const [chosenStatus, setSelectedStatus] = useState<string | null>(null);
+  const selectedStatus = chosenStatus ?? (urlStatus && STATUS_FILTERS.includes(urlStatus) ? urlStatus : 'ALL');
   const [selectedPage, setSelectedPage] = useState<string>('ALL');
   const [selectedTag, setSelectedTag] = useState<string>('ALL');
 
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [newNoteText, setNewNoteText] = useState('');
-
-  // Sync status filter with URL search param
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const urlStatus = params.get('status');
-      if (urlStatus && ['ALL', 'NEW', 'CONTACTED', 'PROPOSAL_SENT', 'NEGOTIATING', 'WON', 'LOST'].includes(urlStatus)) {
-        setSelectedStatus(urlStatus);
-      }
-    }
-  }, []);
 
   const allTags = React.useMemo(() => {
     const set = new Set<string>();
@@ -144,8 +140,8 @@ export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientPr
       } else {
         alert(data.error || `Failed to delete lead (Status ${res.status})`);
       }
-    } catch (err: any) {
-      alert(`Network error deleting lead: ${err?.message || err}`);
+    } catch (err) {
+      alert(`Network error deleting lead: ${errorMessage(err, String(err))}`);
     }
   };
 

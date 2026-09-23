@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getLeads, createLead } from '@/lib/storage';
 import { isAuthenticated } from '@/lib/auth';
+import { rateLimit, tooManyRequests, getClientIp } from '@/lib/rate-limit';
 
 export async function GET(req: NextRequest) {
   const authed = await isAuthenticated();
@@ -18,6 +19,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req.headers);
+  const limit = rateLimit(`lead:${ip}`, 5, 10 * 60 * 1000);
+  if (!limit.allowed) {
+    return tooManyRequests(limit, 'You have sent several inquiries already. Please wait a few minutes, or contact us directly by phone or Telegram.');
+  }
+
   try {
     const body = await req.json();
 
@@ -30,7 +37,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
     const userAgent = req.headers.get('user-agent') || '';
     const country = req.headers.get('x-vercel-ip-country') || req.headers.get('cf-ipcountry') || '';
     const city = req.headers.get('x-vercel-ip-city') ? decodeURIComponent(req.headers.get('x-vercel-ip-city')!) : '';

@@ -2,23 +2,20 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { 
-  Users, 
-  FileText, 
-  Eye, 
-  TrendingUp, 
-  Plus, 
-  ArrowRight, 
-  ExternalLink, 
-  MessageCircle, 
+import {
+  Users,
+  FileText,
+  Eye,
+  TrendingUp,
+  Plus,
+  ArrowRight,
+  ExternalLink,
+  MessageCircle,
   Sparkles,
   LayoutDashboard,
   Layers,
   Clock,
-  CheckCircle2,
-  PhoneCall,
   Search,
-  Filter,
   BookOpen
 } from 'lucide-react';
 import { LandingPage, Lead } from '@/lib/types';

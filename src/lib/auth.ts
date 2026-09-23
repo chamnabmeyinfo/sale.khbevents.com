@@ -102,7 +102,9 @@ export async function isAuthenticated(): Promise<boolean> {
         }
       );
       const { data: { user } } = await supabase.auth.getUser();
-      if (user && isStaffOrAdmin(user.email)) {
+      // Staff access is granted by email domain, so the address must be proven:
+      // without this, anyone could sign up as x@khbevents.com unconfirmed.
+      if (user?.email_confirmed_at && isStaffOrAdmin(user.email)) {
         return true;
       }
     } catch {}

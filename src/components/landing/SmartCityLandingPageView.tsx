@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { LandingPage, SystemSettings } from '@/lib/types';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
-import PagePasswordGate from '@/components/common/PagePasswordGate';
 import FlagIcon from '@/components/common/FlagIcon';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -579,23 +579,23 @@ const SEAT_TAG_POOL = [
 
 // Hero slides — same order as old HTML
 const HERO_SLIDES = [
-  '/photos/photo_2026-09-16_22-01-09 (2).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (7).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (4).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (6).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (11).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (9).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (2).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (7).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (4).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (6).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (11).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (9).jpg',
 ];
 
 const GALLERY_ITEMS = [
-  { src: '/photos/photo_2026-09-16_22-01-09 (2).jpg', alt: 'Vietnam Cafe Show & Tea Expo', badge: 'Hanoi Cafe Culture' },
-  { src: '/photos/photo_2026-09-16_22-01-09 (4).jpg', alt: 'Private VIP Coach Interior', badge: 'Private VIP Coach' },
-  { src: '/photos/photo_2026-09-16_22-01-09 (7).jpg', alt: 'UNESCO Halong Bay Cruise', badge: 'Halong Bay Cruise' },
-  { src: '/photos/photo_2026-09-16_22-01-09 (6).jpg', alt: 'Sung Sot Cave Halong Bay', badge: 'Sung Sot Cave' },
-  { src: '/photos/photo_2026-09-16_22-01-09 (11).jpg', alt: 'Hanoi Old Quarter', badge: 'Hanoi Old Quarter' },
-  { src: '/photos/photo_2026-09-16_22-01-09 (9).jpg', alt: 'Hoan Kiem Lake Hanoi', badge: 'Hoan Kiem Lake' },
-  { src: '/photos/photo_2026-09-16_22-01-09 (3).jpg', alt: 'VIP Limousine Coach', badge: 'VIP Limousine Coach' },
-  { src: '/photos/photo_2026-09-16_22-01-09 (8).jpg', alt: 'One Pillar Pagoda Hanoi', badge: 'One Pillar Pagoda' },
+  { src: '/images/events/photo_2026-09-16_22-01-09 (2).jpg', alt: 'Vietnam Cafe Show & Tea Expo', badge: 'Hanoi Cafe Culture' },
+  { src: '/images/events/photo_2026-09-16_22-01-09 (4).jpg', alt: 'Private VIP Coach Interior', badge: 'Private VIP Coach' },
+  { src: '/images/events/photo_2026-09-16_22-01-09 (7).jpg', alt: 'UNESCO Halong Bay Cruise', badge: 'Halong Bay Cruise' },
+  { src: '/images/events/photo_2026-09-16_22-01-09 (6).jpg', alt: 'Sung Sot Cave Halong Bay', badge: 'Sung Sot Cave' },
+  { src: '/images/events/photo_2026-09-16_22-01-09 (11).jpg', alt: 'Hanoi Old Quarter', badge: 'Hanoi Old Quarter' },
+  { src: '/images/events/photo_2026-09-16_22-01-09 (9).jpg', alt: 'Hoan Kiem Lake Hanoi', badge: 'Hoan Kiem Lake' },
+  { src: '/images/events/photo_2026-09-16_22-01-09 (3).jpg', alt: 'VIP Limousine Coach', badge: 'VIP Limousine Coach' },
+  { src: '/images/events/photo_2026-09-16_22-01-09 (8).jpg', alt: 'One Pillar Pagoda Hanoi', badge: 'One Pillar Pagoda' },
 ];
 
 const DEFAULT_SPEAKERS = [
@@ -606,7 +606,7 @@ const DEFAULT_SPEAKERS = [
     organization: 'Vietnam Coffee & Cocoa Association (VICOFA)',
     topic: 'Supply Chain Optimization & Direct Roastery Sourcing for ASEAN Buyers',
     track: 'F&B Trade Trends',
-    avatar: '/photos/photo_2026-09-16_22-01-09 (2).jpg',
+    avatar: '/images/events/photo_2026-09-16_22-01-09 (2).jpg',
     sessionTime: 'Day 2 • 10:30 AM'
   },
   {
@@ -616,7 +616,7 @@ const DEFAULT_SPEAKERS = [
     organization: 'Vietnam IoT & Retail Tech Consortium',
     topic: 'AI Surveillance, Automated POS & Next-Gen Smart City Infrastructure',
     track: 'Smart Retail Tech',
-    avatar: '/photos/photo_2026-09-16_22-01-09 (6).jpg',
+    avatar: '/images/events/photo_2026-09-16_22-01-09 (6).jpg',
     sessionTime: 'Day 2 • 02:00 PM'
   },
   {
@@ -626,7 +626,7 @@ const DEFAULT_SPEAKERS = [
     organization: 'Cambodia-Vietnam Bilateral Chamber of Commerce',
     topic: 'Cross-Border Customs Clearance, Tariffs & Import Logistics 2026',
     track: 'Trade Policy',
-    avatar: '/photos/photo_2026-09-16_22-01-09 (5).jpg',
+    avatar: '/images/events/photo_2026-09-16_22-01-09 (5).jpg',
     sessionTime: 'Day 3 • 09:30 AM'
   }
 ];
@@ -639,7 +639,7 @@ const DEFAULT_ARTISTS = [
     genre: 'Traditional & Fusion Folk',
     stageName: 'Welcome Banquet Gala',
     stageTime: 'Day 1 • 07:30 PM',
-    image: '/photos/photo_2026-09-16_22-01-09 (4).jpg',
+    image: '/images/events/photo_2026-09-16_22-01-09 (4).jpg',
     bio: 'Renowned folk masters performing authentic Vietnamese strings and percussion during the welcome delegation dinner.'
   },
   {
@@ -649,7 +649,7 @@ const DEFAULT_ARTISTS = [
     genre: 'Smooth Jazz & Acoustic Pop',
     stageName: 'UNESCO Halong Cruise Deck',
     stageTime: 'Day 4 • 12:30 PM',
-    image: '/photos/photo_2026-09-16_22-01-09 (11).jpg',
+    image: '/images/events/photo_2026-09-16_22-01-09 (11).jpg',
     bio: 'Soulful acoustic melodies accompanying VIP delegates along the breathtaking karst seascape of Halong Bay.'
   }
 ];
@@ -735,6 +735,27 @@ const TG_ICON = (size = 30) => (
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
+const SMART_CITY_DEFAULT_ORDER = [
+  'hero',
+  'coreValues',
+  'highlights',
+  'problems',
+  'audiences',
+  'valueStack',
+  'matchmaker',
+  'speakers',
+  'artists',
+  'itinerary',
+  'gallery',
+  'urgency',
+  'testimonials',
+  'expoBooths',
+  'packages',
+  'guarantee',
+  'form',
+  'faqs',
+];
+
 export default function SmartCityLandingPageView({ page, settings, initialLang }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh' } = {}) {
   const [lang, setLang] = useState<'en' | 'kh'>(initialLang || 'en');
   const [heroSlide, setHeroSlide] = useState(0);
@@ -762,37 +783,10 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
   const effPhone = page?.isolatedSettings?.phone || settings?.phone || GENERAL.contactPhone;
   const effTgUsername = page?.isolatedSettings?.telegramUsername || settings?.telegramUsername || GENERAL.contactTelegramUsername;
   const effTgUrl = `/api/round-robin?page=${encodeURIComponent(page?.slug || 'smart-city-tea-cafe')}&redirect=true`;
-  const effWhatsApp = page?.isolatedSettings?.whatsapp || settings?.whatsappNumber;
 
-  const [localClaimed, setLocalClaimed] = useState(effClaimedSeats);
-  const [utmParams, setUtmParams] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    if (page?.urgency?.claimedSeats !== undefined) {
-      setLocalClaimed(page.urgency.claimedSeats);
-    }
-  }, [page?.urgency?.claimedSeats]);
-
-  const SMART_CITY_DEFAULT_ORDER = [
-    'hero',
-    'coreValues',
-    'highlights',
-    'problems',
-    'audiences',
-    'valueStack',
-    'matchmaker',
-    'speakers',
-    'artists',
-    'itinerary',
-    'gallery',
-    'urgency',
-    'testimonials',
-    'expoBooths',
-    'packages',
-    'guarantee',
-    'form',
-    'faqs',
-  ];
+  // Seats booked from this browser are added on top of the CMS count.
+  const [localBookings, setLocalBookings] = useState(0);
+  const localClaimed = Math.min(effClaimedSeats + localBookings, effTotalSeats);
 
   const effectiveSectionOrder = React.useMemo(() => {
     if (Array.isArray(page?.sectionOrder)) {
@@ -808,7 +802,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
       return false;
     }
     if (!page?.sectionVisibility) return true;
-    return (page.sectionVisibility as any)[key] !== false;
+    return (page.sectionVisibility as Record<string, boolean | undefined>)[key] !== false;
   };
 
   const isHighlightsVisible = isVisible('highlights');
@@ -848,7 +842,8 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
     : GALLERY_ITEMS;
 
   // Effective Booths, Speakers, Artists (fallback to rich defaults if not configured)
-  const formExtraBooths = (page?.formConfig as any)?._extra?.expoBooths;
+  // Older Supabase rows stored extra page fields under formConfig._extra.
+  const formExtraBooths = (page?.formConfig as { _extra?: { expoBooths?: LandingPage['expoBooths'] } } | undefined)?._extra?.expoBooths;
   const effectiveBooths = (page?.expoBooths && page.expoBooths.length > 0)
     ? page.expoBooths
     : (Array.isArray(formExtraBooths) && formExtraBooths.length > 0)
@@ -862,30 +857,6 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
   const effectiveArtists = (page?.artists && page.artists.length > 0)
     ? page.artists
     : DEFAULT_ARTISTS;
-
-  // ── Restore saved language & capture UTMs on mount
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const urlLang = params.get('lang');
-      if (urlLang === 'kh' || urlLang === 'en') {
-        setLang(urlLang);
-      } else if (initialLang) {
-        setLang(initialLang);
-      } else {
-        const savedLang = localStorage.getItem('khb_lang');
-        if (savedLang === 'kh' || savedLang === 'en') {
-          setLang(savedLang);
-        }
-      }
-      const utm: Record<string, string> = {};
-      ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid', 'ttclid'].forEach(k => {
-        const v = params.get(k);
-        if (v) utm[k] = v;
-      });
-      setUtmParams(utm);
-    } catch { /* silent */ }
-  }, []);
 
   // Merge dynamic page data into active language content
   const baseContent = CONTENT[lang];
@@ -958,11 +929,11 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
     ? (khTrans?.valueStack?.inclusions && khTrans.valueStack.inclusions.length > 0 ? khTrans.valueStack.inclusions : c.inclusions)
     : (page?.valueStack?.inclusions && page.valueStack.inclusions.length > 0 ? page.valueStack.inclusions : c.inclusions);
 
-  const inclusionsList = inclusionsSource.map((item: any, idx: number) => ({
+  const inclusionsList = inclusionsSource.map((item, idx) => ({
     id: idx + 1,
     title: item.title,
     desc: item.desc,
-    price: item.standalonePrice ? `$${item.standalonePrice}` : (CONTENT.en.valueStackPrices[idx] ? `$${CONTENT.en.valueStackPrices[idx]}` : '')
+    price: 'standalonePrice' in item && item.standalonePrice ? `$${item.standalonePrice}` : (CONTENT.en.valueStackPrices[idx] ? `$${CONTENT.en.valueStackPrices[idx]}` : '')
   }));
 
   // ── Hero slider
@@ -1035,6 +1006,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
     e.preventDefault();
     if (!regName.trim() || !regPhone.trim()) return;
     setSubmitting(true);
+    const utmParams = new URLSearchParams(window.location.search);
     try {
       const res = await fetch('/api/leads', {
         method: 'POST',
@@ -1048,10 +1020,10 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
           landingPageTitle: page?.title || 'Smart City, Tea & Cafe Business Trip to Vietnam 2026',
           source: 'landing_page',
           customFields: { seat: String(regSeat), profile: regProfile },
-          utmSource: utmParams.utm_source,
-          utmMedium: utmParams.utm_medium,
-          utmCampaign: utmParams.utm_campaign,
-          utmContent: utmParams.utm_content,
+          utmSource: utmParams.get('utm_source') || undefined,
+          utmMedium: utmParams.get('utm_medium') || undefined,
+          utmCampaign: utmParams.get('utm_campaign') || undefined,
+          utmContent: utmParams.get('utm_content') || undefined,
           referrer: typeof document !== 'undefined' ? document.referrer : '',
         }),
       });
@@ -1059,7 +1031,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
       if (res.ok && result.success) {
         setSuccessSeat(regSeat);
         setSubmitted(true);
-        setLocalClaimed(prev => Math.min(prev + 1, effTotalSeats));
+        setLocalBookings(prev => prev + 1);
         trackLandingEvent(page, 'form_submit', {
           seat: regSeat,
           profile: regProfile,
@@ -1243,8 +1215,8 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
               <p className="section-subtitle">{c.problemSubtitle}</p>
             </div>
             <div className="problem-grid">
-              {c.problems.map((p: any, i: number) => (
-                <div key={p.id || i} className="problem-card">
+              {c.problems.map((p, i) => (
+                <div key={('id' in p && p.id) || i} className="problem-card">
                   <div className="problem-icon-box">{ICONS[p.icon || 'trend-down'] || ICONS['trend-down']}</div>
                   <h3>{p.title}</h3>
                   <p>{p.desc}</p>
@@ -1271,8 +1243,8 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
               <p className="section-subtitle">{c.audienceSecSub}</p>
             </div>
             <div className="audience-grid">
-              {c.audiences.map((a: any, i: number) => (
-                <div key={a.id || i} className="audience-card">
+              {c.audiences.map((a, i) => (
+                <div key={('id' in a && a.id) || i} className="audience-card">
                   <div className="audience-card-icon">{ICONS[a.icon || 'users'] || ICONS.users}</div>
                   <div className="audience-card-title">{a.title}</div>
                   <div className="audience-card-desc">{a.desc}</div>
@@ -1429,7 +1401,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
               gap: '24px',
               marginTop: '40px'
             }}>
-              {effectiveSpeakers.map((spk: any, sIdx: number) => (
+              {effectiveSpeakers.map((spk, sIdx) => (
                 <div key={spk.id || sIdx} style={{
                   background: 'rgba(255, 255, 255, 0.04)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -1474,7 +1446,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                   )}
                   <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#FFFFFF', margin: '0 0 6px 0' }}>{spk.name}</h3>
                   <div style={{ fontSize: '13px', color: '#F59E0B', fontWeight: 600, marginBottom: '4px' }}>{spk.title}</div>
-                  <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '14px' }}>{spk.organization || spk.company}</div>
+                  <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '14px' }}>{spk.organization}</div>
                   {spk.topic && (
                     <div style={{
                       fontSize: '13px',
@@ -1525,7 +1497,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
               gap: '24px',
               marginTop: '40px'
             }}>
-              {effectiveArtists.map((art: any, aIdx: number) => (
+              {effectiveArtists.map((art, aIdx) => (
                 <div key={art.id || aIdx} style={{
                   background: 'rgba(255, 255, 255, 0.03)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -1729,10 +1701,10 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
               <p className="section-subtitle">{c.testimonialsSubtitle}</p>
             </div>
             <div className="testimonials-grid">
-              {c.testimonials.map((t: any, i: number) => {
+              {c.testimonials.map((t, i) => {
                 const initials = t.name.split(' ').map((w: string) => w[0]).slice(0, 2).join('');
                 return (
-                  <div key={t.id || i} className="testimonial-card">
+                  <div key={('id' in t && typeof t.id === 'string' && t.id) || i} className="testimonial-card">
                     <div className="testimonial-stars">★★★★★</div>
                     <p className="testimonial-quote">&ldquo;{t.quote}&rdquo;</p>
                     <div className="testimonial-author">
@@ -1771,7 +1743,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
               gap: '24px',
               marginTop: '40px'
             }}>
-              {effectiveBooths.map((booth: any, bIdx: number) => (
+              {effectiveBooths.map((booth, bIdx) => (
                 <div key={booth.id || bIdx} style={{
                   background: booth.popular ? 'linear-gradient(180deg, rgba(217, 119, 6, 0.15) 0%, rgba(255, 255, 255, 0.04) 100%)' : 'rgba(255, 255, 255, 0.04)',
                   border: booth.popular ? '2px solid #D97706' : '1px solid rgba(255, 255, 255, 0.1)',
@@ -1818,7 +1790,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                     <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginLeft: '6px' }}>/ full expo duration</span>
                   </div>
                   <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
-                    {booth.inclusions?.map((inc: string, iIdx: number) => (
+                    {('features' in booth ? booth.features : booth.inclusions)?.map((inc: string, iIdx: number) => (
                       <li key={iIdx} style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.8)', display: 'flex', alignItems: 'flex-start', gap: '8px', lineHeight: 1.5 }}>
                         <span style={{ color: '#10B981', fontWeight: 700 }}>✓</span>
                         <span>{inc}</span>
@@ -2188,7 +2160,6 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
   };
 
   return (
-    <PagePasswordGate page={page}>
       <div className={`smart-city-landing${lang === 'kh' ? ' lang-kh' : ''}`}>
         {/* ── Tracking Engine (Internal Analytics & External Pixels) ── */}
         <LandingPageTracking page={page} lang={lang} />
@@ -2306,7 +2277,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
           {isVisible('expoBooths') && <li><a href="#expo-booths" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'ស្តង់ពិព័រណ៍' : 'Booths'}</a></li>}
           {isVisible('packages') && <li><a href="#pricing" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navPricing}</a></li>}
           {isVisible('faqs') && <li><a href="#faq" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navFaq}</a></li>}
-          <li><a href="/smart-city-tea-cafe/optin" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>⚡ Fast 30s Opt-in</a></li>
+          <li><Link href="/smart-city-tea-cafe/optin" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>⚡ Fast 30s Opt-in</Link></li>
           {(isVisible('form') || isVisible('packages')) && <li><a href="#register" className="mobile-drawer-link highlight" onClick={() => setDrawerOpen(false)}>{c.navCtaMobile}</a></li>}
         </ul>
         <div className="mobile-drawer-footer">
@@ -2377,13 +2348,13 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                   ? 'អ្នកគ្រប់គ្រងបានបិទការបង្ហាញផ្នែកទាំងអស់តាមរយៈ CMS Section Display Toggles។ សូមចូលទៅផ្ទាំងគ្រប់គ្រង Admin ដើម្បីបើកផ្នែកដែលចង់បង្ហាញឡើងវិញ។'
                   : 'All sections for this campaign have been toggled off in the CMS Section Display Toggles. Enable desired sections in the Admin portal to display content.'}
               </p>
-              <a
+              <Link
                 href="/admin/pages"
                 className="btn-nav-cta"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
               >
                 <span>{lang === 'kh' ? 'ចូលទៅ Admin CMS' : 'Open Admin CMS'}</span>
-              </a>
+              </Link>
             </div>
           </div>
         </section>
@@ -2401,9 +2372,9 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             {isVisible('urgency') && <li><a href="#seats">Seat Chart</a></li>}
             {isVisible('packages') && <li><a href="#pricing">Pricing</a></li>}
             {isVisible('faqs') && <li><a href="#faq">FAQ</a></li>}
-            <li><a href="/smart-city-tea-cafe/app">Mobile App Shell</a></li>
-            <li><a href="/smart-city-tea-cafe/optin">Fast Opt-in</a></li>
-            <li><a href="/admin">Organizer CMS</a></li>
+            <li><Link href="/smart-city-tea-cafe/app">Mobile App Shell</Link></li>
+            <li><Link href="/smart-city-tea-cafe/optin">Fast Opt-in</Link></li>
+            <li><Link href="/admin">Organizer CMS</Link></li>
           </ul>
         </div>
       </footer>
@@ -2447,7 +2418,6 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
         </div>
       )}
       </div>
-    </PagePasswordGate>
   );
 }
 

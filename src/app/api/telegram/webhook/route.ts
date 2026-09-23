@@ -139,7 +139,6 @@ export async function POST(req: NextRequest) {
       // Extract components — payload starts with "khb" prefix
       let pageSlug = '';
       let staffId = '';
-      let logId = '';
 
       if (parts[0] === 'khb' && parts.length >= 2) {
         // Find the staff-N part to split page slug from staff ID
@@ -149,8 +148,6 @@ export async function POST(req: NextRequest) {
           // Page slug is everything between 'khb' and 'staff'
           pageSlug = parts.slice(1, staffPartIndex).join('_');
           staffId = `staff-${parts[staffPartIndex + 1]}`;
-          // Log ID is the rest
-          logId = parts.slice(staffPartIndex + 2).join('_');
         } else {
           // Legacy format: khb_<pageSlug>_<timestamp> (no staff info)
           pageSlug = parts.slice(1, -1).join('_') || parts.slice(1).join('_');
@@ -277,7 +274,7 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ ok: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Telegram webhook error:', error);
     // Always return 200 to Telegram to avoid retry storms
     return NextResponse.json({ ok: true });

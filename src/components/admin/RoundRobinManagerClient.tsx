@@ -1,45 +1,41 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { 
-  Users, 
-  Send, 
-  CheckCircle2, 
-  AlertTriangle, 
-  RefreshCw, 
-  Sliders, 
-  ExternalLink, 
-  MessageCircle, 
-  Clock, 
-  Sparkles, 
-  Search, 
+import {
+  Users,
+  Send,
+  CheckCircle2,
+  AlertTriangle,
+  RefreshCw,
+  Sliders,
+  ExternalLink,
+  MessageCircle,
+  Clock,
+  Sparkles,
+  Search,
   X,
   Check,
   Building,
   Activity,
   ArrowRight,
   Shield,
-  HelpCircle,
   TrendingUp,
   Percent,
   Rocket,
   Dices,
   Zap,
   BarChart3,
-  Play,
   FileText,
   Smartphone,
   RotateCcw,
   Code,
-  Copy,
   UserPlus,
-  Plus,
   Trash2
 } from 'lucide-react';
-import { 
-  RoundRobinSettings, 
-  RoundRobinStaff, 
-  RoundRobinLog, 
+import {
+  RoundRobinSettings,
+  RoundRobinStaff,
+  RoundRobinLog,
   RoundRobinAlgorithm,
   SystemSettings,
   Lead
@@ -52,6 +48,7 @@ import {
   renderLeadTemplate,
   renderWhatsappGreeting
 } from '@/lib/round-robin';
+import { errorMessage } from '@/lib/errors';
 
 interface RoundRobinManagerClientProps {
   initialSettings: RoundRobinSettings;
@@ -107,6 +104,21 @@ const samplePresets = [
     message: 'Coordinating a 5-member procurement delegation for agricultural tech.'
   }
 ];
+
+/** Response shape of POST /api/round-robin/simulate (fields vary by mode). */
+interface SimulationResult {
+  success: boolean;
+  mode?: string;
+  error?: string;
+  message?: string;
+  lead?: Lead;
+  routing?: Lead['routing'];
+  staff?: { id: string; name: string; username: string; role?: string; chatId?: string };
+  targetTelegramUrl?: string;
+  totalSimulated?: number;
+  summary?: Array<{ staffId: string; staffName: string; configuredWeight: number; assignedCount: number; actualPercentage: number }>;
+  history?: Array<{ leadIndex: number; assignedStaffId: string; assignedStaffName: string; effectivePercentage: number }>;
+}
 
 export default function RoundRobinManagerClient({
   initialSettings,
@@ -169,7 +181,7 @@ export default function RoundRobinManagerClient({
     pageSlug: 'smart-city-tea-cafe'
   });
   const [batchCount, setBatchCount] = useState<number>(10);
-  const [simulationResult, setSimulationResult] = useState<any | null>(null);
+  const [simulationResult, setSimulationResult] = useState<SimulationResult | null>(null);
 
   // Compute total percentage
   const totalPercentage = useMemo(() => {
@@ -338,13 +350,13 @@ export default function RoundRobinManagerClient({
           diagnostic: data.diagnostic
         }
       }));
-    } catch (err: any) {
+    } catch (err) {
       setTestResults((prev) => ({
         ...prev,
         [staff.id]: {
           testing: false,
           success: false,
-          error: err?.message || 'Failed to ping Telegram'
+          error: errorMessage(err, 'Failed to ping Telegram')
         }
       }));
     }
@@ -530,10 +542,10 @@ export default function RoundRobinManagerClient({
 
       const data = await res.json();
       setCustomTemplateTestResult(data);
-    } catch (err: any) {
+    } catch (err) {
       setCustomTemplateTestResult({
         success: false,
-        error: err?.message || 'Failed to send test alert to Telegram',
+        error: errorMessage(err, 'Failed to send test alert to Telegram'),
         diagnostic: 'Network error communicating with Telegram Bot API.'
       });
     } finally {
@@ -605,10 +617,10 @@ export default function RoundRobinManagerClient({
           }
         } catch {}
       }
-    } catch (err: any) {
+    } catch (err) {
       setSimulationResult({
         success: false,
-        error: err?.message || 'Simulation execution failed'
+        error: errorMessage(err, 'Simulation execution failed')
       });
     } finally {
       setIsSimulating(false);
@@ -1458,7 +1470,7 @@ export default function RoundRobinManagerClient({
                     <span>WhatsApp Pre-filled Greeting Template (សារស្វាគមន៍ WhatsApp ជាមុន)</span>
                   </label>
                   <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5">
-                    អត្ថបទដែលបំពេញទុកជាមុននៅពេលបុគ្គលិកចុចប៊ូតុង "ផ្ញើសារ WhatsApp" ដើម្បីទាក់ទងទៅអតិថិជន។
+                    អត្ថបទដែលបំពេញទុកជាមុននៅពេលបុគ្គលិកចុចប៊ូតុង &quot;ផ្ញើសារ WhatsApp&quot; ដើម្បីទាក់ទងទៅអតិថិជន។
                   </p>
                 </div>
 
@@ -1657,7 +1669,7 @@ export default function RoundRobinManagerClient({
                   </span>
                 </div>
                 <div className="p-3 rounded-xl bg-[#0A2016] border border-emerald-900/60 text-emerald-100 text-[11px] italic font-sans">
-                  "{previewWhatsappText}"
+                  &quot;{previewWhatsappText}&quot;
                 </div>
               </div>
             </div>
@@ -2396,7 +2408,7 @@ export default function RoundRobinManagerClient({
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-100 dark:divide-emerald-950/60 bg-white dark:bg-[#0A1610]">
-                                {simulationResult.summary?.map((row: any, idx: number) => {
+                                {simulationResult.summary?.map((row, idx: number) => {
                                   const colorClass = staffColors[idx % staffColors.length];
                                   return (
                                     <tr key={row.staffId} className="hover:bg-slate-50 dark:hover:bg-emerald-950/20">
@@ -2434,7 +2446,7 @@ export default function RoundRobinManagerClient({
                               Sequential Routing Order (First 15 Leads):
                             </span>
                             <div className="flex flex-wrap gap-1.5">
-                              {simulationResult.history?.slice(0, 15).map((h: any) => (
+                              {simulationResult.history?.slice(0, 15).map((h) => (
                                 <span
                                   key={h.leadIndex}
                                   className="px-2 py-0.5 rounded-md bg-white dark:bg-emerald-950 border border-slate-200 dark:border-emerald-900/60 text-[10px] font-medium text-slate-700 dark:text-gray-300 font-mono"
@@ -2442,9 +2454,9 @@ export default function RoundRobinManagerClient({
                                   #{h.leadIndex} ➔ {h.assignedStaffName}
                                 </span>
                               ))}
-                              {simulationResult.history?.length > 15 && (
+                              {(simulationResult.history?.length ?? 0) > 15 && (
                                 <span className="px-2 py-0.5 text-[10px] text-slate-400 font-bold">
-                                  +{simulationResult.history.length - 15} more leads...
+                                  +{(simulationResult.history?.length ?? 0) - 15} more leads...
                                 </span>
                               )}
                             </div>

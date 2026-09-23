@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Sun, Moon, Laptop, Check } from 'lucide-react';
+import { Sun, Moon, Laptop, Check, type LucideIcon } from 'lucide-react';
 import { useTheme, ThemeMode } from '@/context/ThemeContext';
 
 interface ThemeSwitcherProps {
@@ -10,7 +10,7 @@ interface ThemeSwitcherProps {
 }
 
 export default function ThemeSwitcher({ compact = false, className = '' }: ThemeSwitcherProps) {
-  const { theme, resolvedTheme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -24,7 +24,7 @@ export default function ThemeSwitcher({ compact = false, className = '' }: Theme
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const options: { id: ThemeMode; label: string; icon: any }[] = [
+  const options: { id: ThemeMode; label: string; icon: LucideIcon }[] = [
     { id: 'light', label: 'Light', icon: Sun },
     { id: 'dark', label: 'Dark', icon: Moon },
     { id: 'system', label: 'System (Auto)', icon: Laptop }

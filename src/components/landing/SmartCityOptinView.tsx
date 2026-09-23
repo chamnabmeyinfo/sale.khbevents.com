@@ -1,30 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { LandingPage, SystemSettings } from '@/lib/types';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
-import PagePasswordGate from '@/components/common/PagePasswordGate';
 import FlagIcon from '@/components/common/FlagIcon';
 
-export default function SmartCityOptinView({ page, settings, initialLang }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh' } = {}) {
+export default function SmartCityOptinView({ page, initialLang }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh' } = {}) {
   const [lang, setLang] = useState<'en' | 'kh'>(initialLang || 'en');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const urlLang = params.get('lang');
-      if (urlLang === 'kh' || urlLang === 'en') {
-        setLang(urlLang);
-      } else if (initialLang) {
-        setLang(initialLang);
-      }
-    } catch {}
-  }, []);
 
   const effTotalSeats = page?.urgency?.totalSeats ?? 30;
   const effEarlyBirdPrice = page?.urgency?.earlyBirdPrice ? (Number(page.urgency.earlyBirdPrice) || 499) : 499;
@@ -71,7 +58,6 @@ export default function SmartCityOptinView({ page, settings, initialLang }: { pa
   const isKh = lang === 'kh';
 
   return (
-    <PagePasswordGate page={page}>
       <div style={{
         minHeight: '100vh',
         display: 'flex',
@@ -393,6 +379,5 @@ export default function SmartCityOptinView({ page, settings, initialLang }: { pa
         </div>
       </div>
     </div>
-    </PagePasswordGate>
   );
 }

@@ -65,7 +65,7 @@ export function getMarketingParams(): {
 export function trackClientEvent(
   pageSlug: string,
   eventType: TrackingEventType,
-  eventData?: Record<string, any>,
+  eventData?: Record<string, unknown>,
   lang?: 'en' | 'kh'
 ) {
   if (typeof window === 'undefined' || !pageSlug) return;
@@ -102,10 +102,20 @@ export function trackClientEvent(
 }
 
 // Unified Tracker for internal AND external third-party events
+type PixelFn = (...args: unknown[]) => void;
+
+/** Globals installed by the Meta, Google and TikTok pixel snippets, when present. */
+interface TrackingWindow extends Window {
+  fbq?: PixelFn;
+  gtag?: PixelFn;
+  ttq?: { track: PixelFn };
+  dataLayer?: unknown[];
+}
+
 export function trackLandingEvent(
   page?: LandingPage,
   eventType?: TrackingEventType,
-  eventData?: Record<string, any>,
+  eventData?: Record<string, unknown>,
   lang?: 'en' | 'kh'
 ) {
   if (!page) return;
@@ -118,7 +128,7 @@ export function trackLandingEvent(
 
   // 2. External Third-Party Pixels
   if (typeof window === 'undefined') return;
-  const win = window as any;
+  const win = window as TrackingWindow;
   const tracking = page.tracking;
 
   // Meta (Facebook) Pixel
@@ -183,7 +193,7 @@ export function trackLandingEvent(
   }
 
   // TikTok Pixel
-  if (tracking?.tiktokPixelId && tracking.tiktokPixelEnabled !== false && typeof win.ttq === 'function') {
+  if (tracking?.tiktokPixelId && tracking.tiktokPixelEnabled !== false && typeof win.ttq?.track === 'function') {
     if (eventType === 'form_submit') {
       win.ttq.track('SubmitForm', {
         contents: [{ content_id: slug, content_name: page.title }],

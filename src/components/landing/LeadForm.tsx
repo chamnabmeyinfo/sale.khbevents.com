@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, Suspense } from 'react';
 import { Send, CheckCircle2, ShieldCheck, Sparkles, MessageCircle, Lock } from 'lucide-react';
 import { trackClientEvent } from '@/components/common/LandingPageTracking';
 import { IsolatedPageSettings } from '@/lib/types';
+import { errorMessage as describeError } from '@/lib/errors';
 
 interface LeadFormProps {
   landingPageSlug?: string;
@@ -44,24 +45,14 @@ function LeadFormInner({
     message: ''
   });
 
-  const [utm, setUtm] = useState<{ source?: string; medium?: string; campaign?: string; content?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      setUtm({
-        source: params.get('utm_source') || undefined,
-        medium: params.get('utm_medium') || undefined,
-        campaign: params.get('utm_campaign') || undefined,
-        content: params.get('utm_content') || undefined
-      });
-    }
-  }, []);
-
-  useEffect(() => {
+  // When the estimator hands over new selections, merge them into the form.
+  const [appliedPrefill, setAppliedPrefill] = useState(prefillData);
+  if (prefillData !== appliedPrefill) {
+    setAppliedPrefill(prefillData);
     if (prefillData) {
       setFormData((prev) => ({
         ...prev,
@@ -71,12 +62,13 @@ function LeadFormInner({
         packageInterest: prefillData.packageInterest || prev.packageInterest
       }));
     }
-  }, [prefillData]);
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setErrorMessage('');
+    const utm = new URLSearchParams(window.location.search);
 
     try {
       const res = await fetch('/api/leads', {
@@ -86,10 +78,10 @@ function LeadFormInner({
           ...formData,
           landingPageSlug,
           landingPageTitle,
-          utmSource: utm.source,
-          utmMedium: utm.medium,
-          utmCampaign: utm.campaign,
-          utmContent: utm.content,
+          utmSource: utm.get('utm_source') || undefined,
+          utmMedium: utm.get('utm_medium') || undefined,
+          utmCampaign: utm.get('utm_campaign') || undefined,
+          utmContent: utm.get('utm_content') || undefined,
           referrer: typeof document !== 'undefined' ? document.referrer : ''
         })
       });
@@ -110,8 +102,8 @@ function LeadFormInner({
           window.location.href = isolatedSettings.redirectUrl!;
         }, 1500);
       }
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Something went wrong. Please call or WhatsApp us.');
+    } catch (err) {
+      setErrorMessage(describeError(err, 'Something went wrong. Please call or WhatsApp us.'));
     } finally {
       setIsSubmitting(false);
     }
