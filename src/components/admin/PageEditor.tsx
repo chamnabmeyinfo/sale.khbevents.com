@@ -25,6 +25,7 @@ import {
 import KhmerTranslationEditor from './KhmerTranslationEditor';
 import TrackingAndPixelsEditor from './TrackingAndPixelsEditor';
 import IsolatedSettingsEditor from './IsolatedSettingsEditor';
+import ImageManager from './ImageManager';
 import {
   LandingPage,
   PackageTier,
@@ -432,7 +433,6 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
       : linkedTab === 'settings' || linkedTab === 'isolatedSettings' ? 'isolatedSettings'
       : 'general');
   const [langTab, setLangTab] = useState<'en' | 'kh'>('en');
-  const [newGalleryUrl, setNewGalleryUrl] = useState('');
   const [newFeatureText, setNewFeatureText] = useState<{ [pkgIdx: number]: string }>({});
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -810,19 +810,15 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // GALLERY CRUD
+  // PHOTOS: the hero slideshow is the gallery in order; the first photo is the cover (heroImage)
   // ─────────────────────────────────────────────────────────────────────────────
-  const addGalleryImage = (url: string) => {
-    const clean = url.trim();
-    if (!clean) return;
-    setFormData({ ...formData, gallery: [...(formData.gallery || []), clean] });
-    setNewGalleryUrl('');
-  };
-
-  const removeGalleryImage = (idx: number) => {
-    const arr = (formData.gallery || []).filter((_, i) => i !== idx);
-    setFormData({ ...formData, gallery: arr });
-  };
+  const slideshowPhotos: string[] = (() => {
+    const gallery = formData.gallery || [];
+    const cover = formData.heroImage;
+    if (!cover) return gallery;
+    return [cover, ...gallery.filter(g => g !== cover)];
+  })();
+  const setSlideshowPhotos = (list: string[]) => setFormData({ ...formData, heroImage: list[0] || '', gallery: list });
 
   // ─────────────────────────────────────────────────────────────────────────────
   // FAQS CRUD
@@ -1567,36 +1563,15 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               </div>
             </div>
 
-            {/* Hero Image Selection */}
-            <div className="space-y-2 pt-2">
-              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300">
-                Hero Image URL
-              </label>
-              <input
-                type="text"
-                value={formData.heroImage || ''}
-                onChange={(e) => setFormData({ ...formData, heroImage: e.target.value })}
-                placeholder="/images/events/photo_2026-09-16_22-01-09 (2).jpg"
-                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
+            {/* Hero slideshow photos */}
+            <div className="pt-2">
+              <ImageManager
+                title="Hero slideshow photos"
+                hint="The first photo is the cover and opens the slideshow. Drag photos to arrange them, upload new ones, or add from the library. The same photos, in this order, make up the Gallery section."
+                images={slideshowPhotos}
+                onChange={setSlideshowPhotos}
+                library={PRESET_PHOTOS}
               />
-
-              <div className="text-[11px] text-slate-500 dark:text-gray-400 font-semibold pt-1">
-                Quick Select from Event Photo Library:
-              </div>
-              <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2 pt-1">
-                {PRESET_PHOTOS.map((photo, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, heroImage: photo })}
-                    className={`rounded-xl overflow-hidden aspect-[4/3] border-2 transition-all cursor-pointer ${
-                      formData.heroImage === photo ? 'border-amber-400 scale-105 shadow-md' : 'border-transparent opacity-75 hover:opacity-100'
-                    }`}
-                  >
-                    <img src={photo} alt={`Preset ${i}`} className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
         )}
@@ -2966,69 +2941,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               </div>
             </div>
 
-            {/* Add Custom URL */}
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={newGalleryUrl}
-                onChange={(e) => setNewGalleryUrl(e.target.value)}
-                placeholder="Enter image URL or path (/images/events/...)"
-                className="flex-1 px-4 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
-              />
-              <button
-                type="button"
-                onClick={() => addGalleryImage(newGalleryUrl)}
-                className="px-4 py-2 rounded-xl bg-amber-400 text-black font-bold text-xs cursor-pointer hover:bg-amber-300"
-              >
-                + Add Image
-              </button>
-            </div>
-
-            {/* Quick 1-Click Library Presets */}
-            <div className="space-y-1 pt-2">
-              <div className="text-[11px] text-slate-500 dark:text-gray-400 font-semibold">
-                Click any photo to instantly add it to this page gallery:
-              </div>
-              <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
-                {PRESET_PHOTOS.map((photo, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => addGalleryImage(photo)}
-                    className="rounded-xl overflow-hidden aspect-[4/3] border border-slate-200 dark:border-emerald-900/40 hover:border-amber-400 hover:scale-105 transition-all cursor-pointer group relative"
-                    title="Click to add to gallery"
-                  >
-                    <img src={photo} alt="" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold">
-                      + Add
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Active Gallery Grid */}
-            <div className="space-y-2 pt-4 border-t border-slate-200 dark:border-emerald-950">
-              <div className="text-xs font-bold text-slate-900 dark:text-white">Current Gallery Items:</div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {(formData.gallery || []).map((img, idx) => (
-                  <div key={idx} className="rounded-2xl overflow-hidden border border-slate-200 dark:border-emerald-900/50 bg-slate-100 dark:bg-black/30 relative group shadow-sm">
-                    <img src={img} alt={`Gallery ${idx + 1}`} className="w-full aspect-[4/3] object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => removeGalleryImage(idx)}
-                      className="absolute top-2 right-2 p-1.5 rounded-lg bg-rose-600/90 text-white hover:bg-rose-700 cursor-pointer shadow"
-                      title="Delete image"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                    <div className="p-2 text-[10px] text-slate-500 dark:text-gray-400 truncate bg-white dark:bg-[#07130D]">
-                      {img}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ImageManager
+              title="Photos in order"
+              hint="Identical to the hero slideshow: the first photo is the cover. Arrange here or in the Hero tab."
+              images={slideshowPhotos}
+              onChange={setSlideshowPhotos}
+              library={PRESET_PHOTOS}
+            />
           </div>
         )}
 

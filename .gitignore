@@ -50,3 +50,6 @@ next-env.d.ts
 
 # content-pack sync bundle built at build time
 /.sync/
+
+# admin image uploads in local development (production uses Supabase Storage)
+/public/uploads/
