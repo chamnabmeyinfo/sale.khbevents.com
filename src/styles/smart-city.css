@@ -646,7 +646,8 @@ html:not(.light) .smart-city-landing {
   display: inline-block;
   font-size: 0.85rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
   margin-top: 16px;
   padding-bottom: 2px;
   border-bottom: 1px dashed rgba(255, 255, 255, 0.35);

@@ -3,16 +3,16 @@
     {
       "id": "page-smart-city",
       "slug": "smart-city-tea-cafe",
-      "title": "Smart City, Tea & Cafe Business Delegation 2026",
-      "subtitle": "Exclusive B2B Business Delegation to Hanoi & Halong Bay, Vietnam",
-      "description": "Join Cambodia's premier business delegation to explore Cafe Show Vietnam & Smart City Expo, direct factory visits, and business matchmaking in Hanoi & Halong Bay.",
+      "title": "Smart City, Tea & Cafe Business Trip to Vietnam 2026",
+      "subtitle": "Smart City, Tea & Cafe Business Trip to Vietnam · 8 to 11 October 2026",
+      "description": "A 4-day B2B delegation to Hanoi and Halong Bay for Cambodian café, tea and retail-tech owners: Cafe Show Vietnam, Smart City Expo, a factory visit and matched supplier meetings with a trilingual guide.",
       "category": "Trade Delegation",
-      "badge": "Exclusive 30 VIP Seats Only",
+      "badge": "Cambodia's B2B delegation to Vietnam · 30 seats",
       "template": "b2b-delegation",
       "status": "published",
-      "heroHeadline": "Smart City, Tea & Cafe Business Trip to Vietnam 2026.",
-      "heroSubheadline": "Come Home With Suppliers, Not Just Photos. Connect with leading manufacturers, explore Smart City Expo & Cafe Show Vietnam, and uncover high-value wholesale partnerships in Hanoi & Halong Bay.",
-      "heroCtaText": "Reserve Your Seat ($550)",
+      "heroHeadline": "Come home with suppliers, not just photos.",
+      "heroSubheadline": "A 4-day B2B trip for Cambodian café, tea and retail-tech owners: two international expos, a factory visit and matched supplier meetings in Hanoi, with a trilingual guide beside you at every negotiation.",
+      "heroCtaText": "Reserve my seat, no payment today",
       "heroCtaLink": "#register",
       "heroImage": "/photos/photo_2026-09-16_22-01-09 (2).jpg",
       "eventDate": "2026-10-08",
@@ -21,8 +21,8 @@
       "venueAddress": "Vietnam Exhibition Center & Halong Bay UNESCO World Heritage Site",
       "countdownEnabled": true,
       "urgency": {
-        "riskNote": "No payment today • Seat held instantly • Reply within 15 mins",
-        "noticeText": "Early Bird Special: Save $51 before Sept 8, 2026 | Strictly limited to 30 seats",
+        "riskNote": "No payment today · Seat held instantly · Coordinator replies within 15 minutes",
+        "noticeText": "",
         "totalSeats": 30,
         "claimedSeats": 19,
         "regularPrice": "599",
@@ -54,101 +54,101 @@
         {
           "id": "cv-1",
           "num": "01",
-          "desc": "Buy at the source and cut 25% - 35% off what middlemen charge. One negotiated container order can repay the entire trip.",
           "icon": "chart",
-          "title": "Factory-Direct Pricing Power"
+          "title": "Factory-direct pricing",
+          "desc": "Buy at the source and cut 25 to 35% off what brokers charge. One negotiated container order can pay for the whole trip."
         },
         {
           "id": "cv-2",
           "num": "02",
-          "desc": "Walk the factory floor, inspect the QC lab, and look your supplier in the eye before a single dollar is wired.",
           "icon": "shield",
-          "title": "Trust Built Face-to-Face"
+          "title": "Trust built face to face",
+          "desc": "Walk the factory floor, see the QC lab and look your supplier in the eye before a single dollar is wired."
         },
         {
           "id": "cv-3",
           "num": "03",
-          "desc": "Secure exclusive distribution for Cambodia before another importer signs the same supplier.",
           "icon": "trophy",
-          "title": "Exclusive Territory Rights"
+          "title": "Exclusive rights for Cambodia",
+          "desc": "Sign distribution for Cambodia before another importer signs the same supplier."
         },
         {
           "id": "cv-4",
           "num": "04",
-          "desc": "Two international expos in one trip — see next year's products, packaging, and smart-retail tech first.",
           "icon": "zap",
-          "title": "2026 Trends Before Competitors"
+          "title": "Next year's products, this year",
+          "desc": "Two international expos in one trip. See 2026 products, packaging and smart-retail tech before your competitors do."
         },
         {
-          "id": "cv-1790000295513",
+          "id": "cv-5",
           "num": "05",
-          "desc": "The journey that offer you both business opportunities and relax which you never feel losing money. ",
           "icon": "chart",
-          "title": "Business and leisure together in a journey"
+          "title": "Business and leisure in one trip",
+          "desc": "Two expo days and a factory visit, then Hanoi's Old Quarter and a Halong Bay cruise. You come home with deals and a rest."
         },
         {
-          "id": "cv-1790000373866",
+          "id": "cv-6",
           "num": "06",
-          "desc": "By attend overseas market, you gain wider view and insights on your market so that you will know how to strengthen your current business in Cambodia. ",
           "icon": "chart",
-          "title": "Gain outside views on your industry "
+          "title": "See your market from outside",
+          "desc": "Walking a foreign market shows you where Cambodia's café and retail scene is heading, and how to strengthen your business at home."
         }
       ],
       "problems": [
         {
           "id": "prob-1",
-          "desc": "Buying through brokers and resellers adds 25% - 35% to every order before it ever reaches your warehouse.",
-          "icon": "trending-down",
-          "title": "Middleman Markups"
+          "icon": "trend-down",
+          "title": "Middleman markups",
+          "desc": "Brokers and resellers add 25 to 35% to every order before it reaches your warehouse."
         },
         {
           "id": "prob-2",
-          "desc": "Without a shared language, deals die in translation — and you can't verify who is a real factory and who is a middleman.",
-          "icon": "message-square-off",
-          "title": "Language & Trust Barriers"
+          "icon": "chat",
+          "title": "Language and trust barriers",
+          "desc": "Without a shared language deals die in translation, and you cannot tell a real factory from a trader with a catalogue."
         },
         {
           "id": "prob-3",
-          "desc": "Ordering from photos and hoping. No factory floor, no QC lab, no face-to-face MOQ negotiation, no relationship.",
           "icon": "search",
-          "title": "Blind Online Sourcing"
+          "title": "Blind online sourcing",
+          "desc": "Ordering from photos and hoping. No factory floor, no QC lab, no face-to-face MOQ negotiation, no relationship."
         }
       ],
       "audiences": [
         {
           "id": "aud-1",
-          "tag": "IoT & Tech",
-          "desc": "Source smart urban technologies, IoT solutions, smart home automation, and security equipment directly from certified manufacturers.",
           "icon": "cpu",
-          "title": "Smart City & Tech Importers"
+          "title": "Smart city and tech importers",
+          "desc": "Source IoT, smart-home, smart-lighting and security equipment directly from certified manufacturers.",
+          "tag": "IoT & Tech"
         },
         {
           "id": "aud-2",
-          "tag": "F&B Roasters",
-          "desc": "Discover premium Vietnamese tea, coffee beans, syrups, packaging, commercial espresso machines, and brewing technologies.",
           "icon": "coffee",
-          "title": "Cafe & Tea Brand Owners"
+          "title": "Cafe and tea brand owners",
+          "desc": "Vietnamese tea and coffee beans, syrups, packaging, commercial espresso machines and brewing equipment at factory prices.",
+          "tag": "F&B Roasters"
         },
         {
           "id": "aud-3",
-          "tag": "Supply Chain",
-          "desc": "Establish exclusive distribution rights, negotiate factory-direct wholesale pricing, and explore OEM/ODM partnerships.",
           "icon": "truck",
-          "title": "Wholesalers & Distributors"
+          "title": "Wholesalers and distributors",
+          "desc": "Exclusive distribution rights, factory-direct wholesale pricing and OEM/ODM partnerships.",
+          "tag": "Supply Chain"
         },
         {
           "id": "aud-4",
-          "tag": "Franchise & Retail",
-          "desc": "Explore top Vietnamese and international franchise brands, trendsetting beverage concepts, and lucrative retail models.",
           "icon": "users",
-          "title": "F&B Entrepreneurs & Investors"
+          "title": "F&B entrepreneurs and investors",
+          "desc": "Vietnamese and international franchise brands, new beverage concepts and retail models worth bringing to Cambodia.",
+          "tag": "Franchise & Retail"
         },
         {
-          "id": "aud-1790000576737",
-          "tag": "F&B and IOT",
-          "desc": "Any persons that are looking for business ideas and opportunities in the area of IoT and Coffee and Tea are highly recommended to attend this event. ",
+          "id": "aud-5",
+          "tag": "Explorers",
           "icon": "users",
-          "title": "People interesting on Smart City and Tea, Coffee businesses "
+          "title": "Anyone exploring IoT, coffee or tea businesses",
+          "desc": "Looking for your next business idea in smart-city tech, coffee or tea? Four days inside the market beats four months of research."
         }
       ],
       "itinerary": [
@@ -278,84 +278,79 @@
         }
       ],
       "valueStack": {
-        "tag": "Value Stack",
-        "title": "One Price. Nine Things Fully Handled.",
-        "payLabel": "Your Early Bird investment",
-        "subtitle": "Everything below is included in your seat. Arrange each of these yourself and the same trip would cost you far more — in money and in months of effort.",
+        "tag": "What you get",
+        "title": "One price. Nine things handled.",
+        "subtitle": "Everything below is in your seat price. Book each piece yourself and the same trip costs more money and weeks of your time.",
+        "note": "What it would cost you to arrange alone",
+        "totalLabel": "Total if arranged alone",
+        "totalValue": "$910+",
+        "payLabel": "Your seat price",
         "inclusions": [
           {
             "id": "inc-1",
-            "desc": "Phnom Penh - Hanoi roundtrip flights included.",
-            "title": "Roundtrip Flight Tickets",
+            "title": "Round-trip flights",
+            "desc": "Phnom Penh to Hanoi and back.",
             "standalonePrice": 220
           },
           {
             "id": "inc-2",
-            "desc": "Premium hotel accommodation with twin/double sharing.",
-            "title": "Hotel Stay (3 Nights / 4 Days)",
+            "title": "Hotel, 3 nights",
+            "desc": "Twin or double sharing in Hanoi and Halong Bay.",
             "standalonePrice": 150
           },
           {
             "id": "inc-3",
-            "desc": "Buffet breakfast provided every morning at the hotel.",
-            "title": "Daily Hotel Breakfast",
+            "title": "Breakfast every day",
+            "desc": "Hotel buffet each morning.",
             "standalonePrice": 25
           },
           {
             "id": "inc-4",
-            "desc": "Comfortable transportation for all expos, tours, and transfers in Vietnam.",
-            "title": "Private Air-Conditioned Coach",
+            "title": "Private air-conditioned coach",
+            "desc": "Every expo, factory, tour and transfer in Vietnam.",
             "standalonePrice": 80
           },
           {
             "id": "inc-5",
-            "desc": "Dedicated business guide fluent in Vietnamese, English, and Khmer.",
-            "title": "Trilingual Professional Guide",
+            "title": "Trilingual business guide",
+            "desc": "Khmer, English and Vietnamese, beside you in every meeting.",
             "standalonePrice": 60
           },
           {
             "id": "inc-6",
-            "desc": "Full official registration for Cafe Show Vietnam & Smart City Expo.",
-            "title": "VIP All-Access Expo Passes",
+            "title": "Expo passes",
+            "desc": "Registration for Cafe Show Vietnam and Smart City Expo.",
             "standalonePrice": 120
           },
           {
             "id": "inc-7",
-            "desc": "Smooth airport immigration and document assistance upon arrival.",
-            "title": "Border & Customs Facilitation",
+            "title": "Border and customs help",
+            "desc": "Arrival paperwork and immigration handled for you.",
             "standalonePrice": 40
           },
           {
             "id": "inc-8",
-            "desc": "Exclusive on-site visits to coffee/tea processing factories and wholesale hubs.",
-            "title": "Direct Factory & Wholesale Visits",
+            "title": "Factory and wholesale visits",
+            "desc": "Coffee and tea processing plants and wholesale hubs.",
             "standalonePrice": 150
           },
           {
             "id": "inc-9",
-            "desc": "Sightseeing at Halong Bay UNESCO World Heritage Site with onboard lunch.",
-            "title": "Halong Bay Cruise & Hanoi Tour",
+            "title": "Halong Bay cruise and Hanoi tour",
+            "desc": "UNESCO bay cruise with seafood lunch on board.",
             "standalonePrice": 65
-          },
-          {
-            "id": "inc-1789982722248",
-            "desc": "Details of this inclusion provided to delegates.",
-            "title": "Included Item / Service",
-            "standalonePrice": 100
           }
-        ],
-        "totalLabel": "Total standalone value",
-        "totalValue": "$910+"
+        ]
       },
       "guarantee": {
-        "badge": "100% Risk Reversal Guarantee",
-        "title": "Your Reservation is 100% Risk-Free",
+        "badge": "100% risk-free reservation",
+        "title": "Your reservation is risk-free",
+        "subtitle": "You pay nothing until you have spoken with our team and decided this trip is right for your business. If KHB Events cancels the delegation, every delegate is refunded in full.",
         "points": [
-          "No payment today — reserve with just your name & phone number",
-          "Official corporate tax invoice & complete itinerary sent via Telegram",
-          "Full refund if the organizer cancels the delegation"
-        ],
-        "subtitle": "You pay nothing today until you have spoken with our team and decided this delegation is right for your business."
+          "No payment today: reserve with your name and phone only",
+          "Official tax invoice and full itinerary sent on Telegram",
+          "Full refund if the organiser cancels the trip"
+        ]
       },
       "highlights": [
         {
@@ -383,28 +378,7 @@
           "description": "Dedicated business facilitation and negotiation support fluent in Khmer, English, and Vietnamese."
         }
       ],
-      "packages": [
-        {
-          "id": "pkg-standard",
-          "name": "Standard Admission",
-          "price": "$550",
-          "period": "per delegate (after Sept 8)",
-          "ctaText": "Register Standard Seat ($550)",
-          "popular": true,
-          "features": [
-            "Roundtrip Flight Tickets (Phnom Penh - Hanoi)",
-            "Hotel Stay (3 Nights / 4 Days, Twin Sharing)",
-            "Daily Hotel Buffet Breakfast",
-            "Private Air-Conditioned Coach in Vietnam",
-            "Trilingual Professional Guide (Khmer/Eng/Viet)",
-            "Border & Customs Facilitation Assistance",
-            "Direct Factory & Wholesale Market Visits",
-            "UNESCO Halong Bay Cruise & Seafood Lunch",
-            "Visit Coffee and Tea Wholesale factory"
-          ],
-          "description": "Standard registration subject to remaining seat availability."
-        }
-      ],
+      "packages": [],
       "gallery": [
         "/photos/photo_2026-09-16_22-01-09 (2).jpg",
         "/photos/photo_2026-09-16_22-01-09 (7).jpg",
@@ -442,63 +416,454 @@
       "faqs": [
         {
           "id": "f1",
-          "answer": "Cambodian passport holders can enter Vietnam visa-free for up to 30 days. Our team also handles arrival paperwork and customs facilitation.",
-          "question": "Do I need a visa for Vietnam?"
+          "question": "Do I need a visa for Vietnam?",
+          "answer": "Cambodian passport holders enter Vietnam visa-free for up to 30 days. Our team handles the arrival paperwork and customs facilitation so you walk straight through."
         },
         {
           "id": "f2",
-          "answer": "No. You reserve with just your name and phone number. Our coordinator calls you within 15 minutes, and you pay only after details are verified.",
-          "question": "Do I have to pay today?"
+          "question": "Do I have to pay today?",
+          "answer": "No. You reserve with your name and phone number. Sovann Meas calls you within 15 minutes, and you pay only after your flights, hotel and factory schedule are confirmed."
         },
         {
           "id": "f3",
-          "answer": "Yes. We issue corporate billing and official tax invoices — just request it during your confirmation call.",
-          "question": "Can my company get an official invoice?"
+          "question": "Can my company get an official invoice?",
+          "answer": "Yes. We issue corporate billing and official tax invoices. Ask on Telegram or during your confirmation call."
         },
         {
           "id": "f4",
-          "answer": "The package includes premium twin/double sharing. Single private rooms are available with a small supplement upon request.",
-          "question": "Is the hotel room private?"
+          "question": "Is the hotel room private?",
+          "answer": "The price includes twin or double sharing. If you prefer a single room, tell your coordinator and we arrange it for a small supplement."
+        },
+        {
+          "id": "f5",
+          "question": "What if the seats sell out before I decide?",
+          "answer": "The 30 seats are first come, first served. A reserved seat is held for that delegate. Latecomers join a waitlist, and a seat may not open."
+        },
+        {
+          "id": "f6",
+          "question": "What is not included in the price?",
+          "answer": "Lunches and dinners outside the listed programme (the Halong Bay cruise lunch is included), a Vietnam SIM card, travel insurance and personal shopping. All logistics are covered."
+        },
+        {
+          "id": "f7",
+          "question": "Can I get a refund after paying?",
+          "answer": "Yes. Cancel at least 14 days before departure and, if your seat is refilled from the waitlist, you receive a full refund. Organiser cancellations are always refunded in full."
+        },
+        {
+          "id": "f8",
+          "question": "Do I need to speak English or Vietnamese?",
+          "answer": "No. A guide fluent in Khmer, English and Vietnamese sits beside you in every meeting and negotiation."
+        },
+        {
+          "id": "f9",
+          "question": "Can I bring a partner or a staff member?",
+          "answer": "Yes. Each person takes one seat at the same price. Tell your coordinator so you are seated and roomed together."
+        },
+        {
+          "id": "f10",
+          "question": "Is my passport valid enough?",
+          "answer": "Vietnam asks for at least six months of validity from your entry date. Check the expiry date before you reserve."
         }
       ],
       "formConfig": {
-        "headline": "Reserve Your Delegation Seat",
-        "subheadline": "Strictly limited to 30 seats cohort. Our trip coordinator responds in under 15 minutes.",
-        "submitButtonText": "Reserve My Seat Now",
-        "successMessage": "Thank you! Your seat reservation request has been received. Our team will contact you shortly.",
+        "headline": "Reserve your seat",
+        "subheadline": "Sovann Meas calls you within 15 minutes. Nothing to pay today.",
+        "submitButtonText": "Reserve my seat, no payment today",
+        "successMessage": "Thank you. Sovann Meas from KHB Events will call or message you within 15 minutes to confirm the details.",
         "fields": [
           {
             "id": "fullName",
             "type": "text",
             "label": "Full Name",
             "required": true,
-            "placeholder": "e.g. Sok Sovann / Johnathan Doe"
+            "placeholder": "e.g. Sok Sovann"
           },
           {
             "id": "phone",
             "type": "tel",
-            "label": "Phone / Telegram / WhatsApp",
+            "label": "Phone (Telegram or WhatsApp)",
             "required": true,
             "placeholder": "e.g. 012 345 678"
           },
           {
             "id": "email",
             "type": "email",
-            "label": "Work Email (Optional)",
+            "label": "Work email (optional)",
             "required": false,
-            "placeholder": "sokha@company.com.kh"
+            "placeholder": "name@company.com.kh"
           }
         ]
       },
-      "metaTitle": "Smart City, Tea & Cafe Business Delegation 2026 | KHB EVENTS",
-      "metaDescription": "Join the exclusive B2B Business Delegation to Hanoi and Halong Bay, Vietnam. Explore Cafe Show Vietnam & Smart City Expo, direct factory visits, and business matchmaking. Organized by KHB EVENTS.",
+      "metaTitle": "Smart City, Tea & Cafe Business Trip to Vietnam 2026 | KHB Events",
+      "metaDescription": "4-day B2B delegation to Hanoi and Halong Bay for Cambodian café, tea and retail-tech owners. Two expos, a factory visit, matched supplier meetings and a trilingual guide. 30 seats. Reserve with no payment today.",
       "viewsCount": 342,
       "leadsCount": 24,
       "createdAt": "2026-09-21T04:22:10.31+00:00",
-      "updatedAt": "2026-09-22T09:45:48.073Z",
+      "updatedAt": "2026-09-23T15:34:28.724Z",
       "translations": {
         "kh": {
-          "heroHeadline": "ដំណើរទស្សនកិ�្�ពាណិជ្ជកម្ម Smart City ២០២៦ (តេស្តផ្ទាល់)"
+          "title": "ដំណើរអាជីវកម្ម Smart City, Tea & Cafe ទៅវៀតណាម ២០២៦",
+          "subtitle": "ដំណើរអាជីវកម្ម Smart City, Tea & Cafe ទៅវៀតណាម ២០២៦",
+          "description": "ដំណើរ B2B រយៃពេល ៤ ថ្ងៃ សម្រាប់ម្ចាស់ហាងកាហ្វេ តែ និងបច្ចេកវិទ្យាលក់រាយនៅកម្ពុជា។ ពិព័រណ៍អន្តរជាតិ ២ ទស្សនារោងចក្រ និងជួបអ្នកផ្គត់ផ្គង់ដែលផ្គូផ្គងជូន ដោយមានមគ្គុទ្ទេសក៍ ៣ ភាសានៅក្បែរលោកអ្នករាល់ការចរចា។",
+          "badge": "ប្រតិភូ B2B កម្ពុជាទៅវៀតណាម · ៣០ កៅអី",
+          "heroHeadline": "ត្រឡប់មកវិញជាមួយអ្នកផ្គត់ផ្គង់ មិនមែនគ្រាន់តែរូបថត។",
+          "heroSubheadline": "ដំណើរ B2B រយៃពេល ៤ ថ្ងៃ សម្រាប់ម្ចាស់ហាងកាហ្វេ តែ និងបច្ចេកវិទ្យាលក់រាយនៅកម្ពុជា។ ពិព័រណ៍អន្តរជាតិ ២ ទស្សនារោងចក្រ និងជួបអ្នកផ្គត់ផ្គង់ដែលផ្គូផ្គងជូន ដោយមានមគ្គុទ្ទេសក៍ ៣ ភាសានៅក្បែរលោកអ្នករាល់ការចរចា។",
+          "heroCtaText": "កក់កៅអីខ្ញុំ មិនបង់ប្រាក់ថ្ងៃនេះ",
+          "venue": "ហាណូយ & ហាឡុងបេ វៀតណាម",
+          "urgencyRiskNote": "មិនបង់ប្រាក់ថ្ងៃនេះ · កៅអីរក្សាទុកភ្លាម · អ្នកសម្របសម្រួលឆ្លើយក្នុង ១៥ នាទី",
+          "urgencyNotice": "",
+          "coreValues": [
+            {
+              "id": "cv-1",
+              "num": "01",
+              "icon": "chart",
+              "title": "តម្លៃផ្ទាល់ពីរោងចក្រ",
+              "desc": "ទិញពីប្រភពផ្ទាល់ កាត់បន្ថយ ២៥ ដល់ ៣៥% ពីតម្លៃឈ្មួញកណ្តាល។ ការចរចាកុងតឺន័រតែមួយ អាចសងថ្លៃដំណើរទាំងមូល។"
+            },
+            {
+              "id": "cv-2",
+              "num": "02",
+              "icon": "shield",
+              "title": "ទំនុកចិត្តពីការជួបផ្ទាល់",
+              "desc": "ដើរមើលរោងចក្រ មើលបន្ទប់ត្រួតពិនិត្យគុណភាព និងជួបអ្នកផ្គត់ផ្គង់ផ្ទាល់ មុនផ្ទេរប្រាក់មួយដុល្លារ។"
+            },
+            {
+              "id": "cv-3",
+              "num": "03",
+              "icon": "trophy",
+              "title": "សិទ្ធិផ្តាច់មុខសម្រាប់កម្ពុជា",
+              "desc": "ចុះកិច្ចសន្យាចែកចាយសម្រាប់កម្ពុជា មុនអ្នកនាំចូលផ្សេងចុះជាមួយអ្នកផ្គត់ផ្គង់ដូចគ្នា។"
+            },
+            {
+              "id": "cv-4",
+              "num": "04",
+              "icon": "zap",
+              "title": "ផលិតផលឆ្នាំក្រោយ ឃើញឆ្នាំនេះ",
+              "desc": "ពិព័រណ៍អន្តរជាតិ ២ ក្នុងដំណើរតែមួយ។ ឃើញផលិតផល ការវេចខ្ចប់ និងបច្ចេកវិទ្យាលក់រាយ ២០២៦ មុនគូប្រកួត។"
+            },
+            {
+              "id": "cv-5",
+              "num": "05",
+              "icon": "chart",
+              "title": "អាជីវកម្ម និងកម្សាន្តក្នុងដំណើរតែមួយ",
+              "desc": "ពិព័រណ៍ ២ ថ្ងៃ និងទស្សនារោងចក្រ បន្ទាប់មកទីក្រុងចាស់ហាណូយ និងកប៉ាល់ហាឡុងបេ។ លោកអ្នកត្រឡប់មកជាមួយកិច្ចព្រមព្រៀង និងការសម្រាក។"
+            },
+            {
+              "id": "cv-6",
+              "num": "06",
+              "icon": "chart",
+              "title": "មើលទីផ្សារលោកអ្នកពីខាងក្រៅ",
+              "desc": "ការដើរមើលទីផ្សារបរទេស បង្ហាញលោកអ្នកថាវិស័យកាហ្វេ និងលក់រាយកម្ពុជាកំពុងទៅទិសណា និងរបៀបពង្រឹងអាជីវកម្មនៅផ្ទះ។"
+            }
+          ],
+          "problems": [
+            {
+              "id": "prob-1",
+              "icon": "trend-down",
+              "title": "ថ្លៃឈ្មួញកណ្តាល",
+              "desc": "ឈ្មួញកណ្តាល និងអ្នកលក់បន្ត បន្ថែម ២៥ ដល់ ៣៥% លើរាល់ការបញ្ជាទិញ មុនទំនិញមកដល់ឃ្លាំងលោកអ្នក។"
+            },
+            {
+              "id": "prob-2",
+              "icon": "chat",
+              "title": "ភាសា និងទំនុកចិត្ត",
+              "desc": "គ្មានភាសារួម កិច្ចព្រមព្រៀងបាត់បង់ក្នុងការបកប្រែ ហើយលោកអ្នកមិនអាចដឹងថាណាជារោងចក្រពិត ណាជាឈ្មួញកាន់កាតាឡុក។"
+            },
+            {
+              "id": "prob-3",
+              "icon": "search",
+              "title": "ទិញអនឡាញដោយមិនឃើញ",
+              "desc": "បញ្ជាទិញតាមរូបថត រួចរង់ចាំសំណាង។ គ្មានរោងចក្រ គ្មានបន្ទប់ QC គ្មានការចរចា MOQ ផ្ទាល់ គ្មានទំនាក់ទំនង។"
+            }
+          ],
+          "audiences": [
+            {
+              "id": "aud-1",
+              "icon": "cpu",
+              "title": "អ្នកនាំចូល Smart City និងបច្ចេកវិទ្យា",
+              "desc": "IoT ផ្ទះឆ្លាត ភ្លើងឆ្លាត និងឧបករណ៍សុវត្ថិភាព ផ្ទាល់ពីរោងចក្រដែលមានវិញ្ញាបនបត្រ។"
+            },
+            {
+              "id": "aud-2",
+              "icon": "coffee",
+              "title": "ម្ចាស់ម៉ាកកាហ្វេ និងតែ",
+              "desc": "តែ និងកាហ្វេវៀតណាម ស៊ីរ៉ូ ការវេចខ្ចប់ ម៉ាស៊ីនកាហ្វេពាណិជ្ជកម្ម និងឧបករណ៍ឆុង ក្នុងតម្លៃរោងចក្រ។"
+            },
+            {
+              "id": "aud-3",
+              "icon": "truck",
+              "title": "អ្នកលក់ដុំ និងអ្នកចែកចាយ",
+              "desc": "សិទ្ធិចែកចាយផ្តាច់មុខ តម្លៃបោះដុំផ្ទាល់ពីរោងចក្រ និងភាពជាដៃគូ OEM/ODM។"
+            },
+            {
+              "id": "aud-4",
+              "icon": "users",
+              "title": "សហគ្រិន និងអ្នកវិនិយោគ F&B",
+              "desc": "ម៉ាកហ្វ្រេនឆាយវៀតណាម និងអន្តរជាតិ គំនិតភេសជ្ជៃថ្មី និងម៉ូដែលលក់រាយដែលគួរនាំមកកម្ពុជា។"
+            },
+            {
+              "id": "aud-5",
+              "tag": "អ្នកស្វែងរក",
+              "icon": "users",
+              "title": "អ្នកដែលស្វែងរកអាជីវកម្ម IoT កាហ្វេ ឬតែ",
+              "desc": "កំពុងរកគំនិតអាជីវកម្មបន្ទាប់ក្នុងបច្ចេកវិទ្យា Smart City កាហ្វេ ឬតែ? បួនថ្ងៃក្នុងទីផ្សារ ល្អជាងបួនខែស្រាវជ្រាវ។"
+            }
+          ],
+          "itinerary": [
+            {
+              "id": "itin-1",
+              "day": 1,
+              "date": "៨ តុលា ២០២៦",
+              "title": "ភ្នំពេញ ទៅ ហាណូយ យប់ស្វាគមន៍",
+              "events": [
+                {
+                  "time": "17:45 - 21:35",
+                  "activity": "ហោះហើរពីភ្នំពេញទៅហាណូយ (អាកាសយានដ្ឋាន Noi Bai)"
+                },
+                {
+                  "time": "22:30 - 23:00",
+                  "activity": "ឡានក្រុងឯកជនទៅសណ្ឋាគារ និង Check-in"
+                },
+                {
+                  "time": "23:00 - 24:00",
+                  "activity": "ដើរលេងពេលយប់នៅហាណូយ (ស្ម័គ្រចិត្ត)"
+                }
+              ]
+            },
+            {
+              "id": "itin-2",
+              "day": 2,
+              "date": "៩ តុលា ២០២៦",
+              "title": "Cafe Show Vietnam និងជួបអ្នកផ្គត់ផ្គង់",
+              "events": [
+                {
+                  "time": "08:00 - 09:00",
+                  "activity": "អាហារពេលព្រឹកនៅសណ្ឋាគារ"
+                },
+                {
+                  "time": "09:00 - 09:30",
+                  "activity": "ឡានក្រុងទៅ Vietnam Exhibition Center"
+                },
+                {
+                  "time": "10:00 - 12:00",
+                  "activity": "Cafe Show Vietnam៖ តែ កាហ្វេ ម៉ាស៊ីន និងគ្រឿងផ្សំ"
+                },
+                {
+                  "time": "12:00 - 13:00",
+                  "activity": "អាហារថ្ងៃត្រង់នៅមជ្ឈមណ្ឌលពិព័រណ៍"
+                },
+                {
+                  "time": "13:00 - 16:00",
+                  "activity": "កិច្ចប្រជុំ B2B ដែលផ្គូផ្គង និងចរចាតម្លៃជាមួយអ្នកផ្គត់ផ្គង់"
+                },
+                {
+                  "time": "16:00 - 17:00",
+                  "activity": "ត្រឡប់ទៅសណ្ឋាគារ"
+                },
+                {
+                  "time": "18:00 - 22:00",
+                  "activity": "ដើរទីក្រុងចាស់ហាណូយ អាហារពេលល្ងាច និងទីតាំងល្បី"
+                }
+              ]
+            },
+            {
+              "id": "itin-3",
+              "day": 3,
+              "date": "១០ តុលា ២០២៦",
+              "title": "Smart City Expo ទស្សនារោងចក្រ ទៅហាឡុងបេ",
+              "events": [
+                {
+                  "time": "08:00 - 09:00",
+                  "activity": "អាហារពេលព្រឹកនៅសណ្ឋាគារ"
+                },
+                {
+                  "time": "09:00 - 09:30",
+                  "activity": "ឡានក្រុងទៅ Vietnam Exhibition Center"
+                },
+                {
+                  "time": "10:00 - 12:00",
+                  "activity": "Smart City Expo៖ IoT ភ្លើងឆ្លាត ហេដ្ឋារចនាសម្ព័ន្ធ និងបច្ចេកវិទ្យា"
+                },
+                {
+                  "time": "12:00 - 13:00",
+                  "activity": "អាហារថ្ងៃត្រង់នៅមជ្ឈមណ្ឌលពិព័រណ៍"
+                },
+                {
+                  "time": "13:00 - 15:30",
+                  "activity": "ទស្សនារោងចក្រលីងកាហ្វេ តែ បោះដុំ និងបន្ទប់តាំងបង្ហាញ"
+                },
+                {
+                  "time": "15:30 - 18:30",
+                  "activity": "ធ្វើដំណើរតាមផ្លូវហាយវេទៅហាឡុងបេ"
+                },
+                {
+                  "time": "18:30 - 22:00",
+                  "activity": "Check-in សណ្ឋាគារ ផ្សារយប់ និងឆ្នេរហាឡុង"
+                }
+              ]
+            },
+            {
+              "id": "itin-4",
+              "day": 4,
+              "date": "១១ តុលា ២០២៦",
+              "title": "កប៉ាល់ហាឡុងបេ និងហោះត្រឡប់មកផ្ទះ",
+              "events": [
+                {
+                  "time": "06:00 - 07:00",
+                  "activity": "អាហារពេលព្រឹក និង Check-out រហ័ស"
+                },
+                {
+                  "time": "07:00 - 07:30",
+                  "activity": "ទៅកំពង់ផែទេសចរណ៍អន្តរជាតិហាឡុងបេ"
+                },
+                {
+                  "time": "07:30 - 11:30",
+                  "activity": "ជិះកប៉ាល់ឈូងសមុទ្រ UNESCO ជាមួយអាហារថ្ងៃត្រង់សមុទ្រ"
+                },
+                {
+                  "time": "11:30 - 15:00",
+                  "activity": "ផ្លូវល្បឿនលឿនទៅអាកាសយានដ្ឋាន Noi Bai ហាណូយ"
+                },
+                {
+                  "time": "15:00 - 17:00",
+                  "activity": "Check-in និងអន្តោប្រវេសន៍"
+                },
+                {
+                  "time": "18:00 - 20:30",
+                  "activity": "ហោះហើរត្រឡប់មកភ្នំពេញ"
+                }
+              ]
+            }
+          ],
+          "valueStack": {
+            "tag": "អ្វីដែលលោកអ្នកទទួលបាន",
+            "title": "តម្លៃតែមួយ។ រៀបចំជូន ៩ យ៉ាង។",
+            "subtitle": "អ្វីៗខាងក្រោមរួមក្នុងតម្លៃកៅអីរបស់លោកអ្នក។ បើកក់ដោយខ្លួនឯងម្តងមួយៗ ដំណើរដូចគ្នាអស់ប្រាក់ច្រើនជាង និងពេលវេលារាប់សប្តាហ៍។",
+            "note": "តម្លៃបើលោកអ្នករៀបចំដោយខ្លួនឯង",
+            "totalLabel": "សរុប បើរៀបចំដោយខ្លួនឯង",
+            "totalValue": "$910+",
+            "payLabel": "តម្លៃកៅអីរបស់លោកអ្នក",
+            "inclusions": [
+              {
+                "id": "inc-1",
+                "title": "ជើងហោះហើរទៅមក",
+                "desc": "ភ្នំពេញ ទៅ ហាណូយ និងត្រឡប់មកវិញ។",
+                "standalonePrice": 220
+              },
+              {
+                "id": "inc-2",
+                "title": "សណ្ឋាគារ ៣ យប់",
+                "desc": "បន្ទប់ Twin ឬ Double នៅហាណូយ និងហាឡុងបេ។",
+                "standalonePrice": 150
+              },
+              {
+                "id": "inc-3",
+                "title": "អាហារពេលព្រឹករាល់ថ្ងៃ",
+                "desc": "ប៉ូហ្វេនៅសណ្ឋាគាររាល់ព្រឹក។",
+                "standalonePrice": 25
+              },
+              {
+                "id": "inc-4",
+                "title": "ឡានក្រុងឯកជនម៉ាស៊ីនត្រជាក់",
+                "desc": "រាល់ពិព័រណ៍ រោងចក្រ ទស្សនា និងការដឹកជញ្ជូននៅវៀតណាម។",
+                "standalonePrice": 80
+              },
+              {
+                "id": "inc-5",
+                "title": "មគ្គុទ្ទេសក៍អាជីវកម្ម ៣ ភាសា",
+                "desc": "ខ្មែរ អង់គ្លេស វៀតណាម នៅក្បែរលោកអ្នករាល់កិច្ចប្រជុំ។",
+                "standalonePrice": 60
+              },
+              {
+                "id": "inc-6",
+                "title": "សំបុត្រពិព័រណ៍",
+                "desc": "ចុះឈ្មោះ Cafe Show Vietnam និង Smart City Expo។",
+                "standalonePrice": 120
+              },
+              {
+                "id": "inc-7",
+                "title": "ជំនួយច្រកព្រំដែន និងគយ",
+                "desc": "ឯកសារចូលប្រទេស និងអន្តោប្រវេសន៍ រៀបចំជូន។",
+                "standalonePrice": 40
+              },
+              {
+                "id": "inc-8",
+                "title": "ទស្សនារោងចក្រ និងទីផ្សារបោះដុំ",
+                "desc": "រោងចក្រកែច្នៃកាហ្វេ តែ និងមជ្ឈមណ្ឌលលក់ដុំ។",
+                "standalonePrice": 150
+              },
+              {
+                "id": "inc-9",
+                "title": "កប៉ាល់ហាឡុងបេ និងទស្សនាហាណូយ",
+                "desc": "ជិះកប៉ាល់ឈូងសមុទ្រ UNESCO ជាមួយអាហារថ្ងៃត្រង់លើកប៉ាល់។",
+                "standalonePrice": 65
+              }
+            ]
+          },
+          "guarantee": {
+            "badge": "កក់គ្មានហានិភ័យ ១០០%",
+            "title": "ការកក់របស់លោកអ្នកគ្មានហានិភ័យ",
+            "subtitle": "លោកអ្នកមិនបង់អ្វីទាំងអស់ រហូតដល់បាននិយាយជាមួយក្រុមការងារ និងសម្រេចថាដំណើរនេះសមនឹងអាជីវកម្មលោកអ្នក។ បើ KHB Events លុបចោលដំណើរ ប្រតិភូទាំងអស់ទទួលប្រាក់វិញពេញ។",
+            "points": [
+              "មិនបង់ប្រាក់ថ្ងៃនេះ៖ កក់ដោយឈ្មោះ និងលេខទូរស័ព្ទប៉ុណ្ណោះ",
+              "វិក្កយបត្រពន្ធផ្លូវការ និងកាលវិភាគពេញលេញ ផ្ញើតាម Telegram",
+              "សងប្រាក់វិញពេញ បើអ្នករៃបចំលុបចោលដំណើរ"
+            ]
+          },
+          "faqs": [
+            {
+              "id": "f1",
+              "question": "តើខ្ញុំត្រូវការវីសាទៅវៀតណាមទេ?",
+              "answer": "អ្នកកាន់លិខិតឆ្លងដែនកម្ពុជា ចូលវៀតណាមដោយគ្មានវីសារហូតដល់ ៣០ ថ្ងៃ។ ក្រុមការងារយើងរៃបចំឯកសារចូលប្រទេស និងគយជូន។"
+            },
+            {
+              "id": "f2",
+              "question": "តើខ្ញុំត្រូវបង់ប្រាក់ថ្ងៃនេះទេ?",
+              "answer": "ទេ។ លោកអ្នកកក់ដោយឈ្មោះ និងលេខទូរស័ព្ទ។ Sovann Meas ទូរស័ព្ទមកក្នុង ១៥ នាទី ហើយលោកអ្នកបង់តៃក្រោយជើងហោះហើរ សណ្ឋាគារ និងកាលវិភាគរោងចក្របានបញ្ជាក់។"
+            },
+            {
+              "id": "f3",
+              "question": "តើក្រុមហ៊ុនខ្ញុំអាចទទួលវិក្កយបត្រផ្លូវការទេ?",
+              "answer": "បាន។ យើងចេញវិក្កយបត្រពន្ធផ្លូវការសម្រាប់ក្រុមហ៊ុន។ សូមស្នើតាម Telegram ឬក្នុងការហៅបញ្ជាក់។"
+            },
+            {
+              "id": "f4",
+              "question": "តើបន្ទប់សណ្ឋាគារជាបន្ទប់ឯកជនទេ?",
+              "answer": "តម្លៃរួមបញ្ចូលបន្ទប់ Twin ឬ Double រួមគ្នា។ បើចង់បានបន្ទប់តៃម្នាក់ សូមប្រាប់អ្នកសម្របសម្រួល យើងរៃបចំជូនក្នុងថ្លៃបន្ថែមតិចតួច។"
+            },
+            {
+              "id": "f5",
+              "question": "បើកៅអីអស់មុនខ្ញុំសម្រេចចិត្ត?",
+              "answer": "កៅអី 30 អ្នកមកមុនបានមុន។ កៅអីដែលបានកក់ រក្សាទុកសម្រាប់ប្រតិភូនោះ។ អ្នកមកក្រោយចូលបញ្ជីរង់ចាំ ហើយកៅអីអាចមិនទំនេរឡើងវិញ។"
+            },
+            {
+              "id": "f6",
+              "question": "តើអ្វីមិនរួមបញ្ចូលក្នុងតម្លៃ?",
+              "answer": "អាហារថ្ងៃត្រង់ និងពេលល្ងាចក្រៅកម្មវិធី (អាហារលើកប៉ាល់ហាឡុងបេរួមបញ្ចូល) SIM វៀតណាម ធានារ៉ាប់រងដំណើរ និងការទិញឥវ៉ាន់ផ្ទាល់ខ្លួន។ ការរៃបចំដំណើរទាំងអស់រួមបញ្ចូល។"
+            },
+            {
+              "id": "f7",
+              "question": "តើអាចដកប្រាក់វិញក្រោយបង់ទេ?",
+              "answer": "បាន។ លុបចោលយ៉ាងតិច ១៤ ថ្ងៃមុនចេញដំណើរ ហើយបើកៅអីលោកអ្នកមានអ្នកជំនួសពីបញ្ជីរង់ចាំ លោកអ្នកទទួលប្រាក់វិញពេញ។ ការលុបចោលដោយអ្នករៃបចំ សងវិញពេញជានិច្ច។"
+            },
+            {
+              "id": "f8",
+              "question": "តើខ្ញុំត្រូវចេះអង់គ្លេស ឬវៀតណាមទេ?",
+              "answer": "ទេ។ មគ្គុទ្ទេសក៍ចេះខ្មែរ អង់គ្លេស និងវៀតណាម អង្គុយក្បែរលោកអ្នករាល់កិច្ចប្រជុំ និងការចរចា។"
+            },
+            {
+              "id": "f9",
+              "question": "តើអាចនាំដៃគូ ឬបុគ្គលិកមកជាមួយទេ?",
+              "answer": "បាន។ ម្នាក់យកកៅអីមួយក្នុងតម្លៃដូចគ្នា។ សូមប្រាប់អ្នកសម្របសម្រួល ដើម្បីរៃបចំកៅអី និងបន្ទប់ជិតគ្នា។"
+            },
+            {
+              "id": "f10",
+              "question": "តើលិខិតឆ្លងដែនខ្ញុំនៅមានសុពលភាពគ្រប់គ្រាន់ទេ?",
+              "answer": "វៀតណាមតម្រូវសុពលភាពយ៉ាងតិច ៦ ខៃពីថ្ងៃចូលប្រទេស។ សូមពិនិត្យថ្ងៃផុតកំណត់មុនកក់។"
+            }
+          ],
+          "metaTitle": "ដំណើរអាជីវកម្ម Smart City, Tea & Cafe ទៅវៀតណាម ២០២៦ | KHB Events",
+          "metaDescription": "ដំណើរ B2B ៤ ថ្ងៃទៅហាណូយ និងហាឡុងបេ សម្រាប់ម្ចាស់ហាងកាហ្វេ តែ និងបច្ចេកវិទ្យាលក់រាយកម្ពុជា។ ពិព័រណ៍ ២ ទស្សនារោងចក្រ ជួបអ្នកផ្គត់ផ្គង់ មគ្គុទ្ទេសក៍ ៣ ភាសា។ ៣០ កៅអី។ កក់ដោយមិនបង់ប្រាក់ថ្ងៃនេះ។"
         }
       },
       "tracking": {
@@ -523,7 +888,7 @@
         "whatsapp": "+855 12 999 888",
         "accentColor": "#10B981",
         "partnerName": "Vietnam Tea Association & Smart City Alliance",
-        "customCtaText": "Claim VIP Delegation Pass",
+        "customCtaText": "Reserve my seat, no payment today",
         "bankAccountName": "KHB EVENTS CO., LTD",
         "coordinatorName": "Sovann Meas",
         "coordinatorRole": "Senior B2B Mission Director",
@@ -532,7 +897,7 @@
         "bankAccountNumber": "000 123 456",
         "enableTelegramAlerts": true,
         "searchEngineIndexing": "index",
-        "customThankYouMessage": "Thank you! Your seat reservation request has been received. Our coordinator Sovann Meas will contact you within 15 minutes.",
+        "customThankYouMessage": "Thank you. Sovann Meas from KHB Events will call or message you within 15 minutes to confirm the details.",
         "acceptedPaymentMethods": [
           "khqr",
           "bank_transfer"
