@@ -20,7 +20,7 @@ export const GENERAL = {
   totalSeats: 30,
   claimedSeats: 19,
   earlyBirdPrice: 550,
-  regularPrice: 599,
+  regularPrice: 550,
   earlyBirdDeadline: '2026-09-08T23:59:59',
   registrationDeadline: '2026-09-20T23:59:59',
   departureDate: '2026-10-08',
@@ -59,13 +59,15 @@ const en = {
   earlyBirdNotice: (f: PageFacts): string => {
     const seats = `${f.seatsLeft} of ${f.totalSeats} seats left`;
     switch (f.phase) {
-      case 'early': return `Early Bird: save $${f.savings} until ${f.earlyBirdDeadline} · ${seats}`;
+      case 'early': return f.savings > 0
+        ? `Early Bird: save $${f.savings} until ${f.earlyBirdDeadline} · ${seats}`
+        : `Early Bird price until ${f.earlyBirdDeadline} · ${seats}`;
       case 'standard': return `Registration closes ${f.registrationDeadline} · ${seats}`;
       case 'final': return `Final seats: the coach leaves ${f.departureDate} · ${seats}`;
       default: return 'This delegation has departed. Message us about the next trip.';
     }
   },
-  heroPriceAnchorNote: (f: PageFacts) => f.phase === 'early'
+  heroPriceAnchorNote: (f: PageFacts) => f.phase === 'early' && f.savings > 0
     ? `Early Bird $${f.earlyBirdPrice}, regular price $${f.regularPrice}. You save $${f.savings}.`
     : `$${f.currentPrice} per seat with flights, hotel, expo passes and guide all handled.`,
   pillDate: (dateText: string, duration: string) => `${dateText} · ${duration}`,
@@ -99,6 +101,7 @@ const en = {
 
   // ── Proof and stats
   proofStripText: 'business owners have already reserved their seats',
+  proofStripIcons: ['☕', '🏙️', '🚚', '📈', '🏪'],
   proofStripTags: ['Cafe chain owner', 'Tea importer', 'POS integrator', 'Beverage wholesaler', 'F&B investor', 'Retail-tech founder'],
   statsStrip: [
     { value: '9-in-1', label: 'Flights, hotel, passes, guide: all handled' },
@@ -203,7 +206,7 @@ const en = {
   // ── Seat roster
   seatTag: 'Live seat roster',
   seatTitle: (f: PageFacts) => `${f.totalSeats} seats. ${f.claimedSeats} taken.`,
-  seatSubtitle: 'Every taken seat is a real business you will sit beside on the coach. Tap an open seat to make it yours.',
+  seatSubtitle: 'Taken seats are held for owners who reserved before you. Tap an open seat to make it yours.',
   seatLegendBooked: 'Taken',
   seatLegendAvailable: 'Open (tap to pick)',
   seatLegendSelected: 'Yours',
@@ -220,11 +223,8 @@ const en = {
   testimonialsTag: 'From past delegations',
   testimonialsTitle: 'What owners brought home last time',
   testimonialsSubtitle: 'Results reported by business owners who travelled with KHB Events.',
-  testimonials: [
-    { quote: 'I met five roasters in one day and cut my bean cost by 30%. One container order paid for this trip twice over.', name: 'Dara S.', role: 'Cafe chain owner, Phnom Penh' },
-    { quote: 'Seeing the factory floor built trust I could never get online. We signed exclusive distribution for Cambodia.', name: 'Sophea T.', role: 'Beverage importer' },
-    { quote: 'The trilingual guide handled every negotiation. We came back with two signed MOQ agreements and a new POS supplier.', name: 'Vuthy K.', role: 'Retail-tech investor' },
-  ],
+  // Empty on purpose: never ship invented quotes. The section renders only when the CMS holds real ones.
+  testimonials: [] as { quote: string; name: string; role: string }[],
 
   // ── Pricing
   pricingTag: 'Price',
@@ -383,13 +383,15 @@ const kh: SmartCityCopy = {
   earlyBirdNotice: (f) => {
     const seats = `នៅសល់ ${f.seatsLeft} ក្នុង ${f.totalSeats} កៅអី`;
     switch (f.phase) {
-      case 'early': return `Early Bird: ចំណេញ $${f.savings} រហូតដល់ ${f.earlyBirdDeadline} · ${seats}`;
+      case 'early': return f.savings > 0
+        ? `Early Bird: ចំណេញ $${f.savings} រហូតដល់ ${f.earlyBirdDeadline} · ${seats}`
+        : `តម្លៃ Early Bird រហូតដល់ ${f.earlyBirdDeadline} · ${seats}`;
       case 'standard': return `បិទការចុះឈ្មោះ ${f.registrationDeadline} · ${seats}`;
       case 'final': return `កៅអីចុងក្រោយ៖ ចេញដំណើរ ${f.departureDate} · ${seats}`;
       default: return 'ដំណើរនេះបានចេញរួចហើយ។ សូមផ្ញើសារមកយើងអំពីដំណើរបន្ទាប់។';
     }
   },
-  heroPriceAnchorNote: (f) => f.phase === 'early'
+  heroPriceAnchorNote: (f) => f.phase === 'early' && f.savings > 0
     ? `Early Bird $${f.earlyBirdPrice} តម្លៃធម្មតា $${f.regularPrice}។ លោកអ្នកចំណេញ $${f.savings}។`
     : `$${f.currentPrice} ក្នុងមួយកៅអី រួមទាំងជើងហោះហើរ សណ្ឋាគារ សំបុត្រពិព័រណ៍ និងមគ្គុទ្ទេសក៍។`,
   pillDate: (dateText, duration) => `${dateText} · ${duration}`,
@@ -423,6 +425,7 @@ const kh: SmartCityCopy = {
 
   // ── Proof and stats
   proofStripText: 'ម្ចាស់អាជីវកម្មបានកក់កៅអីរួចហើយ',
+  proofStripIcons: ['☕', '🏙️', '🚚', '📈', '🏪'],
   proofStripTags: ['ម្ចាស់ខ្សែសង្វាក់កាហ្វេ', 'អ្នកនាំចូលតែ', 'អ្នកដំឡើង POS', 'អ្នកលក់ដុំភេសជ្ជៃ', 'អ្នកវិនិយោគ F&B', 'ស្ថាបនិកបច្ចេកវិទ្យាលក់រាយ'],
   statsStrip: [
     { value: '9-in-1', label: 'ជើងហោះហើរ សណ្ឋាគារ សំបុត្រ មគ្គុទ្ទេសក៍៖ រៀបចំជូនទាំងអស់' },
@@ -527,7 +530,7 @@ const kh: SmartCityCopy = {
   // ── Seat roster
   seatTag: 'បញ្ជីកៅអីផ្ទាល់',
   seatTitle: (f) => `${f.totalSeats} កៅអី។ បានយក ${f.claimedSeats}។`,
-  seatSubtitle: 'កៅអីដែលបានយករាល់មួយ ជាអាជីវកម្មពិតដែលលោកអ្នកនឹងអង្គុយក្បែរលើឡានក្រុង។ ចុចកៅអីទំនេរដើម្បីយកជារបស់លោកអ្នក។',
+  seatSubtitle: 'កៅអីដែលបានយក រក្សាទុកសម្រាប់ម្ចាស់អាជីវកម្មដែលកក់មុនលោកអ្នក។ ចុចកៅអីទំនេរដើម្បីយកជារបស់លោកអ្នក។',
   seatLegendBooked: 'បានយក',
   seatLegendAvailable: 'ទំនេរ (ចុចជ្រើស)',
   seatLegendSelected: 'របស់លោកអ្នក',
@@ -544,11 +547,7 @@ const kh: SmartCityCopy = {
   testimonialsTag: 'ពីដំណើរមុនៗ',
   testimonialsTitle: 'អ្វីដែលម្ចាស់អាជីវកម្មយកមកផ្ទះលើកមុន',
   testimonialsSubtitle: 'លទ្ធផលដែលរាយការណ៍ដោយម្ចាស់អាជីវកម្មដែលបានធ្វើដំណើរជាមួយ KHB Events។',
-  testimonials: [
-    { quote: 'ខ្ញុំជួបអ្នកលីងកាហ្វេ ៥ ក្នុងមួយថ្ងៃ និងកាត់បន្ថយថ្លៃគ្រាប់កាហ្វេ ៣០%។ ការបញ្ជាទិញកុងតឺន័រមួយ សងថ្លៃដំណើរនេះពីរដង។', name: 'Dara S.', role: 'ម្ចាស់ខ្សែសង្វាក់កាហ្វេ ភ្នំពេញ' },
-    { quote: 'ការឃើញរោងចក្រផ្ទាល់ បង្កើតទំនុកចិត្តដែលខ្ញុំមិនអាចបានតាមអនឡាញ។ យើងចុះកិច្ចសន្យាចែកចាយផ្តាច់មុខសម្រាប់កម្ពុជា។', name: 'Sophea T.', role: 'អ្នកនាំចូលភេសជ្ជៃ' },
-    { quote: 'មគ្គុទ្ទេសក៍ ៣ ភាសាដោះស្រាយរាល់ការចរចា។ យើងត្រឡប់មកជាមួយកិច្ចព្រមព្រៀង MOQ ២ និងអ្នកផ្គត់ផ្គង់ POS ថ្មី។', name: 'Vuthy K.', role: 'អ្នកវិនិយោគបច្ចេកវិទ្យាលក់រាយ' },
-  ],
+  testimonials: [],
 
   // ── Pricing
   pricingTag: 'តម្លៃ',

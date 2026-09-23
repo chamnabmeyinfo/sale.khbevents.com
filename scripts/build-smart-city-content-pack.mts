@@ -65,11 +65,15 @@ const pack = {
   heroCtaLink: '#register',
   metaTitle: 'Smart City, Tea & Cafe Business Trip to Vietnam 2026 | KHB Events',
   metaDescription: '4-day B2B delegation to Hanoi and Halong Bay for Cambodian café, tea and retail-tech owners. Two expos, a factory visit, matched supplier meetings and a trilingual guide. 30 seats. Reserve with no payment today.',
+  // Only the fields the copy owns. Deadlines and seat counts stay whatever the admin set;
+  // the import merges nested objects key by key.
   urgency: {
-    ...page.urgency,
     riskNote: en.heroRiskNote,
     // Left empty on purpose: the page writes the notice itself from the live phase, price and seat count.
     noticeText: '',
+    // Confirmed selling price. Equal prices mean "no early-bird window", and the page shows one plan.
+    earlyBirdPrice: 550,
+    regularPrice: 550,
   },
   coreValues: withIds('cv', [...en.coreValues, ...extraCoreValuesEn]),
   problems: withIds('prob', en.problems),
@@ -77,10 +81,12 @@ const pack = {
   valueStack: enValueStack,
   // Empty so the page renders pricing from urgency.earlyBirdPrice / regularPrice, the single source of truth.
   packages: [],
+  // No real quotes yet. The section is hidden until genuine testimonials are added in the admin.
+  testimonials: [],
+  sectionVisibility: { testimonials: false },
   guarantee: { badge: '100% risk-free reservation', title: en.guaranteeTitle, subtitle: en.guaranteeText, points: en.guaranteePoints },
   faqs: enFaqs,
   formConfig: {
-    ...page.formConfig,
     headline: en.registrationSectionTitle,
     subheadline: `${coordinator} calls you within 15 minutes. Nothing to pay today.`,
     submitButtonText: en.formSubmitBtn,
@@ -91,12 +97,10 @@ const pack = {
       : f.id === 'email' ? { ...f, label: 'Work email (optional)', placeholder: 'name@company.com.kh' } : f),
   },
   isolatedSettings: {
-    ...page.isolatedSettings,
     customCtaText: en.formSubmitBtn,
     customThankYouMessage: `Thank you. ${coordinator} from KHB Events will call or message you within 15 minutes to confirm the details.`,
   },
   translations: {
-    ...page.translations,
     kh: {
       title: kh.heroHeadlineHighlight,
       subtitle: kh.heroHeadlineHighlight,
@@ -122,6 +126,12 @@ const pack = {
 };
 
 writeFileSync('content/pages/smart-city-tea-cafe.json', JSON.stringify(pack, null, 2) + '\n');
-Object.assign(page, pack, { updatedAt: new Date().toISOString() });
+// Same one-level merge the admin "Import JSON" button performs.
+for (const [key, value] of Object.entries(pack)) {
+  const current = page[key];
+  const plain = (v: unknown) => typeof v === 'object' && v !== null && !Array.isArray(v);
+  page[key] = plain(value) && plain(current) ? { ...current, ...(value as object) } : value;
+}
+page.updatedAt = new Date().toISOString();
 writeFileSync(dbPath, JSON.stringify(db, null, 2) + '\n');
 console.log('content pack written; keys:', Object.keys(pack).join(', '));

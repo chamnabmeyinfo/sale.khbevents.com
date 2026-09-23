@@ -14,12 +14,8 @@
   "urgency": {
     "riskNote": "No payment today · Seat held instantly · Coordinator replies within 15 minutes",
     "noticeText": "",
-    "totalSeats": 30,
-    "claimedSeats": 19,
-    "regularPrice": "599",
-    "earlyBirdPrice": "550",
-    "earlyBirdDeadline": "2026-09-08T23:59:59",
-    "registrationDeadline": "2026-09-20T23:59:59"
+    "earlyBirdPrice": 550,
+    "regularPrice": 550
   },
   "coreValues": [
     {
@@ -188,6 +184,10 @@
     ]
   },
   "packages": [],
+  "testimonials": [],
+  "sectionVisibility": {
+    "testimonials": false
+  },
   "guarantee": {
     "badge": "100% risk-free reservation",
     "title": "Your reservation is risk-free",
@@ -280,30 +280,8 @@
     ]
   },
   "isolatedSettings": {
-    "phone": "+855 12 999 888",
-    "bankName": "ABA Bank",
-    "leadTags": [
-      "b2b-vietnam",
-      "tea-cafe-buyer",
-      "vip-delegation"
-    ],
-    "whatsapp": "+855 12 999 888",
-    "accentColor": "#10B981",
-    "partnerName": "Vietnam Tea Association & Smart City Alliance",
     "customCtaText": "Reserve my seat, no payment today",
-    "bankAccountName": "KHB EVENTS CO., LTD",
-    "coordinatorName": "Sovann Meas",
-    "coordinatorRole": "Senior B2B Mission Director",
-    "accessProtection": "public",
-    "postSubmitAction": "inline",
-    "bankAccountNumber": "000 123 456",
-    "enableTelegramAlerts": true,
-    "searchEngineIndexing": "index",
-    "customThankYouMessage": "Thank you. Sovann Meas from KHB Events will call or message you within 15 minutes to confirm the details.",
-    "acceptedPaymentMethods": [
-      "khqr",
-      "bank_transfer"
-    ]
+    "customThankYouMessage": "Thank you. Sovann Meas from KHB Events will call or message you within 15 minutes to confirm the details."
   },
   "translations": {
     "kh": {

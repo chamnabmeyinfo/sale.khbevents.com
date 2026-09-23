@@ -25,8 +25,8 @@
         "noticeText": "",
         "totalSeats": 30,
         "claimedSeats": 19,
-        "regularPrice": "599",
-        "earlyBirdPrice": "550",
+        "regularPrice": 550,
+        "earlyBirdPrice": 550,
         "earlyBirdDeadline": "2026-09-08T23:59:59",
         "registrationDeadline": "2026-09-20T23:59:59"
       },
@@ -48,7 +48,7 @@
         "highlights": true,
         "matchmaker": true,
         "valueStack": true,
-        "testimonials": true
+        "testimonials": false
       },
       "coreValues": [
         {
@@ -387,32 +387,7 @@
         "/photos/photo_2026-09-16_22-01-09 (11).jpg",
         "/photos/photo_2026-09-16_22-01-09 (9).jpg"
       ],
-      "testimonials": [
-        {
-          "id": "t1",
-          "name": "Dara S.",
-          "role": "Cafe Chain CEO",
-          "quote": "I met five roasters in one day and cut my bean sourcing cost by 30%. One container order paid for this trip twice over.",
-          "rating": 5,
-          "company": "Phnom Penh Roastery Network"
-        },
-        {
-          "id": "t2",
-          "name": "Sophea T.",
-          "role": "Beverage Importer",
-          "quote": "Seeing the factory floor with my own eyes built trust I could never get online. We signed an exclusive distribution deal for Cambodia.",
-          "rating": 5,
-          "company": "Indochina Wholesale Goods"
-        },
-        {
-          "id": "t3",
-          "name": "Vuthy K.",
-          "role": "Retail Tech Investor",
-          "quote": "The trilingual guide handled every negotiation. We returned with two signed MOQ agreements and a new POS supplier.",
-          "rating": 5,
-          "company": "Smart Retail Ventures"
-        }
-      ],
+      "testimonials": [],
       "faqs": [
         {
           "id": "f1",
@@ -499,7 +474,7 @@
       "viewsCount": 342,
       "leadsCount": 24,
       "createdAt": "2026-09-21T04:22:10.31+00:00",
-      "updatedAt": "2026-09-23T15:34:28.724Z",
+      "updatedAt": "2026-09-23T15:47:30.941Z",
       "translations": {
         "kh": {
           "title": "ដំណើរអាជីវកម្ម Smart City, Tea & Cafe ទៅវៀតណាម ២០២៦",

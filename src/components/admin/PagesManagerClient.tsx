@@ -24,6 +24,24 @@ interface PagesManagerClientProps {
   initialPages: LandingPage[];
 }
 
+const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/**
+ * Lay a content pack over a page. Nested settings objects (urgency, formConfig,
+ * isolatedSettings, sectionVisibility, ...) merge key by key, so a pack that only
+ * sets `urgency.regularPrice` leaves the deadlines and seat counts the admin
+ * typed in. Arrays and scalars are replaced whole.
+ */
+export function mergeContentPack(base: LandingPage, pack: Partial<LandingPage>): LandingPage {
+  const out: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(pack)) {
+    const current = out[key];
+    out[key] = isPlainObject(value) && isPlainObject(current) ? { ...current, ...value } : value;
+  }
+  return out as unknown as LandingPage;
+}
+
 export default function PagesManagerClient({ initialPages }: PagesManagerClientProps) {
   const [pages, setPages] = useState<LandingPage[]>(initialPages);
   const [search, setSearch] = useState('');
@@ -140,10 +158,11 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
         if (!confirm(`Update "${existing.title}" (/${existing.slug}) with the content in ${file.name}?\nFields not in the file are kept.`)) return;
         const current = await fetch(`/api/pages/${existing.id}`).then(r => r.json()).catch(() => null);
         const base: LandingPage = current?.page || existing;
+        const merged = mergeContentPack(base, fields);
         const res = await fetch(`/api/pages/${existing.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...base, ...fields, id: existing.id, slug: existing.slug, title: fields.title || base.title }),
+          body: JSON.stringify({ ...merged, id: existing.id, slug: existing.slug, title: fields.title || base.title }),
         });
         const data = await res.json();
         if (!res.ok || !data.page) { alert(data.error || 'Import failed'); return; }

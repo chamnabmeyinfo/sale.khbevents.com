@@ -11,8 +11,9 @@ import { readUtmParams } from '@/lib/utm';
 import { CONTENT, GENERAL, type PageFacts, type SalePhase } from './smart-city-content';
 
 /** Which stage of the sale a moment falls in, from the page deadlines. */
-function salePhaseAt(now: number, earlyBird: string, registration: string, departure: string): SalePhase {
-  if (new Date(earlyBird).getTime() > now) return 'early';
+function salePhaseAt(now: number, earlyBird: string, registration: string, departure: string, hasDiscount: boolean): SalePhase {
+  // An early-bird window only exists when the early-bird price is actually lower.
+  if (hasDiscount && new Date(earlyBird).getTime() > now) return 'early';
   if (new Date(registration).getTime() > now) return 'standard';
   // The departure day itself still counts as selling: seats are confirmed by phone up to the flight.
   if (new Date(departure).getTime() + 24 * 60 * 60 * 1000 > now) return 'final';
@@ -142,16 +143,6 @@ const MATCHMAKER_DATA = {
     },
   },
 };
-
-const SEAT_TAG_POOL = [
-  'PP Coffee Chain CEO', 'F&B Brand Owner', 'Beverage Importer',
-  'Smart Kiosk Director', 'Tea Wholesale Buyer', 'Retail Tech Investor',
-  'Cafe Franchisee', 'Espresso Tech Founder', 'Smart City Contractor',
-  'Logistics Wholesaler', 'Tea Leaf Distributor', 'Roastery Operator',
-  'Store POS Integrator', 'Hotel F&B Director', 'Packaging Importer',
-  'Automated Retail Tech', 'Food Chain Investor', 'Specialty Coffee Founder',
-  'Franchise Investor',
-];
 
 // Hero slides — same order as old HTML
 const HERO_SLIDES = [
@@ -358,7 +349,8 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
   const effEarlyBirdDeadline = page?.urgency?.earlyBirdDeadline || GENERAL.earlyBirdDeadline;
   const effRegistrationDeadline = page?.urgency?.registrationDeadline || GENERAL.registrationDeadline;
   const effDepartureDate = page?.eventDate || GENERAL.departureDate;
-  const [phase, setPhase] = useState<SalePhase>(() => salePhaseAt(Date.now(), effEarlyBirdDeadline, effRegistrationDeadline, effDepartureDate));
+  const hasDiscount = effEarlyBirdPrice < effRegularPrice;
+  const [phase, setPhase] = useState<SalePhase>(() => salePhaseAt(Date.now(), effEarlyBirdDeadline, effRegistrationDeadline, effDepartureDate, hasDiscount));
   const isEarlyBird = phase === 'early';
   const effPhone = page?.isolatedSettings?.phone || settings?.phone || GENERAL.contactPhone;
   const effTgUsername = page?.isolatedSettings?.telegramUsername || settings?.telegramUsername || GENERAL.contactTelegramUsername;
@@ -558,7 +550,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
     };
     function tick() {
       const now = Date.now();
-      const current = salePhaseAt(now, effEarlyBirdDeadline, effRegistrationDeadline, effDepartureDate);
+      const current = salePhaseAt(now, effEarlyBirdDeadline, effRegistrationDeadline, effDepartureDate, hasDiscount);
       setPhase(current);
       const diff = Math.max(0, targets[current] - now);
       const d = Math.floor(diff / 86400000);
@@ -575,7 +567,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
     tick();
     const iv = setInterval(tick, 1000);
     return () => clearInterval(iv);
-  }, [effEarlyBirdDeadline, effRegistrationDeadline, effDepartureDate]);
+  }, [effEarlyBirdDeadline, effRegistrationDeadline, effDepartureDate, hasDiscount]);
 
   // ── Language toggle with persistence
   const switchLang = (l: 'en' | 'kh') => {
@@ -758,8 +750,8 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
         <section className="proof-strip-section">
           <div className="container proof-strip-inner">
             <div className="avatar-stack">
-              {['DS', 'ST', 'VK', 'MR', 'KL'].map((init, i) => (
-                <div key={i} className="avatar-chip" style={{ zIndex: 5 - i }}>{init}</div>
+              {c.proofStripIcons.map((icon, i) => (
+                <div key={i} className="avatar-chip" style={{ zIndex: 5 - i }} aria-hidden="true">{icon}</div>
               ))}
             </div>
             <div className="proof-copy">
@@ -1276,7 +1268,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                   const isSelected = !isReserved && n === selectedSeat;
                   const cls = `cabin-seat ${isReserved ? 'reserved' : isSelected ? 'available selected' : 'available'}`;
                   const lbl = isReserved
-                    ? (n <= effClaimedSeats ? SEAT_TAG_POOL[(n - 1) % SEAT_TAG_POOL.length] : c.reservedLabel)
+                    ? c.reservedLabel
                     : isSelected ? c.selectedLabel : c.availableLabel;
                   return (
                     <div key={n} className={cls} onClick={() => handleSeatClick(n)}
@@ -1295,7 +1287,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
 
       case 'testimonials':
         // TESTIMONIALS
-        if (!isVisible('testimonials')) return null;
+        if (!isVisible('testimonials') || c.testimonials.length === 0) return null;
         return (
         <section className="section-padding testimonials-section" id="testimonials">
           <div className="container">

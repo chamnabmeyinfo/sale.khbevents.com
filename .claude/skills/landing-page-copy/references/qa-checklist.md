@@ -9,6 +9,10 @@
 - [ ] Seat counts (left, claimed, total) come from data in every section:
       hero, proof strip, roster, register pill, final CTA.
 - [ ] Testimonials, partner names and counts are real or the section is hidden.
+- [ ] No decorative element implies a specific person or business that does not
+      exist: no invented initials, seat-holder job titles or avatar names.
+- [ ] Early bird only appears when the early-bird price is really lower than
+      the regular price. Equal prices mean one plan, one price.
 - [ ] Coordinator name and phone match `isolatedSettings`.
 
 ## Clarity
