@@ -97,6 +97,8 @@ A high-performance, conversion-optimized Landing Page System and Lead Management
 
 The live site runs on **Vercel** with **Supabase** as the database. Every push to `main` deploys automatically; pull requests get a preview deployment (protected by Vercel SSO).
 
+Server functions run in Singapore (`sin1`, set in `vercel.json`) to sit next to the Supabase project and Cambodian visitors.
+
 Environment variables on Vercel: `SESSION_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_APP_URL`.
 
 After deploying a change that touches security or the Telegram bot:
