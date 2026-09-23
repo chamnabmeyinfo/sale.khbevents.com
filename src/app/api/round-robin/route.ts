@@ -1,45 +1,77 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { recordDirectContactRoute } from '@/lib/storage';
+import { getPageBySlug, getSettings, recordDirectContactRoute } from '@/lib/storage';
 import { rateLimitByIp, getClientIp } from '@/lib/rate-limit';
+import { resolveFallbackTelegramUrl } from '@/lib/round-robin';
 
-const FALLBACK_BOT_USERNAME = 'khb_sale_admin_bot';
+/**
+ * "Chat on Telegram" clicks from the landing pages.
+ *
+ * GET ?page=<slug>&redirect=true sends the visitor straight to the assigned
+ * staff member's Telegram chat. Only the choice of person happens before the
+ * redirect; alerts and logs are written after the response.
+ *
+ * A cookie remembers who the visitor was assigned to, so clicking again (or
+ * from another button) lands on the same person without alerting a second
+ * one. When nobody can take the click, the visitor goes to the configured
+ * contact account, or the bot as a last resort.
+ */
 
-function fallbackUrl(slug: string) {
-  // Telegram deep-link payloads only allow [A-Za-z0-9_-], max 64 chars.
-  const payload = `khb_${slug}`.replace(/[^A-Za-z0-9_-]/g, '-').slice(0, 64);
-  return `https://t.me/${FALLBACK_BOT_USERNAME}?start=${payload}`;
+export const runtime = 'nodejs';
+
+const STICKY_COOKIE = 'khb_rr_staff';
+const STICKY_MAX_AGE = 30 * 24 * 60 * 60;
+
+async function fallbackUrl(slug: string): Promise<string> {
+  const [page, settings] = await Promise.all([getPageBySlug(slug), getSettings()]);
+  return resolveFallbackTelegramUrl({
+    pageSlug: slug,
+    contactUsername: page?.isolatedSettings?.telegramUsername || settings.telegramUsername,
+  });
 }
 
 async function route(req: NextRequest, slug: string, redirectMode: boolean) {
   const visitorIp = getClientIp(req.headers);
   const userAgent = req.headers.get('user-agent') || undefined;
+  const preferredStaffId = req.cookies.get(STICKY_COOKIE)?.value || undefined;
 
-  // Every routed click alerts staff on Telegram and writes a log entry, so
-  // repeat clickers are sent to the bot without re-triggering the alerts.
+  // A returning visitor is sent to the same person without new alerts, so the
+  // limit only caps how many *new* assignments one address can trigger.
   const limit = rateLimitByIp('rr-click', req.headers, 10, 10 * 60 * 1000);
-  const routeResult = limit.allowed
-    ? await recordDirectContactRoute({ pageSlug: slug, visitorIp, userAgent })
-    : null;
+  const routeResult = await recordDirectContactRoute({
+    pageSlug: slug,
+    visitorIp,
+    userAgent,
+    preferredStaffId,
+    allowNewAssignment: limit.allowed
+  });
 
   if (routeResult) {
-    if (redirectMode) {
-      return NextResponse.redirect(routeResult.targetTelegramUrl);
-    }
-    return NextResponse.json({
-      success: true,
-      routed: true,
-      targetTelegramUrl: routeResult.targetTelegramUrl,
-      staff: {
-        id: routeResult.staff.id,
-        name: routeResult.staff.name,
-        username: routeResult.staff.telegramUsername,
-        role: routeResult.staff.title
-      },
-      logId: routeResult.logId
+    const res = redirectMode
+      ? NextResponse.redirect(routeResult.targetTelegramUrl)
+      : NextResponse.json({
+          success: true,
+          routed: true,
+          repeat: routeResult.repeat,
+          targetTelegramUrl: routeResult.targetTelegramUrl,
+          staff: {
+            id: routeResult.staff.id,
+            name: routeResult.staff.name,
+            username: routeResult.staff.telegramUsername,
+            role: routeResult.staff.title
+          },
+          logId: routeResult.logId
+        });
+    res.cookies.set(STICKY_COOKIE, routeResult.staff.id, {
+      maxAge: STICKY_MAX_AGE,
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/'
     });
+    return res;
   }
 
-  const targetTelegramUrl = fallbackUrl(slug);
+  const targetTelegramUrl = await fallbackUrl(slug);
   if (redirectMode) {
     return NextResponse.redirect(targetTelegramUrl);
   }
@@ -47,7 +79,9 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean) {
     success: true,
     routed: false,
     targetTelegramUrl,
-    note: 'Round robin not active or direct contact routing disabled, used default Telegram'
+    note: limit.allowed
+      ? 'Round robin not active, direct contact routing disabled or no reachable staff; used the contact account'
+      : 'Too many new assignments from this address; used the contact account'
   });
 }
 

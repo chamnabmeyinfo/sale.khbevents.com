@@ -46,7 +46,9 @@ import {
   DEFAULT_COMPACT_TELEGRAM_TEMPLATE,
   DEFAULT_KHMER_WHATSAPP_MESSAGE,
   renderLeadTemplate,
-  renderWhatsappGreeting
+  renderWhatsappGreeting,
+  roundRobinHealth,
+  isPlaceholderStaff
 } from '@/lib/round-robin';
 import { errorMessage } from '@/lib/errors';
 
@@ -184,6 +186,20 @@ export default function RoundRobinManagerClient({
   const [simulationResult, setSimulationResult] = useState<SimulationResult | null>(null);
 
   // Compute total percentage
+  // Readiness check: everything that would make a visitor or a lead land nowhere.
+  const health = useMemo(
+    () => roundRobinHealth(settings, {
+      telegramConfigured: Boolean(botToken || systemSettings.telegramBotToken),
+      contactUsername: systemSettings.telegramUsername
+    }),
+    [settings, botToken, systemSettings.telegramBotToken, systemSettings.telegramUsername]
+  );
+  const placeholderCount = settings.staffList.filter(isPlaceholderStaff).length;
+  const handleRemovePlaceholders = () => {
+    if (!confirm('Remove the sample accounts from the team? Your real staff stay as they are.')) return;
+    setSettings((prev) => ({ ...prev, staffList: prev.staffList.filter((s) => !isPlaceholderStaff(s)) }));
+  };
+
   const totalPercentage = useMemo(() => {
     return settings.staffList
       .filter((s) => s.isActive)
@@ -830,6 +846,50 @@ export default function RoundRobinManagerClient({
 
       {activeTab === 'config' && (
         <div className="space-y-6">
+          {/* Readiness check */}
+          <div className={`p-5 rounded-2xl border shadow-xs space-y-3 ${
+            health.some((h) => h.level === 'error')
+              ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900'
+              : health.some((h) => h.level === 'warning')
+                ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/60'
+                : 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/60'
+          }`}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Activity className="w-4 h-4" />
+                <span>Readiness check</span>
+              </h3>
+              <p className="text-[11px] text-slate-600 dark:text-gray-400">
+                How a click works: visitor → your server picks the next person → straight into that person&apos;s Telegram chat. The bot only sends the alerts.
+              </p>
+            </div>
+            <ul className="space-y-2">
+              {health.map((item) => (
+                <li key={item.title} className="flex items-start gap-2.5 text-xs">
+                  {item.level === 'ok' ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertTriangle className={`w-4 h-4 shrink-0 mt-0.5 ${item.level === 'error' ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'}`} />
+                  )}
+                  <div>
+                    <div className="font-bold text-slate-900 dark:text-white">{item.title}</div>
+                    <div className="text-slate-600 dark:text-gray-400">{item.detail}</div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            {placeholderCount > 0 && (
+              <button
+                type="button"
+                onClick={handleRemovePlaceholders}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Remove {placeholderCount} sample account{placeholderCount > 1 ? 's' : ''}, then Save</span>
+              </button>
+            )}
+          </div>
+
           {/* Quick Simulation Launch Banner */}
           <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-[#0A2218] to-slate-900 border border-emerald-500/30 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
             <div className="flex items-center gap-3.5">
@@ -1112,7 +1172,7 @@ export default function RoundRobinManagerClient({
                         <input
                           type="text"
                           value={staff.telegramUsername}
-                          placeholder="e.g. sokhachen_khb"
+                          placeholder="e.g. your_telegram_name"
                           onChange={(e) => handleStaffChange(staff.id, { telegramUsername: e.target.value })}
                           className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white font-mono focus:border-amber-400 focus:outline-none"
                         />
@@ -1239,12 +1299,12 @@ export default function RoundRobinManagerClient({
                   onChange={(e) => setSettings({ ...settings, algorithm: e.target.value as RoundRobinAlgorithm })}
                   className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-semibold focus:border-amber-400 focus:outline-none"
                 >
-                  <option value="weighted_percentage">Weighted Percentage (Recommended)</option>
+                  <option value="weighted_percentage">Fair Weighted Share (Recommended)</option>
                   <option value="strict_round_robin">Strict Round Robin (Sequential 1-by-1)</option>
-                  <option value="random_weighted">Random Weighted Sampling</option>
+                  <option value="random_weighted">Random Weighted Lottery</option>
                 </select>
                 <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">
-                  Matches each staff member proportionally to their configured share %.
+                  Fair share sends each lead to whoever is furthest below their %. Nobody gets several in a row while a colleague waits.
                 </p>
               </div>
 

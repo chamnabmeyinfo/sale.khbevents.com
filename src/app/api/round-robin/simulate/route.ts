@@ -174,6 +174,9 @@ export async function POST(req: NextRequest) {
           const { staff, effectivePercentage, nextIndex } = selection;
           distributionCounts[staff.id].assignedCount += 1;
           rrSettings.lastAssignedIndex = nextIndex;
+          // The fair algorithm reads the counters, so the benchmark copy moves them too.
+          staff.totalDirectClicks = (staff.totalDirectClicks || 0) + 1;
+          staff.lastAssignedAt = new Date(Date.now() + i).toISOString();
 
           simulationHistory.push({
             leadIndex: i + 1,

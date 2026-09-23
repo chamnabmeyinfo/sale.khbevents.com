@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSettings, getRoundRobinSettings, updateRoundRobinSettings, getPageBySlug, isTelegramWebhookSecured } from '@/lib/storage';
 import { selectNextStaff, escapeHtml, readTelegramResponse } from '@/lib/round-robin';
+import { runAfterResponse } from '@/lib/after-response';
+import type { RoundRobinSettings, RoundRobinStaff } from '@/lib/types';
 import { isValidTelegramWebhookSecret } from '@/lib/auth';
 
 /**
@@ -67,6 +69,13 @@ async function sendTelegramMessage(
   return readTelegramResponse(res);
 }
 
+/** Records a bot-side assignment so the rotation and the fairness counters move on. */
+async function commitBotAssignment(rrSettings: RoundRobinSettings, staff: RoundRobinStaff, nextIndex: number) {
+  staff.totalDirectClicks = (staff.totalDirectClicks || 0) + 1;
+  staff.lastAssignedAt = new Date().toISOString();
+  await updateRoundRobinSettings({ staffList: rrSettings.staffList, lastAssignedIndex: nextIndex });
+}
+
 export async function POST(req: NextRequest) {
   try {
     // Same settings source as the admin pages and setup-webhook (Supabase first).
@@ -107,8 +116,8 @@ export async function POST(req: NextRequest) {
       // Plain /start without payload — route to sales rep using round robin
       if (!payload) {
         const rrSettings = await getRoundRobinSettings();
-        const selection = rrSettings?.enabled ? selectNextStaff(rrSettings) : null;
-        if (selection) await updateRoundRobinSettings({ lastAssignedIndex: selection.nextIndex });
+        const selection = rrSettings?.enabled ? selectNextStaff(rrSettings, { need: 'username' }) : null;
+        if (selection) await commitBotAssignment(rrSettings, selection.staff, selection.nextIndex);
         const rep = selection?.staff;
         const repButtons: Array<Array<{ text: string; url?: string; callback_data?: string }>> = [
           [{ text: '🎪 សាកសួរអំពីកម្មវិធី / Event Inquiry', url: 'https://sale.khbevents.com' }],
@@ -176,10 +185,10 @@ export async function POST(req: NextRequest) {
         : null;
 
       if (!assignedStaff && rrSettings?.enabled) {
-        const sel = selectNextStaff(rrSettings);
+        const sel = selectNextStaff(rrSettings, { need: 'username' });
         if (sel) {
           assignedStaff = sel.staff;
-          await updateRoundRobinSettings({ lastAssignedIndex: sel.nextIndex });
+          await commitBotAssignment(rrSettings, sel.staff, sel.nextIndex);
         }
       }
 
@@ -251,9 +260,7 @@ export async function POST(req: NextRequest) {
           `👨‍💼 <b>ចាត់ចែងជូន៖</b> ${assignedStaff ? escapeHtml(assignedStaff.name) : 'មិនទាន់ចាត់ចែង'}\n` +
           `⏰ ${new Date().toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' })}`;
 
-        sendTelegramMessage(botToken, managerChatId, managerNotification).catch((err) => 
-          console.error('Manager notification error:', err)
-        );
+        runAfterResponse(() => sendTelegramMessage(botToken, managerChatId, managerNotification));
       }
 
       return NextResponse.json({ ok: true });
@@ -273,9 +280,7 @@ export async function POST(req: NextRequest) {
           ? `👉 <a href="https://t.me/${message.from.username}">ផ្ញើសារឆ្លើយតប</a>`
           : `🆔 Telegram ID: <code>${message.from.id}</code>`);
 
-      sendTelegramMessage(botToken, forwardChatId, forwardText).catch((err) => 
-        console.error('Forward to manager error:', err)
-      );
+      runAfterResponse(() => sendTelegramMessage(botToken, forwardChatId, forwardText));
     }
 
     // Auto-reply to visitor

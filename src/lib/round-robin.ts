@@ -7,78 +7,25 @@ import {
 import { errorMessage } from '@/lib/errors';
 import { toWhatsAppNumber } from './phone';
 
-export const defaultStaffList: RoundRobinStaff[] = [
-  {
-    id: 'staff-1',
-    name: 'Sokha Chen',
-    title: 'Senior B2B Consultant',
-    telegramUsername: 'sokhachen_khb',
-    telegramChatId: '',
-    percentage: 20,
-    isActive: true,
-    phone: '+855 12 111 222',
-    totalLeadsRouted: 0,
-    totalDirectClicks: 0,
-    successfulDeliveries: 0,
-    failedDeliveries: 0,
-  },
-  {
-    id: 'staff-2',
-    name: 'Dara Kim',
-    title: 'VIP Event Specialist',
-    telegramUsername: 'darakim_khb',
-    telegramChatId: '',
-    percentage: 20,
-    isActive: true,
-    phone: '+855 12 333 444',
-    totalLeadsRouted: 0,
-    totalDirectClicks: 0,
-    successfulDeliveries: 0,
-    failedDeliveries: 0,
-  },
-  {
-    id: 'staff-3',
-    name: 'Vannak Meas',
-    title: 'Exhibition & Trade Director',
-    telegramUsername: 'vannakmeas_khb',
-    telegramChatId: '',
-    percentage: 20,
-    isActive: true,
-    phone: '+855 12 555 666',
-    totalLeadsRouted: 0,
-    totalDirectClicks: 0,
-    successfulDeliveries: 0,
-    failedDeliveries: 0,
-  },
-  {
-    id: 'staff-4',
-    name: 'Sreyleak Pov',
-    title: 'Corporate Partnership Manager',
-    telegramUsername: 'sreyleak_khb',
-    telegramChatId: '',
-    percentage: 20,
-    isActive: true,
-    phone: '+855 12 777 888',
-    totalLeadsRouted: 0,
-    totalDirectClicks: 0,
-    successfulDeliveries: 0,
-    failedDeliveries: 0,
-  },
-  {
-    id: 'staff-5',
-    name: 'Bopha Heng',
-    title: 'Client Relations & Ticketing',
-    telegramUsername: 'bophaheng_khb',
-    telegramChatId: '',
-    percentage: 20,
-    isActive: true,
-    phone: '+855 12 999 000',
-    totalLeadsRouted: 0,
-    totalDirectClicks: 0,
-    successfulDeliveries: 0,
-    failedDeliveries: 0,
-  }
-];
+/**
+ * No staff ship by default: every routed visitor must land on a real person, so
+ * the admin adds their own team in Round Robin. Until then clicks fall back to the
+ * configured contact account (see resolveFallbackTelegramUrl).
+ */
+export const defaultStaffList: RoundRobinStaff[] = [];
+
+/** Sample accounts from earlier builds. They are not real people, so routing to them loses the visitor. */
+export const PLACEHOLDER_STAFF_USERNAMES = new Set([
+  'sokhachen_khb', 'darakim_khb', 'vannakmeas_khb', 'sreyleak_khb', 'bophaheng_khb', 'khb_sales',
+]);
+
+/** Telegram bot the site uses when no other contact is configured. */
+export const DEFAULT_BOT_USERNAME = 'khb_sale_admin_bot';
+
+export const cleanTelegramUsername = (value?: string) => (value || '').trim().replace(/^@/, '').replace(/^https?:\/\/t\.me\//i, '');
+
+export const isPlaceholderStaff = (staff: RoundRobinStaff) =>
+  PLACEHOLDER_STAFF_USERNAMES.has(cleanTelegramUsername(staff.telegramUsername).toLowerCase());
 
 export const DEFAULT_KHMER_TELEGRAM_TEMPLATE = `🎯 <b>មានអតិថិជនថ្មីត្រូវបានចាត់ចែងជូនអ្នក!</b> (NEW LEAD ASSIGNED)
 ━━━━━━━━━━━━━━━━━━━━
@@ -183,68 +130,162 @@ export function getTemplateForStaff(
     : DEFAULT_KHMER_TELEGRAM_TEMPLATE;
 }
 
+/** What the assignee must have so the route actually reaches them. */
+export type StaffRequirement = 'username' | 'chatId';
+
 /**
- * Select the next staff member based on configured percentage weights or round robin
+ * Staff who can take an assignment right now. A direct-contact click needs a
+ * Telegram username to redirect to; a form lead needs a Chat ID for the alert.
+ * With a requirement nobody meets, form leads fall back to every active member
+ * (the lead is still recorded and the manager alerted), clicks return nobody.
+ */
+export function eligibleStaff(settings: RoundRobinSettings, need?: StaffRequirement): RoundRobinStaff[] {
+  const active = (settings.staffList || []).filter((s) => s.isActive);
+  if (!need) return active;
+  const fit = active.filter((s) => (need === 'username' ? cleanTelegramUsername(s.telegramUsername) : (s.telegramChatId || '').trim()));
+  if (fit.length > 0) return fit;
+  return need === 'chatId' ? active : [];
+}
+
+const assignments = (s: RoundRobinStaff) => (s.totalLeadsRouted || 0) + (s.totalDirectClicks || 0);
+
+/**
+ * Select the next staff member.
+ *
+ * - weighted_percentage: deterministic "smooth" weighting. Each member is owed
+ *   share × total assignments so far; the one furthest behind gets the next one.
+ *   Over time everybody ends up exactly at their percentage and nobody gets five
+ *   leads in a row while a colleague waits.
+ * - strict_round_robin: one after another, ignoring percentages.
+ * - random_weighted: lottery in proportion to the percentages.
  */
 export function selectNextStaff(
-  settings: RoundRobinSettings
+  settings: RoundRobinSettings,
+  options: { need?: StaffRequirement } = {}
 ): { staff: RoundRobinStaff; effectivePercentage: number; nextIndex: number } | null {
-  const activeStaff = settings.staffList.filter((s) => s.isActive);
+  const activeStaff = eligibleStaff(settings, options.need);
   if (activeStaff.length === 0) return null;
 
   if (activeStaff.length === 1) {
-    return {
-      staff: activeStaff[0],
-      effectivePercentage: 100,
-      nextIndex: 0
-    };
+    return { staff: activeStaff[0], effectivePercentage: 100, nextIndex: 0 };
   }
 
-  // Strict sequential round-robin
   if (settings.algorithm === 'strict_round_robin') {
     const currentIndex = (settings.lastAssignedIndex || 0) % activeStaff.length;
-    const selected = activeStaff[currentIndex];
-    const nextIndex = (currentIndex + 1) % activeStaff.length;
     return {
-      staff: selected,
+      staff: activeStaff[currentIndex],
       effectivePercentage: Math.round(100 / activeStaff.length),
-      nextIndex
+      nextIndex: (currentIndex + 1) % activeStaff.length
     };
   }
 
-  // Weighted Percentage algorithm (Smooth probabilistic weighted selection)
-  const totalWeight = activeStaff.reduce((sum, s) => sum + Math.max(0, s.percentage || 0), 0);
-
-  if (totalWeight <= 0) {
-    // Fallback if weights are all 0: distribute equally
-    const fallbackIdx = (settings.lastAssignedIndex || 0) % activeStaff.length;
-    return {
-      staff: activeStaff[fallbackIdx],
-      effectivePercentage: Math.round(100 / activeStaff.length),
-      nextIndex: (fallbackIdx + 1) % activeStaff.length
-    };
-  }
-
-  const randomValue = Math.random() * totalWeight;
-  let accumulated = 0;
-  let selected = activeStaff[0];
-
-  for (const staff of activeStaff) {
-    accumulated += Math.max(0, staff.percentage || 0);
-    if (randomValue <= accumulated) {
-      selected = staff;
-      break;
-    }
-  }
-
-  const effectivePercentage = Math.round(((selected.percentage || 0) / totalWeight) * 100);
+  const weights = activeStaff.map((s) => Math.max(0, s.percentage || 0));
+  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
   const nextIndex = ((settings.lastAssignedIndex || 0) + 1) % activeStaff.length;
 
-  return {
-    staff: selected,
-    effectivePercentage,
-    nextIndex
-  };
+  if (totalWeight <= 0) {
+    // No percentages set: plain rotation.
+    const idx = (settings.lastAssignedIndex || 0) % activeStaff.length;
+    return { staff: activeStaff[idx], effectivePercentage: Math.round(100 / activeStaff.length), nextIndex: (idx + 1) % activeStaff.length };
+  }
+
+  const share = (i: number) => weights[i] / totalWeight;
+
+  if (settings.algorithm === 'random_weighted') {
+    const randomValue = Math.random() * totalWeight;
+    let accumulated = 0;
+    let picked = 0;
+    for (let i = 0; i < activeStaff.length; i++) {
+      accumulated += weights[i];
+      if (randomValue <= accumulated) { picked = i; break; }
+    }
+    return { staff: activeStaff[picked], effectivePercentage: Math.round(share(picked) * 100), nextIndex };
+  }
+
+  // weighted_percentage: largest deficit wins; ties go to whoever waited longest, then list order.
+  const total = activeStaff.reduce((sum, s) => sum + assignments(s), 0) + 1;
+  let picked = -1;
+  let bestDeficit = -Infinity;
+  for (let i = 0; i < activeStaff.length; i++) {
+    if (weights[i] <= 0) continue;
+    const deficit = share(i) * total - assignments(activeStaff[i]);
+    const waitedLonger =
+      picked >= 0 && Math.abs(deficit - bestDeficit) < 1e-9 &&
+      (activeStaff[i].lastAssignedAt || '') < (activeStaff[picked].lastAssignedAt || '');
+    if (deficit > bestDeficit + 1e-9 || waitedLonger) {
+      bestDeficit = deficit;
+      picked = i;
+    }
+  }
+  if (picked < 0) picked = 0;
+  return { staff: activeStaff[picked], effectivePercentage: Math.round(share(picked) * 100), nextIndex };
+}
+
+/**
+ * Where a visitor goes when nobody can take the click: the page's or the site's
+ * contact account, or the bot with a deep link so it can greet them by campaign.
+ */
+export function resolveFallbackTelegramUrl(params: { pageSlug: string; contactUsername?: string; botUsername?: string }): string {
+  const bot = cleanTelegramUsername(params.botUsername) || DEFAULT_BOT_USERNAME;
+  const contact = cleanTelegramUsername(params.contactUsername);
+  if (contact && contact.toLowerCase() !== bot.toLowerCase()) return `https://t.me/${contact}`;
+  // Telegram deep-link payloads only allow [A-Za-z0-9_-], max 64 chars.
+  const payload = `khb_${params.pageSlug}`.replace(/[^A-Za-z0-9_-]/g, '-').slice(0, 64);
+  return `https://t.me/${bot}?start=${payload}`;
+}
+
+export interface RoundRobinHealthItem {
+  level: 'error' | 'warning' | 'ok';
+  title: string;
+  detail: string;
+}
+
+/**
+ * Readiness check shown at the top of the Round Robin admin page: everything
+ * that would make a visitor or a lead land nowhere.
+ */
+export function roundRobinHealth(
+  settings: RoundRobinSettings,
+  context: { telegramConfigured: boolean; contactUsername?: string }
+): RoundRobinHealthItem[] {
+  const items: RoundRobinHealthItem[] = [];
+  const active = (settings.staffList || []).filter((s) => s.isActive);
+  const placeholders = (settings.staffList || []).filter(isPlaceholderStaff);
+  const noUsername = active.filter((s) => !cleanTelegramUsername(s.telegramUsername));
+  const noChatId = active.filter((s) => !(s.telegramChatId || '').trim());
+  const contact = cleanTelegramUsername(context.contactUsername);
+  const fallbackIsBot = !contact || contact.toLowerCase() === DEFAULT_BOT_USERNAME.toLowerCase();
+
+  if (placeholders.length > 0) {
+    items.push({
+      level: 'error',
+      title: `${placeholders.length} sample account${placeholders.length > 1 ? 's' : ''} still in the team`,
+      detail: `${placeholders.map((s) => s.name).join(', ')} are demo entries, not real people. Visitors routed to them reach nobody. Replace them with your team or delete them.`,
+    });
+  }
+  if (!settings.enabled) {
+    items.push({ level: 'warning', title: 'Round Robin is paused', detail: `Every Telegram click goes to ${fallbackIsBot ? 'the bot' : '@' + contact} and form leads only reach the group chat.` });
+  } else if (active.length === 0) {
+    items.push({ level: 'error', title: 'No active staff', detail: `Nobody receives leads. Add at least one person with a Telegram username. Until then clicks go to ${fallbackIsBot ? 'the bot' : '@' + contact}.` });
+  }
+  if (noUsername.length > 0) {
+    items.push({ level: 'error', title: `${noUsername.length} active member${noUsername.length > 1 ? 's' : ''} without a Telegram username`, detail: `${noUsername.map((s) => s.name).join(', ')}: visitors cannot be redirected to them, so they are skipped for clicks.` });
+  }
+  if (!context.telegramConfigured) {
+    items.push({ level: 'warning', title: 'Bot token missing', detail: 'Clicks still redirect to staff, but nobody gets an alert and form leads are not delivered to Telegram. Add the token from @BotFather below.' });
+  } else if (noChatId.length > 0) {
+    items.push({ level: 'warning', title: `${noChatId.length} active member${noChatId.length > 1 ? 's' : ''} without a Chat ID`, detail: `${noChatId.map((s) => s.name).join(', ')}: they get no alert when a visitor is sent to them, and form leads skip them. Ask each to send /start to the bot, then paste their Chat ID and press Test.` });
+  }
+  if (settings.directContactRoutingEnabled === false) {
+    items.push({ level: 'warning', title: 'Direct contact routing is off', detail: `"Chat on Telegram" clicks bypass the team and go to ${fallbackIsBot ? 'the bot' : '@' + contact}.` });
+  }
+  if (settings.enabled && active.length > 0 && !settings.managerChatId && !settings.fallbackChatId) {
+    items.push({ level: 'warning', title: 'No manager copy', detail: 'Set a Manager or Fallback Chat ID so you see every routed lead even when a staff alert fails.' });
+  }
+  if (items.length === 0) {
+    items.push({ level: 'ok', title: 'Ready', detail: `${active.length} active member${active.length > 1 ? 's' : ''}, every one reachable, alerts on.` });
+  }
+  return items;
 }
 
 /**
@@ -352,6 +393,8 @@ export async function sendLeadToStaffTelegram(
     enableManagerNotification?: boolean;
     customTemplate?: string;
     customWhatsappMessage?: string;
+    /** Runs the manager copy after the response (server passes runAfterResponse); default is fire-and-forget. */
+    defer?: (task: () => Promise<unknown>) => void;
   }
 ): Promise<{
   status: RoutingDeliveryStatus;
@@ -414,7 +457,7 @@ Lead <b>#${escapeHtml(lead.id)}</b> ពីទំព័រ <b>${escapeHtml(lead.l
 📊 <b>ចំណែកភាគរយ៖</b> ${staff.percentage}%
 ⏰ <b>ពេលវេលា៖</b> ${new Date().toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' })}`;
 
-        fetch(telegramApiUrl, {
+        const sendManagerCopy = () => fetch(telegramApiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -423,7 +466,9 @@ Lead <b>#${escapeHtml(lead.id)}</b> ពីទំព័រ <b>${escapeHtml(lead.l
             parse_mode: 'HTML',
             disable_web_page_preview: true
           })
-        }).catch((err) => console.error('Manager CC error:', err));
+        });
+        if (options.defer) options.defer(sendManagerCopy);
+        else sendManagerCopy().catch((err) => console.error('Manager CC error:', err));
       }
 
       return {

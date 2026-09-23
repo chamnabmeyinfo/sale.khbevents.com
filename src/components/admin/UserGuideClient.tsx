@@ -409,8 +409,8 @@ export default function UserGuideClient() {
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-2">
                   <h4 className="font-bold text-slate-900 dark:text-white">Adding or Editing Sales Reps</h4>
                   <ul className="space-y-1 text-[11px]">
-                    <li><strong>Full Name &amp; Title:</strong> e.g., <em>Sokha Chen - Senior B2B Consultant</em></li>
-                    <li><strong>Telegram Username:</strong> Enter username <strong>WITHOUT</strong> the <code>@</code> symbol (e.g. <code>sokhachen_khb</code>).</li>
+                    <li><strong>Full Name &amp; Title:</strong> e.g., <em>Your Name - Sales Consultant</em></li>
+                    <li><strong>Telegram Username:</strong> Enter username <strong>WITHOUT</strong> the <code>@</code> symbol (e.g. <code>your_telegram_name</code>).</li>
                     <li><strong>Percentage Weight:</strong> Set their share (e.g. 20% each for 5 reps). Click <strong>&quot;Rebalance Weights&quot;</strong> to sum to 100%.</li>
                   </ul>
                 </div>

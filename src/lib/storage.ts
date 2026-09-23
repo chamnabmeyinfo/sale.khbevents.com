@@ -18,10 +18,14 @@ import {
 import {
   defaultRoundRobinSettings,
   selectNextStaff,
+  eligibleStaff,
+  cleanTelegramUsername,
+  readTelegramResponse,
   sendLeadToStaffTelegram,
   escapeHtml
 } from './round-robin';
 import { isSupabaseConfigured } from './supabase';
+import { runAfterResponse } from './after-response';
 import {
   supabaseGetPages,
   supabaseGetPageBySlug,
@@ -821,7 +825,8 @@ export async function createLead(leadData: {
   const botToken = page?.isolatedSettings?.telegramBotToken || systemSettings.telegramBotToken;
 
   if (effectiveRrSettings) {
-    const selection = selectNextStaff(effectiveRrSettings);
+    // With a bot token, prefer people who can actually receive the alert (Chat ID set).
+    const selection = selectNextStaff(effectiveRrSettings, { need: botToken ? 'chatId' : undefined });
     if (selection) {
       const { staff, effectivePercentage, nextIndex } = selection;
       // Advance the rotation before awaiting Telegram, so a second lead arriving
@@ -846,7 +851,8 @@ export async function createLead(leadData: {
             managerChatId: effectiveRrSettings.managerChatId || page?.isolatedSettings?.telegramChatId || systemSettings.telegramChatId,
             enableManagerNotification: Boolean(effectiveRrSettings.enableManagerNotification),
             customTemplate: effectiveRrSettings.customMessageTemplate,
-            customWhatsappMessage: effectiveRrSettings.customWhatsappMessage
+            customWhatsappMessage: effectiveRrSettings.customWhatsappMessage,
+            defer: runAfterResponse
           }
         );
       }
@@ -924,9 +930,7 @@ export async function createLead(leadData: {
     const chatId = page?.isolatedSettings?.telegramChatId || systemSettings.telegramChatId;
 
     if (enableAlerts && token && chatId) {
-      sendTelegramAlert(newLead, systemSettings, token, chatId).catch((err) => {
-        console.error('Telegram error:', err);
-      });
+      runAfterResponse(() => sendTelegramAlert(newLead, systemSettings, token, chatId));
     }
   }
 
@@ -946,9 +950,8 @@ export async function createLead(leadData: {
 
   // Real-time Webhook dispatching (Zapier / Make / HubSpot / Google Sheets)
   if (page?.isolatedSettings?.webhookUrl) {
-    dispatchLeadWebhook(newLead, page.isolatedSettings.webhookUrl, page.isolatedSettings.webhookSecret).catch((err) => {
-      console.error('Webhook dispatch error:', err);
-    });
+    const { webhookUrl, webhookSecret } = page.isolatedSettings;
+    runAfterResponse(() => dispatchLeadWebhook(newLead, webhookUrl, webhookSecret));
   }
 
   return newLead;
@@ -1425,15 +1428,28 @@ export async function getRoundRobinLogs(limit: number = 100): Promise<RoundRobin
     .slice(0, limit);
 }
 
+export interface DirectContactRoute {
+  staff: RoundRobinStaff;
+  targetTelegramUrl: string;
+  logId: string;
+  /** Same visitor again: sent to the same person, nobody re-alerted, nothing re-counted. */
+  repeat: boolean;
+}
+
+/**
+ * Routes a "Chat on Telegram" click. Only the choice of staff happens before the
+ * caller redirects; counters, the audit log and the Telegram alerts are written
+ * after the response so the visitor reaches the chat immediately.
+ */
 export async function recordDirectContactRoute(params: {
   pageSlug: string;
   visitorIp?: string;
   userAgent?: string;
-}): Promise<{
-  staff: RoundRobinStaff;
-  targetTelegramUrl: string;
-  logId: string;
-} | null> {
+  /** Staff id from the visitor's cookie: keep them with the person they already met. */
+  preferredStaffId?: string;
+  /** False when the caller only wants a repeat match (rate limited): no new assignment is made. */
+  allowNewAssignment?: boolean;
+}): Promise<DirectContactRoute | null> {
   const db = await getDatabase();
   const page = db.pages.find((p) => p.slug === params.pageSlug);
   const useCustomRr = Boolean(page?.isolatedSettings?.useCustomRoundRobin && page.isolatedSettings.customRoundRobin?.enabled);
@@ -1441,112 +1457,117 @@ export async function recordDirectContactRoute(params: {
   const rrSettings = useCustomRr
     ? page!.isolatedSettings!.customRoundRobin!
     : (globalRr?.enabled ? globalRr : null);
-  const systemSettings = await getSettings();
 
   if (!rrSettings || rrSettings.directContactRoutingEnabled === false) {
     return null;
   }
 
-  const selection = selectNextStaff(rrSettings);
+  const eligible = eligibleStaff(rrSettings, 'username');
+  const sticky = params.preferredStaffId ? eligible.find((s) => s.id === params.preferredStaffId) : undefined;
+  if (sticky) {
+    return {
+      staff: sticky,
+      targetTelegramUrl: `https://t.me/${cleanTelegramUsername(sticky.telegramUsername)}`,
+      logId: '',
+      repeat: true
+    };
+  }
+  if (params.allowNewAssignment === false) return null;
+
+  const selection = selectNextStaff(rrSettings, { need: 'username' });
   if (!selection) return null;
 
   const { staff, effectivePercentage, nextIndex } = selection;
-  const cleanUsername = (staff.telegramUsername || '').replace(/^@/, '');
-  if (!cleanUsername) return null;
-
+  const cleanUsername = cleanTelegramUsername(staff.telegramUsername);
   const now = new Date().toISOString();
   const logId = `rr-click-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
   const targetTelegramUrl = `https://t.me/${cleanUsername}`;
 
-  // Update staff stats
+  // Rotation state is updated in memory now, so a second click arriving before the
+  // deferred work runs already sees this assignment.
   staff.totalDirectClicks = (staff.totalDirectClicks || 0) + 1;
   staff.lastAssignedAt = now;
   rrSettings.lastAssignedIndex = nextIndex;
-  if (!useCustomRr) {
-    await updateRoundRobinSettings({ staffList: rrSettings.staffList, lastAssignedIndex: nextIndex });
-  }
 
   const pageTitle = page?.title || params.pageSlug;
-  const botToken = systemSettings.telegramBotToken;
 
-  // Dispatch alert to assigned staff member via Bot so they know the client is reaching out
-  if (botToken && staff.telegramChatId) {
-    const staffAlertText = `⚡ <b>មានអតិថិជនថ្មីទាក់ទងមកអ្នកតាម TELEGRAM! (ROUND ROBIN ROUTING)</b>
+  runAfterResponse(async () => {
+    const systemSettings = await getSettings();
+    const botToken = systemSettings.telegramBotToken;
+    const stamp = new Date().toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' });
+    const send = (chatId: string, text: string) =>
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
+      }).then(readTelegramResponse);
+
+    const tasks: Promise<unknown>[] = [];
+
+    if (!useCustomRr) {
+      tasks.push(updateRoundRobinSettings({ staffList: rrSettings.staffList, lastAssignedIndex: nextIndex }));
+    }
+
+    let alertNote: string | undefined;
+    if (botToken && staff.telegramChatId) {
+      const staffAlertText = `⚡ <b>មានអតិថិជនថ្មីទាក់ទងមកអ្នកតាម TELEGRAM! (ROUND ROBIN ROUTING)</b>
 ━━━━━━━━━━━━━━━━━━━━
 📌 <b>យុទ្ធនាការ/ទំព័រ៖</b> <b>${escapeHtml(pageTitle)}</b>
 👤 <b>បុគ្គលិកទទួលបន្ទុក៖</b> <b>${escapeHtml(staff.name)}</b> (@${cleanUsername})
 📊 <b>ចំណែកភាគរយ (Weight)៖</b> ${effectivePercentage}%
-⏰ <b>ពេលវេលា៖</b> ${new Date().toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' })}
+⏰ <b>ពេលវេលា៖</b> ${stamp}
 ━━━━━━━━━━━━━━━━━━━━
 <i>អតិថិជនទើបតែចុចប៊ូតុង Telegram នៅលើគេហទំព័រ ហើយត្រូវបានចាត់ចែងដោយស្វ័យប្រវត្តិតាមប្រព័ន្ធ Round Robin មកកាន់ Telegram របស់អ្នក (@${cleanUsername})។ សូមរៀបចំឆ្លើយតប!</i>`;
+      tasks.push(
+        send(staff.telegramChatId, staffAlertText).then((data) => {
+          if (!data.ok) alertNote = `Staff alert failed: ${data.description || 'Telegram error'}`;
+        })
+      );
+    } else {
+      alertNote = botToken ? 'Staff not alerted: no Chat ID' : 'Staff not alerted: no bot token';
+    }
 
-    fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: staff.telegramChatId,
-        text: staffAlertText,
-        parse_mode: 'HTML'
-      })
-    }).catch((err) => console.error('Round Robin staff ping error:', err));
-  }
-
-  // Manager notification
-  const managerChatId = rrSettings.managerChatId || systemSettings.telegramChatId;
-  if (botToken && rrSettings.enableManagerNotification && managerChatId && String(managerChatId) !== String(staff.telegramChatId)) {
-    const managerAlert = `🔔 <b>Round Robin: អតិថិជនចុច Telegram (CC សម្រាប់ Manager)</b>
+    const managerChatId = rrSettings.managerChatId || systemSettings.telegramChatId;
+    if (botToken && rrSettings.enableManagerNotification && managerChatId && String(managerChatId) !== String(staff.telegramChatId)) {
+      const managerAlert = `🔔 <b>Round Robin: អតិថិជនចុច Telegram (CC សម្រាប់ Manager)</b>
 ━━━━━━━━━━━━━━━━━━━━
 📌 <b>ទំព័រ៖</b> ${escapeHtml(pageTitle)}
 👤 <b>បុគ្គលិកទទួលបន្ទុក៖</b> <b>${escapeHtml(staff.name)}</b> (@${cleanUsername})
 📊 <b>ភាគរយ៖</b> ${effectivePercentage}%
-⏰ <b>ពេលវេលា៖</b> ${new Date().toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' })}`;
-
-    fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: managerChatId,
-        text: managerAlert,
-        parse_mode: 'HTML'
-      })
-    }).catch((err) => console.error('Round Robin manager ping error:', err));
-  }
-
-  const logEntry: RoundRobinLog = {
-    id: logId,
-    timestamp: now,
-    routeType: 'DIRECT_CONTACT_CLICK',
-    pageSlug: params.pageSlug,
-    pageTitle: page?.title || params.pageSlug,
-    staffId: staff.id,
-    staffName: staff.name,
-    staffTelegram: staff.telegramUsername,
-    staffChatId: staff.telegramChatId,
-    percentageWeight: effectivePercentage,
-    status: 'DELIVERED',
-    targetTelegramUrl,
-    visitorIp: params.visitorIp,
-    userAgent: params.userAgent
-  };
-
-  if (!db.roundRobinLogs) db.roundRobinLogs = [];
-  db.roundRobinLogs.unshift(logEntry);
-
-  if (db.roundRobinLogs.length > 500) db.roundRobinLogs.length = 500;
-  await saveDatabase(db);
-
-  if (isSupabaseConfigured()) {
-    try {
-      await supabaseSaveRoundRobinLog(logEntry);
-    } catch (err) {
-      console.error('Supabase save roundRobinLog error:', err);
+⏰ <b>ពេលវេលា៖</b> ${stamp}`;
+      tasks.push(send(managerChatId, managerAlert));
     }
-  }
 
-  return {
-    staff,
-    targetTelegramUrl,
-    logId
-  };
+    await Promise.allSettled(tasks);
+
+    const logEntry: RoundRobinLog = {
+      id: logId,
+      timestamp: now,
+      routeType: 'DIRECT_CONTACT_CLICK',
+      pageSlug: params.pageSlug,
+      pageTitle,
+      staffId: staff.id,
+      staffName: staff.name,
+      staffTelegram: staff.telegramUsername,
+      staffChatId: staff.telegramChatId,
+      percentageWeight: effectivePercentage,
+      status: 'DELIVERED',
+      deliveryError: alertNote,
+      targetTelegramUrl,
+      visitorIp: params.visitorIp,
+      userAgent: params.userAgent
+    };
+
+    if (!db.roundRobinLogs) db.roundRobinLogs = [];
+    db.roundRobinLogs.unshift(logEntry);
+    if (db.roundRobinLogs.length > 500) db.roundRobinLogs.length = 500;
+    await saveDatabase(db);
+
+    if (isSupabaseConfigured()) {
+      await supabaseSaveRoundRobinLog(logEntry);
+    }
+  });
+
+  return { staff, targetTelegramUrl, logId, repeat: false };
 }
 
