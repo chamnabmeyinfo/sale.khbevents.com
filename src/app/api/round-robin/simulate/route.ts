@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/auth';
 import { 
   createLead, 
   recordDirectContactRoute, 
@@ -46,6 +47,9 @@ const sampleClients = [
 ];
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await req.json().catch(() => ({}));
     const mode = body.mode || 'single_lead'; // 'single_lead' | 'visitor_click' | 'batch_test'

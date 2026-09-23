@@ -1,24 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSettings, updateSettings } from '@/lib/storage';
-import { isAuthenticated, hashPassword } from '@/lib/auth';
+import { getSettings, getPublicSettings, updateSettings } from '@/lib/storage';
+import { isAuthenticated, hashPassword, setAdminSession } from '@/lib/auth';
 
 export async function GET() {
-  const settings = await getSettings();
   const authed = await isAuthenticated();
 
-  const { adminPasswordHash, telegramBotToken, ...safeSettings } = settings;
-
   if (authed) {
+    const settings = await getSettings();
     return NextResponse.json({
       settings: {
         ...settings,
         adminPasswordHash: undefined,
-        telegramBotToken: telegramBotToken ? '••••••••' : ''
+        telegramBotToken: settings.telegramBotToken ? '••••••••' : ''
       }
     });
   }
 
-  return NextResponse.json({ settings: safeSettings });
+  return NextResponse.json({ settings: await getPublicSettings() });
 }
 
 export async function PUT(req: NextRequest) {
@@ -49,7 +47,16 @@ export async function PUT(req: NextRequest) {
     }
 
     const updated = await updateSettings(updateData);
-    return NextResponse.json({ success: true, settings: updated });
+
+    // A new password rotates the session signing key; keep the current admin signed in.
+    if (updateData.adminPasswordHash) {
+      await setAdminSession(updated.adminEmail);
+    }
+
+    return NextResponse.json({
+      success: true,
+      settings: { ...updated, adminPasswordHash: undefined, telegramBotToken: updated.telegramBotToken ? '••••••••' : '' }
+    });
   } catch (error) {
     console.error('Settings update error:', error);
     return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });

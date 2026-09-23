@@ -14,6 +14,15 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const { user } = useAuth();
   const isLoginPage = pathname === '/admin/login';
 
+  const [adminLang, setAdminLang] = useState<'en' | 'kh'>('en');
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('khb_admin_lang') || localStorage.getItem('khb_lang');
+      if (saved === 'kh' || saved === 'en') setAdminLang(saved);
+    } catch {}
+  }, []);
+
   if (isLoginPage) {
     return <>{children}</>;
   }
@@ -30,15 +39,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     if (pathname.startsWith('/admin/guide')) return 'Operator User Guide & Blueprint';
     return 'Admin';
   };
-
-  const [adminLang, setAdminLang] = useState<'en' | 'kh'>('en');
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('khb_admin_lang') || localStorage.getItem('khb_lang');
-      if (saved === 'kh' || saved === 'en') setAdminLang(saved);
-    } catch {}
-  }, []);
 
   const handleSwitchLang = (lang: 'en' | 'kh') => {
     setAdminLang(lang);

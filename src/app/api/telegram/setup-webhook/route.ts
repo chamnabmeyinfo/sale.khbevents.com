@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin, getTelegramWebhookSecret } from '@/lib/auth';
 import { getDatabase } from '@/lib/storage';
 
 /**
@@ -20,6 +21,9 @@ async function getBotToken(): Promise<string | null> {
 }
 
 export async function GET() {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const botToken = await getBotToken();
     if (!botToken) {
@@ -43,6 +47,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const botToken = await getBotToken();
     if (!botToken) {
@@ -70,6 +77,7 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url: webhookUrl,
+        secret_token: getTelegramWebhookSecret(botToken),
         allowed_updates: ['message', 'callback_query'],
         drop_pending_updates: true,
       }),
@@ -97,6 +105,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE() {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const botToken = await getBotToken();
     if (!botToken) {

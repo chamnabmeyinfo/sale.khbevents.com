@@ -16,18 +16,23 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
+const NOT_CONFIGURED = new Error('Sign-in is unavailable: Supabase is not configured.');
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const [supabase] = useState(createClient);
+  const [loading, setLoading] = useState(supabase !== null);
 
   useEffect(() => {
+    if (!supabase) return;
+    const client = supabase;
+
     async function getInitialSession() {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await client.auth.getSession();
         setSession(session);
         setUser(session?.user ?? null);
       } catch (err) {
@@ -39,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     getInitialSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = client.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
@@ -54,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 1. Google OAuth
   const signInWithGoogle = async () => {
+    if (!supabase) return { error: NOT_CONFIGURED };
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -70,6 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 2. Email Sign In
   const signInWithEmail = async (email: string, password: string) => {
+    if (!supabase) return { error: NOT_CONFIGURED };
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -79,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 3. Email Sign Up
   const signUpWithEmail = async (email: string, password: string, fullName: string, phone?: string) => {
+    if (!supabase) return { error: NOT_CONFIGURED };
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const { error } = await supabase.auth.signUp({
       email,
@@ -96,6 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 4. Phone SMS OTP Sign In
   const signInWithPhone = async (phone: string) => {
+    if (!supabase) return { error: NOT_CONFIGURED };
     // Format phone with country code if needed (Cambodia default +855)
     let formattedPhone = phone.trim();
     if (!formattedPhone.startsWith('+')) {
@@ -113,6 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 5. Verify Phone SMS OTP
   const verifyPhoneOtp = async (phone: string, token: string) => {
+    if (!supabase) return { error: NOT_CONFIGURED };
     let formattedPhone = phone.trim();
     if (!formattedPhone.startsWith('+')) {
       if (formattedPhone.startsWith('0')) {
@@ -131,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 6. Sign Out
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await supabase?.auth.signOut();
     setUser(null);
     setSession(null);
   };

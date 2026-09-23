@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { getPageById, savePage, deletePage } from '@/lib/storage';
-import { isAuthenticated } from '@/lib/auth';
+import { isAuthenticated, requireAdmin } from '@/lib/auth';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
 export async function GET(req: NextRequest, context: RouteContext) {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   const { id } = await context.params;
   const page = await getPageById(id);
   if (!page) return NextResponse.json({ error: 'Page not found' }, { status: 404 });

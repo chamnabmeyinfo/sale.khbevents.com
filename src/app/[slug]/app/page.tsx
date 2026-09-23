@@ -1,7 +1,7 @@
 import SmartCityAppView from '@/components/landing/SmartCityAppView';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import { getPageBySlug, getSettings } from '@/lib/storage';
+import { getPageBySlug, getPublicSettings } from '@/lib/storage';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +30,7 @@ export default async function SlugAppPage({ params, searchParams }: PageProps) {
   const sp = searchParams ? await searchParams : {};
   const initialLang: 'en' | 'kh' = sp.lang === 'kh' ? 'kh' : 'en';
   const page = await getPageBySlug(cleanSlug);
-  const settings = await getSettings();
+  const settings = await getPublicSettings();
 
   return <SmartCityAppView page={page || undefined} settings={settings} initialLang={initialLang} />;
 }

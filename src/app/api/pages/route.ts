@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { getPages, savePage } from '@/lib/storage';
-import { isAuthenticated } from '@/lib/auth';
+import { isAuthenticated, requireAdmin } from '@/lib/auth';
 
 export async function GET() {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   const pages = await getPages();
   return NextResponse.json({ pages });
 }

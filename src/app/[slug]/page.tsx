@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getPageBySlug, getSettings } from '@/lib/storage';
+import { getPageBySlug, getPublicSettings } from '@/lib/storage';
 import DynamicLandingPageView from '@/components/landing/DynamicLandingPageView';
 import SmartCityLandingPageView from '@/components/landing/SmartCityLandingPageView';
 import SmartCityAppView from '@/components/landing/SmartCityAppView';
@@ -20,7 +20,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const sp = searchParams ? await searchParams : {};
   const isKh = sp.lang === 'kh';
   const page = await getPageBySlug(cleanSlug);
-  const settings = await getSettings();
+  const settings = await getPublicSettings();
 
   if (cleanSlug === 'smart-city-tea-cafe' && !page) {
     return {
@@ -68,7 +68,7 @@ export default async function CampaignPage({ params, searchParams }: PageProps) 
   const sp = searchParams ? await searchParams : {};
   const view = typeof sp.view === 'string' ? sp.view.toLowerCase() : '';
   const initialLang: 'en' | 'kh' = sp.lang === 'kh' ? 'kh' : 'en';
-  const settings = await getSettings();
+  const settings = await getPublicSettings();
   const page = await getPageBySlug(cleanSlug);
 
   if (cleanSlug === 'smart-city-tea-cafe') {

@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/auth';
 import { getSettings } from '@/lib/storage';
 import { testStaffTelegramConnection } from '@/lib/round-robin';
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await req.json();
     const { chatId, staffName, username, botToken: customToken, preferredLanguage } = body;

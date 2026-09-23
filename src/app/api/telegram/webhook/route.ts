@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/storage';
 import { selectNextStaff } from '@/lib/round-robin';
+import { isValidTelegramWebhookSecret } from '@/lib/auth';
 
 /**
  * Telegram Bot Webhook Handler for @khb_sale_admin_bot
@@ -72,18 +73,24 @@ async function sendTelegramMessage(
 
 export async function POST(req: NextRequest) {
   try {
-    const update: TelegramUpdate = await req.json();
-    const message = update.message;
-
-    if (!message?.text) {
-      return NextResponse.json({ ok: true });
-    }
-
     const db = await getDatabase();
     const botToken = db.settings.telegramBotToken;
 
     if (!botToken) {
       console.error('Telegram webhook: No bot token configured');
+      return NextResponse.json({ ok: true });
+    }
+
+    // Reject calls that did not come from Telegram. The secret is registered via
+    // POST /api/telegram/setup-webhook.
+    if (!isValidTelegramWebhookSecret(botToken, req.headers.get('x-telegram-bot-api-secret-token'))) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+
+    const update: TelegramUpdate = await req.json();
+    const message = update.message;
+
+    if (!message?.text) {
       return NextResponse.json({ ok: true });
     }
 

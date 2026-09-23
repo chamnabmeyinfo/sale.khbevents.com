@@ -9,7 +9,7 @@ export default async function AdminRoundRobinPage() {
   const authed = await isAuthenticated();
   if (!authed) redirect('/admin/login');
 
-  const systemSettings = await getSettings();
+  const systemSettings = { ...(await getSettings()), adminPasswordHash: '' };
   const roundRobinSettings = await getRoundRobinSettings();
   const logs = await getRoundRobinLogs(150);
 

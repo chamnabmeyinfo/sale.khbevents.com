@@ -860,6 +860,24 @@ export async function getSettings(): Promise<SystemSettings> {
   return db.settings;
 }
 
+/**
+ * Settings safe to hand to public pages and client components. Everything
+ * rendered by a 'use client' component is serialized into the HTML, so bot
+ * tokens, chat IDs, password hashes and staff routing data must never reach it.
+ */
+export async function getPublicSettings(): Promise<SystemSettings> {
+  const settings = await getSettings();
+  return {
+    ...settings,
+    telegramBotToken: undefined,
+    telegramChatId: undefined,
+    roundRobinSettings: undefined,
+    ownerEmail: undefined,
+    adminEmail: '',
+    adminPasswordHash: '',
+  };
+}
+
 export async function updateSettings(
   partial: Partial<SystemSettings>
 ): Promise<SystemSettings> {
