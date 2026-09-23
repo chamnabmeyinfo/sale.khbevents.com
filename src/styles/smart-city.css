@@ -101,12 +101,14 @@ html:not(.light) .smart-city-landing {
   padding: 0;
 }
 
-.smart-city-landing button {
+:where(.smart-city-landing) button {
   font-family: inherit;
   border: none;
   cursor: pointer;
   background: none;
 }
+/* ^ :where() keeps this reset at zero specificity so styled buttons
+   (.btn-submit-form, .btn-select-profile, …) keep their backgrounds. */
 
 ::selection {
   background: var(--primary-100);
@@ -2556,8 +2558,49 @@ html:not(.light) .smart-city-landing {
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 0.9rem;
+  display: flex;
+  color: var(--text-muted);
   pointer-events: none;
+}
+
+.reg-form-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.reg-form-head .option-badge {
+  margin-bottom: 0;
+}
+
+.seats-left-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--gold-dark);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 6px 12px;
+  border-radius: var(--r-full);
+  white-space: nowrap;
+}
+
+.seats-left-pill .pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold-dark);
+  animation: seatPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes seatPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.8); }
 }
 
 .form-input {

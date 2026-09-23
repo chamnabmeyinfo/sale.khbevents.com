@@ -234,6 +234,22 @@ const CONTENT = {
     passRateLabel: 'RATE LOCKED',
     passRateValue: '$499 EARLY BIRD',
     passGuest: 'GUEST DELEGATE',
+    regTag: 'Priority Reservation',
+    passPreviewLabel: 'Your Live Pass Preview',
+    instantBadge: 'Instant Reservation',
+    businessFocusLabel: 'Business Focus',
+    seatLabel: 'Choose Your Seat',
+    seatWord: 'Seat',
+    seatsLeftNote: (left: number, total: number) => `${left} of ${total} seats left`,
+    secureNote: 'No payment today • Official invoice sent via Telegram',
+    orChat: 'Or chat with us directly',
+    telegramDirectBtn: 'Chat with our coordinator on Telegram',
+    profileOptions: [
+      { value: 'Cafe & Tea Business', label: 'Cafe & Tea Brand' },
+      { value: 'Smart City & Retail Tech', label: 'Smart City / Tech' },
+      { value: 'Wholesale & Distribution', label: 'Wholesaler / Importer' },
+      { value: 'F&B Entrepreneur', label: 'F&B Investor' },
+    ],
   },
   kh: {
     badge: 'ដំណើរទស្សនកិច្ចពាណិជ្ជកម្មកម្រិត B2B ពិសេស ២០២៦',
@@ -442,6 +458,22 @@ const CONTENT = {
     passRateLabel: 'RATE LOCKED',
     passRateValue: '$499 EARLY BIRD',
     passGuest: 'ភ្ញៀវកិត្តិយស',
+    regTag: 'កក់កន្លែងជាអាទិភាព',
+    passPreviewLabel: 'ប័ណ្ណប្រតិភូរបស់អ្នក',
+    instantBadge: 'កក់ភ្លាមៗ',
+    businessFocusLabel: 'វិស័យអាជីវកម្ម',
+    seatLabel: 'ជ្រើសរើសកៅអី',
+    seatWord: 'កៅអី',
+    seatsLeftNote: (left: number, total: number) => `នៅសល់ ${left} ក្នុងចំណោម ${total} កៅអី`,
+    secureNote: 'មិនចាំបាច់បង់ប្រាក់ថ្ងៃនេះ • វិក្កយបត្រផ្លូវការផ្ញើតាម Telegram',
+    orChat: 'ឬជជែកជាមួយយើងផ្ទាល់',
+    telegramDirectBtn: 'ជជែកជាមួយអ្នកសម្របសម្រួលតាម Telegram',
+    profileOptions: [
+      { value: 'Cafe & Tea Business', label: 'ម្ចាស់ហាងកាហ្វេ & តែ' },
+      { value: 'Smart City & Retail Tech', label: 'Smart City / បច្ចេកវិទ្យា' },
+      { value: 'Wholesale & Distribution', label: 'អ្នកលក់ដុំ / អ្នកនាំចូល' },
+      { value: 'F&B Entrepreneur', label: 'អ្នកវិនិយោគ F&B' },
+    ],
   },
 };
 
@@ -721,6 +753,8 @@ const ICONS: Record<string, React.ReactNode> = {
   truck: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>,
   users: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
   telegram: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.77-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .27z"/></svg>,
+  user: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  phone: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>,
   lock: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
   arrow: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>,
   check: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>,
@@ -1977,14 +2011,14 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
         <section className="section-padding registration-section" id="register">
           <div className="container">
             <div className="section-header">
-              <span className="section-tag">Priority Reservation</span>
+              <span className="section-tag">{c.regTag}</span>
               <h2 className="section-title">{c.registrationSectionTitle}</h2>
               <p className="section-subtitle">{c.registrationSectionSubtitle}</p>
             </div>
             <div className="boarding-pass-experience-grid">
               {/* Live VIP Pass */}
               <div className="pass-preview-column">
-                <div className="pass-card-label">Live Pass Preview</div>
+                <div className="pass-card-label">{c.passPreviewLabel}</div>
                 <div className="boarding-pass-card">
                   <div className="pass-header">
                     <div className="pass-brand">
@@ -2039,7 +2073,15 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
               {/* Form */}
               <div className="pass-form-column">
                 <div className="reg-form-card">
-                  <div className="option-badge badge-form">Instant Reservation</div>
+                  <div className="reg-form-head">
+                    <div className="option-badge badge-form">{c.instantBadge}</div>
+                    {!page?.isolatedSettings?.isSoldOut && (
+                      <span className="seats-left-pill" aria-live="polite">
+                        <span className="pulse-dot" aria-hidden="true" />
+                        {c.seatsLeftNote(Math.max(0, effTotalSeats - localClaimed), effTotalSeats)}
+                      </span>
+                    )}
+                  </div>
                   <h3 className="reg-form-title">{c.option2Title}</h3>
                   <p className="reg-form-desc">{c.option2Desc}</p>
 
@@ -2056,7 +2098,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                       <div className="form-group">
                         <label className="form-label">{c.formNameLabel}</label>
                         <div className="input-with-icon">
-                          <span className="input-icon">👤</span>
+                          <span className="input-icon" aria-hidden="true">{ICONS.user}</span>
                           <input type="text" className="form-input" placeholder={c.formNamePlaceholder}
                             value={regName} onChange={e => setRegName(e.target.value)} required />
                         </div>
@@ -2064,38 +2106,37 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                       <div className="form-group">
                         <label className="form-label">{c.formPhoneLabel}</label>
                         <div className="input-with-icon">
-                          <span className="input-icon">📞</span>
+                          <span className="input-icon" aria-hidden="true">{ICONS.phone}</span>
                           <input type="tel" className="form-input" placeholder={c.formPhonePlaceholder}
                             value={regPhone} onChange={e => setRegPhone(e.target.value)} required />
                         </div>
                       </div>
                       <div className="form-row-two">
                         <div className="form-group">
-                          <label className="form-label">Business Focus</label>
+                          <label className="form-label">{c.businessFocusLabel}</label>
                           <select className="form-input form-select" value={regProfile} onChange={e => setRegProfile(e.target.value)}>
-                            <option value="Cafe & Tea Business">Cafe &amp; Tea Brand</option>
-                            <option value="Smart City & Retail Tech">Smart City / Tech</option>
-                            <option value="Wholesale & Distribution">Wholesaler / Importer</option>
-                            <option value="F&B Entrepreneur">F&amp;B Investor</option>
+                            {c.profileOptions.map((opt) => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
                           </select>
                         </div>
                         <div className="form-group">
-                          <label className="form-label">Assigned Seat</label>
+                          <label className="form-label">{c.seatLabel}</label>
                           <select className="form-input form-select" value={regSeat}
                             onChange={e => { const v = Number(e.target.value); setRegSeat(v); setSelectedSeat(v); }}>
                             {availableSeats.map(n => (
-                              <option key={n} value={n}>Seat #{n} ({c.availableLabel})</option>
+                              <option key={n} value={n}>{c.seatWord} #{n} ({c.availableLabel})</option>
                             ))}
                           </select>
                         </div>
                       </div>
                       <button type="submit" className="btn-submit-form" disabled={submitting}>
                         {ICONS.arrow}
-                        <span>{submitting ? c.formSubmitting : (page?.isolatedSettings?.customCtaText || c.formSubmitBtn)}</span>
+                        <span>{submitting ? c.formSubmitting : (isKh ? c.formSubmitBtn : (page?.isolatedSettings?.customCtaText || c.formSubmitBtn))}</span>
                       </button>
                       <div className="form-secure-note">
                         {ICONS.lock}
-                        <span>No instant payment required • Official invoice sent via Telegram</span>
+                        <span>{c.secureNote}</span>
                       </div>
                     </form>
                   ) : (
@@ -2114,9 +2155,9 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                   {/* Telegram alt */}
                   {!submitted && (
                     <div className="direct-telegram-box">
-                      <div className="tg-divider"><span>OR CHAT DIRECTLY</span></div>
+                      <div className="tg-divider"><span>{c.orChat}</span></div>
                       <a href={tgConciergeUrl} target="_blank" rel="noreferrer" className="btn-telegram-direct">
-                        {TG_ICON(20)}<span>Telegram VIP Concierge Direct Chat</span>
+                        {TG_ICON(20)}<span>{c.telegramDirectBtn}</span>
                       </a>
                       <div className="tg-highlight">{c.option1Highlight}</div>
                     </div>
