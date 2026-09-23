@@ -1,4 +1,5 @@
 import fs from 'fs/promises';
+import { unstable_cache, revalidateTag } from 'next/cache';
 import path from 'path';
 import crypto from 'crypto';
 import {
@@ -46,6 +47,32 @@ import {
   supabaseSetMarker
 } from './supabase-store';
 import bundledDbJson from '../../data/db.json';
+
+// ── Read caching ────────────────────────────────────────────────────────────
+// Public pages are rendered per request, and each render made 3–4 Supabase
+// round trips. These wrappers keep the results in Next's data cache for a
+// minute; admin writes call invalidateCache() so their changes show at once.
+const CACHE_SECONDS = 60;
+const cachedSupabaseSettings = unstable_cache(() => supabaseGetSettings(), ['supabase-settings'], {
+  tags: ['settings'], revalidate: CACHE_SECONDS,
+});
+const cachedSupabasePages = unstable_cache(() => supabaseGetPages(), ['supabase-pages'], {
+  tags: ['pages'], revalidate: CACHE_SECONDS,
+});
+const cachedSupabasePageBySlug = unstable_cache((slug: string) => supabaseGetPageBySlug(slug), ['supabase-page-by-slug'], {
+  tags: ['pages'], revalidate: CACHE_SECONDS,
+});
+const cachedSupabaseDeletedPages = unstable_cache(() => supabaseGetDeletedPages(), ['supabase-deleted-pages'], {
+  tags: ['pages'], revalidate: CACHE_SECONDS,
+});
+
+function invalidateCache(tag: 'settings' | 'pages') {
+  try {
+    revalidateTag(tag, { expire: 0 });
+  } catch {
+    // Not inside a request scope (e.g. scripts/tests): the entry simply expires.
+  }
+}
 
 const bundledDb = bundledDbJson as unknown as DatabaseSchema;
 
@@ -352,7 +379,7 @@ async function getDeletedPageKeys(): Promise<Set<string>> {
   const keys = new Set(db.deletedPages || []);
   if (isSupabaseConfigured()) {
     try {
-      for (const key of (await supabaseGetDeletedPages()) || []) keys.add(key);
+      for (const key of (await cachedSupabaseDeletedPages()) || []) keys.add(key);
     } catch (err) {
       console.error('Supabase getDeletedPages error:', err);
     }
@@ -392,7 +419,7 @@ export async function getPages(): Promise<LandingPage[]> {
 
   if (isSupabaseConfigured()) {
     try {
-      const remotePages = await supabaseGetPages();
+      const remotePages = await cachedSupabasePages();
       if (remotePages && remotePages.length > 0) {
         // Check if any local/bundled pages are missing in Supabase
         const remoteSlugs = new Set(remotePages.map((p) => p.slug.toLowerCase().trim()));
@@ -440,7 +467,7 @@ export async function getPageBySlug(slug: string): Promise<LandingPage | null> {
 
   if (isSupabaseConfigured()) {
     try {
-      const page = await supabaseGetPageBySlug(cleanSlug);
+      const page = await cachedSupabasePageBySlug(cleanSlug);
       if (page) return page;
 
       // Auto-sync to Supabase if present locally but missing in Supabase
@@ -600,6 +627,7 @@ export async function savePage(pageData: Partial<LandingPage> & { title: string;
       console.error('Supabase savePage error:', err);
     }
   }
+  invalidateCache('pages');
 
   return targetPage;
 }
@@ -626,6 +654,7 @@ export async function deletePage(id: string): Promise<boolean> {
     // Remember the deletion so the page is not re-seeded from the bundled db.json
     // or re-synced to Supabase on the next restart.
     await updateDeletedPageKeys([`id:${id}`, ...(existing ? [`slug:${existing.slug}`] : [])], []);
+    invalidateCache('pages');
   }
   return deleted;
 }
@@ -1009,7 +1038,7 @@ export async function deleteLead(id: string): Promise<boolean> {
 export async function getSettings(): Promise<SystemSettings> {
   if (isSupabaseConfigured()) {
     try {
-      const settings = await supabaseGetSettings();
+      const settings = await cachedSupabaseSettings();
       if (settings) return settings;
     } catch (err) {
       console.error('Supabase getSettings error:', err);
@@ -1051,6 +1080,7 @@ export async function updateSettings(
   const db = await getDatabase();
   db.settings = { ...db.settings, ...partial };
   await saveDatabase(db);
+  invalidateCache('settings');
   return updated || db.settings;
 }
 
