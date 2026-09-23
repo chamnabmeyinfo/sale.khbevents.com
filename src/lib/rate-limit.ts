@@ -70,3 +70,16 @@ export function getClientIp(headers: Headers): string {
   }
   return 'unknown';
 }
+
+// Without a proxy-supplied IP every visitor lands in one bucket, so that shared
+// bucket gets a much larger budget: still a ceiling on abuse, never a cap on
+// normal traffic.
+const UNKNOWN_IP_MULTIPLIER = 20;
+
+/** Per-visitor rate limit keyed by client IP (see getClientIp). */
+export function rateLimitByIp(prefix: string, headers: Headers, limit: number, windowMs: number): RateLimitResult {
+  const ip = getClientIp(headers);
+  return ip === 'unknown'
+    ? rateLimit(`${prefix}:shared`, limit * UNKNOWN_IP_MULTIPLIER, windowMs)
+    : rateLimit(`${prefix}:${ip}`, limit, windowMs);
+}

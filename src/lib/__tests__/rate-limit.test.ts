@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getClientIp, rateLimit, resetRateLimit } from '../rate-limit';
+import { getClientIp, rateLimit, rateLimitByIp, resetRateLimit } from '../rate-limit';
 
 describe('rateLimit', () => {
   it('allows up to the limit then blocks until the window resets', () => {
@@ -33,5 +33,23 @@ describe('getClientIp', () => {
 
   it('falls back to unknown', () => {
     expect(getClientIp(new Headers())).toBe('unknown');
+  });
+});
+
+describe('rateLimitByIp', () => {
+  it('limits each known IP separately', () => {
+    const prefix = `t${Math.random()}`;
+    const a = new Headers({ 'x-real-ip': '1.1.1.1' });
+    const b = new Headers({ 'x-real-ip': '2.2.2.2' });
+    expect(rateLimitByIp(prefix, a, 1, 60_000).allowed).toBe(true);
+    expect(rateLimitByIp(prefix, a, 1, 60_000).allowed).toBe(false);
+    expect(rateLimitByIp(prefix, b, 1, 60_000).allowed).toBe(true);
+  });
+
+  it('gives visitors without an IP header a larger shared budget', () => {
+    const prefix = `t${Math.random()}`;
+    const none = new Headers();
+    for (let i = 0; i < 20; i++) expect(rateLimitByIp(prefix, none, 1, 60_000).allowed).toBe(true);
+    expect(rateLimitByIp(prefix, none, 1, 60_000).allowed).toBe(false);
   });
 });

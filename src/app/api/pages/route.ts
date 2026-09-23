@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { getPages, savePage } from '@/lib/storage';
+import { getPages, savePage, PageSlugError } from '@/lib/storage';
 import { isAuthenticated, requireAdmin } from '@/lib/auth';
 
 export async function GET() {
@@ -34,6 +34,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, page: saved });
   } catch (error) {
+    if (error instanceof PageSlugError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
     console.error('Save page error:', error);
     return NextResponse.json({ error: 'Failed to save landing page' }, { status: 500 });
   }

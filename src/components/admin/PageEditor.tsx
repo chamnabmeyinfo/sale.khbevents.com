@@ -388,7 +388,11 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     metaTitle: initialData?.metaTitle || '',
     metaDescription: initialData?.metaDescription || '',
     ogImage: initialData?.ogImage || '',
-    isolatedSettings: initialData?.isolatedSettings || {}
+    isolatedSettings: initialData?.isolatedSettings || {},
+    // Must be loaded so the Khmer and Tracking tabs edit the saved values
+    // instead of replacing them with a single-field object on save.
+    translations: initialData?.translations || {},
+    tracking: initialData?.tracking || {}
   });
 
   const [saving, setSaving] = useState(false);
@@ -571,14 +575,14 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     const text = (newFeatureText[pkgIdx] || '').trim();
     if (!text) return;
     const arr = [...(formData.packages || [])];
-    arr[pkgIdx].features = [...(arr[pkgIdx].features || []), text];
+    arr[pkgIdx] = { ...arr[pkgIdx], features: [...(arr[pkgIdx].features || []), text] };
     setFormData({ ...formData, packages: arr });
     setNewFeatureText({ ...newFeatureText, [pkgIdx]: '' });
   };
 
   const removePackageFeature = (pkgIdx: number, fIdx: number) => {
     const arr = [...(formData.packages || [])];
-    arr[pkgIdx].features = (arr[pkgIdx].features || []).filter((_, i) => i !== fIdx);
+    arr[pkgIdx] = { ...arr[pkgIdx], features: (arr[pkgIdx].features || []).filter((_, i) => i !== fIdx) };
     setFormData({ ...formData, packages: arr });
   };
 
@@ -613,10 +617,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
   const addEventToDay = (dayIdx: number) => {
     const arr = [...(formData.itinerary || [])];
-    arr[dayIdx].events = [
-      ...(arr[dayIdx].events || []),
-      { time: '14:00 - 16:00', activity: 'New Itinerary Session / Meeting', desc: '' }
-    ];
+    arr[dayIdx] = {
+      ...arr[dayIdx],
+      events: [
+        ...(arr[dayIdx].events || []),
+        { time: '14:00 - 16:00', activity: 'New Itinerary Session / Meeting', desc: '' }
+      ]
+    };
     setFormData({ ...formData, itinerary: arr });
   };
 
@@ -628,7 +635,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
   const removeEventFromDay = (dayIdx: number, eventIdx: number) => {
     const arr = [...(formData.itinerary || [])];
-    arr[dayIdx].events = arr[dayIdx].events.filter((_, i) => i !== eventIdx);
+    arr[dayIdx] = { ...arr[dayIdx], events: arr[dayIdx].events.filter((_, i) => i !== eventIdx) };
     setFormData({ ...formData, itinerary: arr });
   };
 
@@ -972,14 +979,14 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     const text = (newBoothFeatureText[boothIdx] || '').trim();
     if (!text) return;
     const arr = [...(formData.expoBooths || [])];
-    arr[boothIdx].features = [...(arr[boothIdx].features || []), text];
+    arr[boothIdx] = { ...arr[boothIdx], features: [...(arr[boothIdx].features || []), text] };
     setFormData({ ...formData, expoBooths: arr });
     setNewBoothFeatureText({ ...newBoothFeatureText, [boothIdx]: '' });
   };
 
   const removeBoothFeature = (boothIdx: number, fIdx: number) => {
     const arr = [...(formData.expoBooths || [])];
-    arr[boothIdx].features = (arr[boothIdx].features || []).filter((_, i) => i !== fIdx);
+    arr[boothIdx] = { ...arr[boothIdx], features: (arr[boothIdx].features || []).filter((_, i) => i !== fIdx) };
     setFormData({ ...formData, expoBooths: arr });
   };
 

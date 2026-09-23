@@ -78,7 +78,8 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
 
   const handleDuplicate = async (sourcePage: LandingPage) => {
     const newTitle = `${sourcePage.title} (Copy)`;
-    const newSlug = `${sourcePage.slug}-copy-${Math.floor(Math.random() * 1000)}`;
+    const baseSlug = sourcePage.slug.replace(/(-copy-[a-z0-9]+)+$/, '');
+    const newSlug = `${baseSlug}-copy-${Date.now().toString(36)}`;
 
     try {
       const res = await fetch('/api/pages', {

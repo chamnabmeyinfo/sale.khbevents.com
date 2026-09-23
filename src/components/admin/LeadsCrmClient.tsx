@@ -15,13 +15,16 @@ import {
   Tag
 } from 'lucide-react';
 import { Lead, LeadStatus, LandingPage } from '@/lib/types';
-import { useUrlParam } from '@/lib/use-browser-state';
 import { errorMessage } from '@/lib/errors';
+import { toWhatsAppNumber } from '@/lib/phone';
+import { toCsv } from '@/lib/csv';
 
 const STATUS_FILTERS = ['ALL', 'NEW', 'CONTACTED', 'PROPOSAL_SENT', 'NEGOTIATING', 'WON', 'LOST'];
 
 interface LeadsCrmClientProps {
   initialLeads: Lead[];
+  initialStatus?: string;
+  initialLeadId?: string;
   pages: LandingPage[];
 }
 
@@ -47,17 +50,25 @@ const statusColors: Record<LeadStatus, { bg: string; text: string; border: strin
   LOST: { bg: 'bg-slate-200 dark:bg-gray-800', text: 'text-slate-700 dark:text-gray-400 font-bold', border: 'border-slate-300 dark:border-gray-700' }
 };
 
-export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientProps) {
+export default function LeadsCrmClient({ initialLeads, pages, initialStatus, initialLeadId }: LeadsCrmClientProps) {
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [search, setSearch] = useState('');
   // ?status=NEW (e.g. from the dashboard) sets the starting filter until the user picks one.
-  const urlStatus = useUrlParam('status');
   const [chosenStatus, setSelectedStatus] = useState<string | null>(null);
-  const selectedStatus = chosenStatus ?? (urlStatus && STATUS_FILTERS.includes(urlStatus) ? urlStatus : 'ALL');
+  // Sidebar links (?status=WON) re-render this page with a new initialStatus;
+  // let the link win over an earlier manual choice.
+  const [linkedStatus, setLinkedStatus] = useState(initialStatus);
+  if (linkedStatus !== initialStatus) {
+    setLinkedStatus(initialStatus);
+    setSelectedStatus(null);
+  }
+  const selectedStatus = chosenStatus ?? (initialStatus && STATUS_FILTERS.includes(initialStatus) ? initialStatus : 'ALL');
   const [selectedPage, setSelectedPage] = useState<string>('ALL');
   const [selectedTag, setSelectedTag] = useState<string>('ALL');
 
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  // Telegram alerts link to /admin/leads?id=…; open that lead until the user closes it.
+  const [chosenLead, setSelectedLead] = useState<Lead | null | undefined>(undefined);
+  const selectedLead = chosenLead === undefined ? (leads.find((l) => l.id === initialLeadId) ?? null) : chosenLead;
   const [newNoteText, setNewNoteText] = useState('');
 
   const allTags = React.useMemo(() => {
@@ -101,6 +112,8 @@ export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientPr
         if (selectedLead?.id === leadId) {
           setSelectedLead(data.lead);
         }
+      } else {
+        alert(data.error || 'Failed to update lead status. Please try again.');
       }
     } catch {
       alert('Failed to update lead status');
@@ -122,6 +135,8 @@ export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientPr
         setLeads(leads.map((l) => (l.id === selectedLead.id ? data.lead : l)));
         setSelectedLead(data.lead);
         setNewNoteText('');
+      } else {
+        alert(data.error || 'Failed to save note. Please try again.');
       }
     } catch {
       alert('Failed to save note');
@@ -152,6 +167,7 @@ export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientPr
       'Status',
       'Client Name',
       'Phone',
+      'WhatsApp Number',
       'Email',
       'Company',
       'Tags',
@@ -165,32 +181,37 @@ export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientPr
       'Package Interest',
       'Landing Page',
       'UTM Source',
+      'UTM Campaign',
+      'Visitor Location',
       'Message'
     ];
 
     const rows = filteredLeads.map((l) => [
-      `"${l.id}"`,
-      `"${new Date(l.createdAt).toLocaleString()}"`,
-      `"${l.status}"`,
-      `"${l.fullName.replace(/"/g, '""')}"`,
-      `"${l.phone}"`,
-      `"${l.email}"`,
-      `"${(l.company || '').replace(/"/g, '""')}"`,
-      `"${getLeadTags(l).join(', ')}"`,
-      `"${l.routing?.staffName || 'Unassigned'}"`,
-      `"${l.routing?.status || 'N/A'}"`,
-      `"${l.routing?.percentageWeight ? `${l.routing.percentageWeight}%` : 'N/A'}"`,
-      `"${l.eventType}"`,
-      `"${l.estimatedDate || ''}"`,
-      `"${l.guestCount || ''}"`,
-      `"${l.budgetRange || ''}"`,
-      `"${(l.packageInterest || '').replace(/"/g, '""')}"`,
-      `"${l.landingPageTitle || l.landingPageSlug}"`,
-      `"${l.utmSource || 'Direct'}"`,
-      `"${(l.message || '').replace(/"/g, '""')}"`
+      l.id,
+      new Date(l.createdAt).toLocaleString(),
+      l.status,
+      l.fullName,
+      l.phone,
+      toWhatsAppNumber(l.phone),
+      l.email,
+      l.company || '',
+      getLeadTags(l).join(', '),
+      l.routing?.staffName || 'Unassigned',
+      l.routing?.status || 'N/A',
+      l.routing?.percentageWeight ? `${l.routing.percentageWeight}%` : 'N/A',
+      l.eventType,
+      l.estimatedDate || '',
+      l.guestCount || '',
+      l.budgetRange || '',
+      l.packageInterest || '',
+      l.landingPageTitle || l.landingPageSlug,
+      l.utmSource || 'Direct',
+      l.utmCampaign || '',
+      [l.customFields?.visitorCity, l.customFields?.visitorCountry].filter(Boolean).join(', '),
+      l.message || ''
     ]);
 
-    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const csvContent = toCsv(headers, rows);
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -444,7 +465,7 @@ export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientPr
                         <div className="flex items-center justify-end gap-1.5">
                           {lead.phone && (
                             <a
-                              href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(lead.fullName)},%20this%20is%20KHB%20Events%20regarding%20your%20inquiry.`}
+                              href={`https://wa.me/${toWhatsAppNumber(lead.phone)}?text=Hello%20${encodeURIComponent(lead.fullName)},%20this%20is%20KHB%20Events%20regarding%20your%20inquiry.`}
                               target="_blank"
                               rel="noreferrer"
                               className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60 transition-colors"
@@ -528,7 +549,7 @@ export default function LeadsCrmClient({ initialLeads, pages }: LeadsCrmClientPr
 
               <div className="grid grid-cols-2 gap-3">
                 <a
-                  href={`https://wa.me/${selectedLead.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(selectedLead.fullName)},%20this%20is%20KHB%20Events%20regarding%20your%20inquiry.`}
+                  href={`https://wa.me/${toWhatsAppNumber(selectedLead.phone)}?text=Hello%20${encodeURIComponent(selectedLead.fullName)},%20this%20is%20KHB%20Events%20regarding%20your%20inquiry.`}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider transition-all"

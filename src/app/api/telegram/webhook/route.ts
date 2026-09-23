@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/storage';
-import { selectNextStaff } from '@/lib/round-robin';
+import { getSettings, getRoundRobinSettings, updateRoundRobinSettings, getPageBySlug } from '@/lib/storage';
+import { selectNextStaff, escapeHtml, readTelegramResponse } from '@/lib/round-robin';
 import { isValidTelegramWebhookSecret } from '@/lib/auth';
 
 /**
@@ -43,10 +43,6 @@ interface TelegramUpdate {
   };
 }
 
-function escapeHtml(str: string): string {
-  return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
 async function sendTelegramMessage(
   botToken: string,
   chatId: number | string,
@@ -68,13 +64,14 @@ async function sendTelegramMessage(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  return res.json();
+  return readTelegramResponse(res);
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const db = await getDatabase();
-    const botToken = db.settings.telegramBotToken;
+    // Same settings source as the admin pages and setup-webhook (Supabase first).
+    const settings = await getSettings();
+    const botToken = settings.telegramBotToken;
 
     if (!botToken) {
       console.error('Telegram webhook: No bot token configured');
@@ -105,8 +102,9 @@ export async function POST(req: NextRequest) {
 
       // Plain /start without payload — route to sales rep using round robin
       if (!payload) {
-        const rrSettings = db.settings.roundRobinSettings;
+        const rrSettings = await getRoundRobinSettings();
         const selection = rrSettings?.enabled ? selectNextStaff(rrSettings) : null;
+        if (selection) await updateRoundRobinSettings({ lastAssignedIndex: selection.nextIndex });
         const rep = selection?.staff;
         const repButtons: Array<Array<{ text: string; url?: string; callback_data?: string }>> = [
           [{ text: '🎪 សាកសួរអំពីកម្មវិធី / Event Inquiry', url: 'https://sale.khbevents.com' }],
@@ -154,13 +152,21 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Links from this site are exactly `khb_<slug>`, and slugs may contain '_',
+      // so try the whole remainder as a slug before the heuristics above.
+      const exactPage = payload.startsWith('khb_') ? await getPageBySlug(payload.slice(4)) : null;
+      if (exactPage) {
+        pageSlug = exactPage.slug;
+        staffId = '';
+      }
+
       // Look up the page
-      const page = db.pages.find((p) => p.slug === pageSlug);
+      const page = exactPage || (pageSlug ? await getPageBySlug(pageSlug) : null);
       const pageTitle = page?.title || pageSlug || 'KHB Events';
       const pageCategory = page?.category || 'Event';
 
       // Look up the assigned staff, or select next via Round Robin
-      const rrSettings = db.settings.roundRobinSettings;
+      const rrSettings = await getRoundRobinSettings();
       let assignedStaff = staffId 
         ? rrSettings?.staffList?.find((s) => s.id === staffId)
         : null;
@@ -169,6 +175,7 @@ export async function POST(req: NextRequest) {
         const sel = selectNextStaff(rrSettings);
         if (sel) {
           assignedStaff = sel.staff;
+          await updateRoundRobinSettings({ lastAssignedIndex: sel.nextIndex });
         }
       }
 
@@ -230,7 +237,7 @@ export async function POST(req: NextRequest) {
       }
 
       // ─── Also notify manager / global chat ────────────────────────
-      const managerChatId = rrSettings?.managerChatId || db.settings.telegramChatId;
+      const managerChatId = rrSettings?.managerChatId || settings.telegramChatId;
       if (managerChatId && managerChatId !== assignedStaff?.telegramChatId) {
         const managerNotification = 
           `🔔 <b>Telegram Bot Click — អតិថិជនថ្មី</b>\n` +
@@ -250,7 +257,7 @@ export async function POST(req: NextRequest) {
 
     // ─── Handle regular messages (visitor chatting) ─────────────────
     // Forward to the global chat / manager so someone can respond
-    const forwardChatId = db.settings.telegramChatId;
+    const forwardChatId = settings.telegramChatId;
     if (forwardChatId && String(chatId) !== forwardChatId) {
       const forwardText = 
         `📩 <b>សារពីអតិថិជនតាម Bot</b>\n` +

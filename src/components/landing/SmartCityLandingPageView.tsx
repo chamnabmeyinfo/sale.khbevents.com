@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { LandingPage, SystemSettings } from '@/lib/types';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
 import FlagIcon from '@/components/common/FlagIcon';
+import { safeRedirectUrl } from '@/lib/safe-url';
+import { readUtmParams } from '@/lib/utm';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BILINGUAL CONTENT — exactly from old project content.json + app.js STR obj
@@ -1006,7 +1008,6 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
     e.preventDefault();
     if (!regName.trim() || !regPhone.trim()) return;
     setSubmitting(true);
-    const utmParams = new URLSearchParams(window.location.search);
     try {
       const res = await fetch('/api/leads', {
         method: 'POST',
@@ -1020,10 +1021,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
           landingPageTitle: page?.title || 'Smart City, Tea & Cafe Business Trip to Vietnam 2026',
           source: 'landing_page',
           customFields: { seat: String(regSeat), profile: regProfile },
-          utmSource: utmParams.get('utm_source') || undefined,
-          utmMedium: utmParams.get('utm_medium') || undefined,
-          utmCampaign: utmParams.get('utm_campaign') || undefined,
-          utmContent: utmParams.get('utm_content') || undefined,
+          ...readUtmParams(),
           referrer: typeof document !== 'undefined' ? document.referrer : '',
         }),
       });
@@ -1038,9 +1036,10 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
           value: isEarlyBird ? effEarlyBirdPrice : effRegularPrice,
         }, lang);
 
-        if (page?.isolatedSettings?.postSubmitAction === 'redirect' && page?.isolatedSettings?.redirectUrl) {
+        const redirectTarget = safeRedirectUrl(page?.isolatedSettings?.redirectUrl);
+        if (page?.isolatedSettings?.postSubmitAction === 'redirect' && redirectTarget) {
           setTimeout(() => {
-            window.location.href = page.isolatedSettings!.redirectUrl!;
+            window.location.href = redirectTarget;
           }, 1500);
         }
       } else {

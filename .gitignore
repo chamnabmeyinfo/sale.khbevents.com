@@ -43,3 +43,7 @@ Old Project Code/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# database temp files and corrupt-file backups
+/data/*.tmp
+/data/*.corrupt-*

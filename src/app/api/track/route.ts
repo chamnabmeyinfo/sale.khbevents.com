@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { recordTrackingEvent, RecordTrackingPayload } from '@/lib/storage';
 import { TrackingEventType } from '@/lib/types';
-import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { rateLimitByIp } from '@/lib/rate-limit';
 
 const EVENT_TYPES: readonly TrackingEventType[] = [
   'page_view', 'scroll_depth', 'cta_click', 'telegram_click', 'seat_select', 'form_submit', 'lang_toggle',
@@ -20,7 +20,7 @@ function oneOf<T extends string>(value: unknown, allowed: readonly T[]): T | und
 
 export async function POST(req: NextRequest) {
   // Every event rewrites the database, so cap how fast one visitor can send them.
-  if (!rateLimit(`track:${getClientIp(req.headers)}`, 60, 60 * 1000).allowed) {
+  if (!rateLimitByIp('track', req.headers, 60, 60 * 1000).allowed) {
     return NextResponse.json({ success: false }, { status: 429 });
   }
 

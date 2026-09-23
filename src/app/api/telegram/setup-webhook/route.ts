@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, getTelegramWebhookSecret } from '@/lib/auth';
-import { getDatabase } from '@/lib/storage';
+import { getSettings } from '@/lib/storage';
+import { readTelegramResponse } from '@/lib/round-robin';
 import { errorMessage } from '@/lib/errors';
 
 /**
@@ -17,8 +18,8 @@ import { errorMessage } from '@/lib/errors';
 const WEBHOOK_PATH = '/api/telegram/webhook';
 
 async function getBotToken(): Promise<string | null> {
-  const db = await getDatabase();
-  return db.settings.telegramBotToken || null;
+  const settings = await getSettings();
+  return settings.telegramBotToken || null;
 }
 
 export async function GET() {
@@ -35,7 +36,7 @@ export async function GET() {
     }
 
     const res = await fetch(`https://api.telegram.org/bot${botToken}/getWebhookInfo`);
-    const data = await res.json();
+    const data = await readTelegramResponse(res);
 
     return NextResponse.json({
       success: true,
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
       }),
     });
 
-    const data = await res.json();
+    const data = await readTelegramResponse(res);
 
     if (data.ok) {
       return NextResponse.json({
@@ -124,7 +125,7 @@ export async function DELETE() {
       body: JSON.stringify({ drop_pending_updates: true }),
     });
 
-    const data = await res.json();
+    const data = await readTelegramResponse(res);
 
     return NextResponse.json({
       success: data.ok,

@@ -19,6 +19,7 @@ import {
   BookOpen
 } from 'lucide-react';
 import { LandingPage, Lead } from '@/lib/types';
+import { toWhatsAppNumber } from '@/lib/phone';
 
 interface DashboardOverviewClientProps {
   pages: LandingPage[];
@@ -331,7 +332,7 @@ export default function DashboardOverviewClient({ pages, leads }: DashboardOverv
                       {lead.phone && (
                         <div className="flex items-center gap-2">
                           <a
-                            href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(lead.fullName)},%20this%20is%20KHB%20Events%20regarding%20your%20inquiry.`}
+                            href={`https://wa.me/${toWhatsAppNumber(lead.phone)}?text=Hello%20${encodeURIComponent(lead.fullName)},%20this%20is%20KHB%20Events%20regarding%20your%20inquiry.`}
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/40 transition-colors"

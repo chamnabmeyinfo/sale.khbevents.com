@@ -100,6 +100,9 @@ In **Setup Node.js App → Environment variables**, add `SESSION_SECRET` with a 
 4. Click **Save All Settings**.
 Whenever a client submits an event inquiry or delegate reservation, your sales team will receive an instant notification on Telegram!
 
+### If you use Supabase: lock down table access
+Older versions of `supabase/schema.sql` let the public (anon) key — which is visible in the browser — read and edit every table, including leads and the bot token. Set `SUPABASE_SERVICE_ROLE_KEY` on the server first, then run `supabase/migrations/20260923_lock_down_rls.sql` in the Supabase SQL editor.
+
 ### Register the bot webhook (once, and again after changing the bot token)
 The webhook only accepts calls that carry a secret Telegram sends back, so it must be registered by the app. While logged in to `/admin`, open the browser console and run:
 ```js

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { LandingPage, SystemSettings } from '@/lib/types';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
 import FlagIcon from '@/components/common/FlagIcon';
+import { safeRedirectUrl } from '@/lib/safe-url';
+import { readUtmParams } from '@/lib/utm';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GENERAL CONSTANTS
@@ -382,6 +384,7 @@ export default function SmartCityAppView({ page, initialLang }: { page?: Landing
           landingPageSlug: page?.slug || 'smart-city-tea-cafe',
           landingPageTitle: page?.title || 'Smart City, Tea & Cafe Delegation (Mobile App)',
           source: 'mobile_app',
+          ...readUtmParams(),
           message: `Seat #${selectedSeat} | Profile: ${regProfile}`,
           packageInterest: `Early Bird $${effEarlyBirdPrice}`,
           customFields: { seat: String(selectedSeat), profile: regProfile }
@@ -393,9 +396,10 @@ export default function SmartCityAppView({ page, initialLang }: { page?: Landing
         setLocalBookings(prev => prev + 1);
         trackLandingEvent(page, 'form_submit', { seat: selectedSeat, profile: regProfile, value: effEarlyBirdPrice }, lang);
 
-        if (page?.isolatedSettings?.postSubmitAction === 'redirect' && page?.isolatedSettings?.redirectUrl) {
+        const redirectTarget = safeRedirectUrl(page?.isolatedSettings?.redirectUrl);
+        if (page?.isolatedSettings?.postSubmitAction === 'redirect' && redirectTarget) {
           setTimeout(() => {
-            window.location.href = page.isolatedSettings!.redirectUrl!;
+            window.location.href = redirectTarget;
           }, 1500);
         }
       } else {

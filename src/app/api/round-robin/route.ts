@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { recordDirectContactRoute } from '@/lib/storage';
-import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { rateLimitByIp, getClientIp } from '@/lib/rate-limit';
 
 const FALLBACK_BOT_USERNAME = 'khb_sale_admin_bot';
 
@@ -16,7 +16,7 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean) {
 
   // Every routed click alerts staff on Telegram and writes a log entry, so
   // repeat clickers are sent to the bot without re-triggering the alerts.
-  const limit = rateLimit(`rr-click:${visitorIp}`, 10, 10 * 60 * 1000);
+  const limit = rateLimitByIp('rr-click', req.headers, 10, 10 * 60 * 1000);
   const routeResult = limit.allowed
     ? await recordDirectContactRoute({ pageSlug: slug, visitorIp, userAgent })
     : null;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyCredentials, setAdminSession } from '@/lib/auth';
-import { rateLimit, resetRateLimit, tooManyRequests, getClientIp } from '@/lib/rate-limit';
+import { rateLimit, rateLimitByIp, resetRateLimit, tooManyRequests, getClientIp } from '@/lib/rate-limit';
 
 const WINDOW_MS = 15 * 60 * 1000;
 
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
     const ipKey = `login:ip:${getClientIp(req.headers)}`;
     const emailKey = `login:email:${String(email).toLowerCase().trim()}`;
-    const byIp = rateLimit(ipKey, 10, WINDOW_MS);
+    const byIp = rateLimitByIp('login:ip', req.headers, 10, WINDOW_MS);
     const byEmail = rateLimit(emailKey, 20, WINDOW_MS);
     if (!byIp.allowed) return tooManyRequests(byIp, 'Too many login attempts. Please wait 15 minutes and try again.');
     if (!byEmail.allowed) return tooManyRequests(byEmail, 'Too many login attempts. Please wait 15 minutes and try again.');

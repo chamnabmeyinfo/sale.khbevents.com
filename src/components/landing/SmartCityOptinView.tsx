@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { LandingPage, SystemSettings } from '@/lib/types';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
 import FlagIcon from '@/components/common/FlagIcon';
+import { safeRedirectUrl } from '@/lib/safe-url';
+import { readUtmParams } from '@/lib/utm';
 
 export default function SmartCityOptinView({ page, initialLang }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh' } = {}) {
   const [lang, setLang] = useState<'en' | 'kh'>(initialLang || 'en');
@@ -31,6 +33,7 @@ export default function SmartCityOptinView({ page, initialLang }: { page?: Landi
           landingPageSlug: page?.slug || 'smart-city-tea-cafe',
           landingPageTitle: page?.title || 'Smart City, Tea & Cafe Delegation (Fast Opt-in)',
           source: 'optin_funnel',
+          ...readUtmParams(),
           message: 'Direct Opt-in Lead (Express Booking)',
           packageInterest: `Early Bird $${effEarlyBirdPrice}`,
         }),
@@ -40,9 +43,10 @@ export default function SmartCityOptinView({ page, initialLang }: { page?: Landi
         setSubmitted(true);
         trackLandingEvent(page, 'form_submit', { profile: 'Fast Opt-in', value: effEarlyBirdPrice }, lang);
 
-        if (page?.isolatedSettings?.postSubmitAction === 'redirect' && page?.isolatedSettings?.redirectUrl) {
+        const redirectTarget = safeRedirectUrl(page?.isolatedSettings?.redirectUrl);
+        if (page?.isolatedSettings?.postSubmitAction === 'redirect' && redirectTarget) {
           setTimeout(() => {
-            window.location.href = page.isolatedSettings!.redirectUrl!;
+            window.location.href = redirectTarget;
           }, 1500);
         }
       } else {

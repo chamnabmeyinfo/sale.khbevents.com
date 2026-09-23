@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/auth';
 import { getSettings } from '@/lib/storage';
 import { testStaffTelegramConnection } from '@/lib/round-robin';
 import { errorMessage } from '@/lib/errors';
+import { isMaskedSecret } from '@/lib/secrets';
 
 export async function POST(req: NextRequest) {
   const unauthorized = await requireAdmin();
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
     }
 
     const settings = await getSettings();
-    const botToken = customToken || settings.telegramBotToken;
+    const botToken = (customToken && !isMaskedSecret(customToken) ? customToken : '') || settings.telegramBotToken;
 
     if (!botToken) {
       return NextResponse.json(

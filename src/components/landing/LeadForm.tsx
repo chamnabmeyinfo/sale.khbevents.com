@@ -5,6 +5,8 @@ import { Send, CheckCircle2, ShieldCheck, Sparkles, MessageCircle, Lock } from '
 import { trackClientEvent } from '@/components/common/LandingPageTracking';
 import { IsolatedPageSettings } from '@/lib/types';
 import { errorMessage as describeError } from '@/lib/errors';
+import { safeRedirectUrl } from '@/lib/safe-url';
+import { readUtmParams } from '@/lib/utm';
 
 interface LeadFormProps {
   landingPageSlug?: string;
@@ -68,7 +70,6 @@ function LeadFormInner({
     e.preventDefault();
     setIsSubmitting(true);
     setErrorMessage('');
-    const utm = new URLSearchParams(window.location.search);
 
     try {
       const res = await fetch('/api/leads', {
@@ -78,11 +79,7 @@ function LeadFormInner({
           ...formData,
           landingPageSlug,
           landingPageTitle,
-          utmSource: utm.get('utm_source') || undefined,
-          utmMedium: utm.get('utm_medium') || undefined,
-          utmCampaign: utm.get('utm_campaign') || undefined,
-          utmContent: utm.get('utm_content') || undefined,
-          referrer: typeof document !== 'undefined' ? document.referrer : ''
+          ...readUtmParams()
         })
       });
 
@@ -97,9 +94,10 @@ function LeadFormInner({
         client: formData.fullName,
       });
 
-      if (isolatedSettings?.postSubmitAction === 'redirect' && isolatedSettings.redirectUrl) {
+      const redirectTarget = safeRedirectUrl(isolatedSettings?.redirectUrl);
+      if (isolatedSettings?.postSubmitAction === 'redirect' && redirectTarget) {
         setTimeout(() => {
-          window.location.href = isolatedSettings.redirectUrl!;
+          window.location.href = redirectTarget;
         }, 1500);
       }
     } catch (err) {

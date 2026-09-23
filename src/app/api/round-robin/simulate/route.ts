@@ -143,7 +143,8 @@ export async function POST(req: NextRequest) {
     // ─────────────────────────────────────────────────────────────
     if (mode === 'batch_test') {
       const count = Math.min(Math.max(Number(body.count) || 10, 5), 50);
-      const rrSettings = await getRoundRobinSettings();
+      // Simulate on a copy so the benchmark never moves the live rotation.
+      const rrSettings = structuredClone(await getRoundRobinSettings());
 
       if (!rrSettings || !rrSettings.enabled) {
         return NextResponse.json({

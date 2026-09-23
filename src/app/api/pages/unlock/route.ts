@@ -7,7 +7,7 @@ import {
   pageUnlockCookieName,
   pageUnlockToken,
 } from '@/lib/page-access';
-import { rateLimit, tooManyRequests, getClientIp } from '@/lib/rate-limit';
+import { rateLimit, rateLimitByIp, tooManyRequests } from '@/lib/rate-limit';
 
 const WINDOW_MS = 15 * 60 * 1000;
 
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Passcodes are short, so guessing is capped per visitor and per page.
-  const byIp = rateLimit(`unlock:ip:${getClientIp(req.headers)}`, 10, WINDOW_MS);
+  const byIp = rateLimitByIp('unlock:ip', req.headers, 10, WINDOW_MS);
   const byPage = rateLimit(`unlock:page:${slug}`, 100, WINDOW_MS);
   if (!byIp.allowed) return tooManyRequests(byIp, 'Too many attempts. Please wait 15 minutes and try again.');
   if (!byPage.allowed) return tooManyRequests(byPage, 'Too many attempts. Please wait 15 minutes and try again.');

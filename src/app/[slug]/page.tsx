@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getPageBySlug, getPublicSettings } from '@/lib/storage';
+import { getPublicSettings } from '@/lib/storage';
 import { loadPublicPage } from '@/lib/page-access';
 import PageLockScreen from '@/components/common/PageLockScreen';
 import DynamicLandingPageView from '@/components/landing/DynamicLandingPageView';
@@ -21,8 +21,13 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const cleanSlug = slug.toLowerCase().trim();
   const sp = searchParams ? await searchParams : {};
   const isKh = sp.lang === 'kh';
-  const page = await getPageBySlug(cleanSlug);
+  const access = await loadPublicPage(cleanSlug);
   const settings = await getPublicSettings();
+  if (access.kind === 'locked') {
+    // Only what the lock screen shows; keep locked content out of link previews.
+    return { title: `${access.stub.title} | ${settings.companyName}`, robots: { index: false, follow: false } };
+  }
+  const page = access.kind === 'ok' ? access.page : null;
 
   if (cleanSlug === 'smart-city-tea-cafe' && !page) {
     return {

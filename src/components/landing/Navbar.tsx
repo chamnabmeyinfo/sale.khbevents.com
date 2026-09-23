@@ -139,7 +139,7 @@ export default function Navbar({
             </a>
           </div>
 
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex md:hidden items-center gap-1 sm:gap-2">
             <ThemeSwitcher compact={true} />
             <UserNavButton />
             <a

@@ -791,6 +791,8 @@ export interface DatabaseSchema {
   roundRobinLogs?: RoundRobinLog[];
   // Tombstones (`id:<id>` / `slug:<slug>`) so deleted pages are not re-seeded from the bundled db.json.
   deletedPages?: string[];
+  // Leads whose Supabase insert failed; shown in the CRM and retried until they sync.
+  unsyncedLeadIds?: string[];
 }
 
 export interface RoundRobinStaff {
