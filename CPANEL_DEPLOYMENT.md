@@ -103,9 +103,7 @@ Whenever a client submits an event inquiry or delegate reservation, your sales t
 ### If you use Supabase: lock down table access
 Older versions of `supabase/schema.sql` let the public (anon) key — which is visible in the browser — read and edit every table, including leads and the bot token. Set `SUPABASE_SERVICE_ROLE_KEY` on the server first, then run `supabase/migrations/20260923_lock_down_rls.sql` in the Supabase SQL editor.
 
-### Register the bot webhook (once, and again after changing the bot token)
-The webhook only accepts calls that carry a secret Telegram sends back, so it must be registered by the app. While logged in to `/admin`, open the browser console and run:
-```js
-fetch('/api/telegram/setup-webhook', { method: 'POST' }).then(r => r.json()).then(console.log)
-```
-It should print `Webhook registered successfully!`.
+### Secure the bot webhook (once, and again after changing the bot token)
+Go to **Admin → Settings → Telegram** and click **Register / secure bot webhook** (save a new token first if you changed it). You should see "Connected: https://sale.khbevents.com/api/telegram/webhook".
+
+Until you do this the bot keeps working exactly as before; afterwards the webhook only accepts calls that really come from Telegram.

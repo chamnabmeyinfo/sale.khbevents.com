@@ -41,7 +41,9 @@ import {
   supabaseGetRoundRobinLogs,
   supabaseSaveRoundRobinLog,
   supabaseGetDeletedPages,
-  supabaseSaveDeletedPages
+  supabaseSaveDeletedPages,
+  supabaseGetMarker,
+  supabaseSetMarker
 } from './supabase-store';
 import bundledDbJson from '../../data/db.json';
 
@@ -319,9 +321,17 @@ export async function saveDatabase(data: DatabaseSchema): Promise<void> {
       await fs.mkdir(DATA_DIR, { recursive: true });
       // Write a temp file and rename it over the real one: the rename is atomic,
       // so a crash mid-write can never leave a truncated db.json behind.
+      const json = JSON.stringify(data, null, 2);
       const tmp = `${DB_FILE}.${process.pid}.tmp`;
-      await fs.writeFile(tmp, JSON.stringify(data, null, 2), 'utf-8');
-      await fs.rename(tmp, DB_FILE);
+      try {
+        await fs.writeFile(tmp, json, 'utf-8');
+        await fs.rename(tmp, DB_FILE);
+      } catch {
+        // Some hosts allow writing db.json but not creating files beside it;
+        // fall back to a direct write rather than losing the save.
+        await fs.rm(tmp, { force: true }).catch(() => {});
+        await fs.writeFile(DB_FILE, json, 'utf-8');
+      }
     } catch (err) {
       // In read-only serverless environments (like Vercel), local disk writes are ignored
       // because Supabase PostgreSQL provides cloud persistence.
@@ -1042,6 +1052,38 @@ export async function updateSettings(
   db.settings = { ...db.settings, ...partial };
   await saveDatabase(db);
   return updated || db.settings;
+}
+
+const WEBHOOK_MARKER_ID = 'telegram_webhook_secured';
+
+function tokenFingerprint(botToken: string): string {
+  return crypto.createHash('sha256').update(botToken).digest('hex').slice(0, 16);
+}
+
+/**
+ * Whether the bot's webhook was registered with a secret token (via
+ * POST /api/telegram/setup-webhook) for this bot token. Until it is, the
+ * webhook keeps accepting unsigned calls so the live bot doesn't go silent
+ * after an upgrade.
+ */
+export async function isTelegramWebhookSecured(botToken: string): Promise<boolean> {
+  const fingerprint = tokenFingerprint(botToken);
+  const db = await getDatabase();
+  if (db.telegramWebhookSecuredFor === fingerprint) return true;
+  if (isSupabaseConfigured()) {
+    return (await supabaseGetMarker(WEBHOOK_MARKER_ID).catch(() => null)) === fingerprint;
+  }
+  return false;
+}
+
+export async function setTelegramWebhookSecured(botToken: string | null): Promise<void> {
+  const value = botToken ? tokenFingerprint(botToken) : '';
+  const db = await getDatabase();
+  db.telegramWebhookSecuredFor = value || undefined;
+  await saveDatabase(db);
+  if (isSupabaseConfigured()) {
+    await supabaseSetMarker(WEBHOOK_MARKER_ID, value).catch(() => false);
+  }
 }
 
 export interface RecordTrackingPayload {

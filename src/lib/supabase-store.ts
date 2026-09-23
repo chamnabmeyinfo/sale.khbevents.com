@@ -532,6 +532,29 @@ export async function supabaseSaveDeletedPages(list: string[]): Promise<boolean>
   return !error;
 }
 
+// Small key/value markers, stored as rows in system_settings like the data above.
+export async function supabaseGetMarker(id: string): Promise<string | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('system_settings')
+    .select('brand_tagline')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) return null;
+  return data?.brand_tagline || null;
+}
+
+export async function supabaseSetMarker(id: string, value: string): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  const { error } = await supabase
+    .from('system_settings')
+    .upsert({ id, brand_tagline: value, updated_at: new Date().toISOString() });
+  if (error) console.error(`Supabase setMarker(${id}) error:`, error);
+  return !error;
+}
+
 export async function supabaseGetRoundRobinLogs(limit: number = 100): Promise<RoundRobinLog[] | null> {
   const supabase = getSupabase();
   if (!supabase) return null;

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSettings, getRoundRobinSettings, updateRoundRobinSettings, getPageBySlug } from '@/lib/storage';
+import { getSettings, getRoundRobinSettings, updateRoundRobinSettings, getPageBySlug, isTelegramWebhookSecured } from '@/lib/storage';
 import { selectNextStaff, escapeHtml, readTelegramResponse } from '@/lib/round-robin';
 import { isValidTelegramWebhookSecret } from '@/lib/auth';
 
@@ -79,9 +79,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Reject calls that did not come from Telegram. The secret is registered via
-    // POST /api/telegram/setup-webhook.
+    // POST /api/telegram/setup-webhook; until that has been done for this bot
+    // token, unsigned calls are still accepted so the bot keeps working.
     if (!isValidTelegramWebhookSecret(botToken, req.headers.get('x-telegram-bot-api-secret-token'))) {
-      return NextResponse.json({ ok: false }, { status: 401 });
+      if (await isTelegramWebhookSecured(botToken)) {
+        return NextResponse.json({ ok: false }, { status: 401 });
+      }
+      console.warn('Telegram webhook is not secured yet: register it via POST /api/telegram/setup-webhook.');
     }
 
     const update: TelegramUpdate = await req.json();

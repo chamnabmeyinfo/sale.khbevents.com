@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, getTelegramWebhookSecret } from '@/lib/auth';
-import { getSettings } from '@/lib/storage';
+import { getSettings, setTelegramWebhookSecured } from '@/lib/storage';
 import { readTelegramResponse } from '@/lib/round-robin';
 import { errorMessage } from '@/lib/errors';
 
@@ -88,6 +88,8 @@ export async function POST(req: NextRequest) {
     const data = await readTelegramResponse(res);
 
     if (data.ok) {
+      // From now on the webhook rejects calls without the secret.
+      await setTelegramWebhookSecured(botToken);
       return NextResponse.json({
         success: true,
         message: `Webhook registered successfully!`,
@@ -126,6 +128,7 @@ export async function DELETE() {
     });
 
     const data = await readTelegramResponse(res);
+    if (data.ok) await setTelegramWebhookSecured(null);
 
     return NextResponse.json({
       success: data.ok,
