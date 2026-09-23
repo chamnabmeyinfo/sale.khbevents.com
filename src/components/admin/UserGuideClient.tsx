@@ -2,30 +2,26 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { 
-  BookOpen, 
-  Search, 
-  FileText, 
-  Users, 
-  Sliders, 
-  Settings, 
-  HelpCircle, 
-  CheckCircle2, 
-  ArrowRight, 
-  Sparkles, 
-  Bell, 
-  MessageCircle, 
-  Phone, 
-  Download, 
-  ShieldCheck, 
-  ExternalLink,
+import {
+  BookOpen,
+  Search,
+  FileText,
+  Users,
+  Sliders,
+  Settings,
+  HelpCircle,
+  CheckCircle2,
+  ArrowRight,
+  Sparkles,
+  Bell,
+  MessageCircle,
+  Phone,
+  Download,
+  ShieldCheck,
   PlusCircle,
-  Copy,
   Clock,
   Layers,
-  ChevronRight,
-  AlertTriangle,
-  Award
+  type LucideIcon
 } from 'lucide-react';
 
 type GuideTab = 'all' | 'quickstart' | 'pages' | 'leads' | 'roundrobin' | 'settings' | 'faqs';
@@ -33,15 +29,7 @@ type GuideTab = 'all' | 'quickstart' | 'pages' | 'leads' | 'roundrobin' | 'setti
 export default function UserGuideClient() {
   const [activeTab, setActiveTab] = useState<GuideTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [copiedSection, setCopiedSection] = useState<string | null>(null);
-
-  const handleCopy = (text: string, sectionId: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedSection(sectionId);
-    setTimeout(() => setCopiedSection(null), 2000);
-  };
-
-  const navTabs: { id: GuideTab; label: string; icon: any; badge?: string }[] = [
+  const navTabs: { id: GuideTab; label: string; icon: LucideIcon; badge?: string }[] = [
     { id: 'all', label: 'Complete Blueprint', icon: BookOpen },
     { id: 'quickstart', label: '1. Quick Start & Login', icon: Clock },
     { id: 'pages', label: '2. Landing Pages CMS', icon: FileText, badge: 'Core' },
@@ -235,7 +223,7 @@ export default function UserGuideClient() {
                 <h4 className="font-bold text-sm text-emerald-900 dark:text-emerald-200 mb-1">
                   Step 1: Choose an Industry Template
                 </h4>
-                <p>When you click <strong>"+ New Page"</strong>, choose from 5 built-in presets:</p>
+                <p>When you click <strong>&quot;+ New Page&quot;</strong>, choose from 5 built-in presets:</p>
                 <div className="grid sm:grid-cols-3 gap-2 pt-2">
                   <div className="p-2.5 rounded-xl bg-white dark:bg-[#060D09] border border-emerald-900/30">
                     <strong className="text-slate-900 dark:text-white block">B2B Trade Delegation</strong>
@@ -267,7 +255,7 @@ export default function UserGuideClient() {
                   <ul className="list-disc list-inside space-y-1 text-[11px]">
                     <li><strong>Event Dates:</strong> e.g., <code>2026-11-25</code> (4 Days / 3 Nights).</li>
                     <li><strong>Countdown Timer:</strong> Enable to show live ticking countdown.</li>
-                    <li><strong>Seats Scarcity:</strong> Set Total <code>30</code> and Claimed <code>19</code> to show <em>"Only 11 seats remaining!"</em></li>
+                    <li><strong>Seats Scarcity:</strong> Set Total <code>30</code> and Claimed <code>19</code> to show <em>&quot;Only 11 seats remaining!&quot;</em></li>
                     <li><strong>Early Bird Pricing:</strong> Enter discount price (e.g. <code>$750</code> vs <code>$799</code> regular).</li>
                   </ul>
                 </div>
@@ -366,9 +354,9 @@ export default function UserGuideClient() {
                     <span>Notes &amp; CSV Export</span>
                   </h4>
                   <ul className="space-y-1.5 text-[11px]">
-                    <li><strong>Team Notes:</strong> Type updates in the note box (e.g., *"Client wants 2 VIP passes and invoice by Friday"*). Every note records the author and timestamp.</li>
+                    <li><strong>Team Notes:</strong> Type updates in the note box (e.g., *&quot;Client wants 2 VIP passes and invoice by Friday&quot;*). Every note records the author and timestamp.</li>
                     <li><strong>Delete Lead:</strong> Click the red trash button to remove test or spam submissions safely.</li>
-                    <li><strong>Export CSV:</strong> Click "Export CSV" to download an instant spreadsheet for weekly executive meetings.</li>
+                    <li><strong>Export CSV:</strong> Click &quot;Export CSV&quot; to download an instant spreadsheet for weekly executive meetings.</li>
                   </ul>
                 </div>
               </div>
@@ -412,7 +400,7 @@ export default function UserGuideClient() {
                 </p>
                 <ol className="list-decimal list-inside space-y-1 text-[11px]">
                   <li>The Round-Robin algorithm selects the next eligible sales representative according to configured weights.</li>
-                  <li><strong>Instant Direct Redirect:</strong> The visitor's Telegram app opens immediately to chat with the assigned sales rep (<code>https://t.me/&lt;staff_telegram&gt;</code>).</li>
+                  <li><strong>Instant Direct Redirect:</strong> The visitor&apos;s Telegram app opens immediately to chat with the assigned sales rep (<code>https://t.me/&lt;staff_telegram&gt;</code>).</li>
                   <li><strong>Silent Bot Notification:</strong> <code>@khb_sale_admin_bot</code> simultaneously sends lead details to the rep and to the Event Director (Chat ID: <code>5746705393</code>).</li>
                 </ol>
               </div>
@@ -423,7 +411,7 @@ export default function UserGuideClient() {
                   <ul className="space-y-1 text-[11px]">
                     <li><strong>Full Name &amp; Title:</strong> e.g., <em>Sokha Chen - Senior B2B Consultant</em></li>
                     <li><strong>Telegram Username:</strong> Enter username <strong>WITHOUT</strong> the <code>@</code> symbol (e.g. <code>sokhachen_khb</code>).</li>
-                    <li><strong>Percentage Weight:</strong> Set their share (e.g. 20% each for 5 reps). Click <strong>"Rebalance Weights"</strong> to sum to 100%.</li>
+                    <li><strong>Percentage Weight:</strong> Set their share (e.g. 20% each for 5 reps). Click <strong>&quot;Rebalance Weights&quot;</strong> to sum to 100%.</li>
                   </ul>
                 </div>
 
@@ -435,7 +423,7 @@ export default function UserGuideClient() {
                   <ol className="list-decimal list-inside space-y-1 text-[11px]">
                     <li>Find their card in <code>/admin/round-robin</code>.</li>
                     <li>Toggle their status to <strong>OFF (Idle)</strong>.</li>
-                    <li>Click <strong>"Rebalance Weights"</strong> so their leads are automatically redirected to active reps.</li>
+                    <li>Click <strong>&quot;Rebalance Weights&quot;</strong> so their leads are automatically redirected to active reps.</li>
                     <li>When they return, toggle them back <strong>ON (Active)</strong>.</li>
                   </ol>
                 </div>
@@ -515,7 +503,7 @@ export default function UserGuideClient() {
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">
-                    Operator "How Do I..." Cheat Sheet
+                    Operator &quot;How Do I...&quot; Cheat Sheet
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-gray-400">
                     Quick answers to common questions and operational tasks
@@ -538,10 +526,10 @@ export default function UserGuideClient() {
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-1">
                 <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>How do I mark a campaign as "Sold Out"?</span>
+                  <span>How do I mark a campaign as &quot;Sold Out&quot;?</span>
                 </h4>
                 <p className="text-slate-600 dark:text-gray-300 text-[11px]">
-                  Edit the landing page &rarr; Go to the <strong>Isolated Settings</strong> tab &rarr; Toggle <strong>"Mark as Sold Out"</strong> to ON &rarr; Enter your custom message (e.g. <em>"All 30 seats booked! Join the waitlist"</em>) &rarr; Save. The booking form will disable or show a waitlist button.
+                  Edit the landing page &rarr; Go to the <strong>Isolated Settings</strong> tab &rarr; Toggle <strong>&quot;Mark as Sold Out&quot;</strong> to ON &rarr; Enter your custom message (e.g. <em>&quot;All 30 seats booked! Join the waitlist&quot;</em>) &rarr; Save. The booking form will disable or show a waitlist button.
                 </p>
               </div>
 

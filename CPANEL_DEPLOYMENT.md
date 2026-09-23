@@ -85,8 +85,10 @@ Once deployed:
 | **Admin CMS & CRM** | `https://sale.khbevents.com/admin` | Page builder, leads pipeline & Telegram settings |
 
 - **Default Admin Email:** `admin@khbevents.com`
-- **Default Password:** `khbevents2026`
-*(You can change email and password anytime from Admin $\rightarrow$ Settings & Alerts)*
+- **Default Password:** `khbevents2026` — **change it immediately** in Admin $\rightarrow$ Settings & Alerts. New passwords are stored salted (scrypt); changing the password signs out every other admin session.
+
+### 🔒 Required: set `SESSION_SECRET`
+In **Setup Node.js App → Environment variables**, add `SESSION_SECRET` with a long random value (e.g. the output of `openssl rand -hex 32`), then restart the app. It signs admin sessions and page-unlock cookies; without it a publicly known fallback is used.
 
 ---
 
@@ -97,3 +99,11 @@ Once deployed:
 3. Paste your **Telegram Bot Token** and **Chat ID / Group ID**.
 4. Click **Save All Settings**.
 Whenever a client submits an event inquiry or delegate reservation, your sales team will receive an instant notification on Telegram!
+
+### If you use Supabase: lock down table access
+Older versions of `supabase/schema.sql` let the public (anon) key — which is visible in the browser — read and edit every table, including leads and the bot token. Set `SUPABASE_SERVICE_ROLE_KEY` on the server first, then run `supabase/migrations/20260923_lock_down_rls.sql` in the Supabase SQL editor.
+
+### Secure the bot webhook (once, and again after changing the bot token)
+Go to **Admin → Settings → Telegram** and click **Register / secure bot webhook** (save a new token first if you changed it). You should see "Connected: https://sale.khbevents.com/api/telegram/webhook".
+
+Until you do this the bot keeps working exactly as before; afterwards the webhook only accepts calls that really come from Telegram.

@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Lock, Mail, ArrowRight, KeyRound } from 'lucide-react';
+import { Lock, Mail, ArrowRight } from 'lucide-react';
+import { errorMessage } from '@/lib/errors';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -31,8 +33,8 @@ export default function AdminLoginPage() {
 
       router.push('/admin');
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || 'Login failed. Please check credentials.');
+    } catch (err) {
+      setError(errorMessage(err, 'Login failed. Please check credentials.'));
     } finally {
       setLoading(false);
     }
@@ -124,19 +126,10 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 text-[11px] text-slate-700 dark:text-gray-300 space-y-1">
-            <div className="font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
-              <KeyRound className="w-3.5 h-3.5" />
-              Default Credentials:
-            </div>
-            <div>Email: <code className="text-emerald-800 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-950 px-1 py-0.5 rounded">admin@khbevents.com</code></div>
-            <div>Password: <code className="text-emerald-800 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-950 px-1 py-0.5 rounded">khbevents2026</code></div>
-          </div>
-
           <div className="text-center">
-            <a href="/" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
+            <Link href="/" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
               ← Return to public website
-            </a>
+            </Link>
           </div>
 
         </div>

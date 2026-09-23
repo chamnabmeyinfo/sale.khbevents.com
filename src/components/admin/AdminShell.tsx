@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { usePathname } from 'next/navigation';
 import AdminSidebar from './AdminSidebar';
 import Link from 'next/link';
@@ -8,11 +8,16 @@ import { ExternalLink } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import FlagIcon from '@/components/common/FlagIcon';
+import { useStoredChoice } from '@/lib/use-browser-state';
+
+const LANGS = ['en', 'kh'] as const;
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth();
   const isLoginPage = pathname === '/admin/login';
+
+  const [adminLang, setAdminLang] = useStoredChoice(['khb_admin_lang', 'khb_lang'], LANGS, 'en');
 
   if (isLoginPage) {
     return <>{children}</>;
@@ -31,22 +36,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     return 'Admin';
   };
 
-  const [adminLang, setAdminLang] = useState<'en' | 'kh'>('en');
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('khb_admin_lang') || localStorage.getItem('khb_lang');
-      if (saved === 'kh' || saved === 'en') setAdminLang(saved);
-    } catch {}
-  }, []);
-
-  const handleSwitchLang = (lang: 'en' | 'kh') => {
-    setAdminLang(lang);
-    try {
-      localStorage.setItem('khb_admin_lang', lang);
-      localStorage.setItem('khb_lang', lang);
-    } catch {}
-  };
+  const handleSwitchLang = setAdminLang;
 
   const cleanEmail = (user?.email || '').toLowerCase().trim();
   const isSuperAdmin = cleanEmail === 'admin@khbevents.com';

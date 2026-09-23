@@ -43,6 +43,9 @@ function rowToLandingPage(row: any): LandingPage {
     testimonials: Array.isArray(row.testimonials) ? row.testimonials : [],
     faqs: Array.isArray(row.faqs) ? row.faqs : [],
     guarantee: row.guarantee || extra.guarantee || undefined,
+    expoBooths: Array.isArray(extra.expoBooths) ? extra.expoBooths : [],
+    artists: Array.isArray(extra.artists) ? extra.artists : [],
+    speakers: Array.isArray(extra.speakers) ? extra.speakers : [],
     translations: row.translations || extra.translations || undefined,
     tracking: row.tracking || extra.tracking || undefined,
     isolatedSettings: row.isolatedSettings || row.isolated_settings || extra.isolatedSettings || undefined,
@@ -494,6 +497,62 @@ export async function supabaseUpdateRoundRobinSettings(
     return null;
   }
   return settings;
+}
+
+// Deleted-page tombstones, stored as a JSON row in system_settings like the round robin data.
+export async function supabaseGetDeletedPages(): Promise<string[] | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('system_settings')
+    .select('brand_tagline')
+    .eq('id', 'deleted_pages')
+    .maybeSingle();
+  if (error) return null;
+  if (!data?.brand_tagline) return [];
+  try {
+    const list = JSON.parse(data.brand_tagline);
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function supabaseSaveDeletedPages(list: string[]): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  const { error } = await supabase
+    .from('system_settings')
+    .upsert({
+      id: 'deleted_pages',
+      brand_tagline: JSON.stringify(list),
+      updated_at: new Date().toISOString()
+    });
+  if (error) console.error('Supabase saveDeletedPages error:', error);
+  return !error;
+}
+
+// Small key/value markers, stored as rows in system_settings like the data above.
+export async function supabaseGetMarker(id: string): Promise<string | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('system_settings')
+    .select('brand_tagline')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) return null;
+  return data?.brand_tagline || null;
+}
+
+export async function supabaseSetMarker(id: string, value: string): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  const { error } = await supabase
+    .from('system_settings')
+    .upsert({ id, brand_tagline: value, updated_at: new Date().toISOString() });
+  if (error) console.error(`Supabase setMarker(${id}) error:`, error);
+  return !error;
 }
 
 export async function supabaseGetRoundRobinLogs(limit: number = 100): Promise<RoundRobinLog[] | null> {

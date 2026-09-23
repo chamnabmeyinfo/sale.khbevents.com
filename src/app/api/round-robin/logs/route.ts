@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/auth';
 import { getRoundRobinLogs } from '@/lib/storage';
+import { errorMessage } from '@/lib/errors';
 
 export async function GET(req: NextRequest) {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const { searchParams } = new URL(req.url);
     const limit = parseInt(searchParams.get('limit') || '100', 10);
@@ -11,9 +16,9 @@ export async function GET(req: NextRequest) {
       success: true,
       logs
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to fetch logs' },
+      { success: false, error: errorMessage(error, 'Failed to fetch logs') },
       { status: 500 }
     );
   }

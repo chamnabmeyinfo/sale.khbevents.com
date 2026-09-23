@@ -12,7 +12,6 @@ interface FloatingContactProps {
 
 export default function FloatingContact({
   whatsappNumber = '85512888999',
-  telegramUsername = 'khb_sale_admin_bot',
   pageSlug = 'home'
 }: FloatingContactProps) {
   const [showTooltip, setShowTooltip] = useState(true);

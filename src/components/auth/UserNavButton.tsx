@@ -31,10 +31,11 @@ export function UserNavButton() {
       <>
         <button
           onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-amber-500/10 to-amber-500/20 border border-amber-500/30 text-amber-300 hover:text-white hover:border-amber-400 hover:bg-amber-500/30 transition-all shadow-sm"
+          aria-label="Sign In"
+          className="inline-flex items-center gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-amber-500/10 to-amber-500/20 border border-amber-500/30 text-amber-300 hover:text-white hover:border-amber-400 hover:bg-amber-500/30 transition-all shadow-sm"
         >
           <UserIcon className="w-3.5 h-3.5" />
-          <span>Sign In</span>
+          <span className="hidden sm:inline">Sign In</span>
         </button>
         <AuthModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
       </>

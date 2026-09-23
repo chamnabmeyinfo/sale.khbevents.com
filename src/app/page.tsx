@@ -1,11 +1,12 @@
-import { getPages, getSettings } from '@/lib/storage';
+import { getPages, getPublicSettings } from '@/lib/storage';
+import { getPagePin, toPublicPage } from '@/lib/page-access';
 import MainSalesView from '@/components/landing/MainSalesView';
 import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSettings();
+  const settings = await getPublicSettings();
   return {
     title: `${settings.companyName} | Premium Event Management & Production in Cambodia`,
     description: settings.brandTagline || 'Turnkey 4K LED staging, audio-visual engineering, corporate gala dinners, concert production and exhibition booths across Cambodia.',
@@ -18,8 +19,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const pages = await getPages();
-  const settings = await getSettings();
+  // Only published, non-passcode pages are listed publicly.
+  const pages = (await getPages())
+    .filter((p) => p.status === 'published' && !getPagePin(p))
+    .map(toPublicPage);
+  const settings = await getPublicSettings();
 
   return <MainSalesView pages={pages} settings={settings} />;
 }

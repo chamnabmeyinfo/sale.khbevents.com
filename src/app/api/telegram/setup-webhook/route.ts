@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/storage';
+import { requireAdmin, getTelegramWebhookSecret } from '@/lib/auth';
+import { getSettings, setTelegramWebhookSecured } from '@/lib/storage';
+import { readTelegramResponse } from '@/lib/round-robin';
+import { errorMessage } from '@/lib/errors';
 
 /**
  * One-time setup: Register or check the Telegram Bot webhook URL.
@@ -15,11 +18,14 @@ import { getDatabase } from '@/lib/storage';
 const WEBHOOK_PATH = '/api/telegram/webhook';
 
 async function getBotToken(): Promise<string | null> {
-  const db = await getDatabase();
-  return db.settings.telegramBotToken || null;
+  const settings = await getSettings();
+  return settings.telegramBotToken || null;
 }
 
 export async function GET() {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const botToken = await getBotToken();
     if (!botToken) {
@@ -30,19 +36,22 @@ export async function GET() {
     }
 
     const res = await fetch(`https://api.telegram.org/bot${botToken}/getWebhookInfo`);
-    const data = await res.json();
+    const data = await readTelegramResponse(res);
 
     return NextResponse.json({
       success: true,
       webhookInfo: data.result,
       isActive: Boolean(data.result?.url),
     });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: errorMessage(error, 'Telegram request failed') }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const botToken = await getBotToken();
     if (!botToken) {
@@ -70,14 +79,17 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url: webhookUrl,
+        secret_token: getTelegramWebhookSecret(botToken),
         allowed_updates: ['message', 'callback_query'],
         drop_pending_updates: true,
       }),
     });
 
-    const data = await res.json();
+    const data = await readTelegramResponse(res);
 
     if (data.ok) {
+      // From now on the webhook rejects calls without the secret.
+      await setTelegramWebhookSecured(botToken);
       return NextResponse.json({
         success: true,
         message: `Webhook registered successfully!`,
@@ -91,12 +103,15 @@ export async function POST(req: NextRequest) {
       error: data.description || 'Failed to set webhook',
       telegramResponse: data,
     }, { status: 400 });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: errorMessage(error, 'Telegram request failed') }, { status: 500 });
   }
 }
 
 export async function DELETE() {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const botToken = await getBotToken();
     if (!botToken) {
@@ -112,13 +127,14 @@ export async function DELETE() {
       body: JSON.stringify({ drop_pending_updates: true }),
     });
 
-    const data = await res.json();
+    const data = await readTelegramResponse(res);
+    if (data.ok) await setTelegramWebhookSecured(null);
 
     return NextResponse.json({
       success: data.ok,
       message: data.ok ? 'Webhook removed' : data.description,
     });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: errorMessage(error, 'Telegram request failed') }, { status: 500 });
   }
 }

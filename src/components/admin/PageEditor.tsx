@@ -1,54 +1,41 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  Save, 
-  ArrowLeft, 
-  ExternalLink, 
-  Plus, 
-  Trash2, 
+import {
+  Save,
+  ArrowLeft,
+  ExternalLink,
+  Plus,
+  Trash2,
   CheckCircle2,
-  Calendar,
-  DollarSign,
   Clock,
-  Star,
-  Image as ImageIcon,
-  HelpCircle,
   ShieldCheck,
-  Users,
   Sparkles,
-  Eye,
-  EyeOff,
-  ChevronDown,
-  ChevronUp,
-  FileText,
-  Tag,
   AlertTriangle,
-  Award,
   Layers,
   HeartHandshake,
   Store,
   Music,
   Mic,
-  Briefcase,
-  Globe
+  Globe,
+  type LucideIcon
 } from 'lucide-react';
 import KhmerTranslationEditor from './KhmerTranslationEditor';
 import TrackingAndPixelsEditor from './TrackingAndPixelsEditor';
 import IsolatedSettingsEditor from './IsolatedSettingsEditor';
-import { 
-  LandingPage, 
-  PackageTier, 
-  HighlightItem, 
-  FaqItem, 
-  TestimonialItem, 
-  CoreValueItem, 
-  ProblemItem, 
-  AudienceItem, 
-  ItineraryDay, 
-  InclusionItem, 
+import {
+  LandingPage,
+  PackageTier,
+  HighlightItem,
+  FaqItem,
+  TestimonialItem,
+  CoreValueItem,
+  ProblemItem,
+  AudienceItem,
+  ItineraryDay,
+  InclusionItem,
   FormField,
   SectionVisibility,
   PageTemplateType,
@@ -59,10 +46,11 @@ import {
   B2B_DELEGATION_ORDER,
   TRADE_EXPO_ORDER,
   CORPORATE_SUMMIT_ORDER,
-  CONCERT_FESTIVAL_ORDER,
-  MINIMAL_LEAD_ORDER
+  CONCERT_FESTIVAL_ORDER
 } from '@/lib/types';
 import DragDropSectionBuilder from './DragDropSectionBuilder';
+import { useLocationHash, useUrlParam } from '@/lib/use-browser-state';
+import { errorMessage } from '@/lib/errors';
 
 interface PageEditorProps {
   initialData?: Partial<LandingPage>;
@@ -70,17 +58,17 @@ interface PageEditorProps {
 }
 
 const PRESET_PHOTOS = [
-  '/photos/photo_2026-09-16_22-01-09 (2).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (7).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (4).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (6).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (11).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (9).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (3).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (8).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (5).jpg',
-  '/photos/photo_2026-09-16_22-01-09 (10).jpg',
-  '/photos/photo_2026-09-16_22-01-09.jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (2).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (7).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (4).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (6).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (11).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (9).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (3).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (8).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (5).jpg',
+  '/images/events/photo_2026-09-16_22-01-09 (10).jpg',
+  '/images/events/photo_2026-09-16_22-01-09.jpg',
 ];
 
 const TEMPLATE_OPTIONS: {
@@ -89,7 +77,7 @@ const TEMPLATE_OPTIONS: {
   category: string;
   badge: string;
   description: string;
-  icon: any;
+  icon: LucideIcon;
   recommendedSections: string[];
 }[] = [
   {
@@ -206,7 +194,7 @@ const DEFAULT_FESTIVAL_ARTISTS: ArtistItem[] = [
     genre: 'EDM / Progressive House',
     stageName: 'Main Stage Arena',
     stageTime: '22:00 - 23:30',
-    image: '/photos/photo_2026-09-16_22-01-09 (6).jpg',
+    image: '/images/events/photo_2026-09-16_22-01-09 (6).jpg',
     bio: 'Chart-topping electronic dance music act featuring synchronized LED stage visuals, pyrotechnics, and bass drops.'
   },
   {
@@ -216,7 +204,7 @@ const DEFAULT_FESTIVAL_ARTISTS: ArtistItem[] = [
     genre: 'Indie Fusion & Modern Rock',
     stageName: 'Main Stage Arena',
     stageTime: '20:15 - 21:45',
-    image: '/photos/photo_2026-09-16_22-01-09 (11).jpg',
+    image: '/images/events/photo_2026-09-16_22-01-09 (11).jpg',
     bio: 'High-octane fusion ensemble blending traditional instruments with modern festival basslines and rock anthems.'
   },
   {
@@ -226,7 +214,7 @@ const DEFAULT_FESTIVAL_ARTISTS: ArtistItem[] = [
     genre: 'Melodic Deep House & Chillout',
     stageName: 'Skyline Sunset Stage',
     stageTime: '17:30 - 19:30',
-    image: '/photos/photo_2026-09-16_22-01-09 (9).jpg',
+    image: '/images/events/photo_2026-09-16_22-01-09 (9).jpg',
     bio: 'Atmospheric sunset melodies and deep rhythms designed for VIP terrace lounges and cocktail hours.'
   }
 ];
@@ -237,7 +225,7 @@ const DEFAULT_SUMMIT_SPEAKERS: SpeakerItem[] = [
     name: 'Oknha Bunthan Seng',
     title: 'Chairman & Group CEO',
     organization: 'Apex Trading Corp Cambodia',
-    avatar: '/photos/photo_2026-09-16_22-01-09 (2).jpg',
+    avatar: '/images/events/photo_2026-09-16_22-01-09 (2).jpg',
     topic: 'Cross-Border Supply Chain Resilience & Regional Integration',
     track: 'Plenary Keynote',
     sessionTime: '09:30 - 10:15'
@@ -247,7 +235,7 @@ const DEFAULT_SUMMIT_SPEAKERS: SpeakerItem[] = [
     name: 'Dr. Minh Nguyen',
     title: 'Managing Director, Smart City Solutions',
     organization: 'Vietnam High-Tech Industry Consortium',
-    avatar: '/photos/photo_2026-09-16_22-01-09 (3).jpg',
+    avatar: '/images/events/photo_2026-09-16_22-01-09 (3).jpg',
     topic: 'Automated Factory Infrastructures & IoT in Modern Manufacturing',
     track: 'Industry & Tech Track',
     sessionTime: '11:00 - 11:45'
@@ -257,7 +245,7 @@ const DEFAULT_SUMMIT_SPEAKERS: SpeakerItem[] = [
     name: 'Sophea Pich',
     title: 'Vice President of Business Development',
     organization: 'ASEAN Venture Partners',
-    avatar: '/photos/photo_2026-09-16_22-01-09 (5).jpg',
+    avatar: '/images/events/photo_2026-09-16_22-01-09 (5).jpg',
     topic: 'Unlocking Bilateral Capital: Investment Vehicles & JV Structuring',
     track: 'Investment & Finance Track',
     sessionTime: '14:30 - 15:15'
@@ -281,7 +269,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     heroSubheadline: initialData?.heroSubheadline || '',
     heroCtaText: initialData?.heroCtaText || 'Reserve Your Seat ($499)',
     heroCtaLink: initialData?.heroCtaLink || '#booking-form',
-    heroImage: initialData?.heroImage || '/photos/photo_2026-09-16_22-01-09 (2).jpg',
+    heroImage: initialData?.heroImage || '/images/events/photo_2026-09-16_22-01-09 (2).jpg',
     videoUrl: initialData?.videoUrl || '',
     eventDate: initialData?.eventDate || '2026-10-08',
     eventTime: initialData?.eventTime || '4 Days / 3 Nights',
@@ -367,9 +355,9 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
       }
     ],
     gallery: initialData?.gallery || [
-      '/photos/photo_2026-09-16_22-01-09 (2).jpg',
-      '/photos/photo_2026-09-16_22-01-09 (7).jpg',
-      '/photos/photo_2026-09-16_22-01-09 (4).jpg'
+      '/images/events/photo_2026-09-16_22-01-09 (2).jpg',
+      '/images/events/photo_2026-09-16_22-01-09 (7).jpg',
+      '/images/events/photo_2026-09-16_22-01-09 (4).jpg'
     ],
     testimonials: initialData?.testimonials || [
       { id: 't1', name: 'Dara S.', role: 'Cafe Chain CEO', company: 'Phnom Penh Roastery', quote: 'I met five roasters in one day and cut my bean sourcing cost by 30%.', rating: 5 }
@@ -400,7 +388,11 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     metaTitle: initialData?.metaTitle || '',
     metaDescription: initialData?.metaDescription || '',
     ogImage: initialData?.ogImage || '',
-    isolatedSettings: initialData?.isolatedSettings || {}
+    isolatedSettings: initialData?.isolatedSettings || {},
+    // Must be loaded so the Khmer and Tracking tabs edit the saved values
+    // instead of replacing them with a single-field object on save.
+    translations: initialData?.translations || {},
+    tracking: initialData?.tracking || {}
   });
 
   const [saving, setSaving] = useState(false);
@@ -430,21 +422,18 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     | 'tracking'
     | 'isolatedSettings';
 
-  const [activeTab, setActiveTab] = useState<TabType>('general');
+  // Deep links (?tab=tracking, #settings) choose the starting tab until the user picks one.
+  const urlTab = useUrlParam('tab');
+  const hashTab = useLocationHash();
+  const [chosenTab, setActiveTab] = useState<TabType | null>(null);
+  const linkedTab = urlTab || hashTab;
+  const activeTab: TabType = chosenTab
+    ?? (linkedTab === 'tracking' ? 'tracking'
+      : linkedTab === 'settings' || linkedTab === 'isolatedSettings' ? 'isolatedSettings'
+      : 'general');
   const [langTab, setLangTab] = useState<'en' | 'kh'>('en');
   const [newGalleryUrl, setNewGalleryUrl] = useState('');
   const [newFeatureText, setNewFeatureText] = useState<{ [pkgIdx: number]: string }>({});
-
-  useEffect(() => {
-    try {
-      const sp = new URLSearchParams(window.location.search);
-      const t = sp.get('tab');
-      if (t === 'tracking') setActiveTab('tracking');
-      else if (t === 'settings' || t === 'isolatedSettings') setActiveTab('isolatedSettings');
-      else if (window.location.hash === '#tracking') setActiveTab('tracking');
-      else if (window.location.hash === '#settings' || window.location.hash === '#isolatedSettings') setActiveTab('isolatedSettings');
-    } catch {}
-  }, []);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // SAVE HANDLER
@@ -482,8 +471,8 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
       if (isNew && data.page?.id) {
         router.push(`/admin/pages/${data.page.id}`);
       }
-    } catch (err: any) {
-      setError(err.message || 'Error occurred while saving');
+    } catch (err) {
+      setError(errorMessage(err, 'Error occurred while saving'));
     } finally {
       setSaving(false);
     }
@@ -541,19 +530,6 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
   // ─────────────────────────────────────────────────────────────────────────────
   // SECTION VISIBILITY TOGGLES
   // ─────────────────────────────────────────────────────────────────────────────
-  const toggleSection = (sectionKey: keyof SectionVisibility) => {
-    setFormData(prev => {
-      const current = prev.sectionVisibility || {};
-      return {
-        ...prev,
-        sectionVisibility: {
-          ...current,
-          [sectionKey]: current[sectionKey] === false ? true : false
-        }
-      };
-    });
-  };
-
   const setAllSections = (visible: boolean) => {
     const allKeys: (keyof SectionVisibility)[] = [
       'hero', 'urgency', 'coreValues', 'highlights', 'problems', 'audiences', 'matchmaker',
@@ -584,7 +560,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     setFormData({ ...formData, packages: [...(formData.packages || []), newPkg] });
   };
 
-  const updatePackage = (index: number, field: keyof PackageTier, value: any) => {
+  const updatePackage = <K extends keyof PackageTier>(index: number, field: K, value: PackageTier[K]) => {
     const arr = [...(formData.packages || [])];
     arr[index] = { ...arr[index], [field]: value };
     setFormData({ ...formData, packages: arr });
@@ -599,14 +575,14 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     const text = (newFeatureText[pkgIdx] || '').trim();
     if (!text) return;
     const arr = [...(formData.packages || [])];
-    arr[pkgIdx].features = [...(arr[pkgIdx].features || []), text];
+    arr[pkgIdx] = { ...arr[pkgIdx], features: [...(arr[pkgIdx].features || []), text] };
     setFormData({ ...formData, packages: arr });
     setNewFeatureText({ ...newFeatureText, [pkgIdx]: '' });
   };
 
   const removePackageFeature = (pkgIdx: number, fIdx: number) => {
     const arr = [...(formData.packages || [])];
-    arr[pkgIdx].features = (arr[pkgIdx].features || []).filter((_, i) => i !== fIdx);
+    arr[pkgIdx] = { ...arr[pkgIdx], features: (arr[pkgIdx].features || []).filter((_, i) => i !== fIdx) };
     setFormData({ ...formData, packages: arr });
   };
 
@@ -628,7 +604,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     setFormData({ ...formData, itinerary: [...(formData.itinerary || []), newDay] });
   };
 
-  const updateDay = (dayIdx: number, field: keyof ItineraryDay, value: any) => {
+  const updateDay = <K extends keyof ItineraryDay>(dayIdx: number, field: K, value: ItineraryDay[K]) => {
     const arr = [...(formData.itinerary || [])];
     arr[dayIdx] = { ...arr[dayIdx], [field]: value };
     setFormData({ ...formData, itinerary: arr });
@@ -641,10 +617,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
   const addEventToDay = (dayIdx: number) => {
     const arr = [...(formData.itinerary || [])];
-    arr[dayIdx].events = [
-      ...(arr[dayIdx].events || []),
-      { time: '14:00 - 16:00', activity: 'New Itinerary Session / Meeting', desc: '' }
-    ];
+    arr[dayIdx] = {
+      ...arr[dayIdx],
+      events: [
+        ...(arr[dayIdx].events || []),
+        { time: '14:00 - 16:00', activity: 'New Itinerary Session / Meeting', desc: '' }
+      ]
+    };
     setFormData({ ...formData, itinerary: arr });
   };
 
@@ -656,7 +635,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
   const removeEventFromDay = (dayIdx: number, eventIdx: number) => {
     const arr = [...(formData.itinerary || [])];
-    arr[dayIdx].events = arr[dayIdx].events.filter((_, i) => i !== eventIdx);
+    arr[dayIdx] = { ...arr[dayIdx], events: arr[dayIdx].events.filter((_, i) => i !== eventIdx) };
     setFormData({ ...formData, itinerary: arr });
   };
 
@@ -783,7 +762,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     });
   };
 
-  const updateInclusion = (idx: number, field: keyof InclusionItem, value: any) => {
+  const updateInclusion = <K extends keyof InclusionItem>(idx: number, field: K, value: InclusionItem[K]) => {
     const currentStack = formData.valueStack;
     if (!currentStack) return;
     const arr = [...currentStack.inclusions];
@@ -819,7 +798,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     setFormData({ ...formData, testimonials: [...(formData.testimonials || []), newT] });
   };
 
-  const updateTestimonial = (idx: number, field: keyof TestimonialItem, value: any) => {
+  const updateTestimonial = <K extends keyof TestimonialItem>(idx: number, field: K, value: TestimonialItem[K]) => {
     const arr = [...(formData.testimonials || [])];
     arr[idx] = { ...arr[idx], [field]: value };
     setFormData({ ...formData, testimonials: arr });
@@ -934,7 +913,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     });
   };
 
-  const updateFormField = (idx: number, field: keyof FormField, value: any) => {
+  const updateFormField = <K extends keyof FormField>(idx: number, field: K, value: FormField[K]) => {
     const currentForm = formData.formConfig;
     if (!currentForm) return;
     const arr = [...currentForm.fields];
@@ -985,7 +964,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     });
   };
 
-  const updateExpoBooth = (idx: number, field: keyof ExpoBoothTier, value: any) => {
+  const updateExpoBooth = <K extends keyof ExpoBoothTier>(idx: number, field: K, value: ExpoBoothTier[K]) => {
     const arr = [...(formData.expoBooths || [])];
     arr[idx] = { ...arr[idx], [field]: value };
     setFormData({ ...formData, expoBooths: arr });
@@ -1000,14 +979,14 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     const text = (newBoothFeatureText[boothIdx] || '').trim();
     if (!text) return;
     const arr = [...(formData.expoBooths || [])];
-    arr[boothIdx].features = [...(arr[boothIdx].features || []), text];
+    arr[boothIdx] = { ...arr[boothIdx], features: [...(arr[boothIdx].features || []), text] };
     setFormData({ ...formData, expoBooths: arr });
     setNewBoothFeatureText({ ...newBoothFeatureText, [boothIdx]: '' });
   };
 
   const removeBoothFeature = (boothIdx: number, fIdx: number) => {
     const arr = [...(formData.expoBooths || [])];
-    arr[boothIdx].features = (arr[boothIdx].features || []).filter((_, i) => i !== fIdx);
+    arr[boothIdx] = { ...arr[boothIdx], features: (arr[boothIdx].features || []).filter((_, i) => i !== fIdx) };
     setFormData({ ...formData, expoBooths: arr });
   };
 
@@ -1022,7 +1001,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
       genre: 'EDM / Dance Pop',
       stageName: 'Main Stage',
       stageTime: '21:30 - 23:00',
-      image: '/photos/photo_2026-09-16_22-01-09 (6).jpg',
+      image: '/images/events/photo_2026-09-16_22-01-09 (6).jpg',
       bio: 'Renowned international performer delivering festival soundscapes and lighting shows.'
     };
     setFormData({
@@ -1031,7 +1010,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     });
   };
 
-  const updateArtist = (idx: number, field: keyof ArtistItem, value: any) => {
+  const updateArtist = <K extends keyof ArtistItem>(idx: number, field: K, value: ArtistItem[K]) => {
     const arr = [...(formData.artists || [])];
     arr[idx] = { ...arr[idx], [field]: value };
     setFormData({ ...formData, artists: arr });
@@ -1051,7 +1030,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
       name: 'Speaker Full Name',
       title: 'Managing Director / CEO',
       organization: 'Enterprise Group Cambodia',
-      avatar: '/photos/photo_2026-09-16_22-01-09 (2).jpg',
+      avatar: '/images/events/photo_2026-09-16_22-01-09 (2).jpg',
       topic: 'Future of Regional Business & Cross-Border Growth',
       track: 'Plenary Keynote',
       sessionTime: '09:30 - 10:15'
@@ -1062,7 +1041,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     });
   };
 
-  const updateSpeaker = (idx: number, field: keyof SpeakerItem, value: any) => {
+  const updateSpeaker = <K extends keyof SpeakerItem>(idx: number, field: K, value: SpeakerItem[K]) => {
     const arr = [...(formData.speakers || [])];
     arr[idx] = { ...arr[idx], [field]: value };
     setFormData({ ...formData, speakers: arr });
@@ -1418,7 +1397,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 </label>
                 <select
                   value={formData.status || 'published'}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value as LandingPage['status'] })}
                   className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
                 >
                   <option value="published">Published (Active & Live)</option>
@@ -1597,7 +1576,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 type="text"
                 value={formData.heroImage || ''}
                 onChange={(e) => setFormData({ ...formData, heroImage: e.target.value })}
-                placeholder="/photos/photo_2026-09-16_22-01-09 (2).jpg"
+                placeholder="/images/events/photo_2026-09-16_22-01-09 (2).jpg"
                 className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
               />
 
@@ -2246,7 +2225,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                         type="text"
                         value={artist.image || ''}
                         onChange={(e) => updateArtist(idx, 'image', e.target.value)}
-                        placeholder="/photos/photo_2026-09-16_22-01-09 (6).jpg"
+                        placeholder="/images/events/photo_2026-09-16_22-01-09 (6).jpg"
                         className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
                       />
                     </div>
@@ -2382,7 +2361,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                         type="text"
                         value={speaker.avatar || ''}
                         onChange={(e) => updateSpeaker(idx, 'avatar', e.target.value)}
-                        placeholder="/photos/photo_2026-09-16_22-01-09 (2).jpg"
+                        placeholder="/images/events/photo_2026-09-16_22-01-09 (2).jpg"
                         className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs"
                       />
                     </div>
@@ -2993,7 +2972,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 type="text"
                 value={newGalleryUrl}
                 onChange={(e) => setNewGalleryUrl(e.target.value)}
-                placeholder="Enter image URL or path (/photos/...)"
+                placeholder="Enter image URL or path (/images/events/...)"
                 className="flex-1 px-4 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
               />
               <button
@@ -3288,7 +3267,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                     <label className="block text-[10px] text-slate-500 mb-1">Type</label>
                     <select
                       value={f.type}
-                      onChange={(e) => updateFormField(fIdx, 'type', e.target.value as any)}
+                      onChange={(e) => updateFormField(fIdx, 'type', e.target.value as FormField['type'])}
                       className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs"
                     >
                       <option value="text">Text</option>
@@ -3370,7 +3349,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 type="text"
                 value={formData.ogImage || ''}
                 onChange={(e) => setFormData({ ...formData, ogImage: e.target.value })}
-                placeholder="/photos/photo_2026-09-16_22-01-09 (2).jpg"
+                placeholder="/images/events/photo_2026-09-16_22-01-09 (2).jpg"
                 className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
               />
             </div>

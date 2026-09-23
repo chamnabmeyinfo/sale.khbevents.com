@@ -1,12 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Phone, MessageCircle, Menu, X, ArrowRight, Sparkles } from 'lucide-react';
 import { UserNavButton } from '@/components/auth/UserNavButton';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import FlagIcon from '@/components/common/FlagIcon';
+import { useStoredChoice, useUrlParam } from '@/lib/use-browser-state';
+
+const LANGS = ['en', 'kh'] as const;
 
 interface NavbarProps {
   phone?: string;
@@ -18,27 +21,13 @@ export default function Navbar({
   whatsapp = '85512888999'
 }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentLang, setCurrentLang] = useState<'en' | 'kh'>('en');
-
-  useEffect(() => {
-    try {
-      const sp = new URLSearchParams(window.location.search);
-      const l = sp.get('lang');
-      if (l === 'kh' || l === 'en') {
-        setCurrentLang(l);
-      } else {
-        const saved = localStorage.getItem('khb_lang');
-        if (saved === 'kh' || saved === 'en') {
-          setCurrentLang(saved);
-        }
-      }
-    } catch {}
-  }, []);
+  const urlLang = useUrlParam('lang');
+  const [savedLang, setSavedLang] = useStoredChoice('khb_lang', LANGS, 'en');
+  const currentLang = urlLang === 'kh' || urlLang === 'en' ? urlLang : savedLang;
 
   const switchLang = (target: 'en' | 'kh') => {
-    setCurrentLang(target);
+    setSavedLang(target);
     try {
-      localStorage.setItem('khb_lang', target);
       const url = new URL(window.location.href);
       url.searchParams.set('lang', target);
       window.location.href = url.toString();
@@ -150,7 +139,7 @@ export default function Navbar({
             </a>
           </div>
 
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex md:hidden items-center gap-1 sm:gap-2">
             <ThemeSwitcher compact={true} />
             <UserNavButton />
             <a

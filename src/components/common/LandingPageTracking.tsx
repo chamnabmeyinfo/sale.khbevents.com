@@ -65,7 +65,7 @@ export function getMarketingParams(): {
 export function trackClientEvent(
   pageSlug: string,
   eventType: TrackingEventType,
-  eventData?: Record<string, any>,
+  eventData?: Record<string, unknown>,
   lang?: 'en' | 'kh'
 ) {
   if (typeof window === 'undefined' || !pageSlug) return;
@@ -102,10 +102,28 @@ export function trackClientEvent(
 }
 
 // Unified Tracker for internal AND external third-party events
+/**
+ * A value as a JavaScript string literal for the inline pixel snippets below.
+ * `<` is escaped too, so an admin-entered value can never close the <script>.
+ */
+function jsString(value: string | undefined): string {
+  return JSON.stringify(value ?? '').replace(/</g, '\\u003c');
+}
+
+type PixelFn = (...args: unknown[]) => void;
+
+/** Globals installed by the Meta, Google and TikTok pixel snippets, when present. */
+interface TrackingWindow extends Window {
+  fbq?: PixelFn;
+  gtag?: PixelFn;
+  ttq?: { track: PixelFn };
+  dataLayer?: unknown[];
+}
+
 export function trackLandingEvent(
   page?: LandingPage,
   eventType?: TrackingEventType,
-  eventData?: Record<string, any>,
+  eventData?: Record<string, unknown>,
   lang?: 'en' | 'kh'
 ) {
   if (!page) return;
@@ -118,7 +136,7 @@ export function trackLandingEvent(
 
   // 2. External Third-Party Pixels
   if (typeof window === 'undefined') return;
-  const win = window as any;
+  const win = window as TrackingWindow;
   const tracking = page.tracking;
 
   // Meta (Facebook) Pixel
@@ -183,7 +201,7 @@ export function trackLandingEvent(
   }
 
   // TikTok Pixel
-  if (tracking?.tiktokPixelId && tracking.tiktokPixelEnabled !== false && typeof win.ttq === 'function') {
+  if (tracking?.tiktokPixelId && tracking.tiktokPixelEnabled !== false && typeof win.ttq?.track === 'function') {
     if (eventType === 'form_submit') {
       win.ttq.track('SubmitForm', {
         contents: [{ content_id: slug, content_name: page.title }],
@@ -251,9 +269,9 @@ export default function LandingPageTracking({ page, lang = 'en' }: LandingPageTr
               t.src=v;s=b.getElementsByTagName(e)[0];
               s.parentNode.insertBefore(t,s)}(window, document,'script',
               'https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', '${tracking.facebookPixelId}');
+              fbq('init', ${jsString(tracking.facebookPixelId)});
               fbq('track', 'PageView');
-              fbq('track', 'ViewContent', { content_name: '${page.title?.replace(/'/g, "\\'")}', value: 499, currency: 'USD' });
+              fbq('track', 'ViewContent', { content_name: ${jsString(page.title)}, value: 499, currency: 'USD' });
             `}
           </Script>
           <noscript>
@@ -262,7 +280,7 @@ export default function LandingPageTracking({ page, lang = 'en' }: LandingPageTr
               height="1"
               width="1"
               style={{ display: 'none' }}
-              src={`https://www.facebook.com/tr?id=${tracking.facebookPixelId}&ev=PageView&noscript=1`}
+              src={`https://www.facebook.com/tr?id=${encodeURIComponent(tracking.facebookPixelId || '')}&ev=PageView&noscript=1`}
               alt="fb-pixel"
             />
           </noscript>
@@ -278,12 +296,12 @@ export default function LandingPageTracking({ page, lang = 'en' }: LandingPageTr
               new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
               j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
               'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-              })(window,document,'script','dataLayer','${tracking.gtmContainerId}');
+              })(window,document,'script','dataLayer',${jsString(tracking.gtmContainerId)});
             `}
           </Script>
           <noscript>
             <iframe
-              src={`https://www.googletagmanager.com/ns.html?id=${tracking.gtmContainerId}`}
+              src={`https://www.googletagmanager.com/ns.html?id=${encodeURIComponent(tracking.gtmContainerId || '')}`}
               height="0"
               width="0"
               style={{ display: 'none', visibility: 'hidden' }}
@@ -296,7 +314,7 @@ export default function LandingPageTracking({ page, lang = 'en' }: LandingPageTr
       {tracking?.ga4MeasurementId && tracking.ga4Enabled !== false && (
         <>
           <Script
-            src={`https://www.googletagmanager.com/gtag/js?id=${tracking.ga4MeasurementId}`}
+            src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(tracking.ga4MeasurementId || '')}`}
             strategy="afterInteractive"
           />
           <Script id={`ga4-init-${page.slug}`} strategy="afterInteractive">
@@ -304,8 +322,8 @@ export default function LandingPageTracking({ page, lang = 'en' }: LandingPageTr
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', '${tracking.ga4MeasurementId}', {
-                page_title: '${page.title?.replace(/'/g, "\\'")}',
+              gtag('config', ${jsString(tracking.ga4MeasurementId)}, {
+                page_title: ${jsString(page.title)},
                 page_path: window.location.pathname
               });
             `}
@@ -319,7 +337,7 @@ export default function LandingPageTracking({ page, lang = 'en' }: LandingPageTr
           {`
             !function (w, d, t) {
               w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
-              ttq.load('${tracking.tiktokPixelId}');
+              ttq.load(${jsString(tracking.tiktokPixelId)});
               ttq.page();
             }(window, document, 'ttq');
           `}

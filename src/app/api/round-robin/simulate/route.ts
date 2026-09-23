@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/auth';
 import { 
   createLead, 
   recordDirectContactRoute, 
   getRoundRobinSettings 
 } from '@/lib/storage';
 import { selectNextStaff } from '@/lib/round-robin';
+import { RoundRobinStaff } from '@/lib/types';
+import { errorMessage } from '@/lib/errors';
 
 const sampleClients = [
   {
@@ -46,6 +49,9 @@ const sampleClients = [
 ];
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await req.json().catch(() => ({}));
     const mode = body.mode || 'single_lead'; // 'single_lead' | 'visitor_click' | 'batch_test'
@@ -137,7 +143,8 @@ export async function POST(req: NextRequest) {
     // ─────────────────────────────────────────────────────────────
     if (mode === 'batch_test') {
       const count = Math.min(Math.max(Number(body.count) || 10, 5), 50);
-      const rrSettings = await getRoundRobinSettings();
+      // Simulate on a copy so the benchmark never moves the live rotation.
+      const rrSettings = structuredClone(await getRoundRobinSettings());
 
       if (!rrSettings || !rrSettings.enabled) {
         return NextResponse.json({
@@ -154,7 +161,7 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      const distributionCounts: Record<string, { staff: any; assignedCount: number }> = {};
+      const distributionCounts: Record<string, { staff: RoundRobinStaff; assignedCount: number }> = {};
       activeStaff.forEach((s) => {
         distributionCounts[s.id] = { staff: s, assignedCount: 0 };
       });
@@ -201,10 +208,10 @@ export async function POST(req: NextRequest) {
       { success: false, error: `Invalid simulation mode: ${mode}` },
       { status: 400 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error('Simulation error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Simulation process failed' },
+      { success: false, error: errorMessage(error, 'Simulation process failed') },
       { status: 500 }
     );
   }

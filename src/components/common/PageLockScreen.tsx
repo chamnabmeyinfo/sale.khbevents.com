@@ -1,65 +1,45 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { LandingPage } from '@/lib/types';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Lock, KeyRound, ArrowRight, ShieldAlert, Sparkles } from 'lucide-react';
+import type { LockedPageStub } from '@/lib/page-access';
 
-interface PagePasswordGateProps {
-  page?: LandingPage;
-  children: React.ReactNode;
-}
-
-export default function PagePasswordGate({ page, children }: PagePasswordGateProps) {
-  const isProtected = page?.isolatedSettings?.accessProtection === 'password' && Boolean(page?.isolatedSettings?.passwordPin);
-  const correctPin = (page?.isolatedSettings?.passwordPin || '').trim();
-  const storageKey = `khb_unlocked_${page?.id || page?.slug || 'page'}`;
-
-  const [unlocked, setUnlocked] = useState(!isProtected);
+/**
+ * Passcode screen for protected landing pages. The page content is never sent
+ * to the browser until the server has verified the passcode and set an
+ * unlock cookie; after that a refresh renders the real page.
+ */
+export default function PageLockScreen({ page }: { page: LockedPageStub }) {
+  const router = useRouter();
   const [pinInput, setPinInput] = useState('');
-  const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(Boolean(isProtected));
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (!isProtected) {
-      setUnlocked(true);
-      setLoading(false);
-      return;
-    }
-    try {
-      const stored = sessionStorage.getItem(storageKey);
-      if (stored === correctPin) {
-        setUnlocked(true);
-      }
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
-    }
-  }, [isProtected, correctPin, storageKey]);
-
-  const handleUnlock = (e: React.FormEvent) => {
+  const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pinInput.trim() === correctPin) {
-      try {
-        sessionStorage.setItem(storageKey, correctPin);
-      } catch {}
-      setError(false);
-      setUnlocked(true);
-    } else {
-      setError(true);
+    if (!pinInput.trim() || submitting) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      const res = await fetch('/api/pages/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug: page.slug, pin: pinInput }),
+      });
+      if (res.ok) {
+        router.refresh();
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || 'Invalid invitation passcode. Please check and try again.');
+    } catch {
+      setError('Connection problem. Please try again.');
     }
+    setSubmitting(false);
   };
 
-  if (loading) {
-    return <div className="min-h-screen bg-[#07130C]" />;
-  }
-
-  if (!isProtected || unlocked) {
-    return <>{children}</>;
-  }
-
-  const partnerLogo = page?.isolatedSettings?.partnerLogo;
-  const partnerName = page?.isolatedSettings?.partnerName;
+  const { partnerLogo, partnerName } = page;
 
   return (
     <div className="min-h-screen bg-[#050E09] text-white flex items-center justify-center p-4 relative overflow-hidden font-sans">
@@ -85,7 +65,7 @@ export default function PagePasswordGate({ page, children }: PagePasswordGatePro
             <span>Exclusive VIP Campaign</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-white">
-            {page?.title || 'Private Access Portal'}
+            {page.title || 'Private Access Portal'}
           </h1>
           <p className="text-xs text-gray-400 max-w-sm mx-auto leading-relaxed">
             This delegation briefing and registration portal is restricted to invited delegates. Please enter your access code below.
@@ -103,7 +83,7 @@ export default function PagePasswordGate({ page, children }: PagePasswordGatePro
               value={pinInput}
               onChange={e => {
                 setPinInput(e.target.value);
-                setError(false);
+                setError('');
               }}
               placeholder="Enter Invitation Passcode"
               className={`w-full pl-11 pr-4 py-3 rounded-xl bg-[#040C07] border text-sm text-center tracking-widest text-white placeholder-gray-600 focus:outline-none focus:ring-2 ${
@@ -117,15 +97,16 @@ export default function PagePasswordGate({ page, children }: PagePasswordGatePro
           {error && (
             <div className="flex items-center justify-center gap-1.5 text-rose-400 text-xs font-semibold">
               <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
-              <span>Invalid invitation passcode. Please check and try again.</span>
+              <span>{error}</span>
             </div>
           )}
 
           <button
             type="submit"
+            disabled={submitting}
             className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
           >
-            <span>Unlock Invitation</span>
+            <span>{submitting ? 'Checking…' : 'Unlock Invitation'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
@@ -133,7 +114,7 @@ export default function PagePasswordGate({ page, children }: PagePasswordGatePro
         <div className="pt-2 border-t border-emerald-950/60 text-[11px] text-gray-500">
           Need assistance? Contact our delegation team at{' '}
           <span className="text-gray-300 font-medium">
-            {page?.isolatedSettings?.phone || 'support@khbevents.com'}
+            {page.phone || 'support@khbevents.com'}
           </span>
         </div>
       </div>

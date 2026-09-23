@@ -16,6 +16,9 @@
 html {
   scroll-behavior: smooth;
   transition: background-color 0.2s ease, color 0.2s ease;
+  /* Decorative glows sit partly off-screen; clip them so phones never scroll
+     sideways. `clip` (unlike `hidden`) keeps position: sticky working. */
+  overflow-x: clip;
 }
 
 /* Base Body defaults */

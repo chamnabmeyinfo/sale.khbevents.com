@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
-import { getPageBySlug, getSettings } from '@/lib/storage';
+import { getPublicSettings } from '@/lib/storage';
+import { loadPublicPage } from '@/lib/page-access';
+import PageLockScreen from '@/components/common/PageLockScreen';
 import DynamicLandingPageView from '@/components/landing/DynamicLandingPageView';
 import SmartCityLandingPageView from '@/components/landing/SmartCityLandingPageView';
 import SmartCityAppView from '@/components/landing/SmartCityAppView';
@@ -19,8 +21,13 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const cleanSlug = slug.toLowerCase().trim();
   const sp = searchParams ? await searchParams : {};
   const isKh = sp.lang === 'kh';
-  const page = await getPageBySlug(cleanSlug);
-  const settings = await getSettings();
+  const access = await loadPublicPage(cleanSlug);
+  const settings = await getPublicSettings();
+  if (access.kind === 'locked') {
+    // Only what the lock screen shows; keep locked content out of link previews.
+    return { title: `${access.stub.title} | ${settings.companyName}`, robots: { index: false, follow: false } };
+  }
+  const page = access.kind === 'ok' ? access.page : null;
 
   if (cleanSlug === 'smart-city-tea-cafe' && !page) {
     return {
@@ -33,12 +40,12 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
         description: isKh
           ? 'ដំណើរធុរកិច្ច B2B ផ្តាច់មុខ៖ ពិព័រណ៍អន្តរជាតិ ២, ទស្សនកិច្ចរោងចក្រផ្ទាល់, B2B Matching & កប៉ាល់ UNESCO ហាឡុងបេ។ ៨-១១ តុលា ២០២៦។ Early Bird $499។'
           : 'Exclusive B2B Trip to Vietnam: 2 Major Expos, Factory Visits, Business Matching & Halong Bay UNESCO Cruise. Oct 8-11, 2026. Early Bird $499.',
-        images: ['/photos/photo_2026-09-16_22-01-09 (2).jpg']
+        images: ['/images/events/photo_2026-09-16_22-01-09 (2).jpg']
       }
     };
   }
 
-  if (!page) {
+  if (!page || page.status !== 'published') {
     return {
       title: `Page Not Found | ${settings.companyName}`
     };
@@ -48,7 +55,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const title = (khTrans?.metaTitle || khTrans?.title) || page.metaTitle || `${page.title} | ${settings.companyName}`;
   const description = (khTrans?.metaDescription || khTrans?.description) || page.metaDescription || page.description;
 
-  const isNoIndex = page?.isolatedSettings?.searchEngineIndexing === 'noindex';
+  const isNoIndex = page.isolatedSettings?.searchEngineIndexing === 'noindex' || page.isolatedSettings?.accessProtection === 'password';
 
   return {
     title,
@@ -57,7 +64,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     openGraph: {
       title,
       description,
-      images: [page.ogImage || page.heroImage || '/photos/photo_2026-09-16_22-01-09 (2).jpg']
+      images: [page.ogImage || page.heroImage || '/images/events/photo_2026-09-16_22-01-09 (2).jpg']
     }
   };
 }
@@ -68,8 +75,11 @@ export default async function CampaignPage({ params, searchParams }: PageProps) 
   const sp = searchParams ? await searchParams : {};
   const view = typeof sp.view === 'string' ? sp.view.toLowerCase() : '';
   const initialLang: 'en' | 'kh' = sp.lang === 'kh' ? 'kh' : 'en';
-  const settings = await getSettings();
-  const page = await getPageBySlug(cleanSlug);
+  const result = await loadPublicPage(cleanSlug);
+  if (result.kind === 'not_found') notFound();
+  if (result.kind === 'locked') return <PageLockScreen page={result.stub} />;
+  const page = result.page;
+  const settings = await getPublicSettings();
 
   if (cleanSlug === 'smart-city-tea-cafe') {
     if (view === 'app') {
@@ -85,7 +95,7 @@ export default async function CampaignPage({ params, searchParams }: PageProps) 
     return <SmartCityLandingPageView page={page || undefined} settings={settings} initialLang={initialLang} />;
   }
 
-  if (!page || page.status === 'archived') {
+  if (!page) {
     notFound();
   }
 

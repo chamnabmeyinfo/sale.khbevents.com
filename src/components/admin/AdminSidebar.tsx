@@ -27,7 +27,8 @@ import {
   Sun,
   Activity,
   Sliders,
-  BookOpen
+  BookOpen,
+  type LucideIcon
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
@@ -35,7 +36,7 @@ import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 interface SubItem {
   label: string;
   href: string;
-  icon: any;
+  icon: LucideIcon;
   isHighlight?: boolean;
   badge?: string;
 }
@@ -43,7 +44,7 @@ interface SubItem {
 interface NavGroup {
   id: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   href: string;
   isActive: boolean;
   subItems: SubItem[];

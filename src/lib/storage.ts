@@ -1,24 +1,24 @@
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
-import { 
-  DatabaseSchema, 
-  LandingPage, 
-  Lead, 
-  LeadStatus, 
-  SystemSettings, 
-  PageAnalyticsSummary, 
-  TrackingEvent, 
+import {
+  DatabaseSchema,
+  LandingPage,
+  Lead,
+  LeadStatus,
+  SystemSettings,
+  PageAnalyticsSummary,
   TrackingEventType,
   RoundRobinStaff,
   RoundRobinSettings,
   RoundRobinLog,
   RoutingDeliveryStatus
 } from './types';
-import { 
-  defaultRoundRobinSettings, 
-  selectNextStaff, 
-  sendLeadToStaffTelegram 
+import {
+  defaultRoundRobinSettings,
+  selectNextStaff,
+  sendLeadToStaffTelegram,
+  escapeHtml
 } from './round-robin';
 import { isSupabaseConfigured } from './supabase';
 import {
@@ -40,6 +40,10 @@ import {
   supabaseUpdateRoundRobinSettings,
   supabaseGetRoundRobinLogs,
   supabaseSaveRoundRobinLog,
+  supabaseGetDeletedPages,
+  supabaseSaveDeletedPages,
+  supabaseGetMarker,
+  supabaseSetMarker
 } from './supabase-store';
 import bundledDbJson from '../../data/db.json';
 
@@ -50,8 +54,10 @@ const BUNDLED_DB_FILE = path.join(process.cwd(), 'data', 'db.json');
 const DATA_DIR = IS_SERVERLESS ? '/tmp' : path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 
-// Global in-memory cache to ensure consistency across serverless invocations
-let memoryDb: DatabaseSchema | null = null;
+// In-memory copy of the database. It lives on globalThis because Next.js bundles
+// route handlers and pages separately, each with its own copy of this module;
+// a module-level variable would let API writes go unseen by page renders.
+const dbCache = globalThis as typeof globalThis & { __khbMemoryDb?: DatabaseSchema | null };
 
 const defaultSettings: SystemSettings = {
   companyName: 'KHB EVENTS',
@@ -242,11 +248,11 @@ const defaultLeads: Lead[] = [
 ];
 
 export async function getDatabase(): Promise<DatabaseSchema> {
-  if (memoryDb) {
-    return memoryDb;
+  if (dbCache.__khbMemoryDb) {
+    return dbCache.__khbMemoryDb;
   }
+  let content = '';
   try {
-    let content = '';
     try {
       content = await fs.readFile(DB_FILE, 'utf-8');
     } catch {
@@ -263,21 +269,30 @@ export async function getDatabase(): Promise<DatabaseSchema> {
     }
     const db = JSON.parse(content) as DatabaseSchema;
     if (bundledDb?.pages) {
+      const deleted = new Set(db.deletedPages || []);
       for (const bp of bundledDb.pages) {
+        if (isDeletedPage(bp, deleted)) continue;
         if (!db.pages.some((p) => p.slug === bp.slug || p.id === bp.id)) {
           db.pages.push(bp);
         }
       }
     }
     if (!db.settings.roundRobinSettings) {
-      db.settings.roundRobinSettings = defaultRoundRobinSettings;
+      db.settings.roundRobinSettings = structuredClone(defaultRoundRobinSettings);
     }
     if (!db.roundRobinLogs) {
       db.roundRobinLogs = [];
     }
-    memoryDb = db;
+    dbCache.__khbMemoryDb = db;
     return db;
-  } catch {
+  } catch (err) {
+    if (content) {
+      // The file exists but is unreadable. Keep a copy before anything is
+      // written over it, so leads saved since the last deploy can be recovered.
+      const backup = `${DB_FILE}.corrupt-${Date.now()}`;
+      await fs.writeFile(backup, content, 'utf-8').catch(() => {});
+      console.error(`Database file could not be parsed; saved a copy to ${backup}:`, err);
+    }
     const initialDb: DatabaseSchema = {
       pages: (bundledDb?.pages && bundledDb.pages.length > 0) ? bundledDb.pages : defaultPages,
       leads: bundledDb?.leads || defaultLeads,
@@ -291,26 +306,89 @@ export async function getDatabase(): Promise<DatabaseSchema> {
     } catch {
       // Ignore write errors in read-only serverless environments
     }
-    memoryDb = initialDb;
+    dbCache.__khbMemoryDb = initialDb;
     return initialDb;
   }
 }
 
+// Writes are chained so two requests never write the file at the same time.
+const writeQueue = globalThis as typeof globalThis & { __khbDbWrite?: Promise<void> };
+
 export async function saveDatabase(data: DatabaseSchema): Promise<void> {
-  memoryDb = data;
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    await fs.writeFile(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
-  } catch (err) {
-    // In read-only serverless environments (like Vercel), local disk writes are ignored
-    // because Supabase PostgreSQL provides cloud persistence.
-    console.warn('Local DB write bypassed in serverless mode:', (err as Error).message);
+  dbCache.__khbMemoryDb = data;
+  const write = async () => {
+    try {
+      await fs.mkdir(DATA_DIR, { recursive: true });
+      // Write a temp file and rename it over the real one: the rename is atomic,
+      // so a crash mid-write can never leave a truncated db.json behind.
+      const json = JSON.stringify(data, null, 2);
+      const tmp = `${DB_FILE}.${process.pid}.tmp`;
+      try {
+        await fs.writeFile(tmp, json, 'utf-8');
+        await fs.rename(tmp, DB_FILE);
+      } catch {
+        // Some hosts allow writing db.json but not creating files beside it;
+        // fall back to a direct write rather than losing the save.
+        await fs.rm(tmp, { force: true }).catch(() => {});
+        await fs.writeFile(DB_FILE, json, 'utf-8');
+      }
+    } catch (err) {
+      // In read-only serverless environments (like Vercel), local disk writes are ignored
+      // because Supabase PostgreSQL provides cloud persistence.
+      console.warn('Local DB write bypassed in serverless mode:', (err as Error).message);
+    }
+  };
+  const next = (writeQueue.__khbDbWrite ?? Promise.resolve()).then(write);
+  writeQueue.__khbDbWrite = next;
+  await next;
+}
+
+function isDeletedPage(page: Pick<LandingPage, 'id' | 'slug'>, deleted: Set<string>): boolean {
+  return deleted.has(`id:${page.id}`) || deleted.has(`slug:${page.slug}`);
+}
+
+async function getDeletedPageKeys(): Promise<Set<string>> {
+  const db = await getDatabase();
+  const keys = new Set(db.deletedPages || []);
+  if (isSupabaseConfigured()) {
+    try {
+      for (const key of (await supabaseGetDeletedPages()) || []) keys.add(key);
+    } catch (err) {
+      console.error('Supabase getDeletedPages error:', err);
+    }
   }
+  return keys;
+}
+
+async function updateDeletedPageKeys(add: string[], remove: string[]): Promise<void> {
+  const keys = await getDeletedPageKeys();
+  const changed = add.some((k) => !keys.has(k)) || remove.some((k) => keys.has(k));
+  if (!changed) return;
+  for (const k of add) keys.add(k);
+  for (const k of remove) keys.delete(k);
+  const list = [...keys];
+  const db = await getDatabase();
+  db.deletedPages = list;
+  await saveDatabase(db);
+  if (isSupabaseConfigured()) {
+    await supabaseSaveDeletedPages(list).catch(() => false);
+  }
+}
+
+/**
+ * Drops pages the admin has deleted (they may still be in the bundled db.json).
+ * Tombstones are only fetched when there is something to filter, so the common
+ * path of serving a page straight from Supabase costs no extra query.
+ */
+async function withoutDeleted(pages: LandingPage[]): Promise<LandingPage[]> {
+  if (pages.length === 0) return pages;
+  const deleted = await getDeletedPageKeys();
+  return pages.filter((p) => !isDeletedPage(p, deleted));
 }
 
 export async function getPages(): Promise<LandingPage[]> {
   const db = await getDatabase();
-  const localPages = db.pages || [];
+  const allLocalPages = db.pages || [];
 
   if (isSupabaseConfigured()) {
     try {
@@ -318,7 +396,9 @@ export async function getPages(): Promise<LandingPage[]> {
       if (remotePages && remotePages.length > 0) {
         // Check if any local/bundled pages are missing in Supabase
         const remoteSlugs = new Set(remotePages.map((p) => p.slug.toLowerCase().trim()));
-        const missingPages = localPages.filter((lp) => !remoteSlugs.has(lp.slug.toLowerCase().trim()));
+        const missingPages = await withoutDeleted(
+          allLocalPages.filter((lp) => !remoteSlugs.has(lp.slug.toLowerCase().trim()))
+        );
 
         if (missingPages.length > 0) {
           for (const page of missingPages) {
@@ -332,7 +412,9 @@ export async function getPages(): Promise<LandingPage[]> {
           }
         }
         return remotePages;
-      } else if (localPages.length > 0) {
+      }
+      const localPages = await withoutDeleted(allLocalPages);
+      if (localPages.length > 0) {
         // If Supabase is empty, seed all local pages to Supabase
         for (const page of localPages) {
           try {
@@ -347,13 +429,14 @@ export async function getPages(): Promise<LandingPage[]> {
       console.error('Supabase getPages error:', err);
     }
   }
-  return localPages;
+  return withoutDeleted(allLocalPages);
 }
 
 export async function getPageBySlug(slug: string): Promise<LandingPage | null> {
   const cleanSlug = slug.toLowerCase().trim();
   const db = await getDatabase();
-  const localPage = db.pages.find((p) => p.slug === cleanSlug) || null;
+  const localMatch = db.pages.find((p) => p.slug === cleanSlug);
+  const [localPage = null] = await withoutDeleted(localMatch ? [localMatch] : []);
 
   if (isSupabaseConfigured()) {
     try {
@@ -379,7 +462,8 @@ export async function getPageBySlug(slug: string): Promise<LandingPage | null> {
 
 export async function getPageById(id: string): Promise<LandingPage | null> {
   const db = await getDatabase();
-  const localPage = db.pages.find((p) => p.id === id) || null;
+  const localMatch = db.pages.find((p) => p.id === id);
+  const [localPage = null] = await withoutDeleted(localMatch ? [localMatch] : []);
 
   if (isSupabaseConfigured()) {
     try {
@@ -402,17 +486,42 @@ export async function getPageById(id: string): Promise<LandingPage | null> {
   return localPage;
 }
 
+// Paths owned by the app itself; a page with one of these slugs could never be reached.
+const RESERVED_SLUGS = new Set(['admin', 'api', 'auth', 'login', 'images', 'photos', '_next', 'favicon.ico']);
+
+/** Thrown when a page cannot be saved under the requested slug (API maps it to 409). */
+export class PageSlugError extends Error {}
+
 export async function savePage(pageData: Partial<LandingPage> & { title: string; slug: string }): Promise<LandingPage> {
   const slug = pageData.slug.toLowerCase().trim().replace(/[^a-z0-9-_]/g, '-');
   const now = new Date().toISOString();
 
+  if (!slug.replace(/[-_]/g, '')) throw new PageSlugError('Please enter a page URL slug.');
+  if (RESERVED_SLUGS.has(slug)) throw new PageSlugError(`"/${slug}" is reserved by the system. Please choose another URL slug.`);
+
   let targetPage: LandingPage;
   const db = await getDatabase();
-  let existingIndex = -1;
-  if (pageData.id) {
-    existingIndex = db.pages.findIndex((p) => p.id === pageData.id);
-  } else {
-    existingIndex = db.pages.findIndex((p) => p.slug === slug);
+  let existingIndex = pageData.id ? db.pages.findIndex((p) => p.id === pageData.id) : -1;
+
+  // A page created on another server instance may exist only in Supabase; merge
+  // into it rather than rebuilding it from defaults (which drops fields and counters).
+  if (existingIndex < 0 && pageData.id && isSupabaseConfigured()) {
+    const remote = await supabaseGetPageById(pageData.id).catch(() => null);
+    if (remote) {
+      db.pages.unshift(remote);
+      existingIndex = 0;
+    }
+  }
+
+  // Slugs must be unique: saving over another page's slug used to overwrite that page.
+  const ownId = existingIndex >= 0 ? db.pages[existingIndex].id : pageData.id;
+  const localClash = db.pages.find((p) => p.slug === slug && p.id !== ownId);
+  const remoteClash = !localClash && isSupabaseConfigured()
+    ? await supabaseGetPageBySlug(slug).catch(() => null)
+    : null;
+  const clash = localClash || (remoteClash && remoteClash.id !== ownId ? remoteClash : null);
+  if (clash) {
+    throw new PageSlugError(`The URL "/${slug}" is already used by "${clash.title}". Please choose another slug.`);
   }
 
   if (existingIndex >= 0) {
@@ -481,6 +590,8 @@ export async function savePage(pageData: Partial<LandingPage> & { title: string;
   }
 
   await saveDatabase(db);
+  // Re-creating a page with a previously deleted id or slug brings it back.
+  await updateDeletedPageKeys([], [`id:${targetPage.id}`, `slug:${targetPage.slug}`]);
 
   if (isSupabaseConfigured()) {
     try {
@@ -494,6 +605,7 @@ export async function savePage(pageData: Partial<LandingPage> & { title: string;
 }
 
 export async function deletePage(id: string): Promise<boolean> {
+  const existing = await getPageById(id);
   let supabaseDeleted = false;
   if (isSupabaseConfigured()) {
     try {
@@ -509,7 +621,58 @@ export async function deletePage(id: string): Promise<boolean> {
   if (localDeleted) {
     await saveDatabase(db);
   }
-  return supabaseDeleted || localDeleted;
+  const deleted = supabaseDeleted || localDeleted;
+  if (deleted) {
+    // Remember the deletion so the page is not re-seeded from the bundled db.json
+    // or re-synced to Supabase on the next restart.
+    await updateDeletedPageKeys([`id:${id}`, ...(existing ? [`slug:${existing.slug}`] : [])], []);
+  }
+  return deleted;
+}
+
+/**
+ * Retries Supabase inserts that failed when the lead was submitted. Returns the
+ * leads that are still only stored locally.
+ */
+async function syncPendingLeads(): Promise<Lead[]> {
+  const db = await getDatabase();
+  const pending = db.unsyncedLeadIds || [];
+  if (pending.length === 0) return [];
+  const stillPending: string[] = [];
+  for (const id of pending) {
+    const lead = db.leads.find((l) => l.id === id);
+    if (!lead) continue;
+    try {
+      await supabaseCreateLead(lead);
+    } catch {
+      stillPending.push(id);
+    }
+  }
+  db.unsyncedLeadIds = stillPending;
+  await saveDatabase(db);
+  return db.leads.filter((l) => stillPending.includes(l.id));
+}
+
+function applyLeadFilter(leads: Lead[], filter?: { pageSlug?: string; status?: string; search?: string }): Lead[] {
+  let result = leads;
+  if (filter?.pageSlug && filter.pageSlug !== 'ALL') {
+    result = result.filter((l) => l.landingPageSlug === filter.pageSlug);
+  }
+  if (filter?.status && filter.status !== 'ALL') {
+    result = result.filter((l) => l.status === filter.status);
+  }
+  if (filter?.search) {
+    const q = filter.search.toLowerCase();
+    result = result.filter(
+      (l) =>
+        l.fullName.toLowerCase().includes(q) ||
+        l.email.toLowerCase().includes(q) ||
+        l.phone.toLowerCase().includes(q) ||
+        (l.company && l.company.toLowerCase().includes(q)) ||
+        (l.message && l.message.toLowerCase().includes(q))
+    );
+  }
+  return [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function getLeads(filter?: {
@@ -520,37 +683,17 @@ export async function getLeads(filter?: {
   if (isSupabaseConfigured()) {
     try {
       const leads = await supabaseGetLeads(filter);
-      if (leads && leads.length > 0) return leads;
+      if (leads && leads.length > 0) {
+        const pending = applyLeadFilter(await syncPendingLeads(), filter);
+        const remoteIds = new Set(leads.map((l) => l.id));
+        return applyLeadFilter([...pending.filter((l) => !remoteIds.has(l.id)), ...leads]);
+      }
     } catch (err) {
       console.error('Supabase getLeads error:', err);
     }
   }
   const db = await getDatabase();
-  let leads = [...db.leads];
-
-  if (filter?.pageSlug && filter.pageSlug !== 'ALL') {
-    leads = leads.filter((l) => l.landingPageSlug === filter.pageSlug);
-  }
-
-  if (filter?.status && filter.status !== 'ALL') {
-    leads = leads.filter((l) => l.status === filter.status);
-  }
-
-  if (filter?.search) {
-    const q = filter.search.toLowerCase();
-    leads = leads.filter(
-      (l) =>
-        l.fullName.toLowerCase().includes(q) ||
-        l.email.toLowerCase().includes(q) ||
-        l.phone.toLowerCase().includes(q) ||
-        (l.company && l.company.toLowerCase().includes(q)) ||
-        (l.message && l.message.toLowerCase().includes(q))
-    );
-  }
-
-  return leads.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  return applyLeadFilter(db.leads, filter);
 }
 
 export async function getLeadById(id: string): Promise<Lead | null> {
@@ -636,17 +779,25 @@ export async function createLead(leadData: {
     updatedAt: now
   };
 
-  // 1. Check if Round Robin Lead Distribution is active (Campaign-specific override or Global)
-  const effectiveRrSettings = (page?.isolatedSettings?.useCustomRoundRobin && page.isolatedSettings.customRoundRobin?.enabled)
-    ? page.isolatedSettings.customRoundRobin
-    : (db.settings.roundRobinSettings?.enabled ? db.settings.roundRobinSettings : null);
+  // 1. Check if Round Robin Lead Distribution is active (Campaign-specific override or Global).
+  // Global routing and bot settings are read through the same getters the admin
+  // pages write to, so Supabase deployments route with the current staff list.
+  const useCustomRr = Boolean(page?.isolatedSettings?.useCustomRoundRobin && page.isolatedSettings.customRoundRobin?.enabled);
+  const globalRr = useCustomRr ? null : await getRoundRobinSettings();
+  const effectiveRrSettings = useCustomRr
+    ? page!.isolatedSettings!.customRoundRobin!
+    : (globalRr?.enabled ? globalRr : null);
+  const systemSettings = await getSettings();
 
-  const botToken = page?.isolatedSettings?.telegramBotToken || db.settings.telegramBotToken;
+  const botToken = page?.isolatedSettings?.telegramBotToken || systemSettings.telegramBotToken;
 
   if (effectiveRrSettings) {
     const selection = selectNextStaff(effectiveRrSettings);
     if (selection) {
       const { staff, effectivePercentage, nextIndex } = selection;
+      // Advance the rotation before awaiting Telegram, so a second lead arriving
+      // meanwhile goes to the next person instead of the same one.
+      effectiveRrSettings.lastAssignedIndex = nextIndex;
 
       // Dispatch to assigned staff member's Telegram (or record diagnostic failure if token/chatId missing)
       let dispatchResult: { status: RoutingDeliveryStatus; messageId?: number; error?: string; fallbackSent?: boolean } = {
@@ -662,8 +813,8 @@ export async function createLead(leadData: {
           staff,
           botToken,
           {
-            fallbackChatId: effectiveRrSettings.fallbackChatId || page?.isolatedSettings?.telegramChatId || db.settings.telegramChatId,
-            managerChatId: effectiveRrSettings.managerChatId || page?.isolatedSettings?.telegramChatId || db.settings.telegramChatId,
+            fallbackChatId: effectiveRrSettings.fallbackChatId || page?.isolatedSettings?.telegramChatId || systemSettings.telegramChatId,
+            managerChatId: effectiveRrSettings.managerChatId || page?.isolatedSettings?.telegramChatId || systemSettings.telegramChatId,
             enableManagerNotification: Boolean(effectiveRrSettings.enableManagerNotification),
             customTemplate: effectiveRrSettings.customMessageTemplate,
             customWhatsappMessage: effectiveRrSettings.customWhatsappMessage
@@ -696,7 +847,12 @@ export async function createLead(leadData: {
         staff.failedDeliveries = (staff.failedDeliveries || 0) + 1;
       }
       staff.lastAssignedAt = now;
-      effectiveRrSettings.lastAssignedIndex = nextIndex;
+      if (!useCustomRr) {
+        await updateRoundRobinSettings({
+          staffList: effectiveRrSettings.staffList,
+          lastAssignedIndex: effectiveRrSettings.lastAssignedIndex,
+        });
+      }
 
       // Add to Round Robin Audit Logs
       if (!db.roundRobinLogs) db.roundRobinLogs = [];
@@ -734,12 +890,12 @@ export async function createLead(leadData: {
     // Fallback: Standard Telegram group broadcast alert if Round Robin is inactive
     const enableAlerts = page?.isolatedSettings?.enableTelegramAlerts !== undefined 
       ? page.isolatedSettings.enableTelegramAlerts 
-      : db.settings.enableTelegramAlerts;
-    const token = page?.isolatedSettings?.telegramBotToken || db.settings.telegramBotToken;
-    const chatId = page?.isolatedSettings?.telegramChatId || db.settings.telegramChatId;
+      : systemSettings.enableTelegramAlerts;
+    const token = page?.isolatedSettings?.telegramBotToken || systemSettings.telegramBotToken;
+    const chatId = page?.isolatedSettings?.telegramChatId || systemSettings.telegramChatId;
 
     if (enableAlerts && token && chatId) {
-      sendTelegramAlert(newLead, db.settings, token, chatId).catch((err) => {
+      sendTelegramAlert(newLead, systemSettings, token, chatId).catch((err) => {
         console.error('Telegram error:', err);
       });
     }
@@ -749,7 +905,10 @@ export async function createLead(leadData: {
     try {
       await supabaseCreateLead(newLead);
     } catch (err) {
+      // Keep the lead locally and mark it, so the CRM still shows it and the
+      // upload is retried (see syncPendingLeads) instead of silently losing it.
       console.error('Supabase createLead error:', err);
+      db.unsyncedLeadIds = [...(db.unsyncedLeadIds || []), newLead.id];
     }
   }
 
@@ -860,6 +1019,24 @@ export async function getSettings(): Promise<SystemSettings> {
   return db.settings;
 }
 
+/**
+ * Settings safe to hand to public pages and client components. Everything
+ * rendered by a 'use client' component is serialized into the HTML, so bot
+ * tokens, chat IDs, password hashes and staff routing data must never reach it.
+ */
+export async function getPublicSettings(): Promise<SystemSettings> {
+  const settings = await getSettings();
+  return {
+    ...settings,
+    telegramBotToken: undefined,
+    telegramChatId: undefined,
+    roundRobinSettings: undefined,
+    ownerEmail: undefined,
+    adminEmail: '',
+    adminPasswordHash: '',
+  };
+}
+
 export async function updateSettings(
   partial: Partial<SystemSettings>
 ): Promise<SystemSettings> {
@@ -877,11 +1054,43 @@ export async function updateSettings(
   return updated || db.settings;
 }
 
+const WEBHOOK_MARKER_ID = 'telegram_webhook_secured';
+
+function tokenFingerprint(botToken: string): string {
+  return crypto.createHash('sha256').update(botToken).digest('hex').slice(0, 16);
+}
+
+/**
+ * Whether the bot's webhook was registered with a secret token (via
+ * POST /api/telegram/setup-webhook) for this bot token. Until it is, the
+ * webhook keeps accepting unsigned calls so the live bot doesn't go silent
+ * after an upgrade.
+ */
+export async function isTelegramWebhookSecured(botToken: string): Promise<boolean> {
+  const fingerprint = tokenFingerprint(botToken);
+  const db = await getDatabase();
+  if (db.telegramWebhookSecuredFor === fingerprint) return true;
+  if (isSupabaseConfigured()) {
+    return (await supabaseGetMarker(WEBHOOK_MARKER_ID).catch(() => null)) === fingerprint;
+  }
+  return false;
+}
+
+export async function setTelegramWebhookSecured(botToken: string | null): Promise<void> {
+  const value = botToken ? tokenFingerprint(botToken) : '';
+  const db = await getDatabase();
+  db.telegramWebhookSecuredFor = value || undefined;
+  await saveDatabase(db);
+  if (isSupabaseConfigured()) {
+    await supabaseSetMarker(WEBHOOK_MARKER_ID, value).catch(() => false);
+  }
+}
+
 export interface RecordTrackingPayload {
   slug: string;
   eventType?: TrackingEventType;
   sessionId?: string;
-  eventData?: Record<string, any>;
+  eventData?: Record<string, unknown>;
   referrer?: string;
   utmSource?: string;
   utmMedium?: string;
@@ -976,7 +1185,8 @@ export async function getPageAnalytics(slug: string): Promise<PageAnalyticsSumma
   views.forEach((v) => {
     if (v.sessionId) uniqueSessionSet.add(v.sessionId);
   });
-  const uniqueVisitors = uniqueSessionSet.size > 0 ? uniqueSessionSet.size : Math.max(1, Math.round(totalViews * 0.72));
+  // Real counts only; older views without a session id count as one visitor each.
+  const uniqueVisitors = uniqueSessionSet.size > 0 ? uniqueSessionSet.size : views.length;
   const totalLeads = leads.length;
   const conversionRate = totalViews > 0 ? Number(((totalLeads / totalViews) * 100).toFixed(1)) : 0;
 
@@ -1047,9 +1257,9 @@ export async function getPageAnalytics(slug: string): Promise<PageAnalyticsSumma
     conversionRate,
     funnel: {
       views: totalViews,
-      scrolled50: scrolled50 || Math.round(totalViews * 0.58),
-      clickedCta: ctaClicks || Math.round(totalViews * 0.24),
-      telegramClicks: telegramClicks || Math.round(totalViews * 0.12),
+      scrolled50,
+      clickedCta: ctaClicks,
+      telegramClicks,
       leadsSubmitted: totalLeads,
     },
     topSources: topSources.length > 0 ? topSources : [{ source: 'Direct / Social', count: totalViews, percentage: 100 }],
@@ -1070,7 +1280,6 @@ async function sendTelegramAlert(
   const chatId = chatIdOverride || settings.telegramChatId;
   if (!token || !chatId) return;
 
-  const escapeHtml = (str: string) => (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   const text = `🎉 <b>មានអតិថិជនថ្មីទាក់ទងមក (NEW LEAD INQUIRY)!</b>
 ━━━━━━━━━━━━━━━━━━━━
@@ -1138,7 +1347,7 @@ export async function getRoundRobinSettings(): Promise<RoundRobinSettings> {
 
   const db = await getDatabase();
   if (!db.settings.roundRobinSettings) {
-    db.settings.roundRobinSettings = defaultRoundRobinSettings;
+    db.settings.roundRobinSettings = structuredClone(defaultRoundRobinSettings);
     await saveDatabase(db);
   }
   return db.settings.roundRobinSettings;
@@ -1197,9 +1406,12 @@ export async function recordDirectContactRoute(params: {
 } | null> {
   const db = await getDatabase();
   const page = db.pages.find((p) => p.slug === params.pageSlug);
-  const rrSettings = (page?.isolatedSettings?.useCustomRoundRobin && page.isolatedSettings.customRoundRobin?.enabled)
-    ? page.isolatedSettings.customRoundRobin
-    : (db.settings.roundRobinSettings?.enabled ? db.settings.roundRobinSettings : null);
+  const useCustomRr = Boolean(page?.isolatedSettings?.useCustomRoundRobin && page.isolatedSettings.customRoundRobin?.enabled);
+  const globalRr = useCustomRr ? null : await getRoundRobinSettings();
+  const rrSettings = useCustomRr
+    ? page!.isolatedSettings!.customRoundRobin!
+    : (globalRr?.enabled ? globalRr : null);
+  const systemSettings = await getSettings();
 
   if (!rrSettings || rrSettings.directContactRoutingEnabled === false) {
     return null;
@@ -1220,16 +1432,19 @@ export async function recordDirectContactRoute(params: {
   staff.totalDirectClicks = (staff.totalDirectClicks || 0) + 1;
   staff.lastAssignedAt = now;
   rrSettings.lastAssignedIndex = nextIndex;
+  if (!useCustomRr) {
+    await updateRoundRobinSettings({ staffList: rrSettings.staffList, lastAssignedIndex: nextIndex });
+  }
 
   const pageTitle = page?.title || params.pageSlug;
-  const botToken = db.settings.telegramBotToken;
+  const botToken = systemSettings.telegramBotToken;
 
   // Dispatch alert to assigned staff member via Bot so they know the client is reaching out
   if (botToken && staff.telegramChatId) {
     const staffAlertText = `⚡ <b>មានអតិថិជនថ្មីទាក់ទងមកអ្នកតាម TELEGRAM! (ROUND ROBIN ROUTING)</b>
 ━━━━━━━━━━━━━━━━━━━━
-📌 <b>យុទ្ធនាការ/ទំព័រ៖</b> <b>${pageTitle}</b>
-👤 <b>បុគ្គលិកទទួលបន្ទុក៖</b> <b>${staff.name}</b> (@${cleanUsername})
+📌 <b>យុទ្ធនាការ/ទំព័រ៖</b> <b>${escapeHtml(pageTitle)}</b>
+👤 <b>បុគ្គលិកទទួលបន្ទុក៖</b> <b>${escapeHtml(staff.name)}</b> (@${cleanUsername})
 📊 <b>ចំណែកភាគរយ (Weight)៖</b> ${effectivePercentage}%
 ⏰ <b>ពេលវេលា៖</b> ${new Date().toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' })}
 ━━━━━━━━━━━━━━━━━━━━
@@ -1247,12 +1462,12 @@ export async function recordDirectContactRoute(params: {
   }
 
   // Manager notification
-  const managerChatId = rrSettings.managerChatId || db.settings.telegramChatId;
+  const managerChatId = rrSettings.managerChatId || systemSettings.telegramChatId;
   if (botToken && rrSettings.enableManagerNotification && managerChatId && String(managerChatId) !== String(staff.telegramChatId)) {
     const managerAlert = `🔔 <b>Round Robin: អតិថិជនចុច Telegram (CC សម្រាប់ Manager)</b>
 ━━━━━━━━━━━━━━━━━━━━
-📌 <b>ទំព័រ៖</b> ${pageTitle}
-👤 <b>បុគ្គលិកទទួលបន្ទុក៖</b> <b>${staff.name}</b> (@${cleanUsername})
+📌 <b>ទំព័រ៖</b> ${escapeHtml(pageTitle)}
+👤 <b>បុគ្គលិកទទួលបន្ទុក៖</b> <b>${escapeHtml(staff.name)}</b> (@${cleanUsername})
 📊 <b>ភាគរយ៖</b> ${effectivePercentage}%
 ⏰ <b>ពេលវេលា៖</b> ${new Date().toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' })}`;
 

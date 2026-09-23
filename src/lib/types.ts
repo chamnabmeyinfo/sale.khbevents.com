@@ -515,7 +515,7 @@ export interface TrackingEvent {
   pageSlug: string;
   sessionId: string;
   eventType: TrackingEventType;
-  eventData?: Record<string, any>;
+  eventData?: Record<string, unknown>;
   referrer?: string;
   utmSource?: string;
   utmMedium?: string;
@@ -789,6 +789,12 @@ export interface DatabaseSchema {
   }>;
   trackingEvents?: TrackingEvent[];
   roundRobinLogs?: RoundRobinLog[];
+  // Tombstones (`id:<id>` / `slug:<slug>`) so deleted pages are not re-seeded from the bundled db.json.
+  deletedPages?: string[];
+  // Fingerprint of the bot token whose webhook was registered with a secret token.
+  telegramWebhookSecuredFor?: string;
+  // Leads whose Supabase insert failed; shown in the CRM and retried until they sync.
+  unsyncedLeadIds?: string[];
 }
 
 export interface RoundRobinStaff {

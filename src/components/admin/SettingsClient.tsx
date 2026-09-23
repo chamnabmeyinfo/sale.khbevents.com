@@ -1,24 +1,23 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Settings, 
-  Save, 
-  Bell, 
-  Lock, 
-  Building, 
+import {
+  Settings,
+  Save,
+  Bell,
+  Building,
   CheckCircle2,
   Share2,
   ShieldCheck,
   Crown,
   Key,
-  Smartphone,
   Sun,
   Moon,
   Laptop
 } from 'lucide-react';
 import { SystemSettings } from '@/lib/types';
 import { useTheme } from '@/context/ThemeContext';
+import { errorMessage } from '@/lib/errors';
 
 interface SettingsClientProps {
   initialSettings: SystemSettings;
@@ -50,6 +49,27 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [webhookStatus, setWebhookStatus] = useState<'idle' | 'working' | 'done' | 'error'>('idle');
+  const [webhookMessage, setWebhookMessage] = useState('');
+
+  const handleRegisterWebhook = async () => {
+    setWebhookStatus('working');
+    setWebhookMessage('');
+    try {
+      const res = await fetch('/api/telegram/setup-webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ baseUrl: window.location.origin }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) throw new Error(data.error || 'Registration failed');
+      setWebhookStatus('done');
+      setWebhookMessage(`Connected: ${data.webhookUrl}`);
+    } catch (err) {
+      setWebhookStatus('error');
+      setWebhookMessage(errorMessage(err, 'Registration failed'));
+    }
+  };
 
   // Sync active tab with location hash
   useEffect(() => {
@@ -66,7 +86,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
 
   const handleTabChange = (tab: SettingsTab) => {
     setActiveTab(tab);
-    window.location.hash = tab;
+    window.history.replaceState(null, '', `#${tab}`);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -94,8 +114,8 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
       setFormData((prev) => ({ ...prev, newPassword: '', confirmPassword: '' }));
-    } catch (err: any) {
-      setError(err.message || 'Error saving settings');
+    } catch (err) {
+      setError(errorMessage(err, 'Error saving settings'));
     } finally {
       setSaving(false);
     }
@@ -372,6 +392,25 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                   Your personal ID or team sales group ID.
                 </span>
               </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-200 dark:border-emerald-900/40 space-y-2">
+              <p className="text-xs text-slate-600 dark:text-gray-400">
+                Connect the bot to this website so it can answer visitors. Do this once, and again after changing the bot token (save the new token first).
+              </p>
+              <button
+                type="button"
+                onClick={handleRegisterWebhook}
+                disabled={webhookStatus === 'working'}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-60 transition-colors"
+              >
+                {webhookStatus === 'working' ? 'Registering…' : 'Register / secure bot webhook'}
+              </button>
+              {webhookMessage && (
+                <p className={`text-xs ${webhookStatus === 'error' ? 'text-rose-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                  {webhookMessage}
+                </p>
+              )}
             </div>
           </div>
         )}

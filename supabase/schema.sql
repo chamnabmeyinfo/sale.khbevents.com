@@ -114,42 +114,9 @@ ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE system_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE page_views ENABLE ROW LEVEL SECURITY;
 
--- Allow public read of published landing pages
-CREATE POLICY "Public can view published landing pages" 
-  ON landing_pages FOR SELECT 
-  USING (status = 'published');
-
--- Allow public lead creation (form submissions)
-CREATE POLICY "Public can insert leads" 
-  ON leads FOR INSERT 
-  WITH CHECK (true);
-
--- Allow public page view tracking
-CREATE POLICY "Public can insert page views" 
-  ON page_views FOR INSERT 
-  WITH CHECK (true);
-
--- Allow public to read public system settings
-CREATE POLICY "Public can view company settings" 
-  ON system_settings FOR SELECT 
-  USING (true);
-
--- Allow service_role key full unrestricted access for backend API routes
-CREATE POLICY "Service role full access on landing_pages" 
-  ON landing_pages FOR ALL 
-  USING (true);
-
-CREATE POLICY "Service role full access on leads" 
-  ON leads FOR ALL 
-  USING (true);
-
-CREATE POLICY "Service role full access on system_settings" 
-  ON system_settings FOR ALL 
-  USING (true);
-
-CREATE POLICY "Service role full access on page_views" 
-  ON page_views FOR ALL 
-  USING (true);
+-- No policies: the anon key (shipped to browsers) gets no table access.
+-- The server uses SUPABASE_SERVICE_ROLE_KEY, which bypasses RLS.
+-- See migrations/20260923_lock_down_rls.sql for existing databases.
 
 -- Insert default system settings row if it doesn't exist
 INSERT INTO system_settings (id) 

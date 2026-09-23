@@ -1,35 +1,32 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import Navbar from './Navbar';
 import FloatingContact from './FloatingContact';
 import Footer from './Footer';
 import LeadForm from './LeadForm';
 import { LandingPage, SystemSettings, DEFAULT_SECTION_ORDER } from '@/lib/types';
 import LandingPageTracking from '@/components/common/LandingPageTracking';
-import PagePasswordGate from '@/components/common/PagePasswordGate';
-import { 
-  Calendar, 
-  MapPin, 
-  Clock, 
-  Award, 
-  Sparkles, 
-  ArrowRight, 
-  ChevronDown, 
+import {
+  Calendar,
+  MapPin,
+  Clock,
+  Award,
+  Sparkles,
+  ArrowRight,
+  ChevronDown,
   Star,
   CheckCircle2,
   TrendingDown,
   Users,
   ShieldCheck,
   Zap,
-  Coffee,
   Check,
-  Building2,
   Tag,
   Mic,
   Music,
-  Store,
-  Layers
+  Store
 } from 'lucide-react';
 
 
@@ -155,7 +152,7 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
       return false;
     }
     if (!page.sectionVisibility) return true;
-    return (page.sectionVisibility as any)[sectionKey] !== false;
+    return (page.sectionVisibility as Record<string, boolean | undefined>)[sectionKey] !== false;
   };
 
   const isAnySectionVisible = effectiveSectionOrder.some((key: string) => {
@@ -292,7 +289,7 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
                 <div className="lg:col-span-5">
                   <div className="relative rounded-3xl overflow-hidden border border-slate-200 dark:border-emerald-700/50 shadow-2xl group">
                     <img
-                      src={page.heroImage || '/photos/photo_2026-09-16_22-01-09 (2).jpg'}
+                      src={page.heroImage || '/images/events/photo_2026-09-16_22-01-09 (2).jpg'}
                       alt={page.title}
                       className="w-full h-80 sm:h-96 object-cover group-hover:scale-105 transition-transform duration-700"
                     />
@@ -643,7 +640,7 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
                     <div>
                       <div className="relative rounded-2xl overflow-hidden aspect-square mb-4 bg-slate-200 dark:bg-black/40 border border-slate-200 dark:border-emerald-950">
                         <img
-                          src={speaker.avatar || '/photos/photo_2026-09-16_22-01-09 (2).jpg'}
+                          src={speaker.avatar || '/images/events/photo_2026-09-16_22-01-09 (2).jpg'}
                           alt={speaker.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
@@ -711,7 +708,7 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
                     <div>
                       <div className="relative aspect-[4/3] overflow-hidden">
                         <img
-                          src={artist.image || '/photos/photo_2026-09-16_22-01-09 (6).jpg'}
+                          src={artist.image || '/images/events/photo_2026-09-16_22-01-09 (6).jpg'}
                           alt={artist.name}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
@@ -1254,7 +1251,6 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
   };
 
   return (
-    <PagePasswordGate page={page}>
       <div className="min-h-screen bg-slate-50 dark:bg-[#070D0A] text-slate-900 dark:text-gray-100 flex flex-col selection:bg-amber-400 selection:text-black transition-colors">
         <LandingPageTracking page={page} />
         <Navbar phone={effPhone} whatsapp={effWhatsapp} />
@@ -1277,12 +1273,12 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
                 <p className="text-xs text-slate-500 dark:text-gray-400 mb-5 leading-relaxed">
                   All sections for this campaign have been toggled off in the CMS Section Display Toggles. Enable desired sections in the Admin portal to display content.
                 </p>
-                <a
+                <Link
                   href="/admin/pages"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold shadow-md transition-colors"
                 >
                   Open Admin CMS
-                </a>
+                </Link>
               </div>
             </div>
           </section>
@@ -1302,7 +1298,6 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
         address={settings.address}
       />
     </div>
-    </PagePasswordGate>
   );
 }
 

@@ -27,8 +27,10 @@ import {
 
 interface IsolatedSettingsEditorProps {
   formData: Partial<LandingPage>;
-  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  setFormData: React.Dispatch<React.SetStateAction<Partial<LandingPage>>>;
 }
+
+type PaymentMethod = NonNullable<IsolatedPageSettings['acceptedPaymentMethods']>[number];
 
 const PRESET_ACCENTS = [
   { name: 'Emerald (Default)', value: '#10B981' },
@@ -44,8 +46,8 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
   const [newTagInput, setNewTagInput] = useState('');
   const [activeSection, setActiveSection] = useState<'comms' | 'routing' | 'postsubmit' | 'branding' | 'access' | 'payment'>('comms');
 
-  const updateSetting = (key: keyof IsolatedPageSettings, value: any) => {
-    setFormData((prev: any) => ({
+  const updateSetting = <K extends keyof IsolatedPageSettings>(key: K, value: IsolatedPageSettings[K]) => {
+    setFormData((prev) => ({
       ...prev,
       isolatedSettings: {
         ...(prev.isolatedSettings || {}),
@@ -119,7 +121,7 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
             <button
               key={item.id}
               type="button"
-              onClick={() => setActiveSection(item.id as any)}
+              onClick={() => setActiveSection(item.id as typeof activeSection)}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 isActive
                   ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
@@ -238,7 +240,7 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                   type="text"
                   value={settings.coordinatorAvatar || ''}
                   onChange={e => updateSetting('coordinatorAvatar', e.target.value)}
-                  placeholder="/photos/photo_2026-09-16_22-01-09 (2).jpg"
+                  placeholder="/images/events/photo_2026-09-16_22-01-09 (2).jpg"
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs"
                 />
               </div>
@@ -288,7 +290,7 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
                 <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-1 block">
-                  Send leads directly to your campaign's dedicated Telegram group. (Leave empty to use global setting).
+                  Send leads directly to your campaign&apos;s dedicated Telegram group. (Leave empty to use global setting).
                 </span>
               </div>
 
@@ -710,7 +712,7 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
               </div>
               <select
                 value={settings.searchEngineIndexing === false || settings.searchEngineIndexing === 'noindex' ? 'noindex' : 'index'}
-                onChange={e => updateSetting('searchEngineIndexing', e.target.value as any)}
+                onChange={e => updateSetting('searchEngineIndexing', e.target.value as IsolatedPageSettings['searchEngineIndexing'])}
                 className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs font-bold"
               >
                 <option value="index">Indexable (Public SEO)</option>
@@ -747,11 +749,11 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                 { id: 'cash', label: 'Cash on Arrival / Office', icon: Check }
               ].map(method => {
                 const Icon = method.icon;
-                const isChecked = (settings.acceptedPaymentMethods || ['khqr', 'bank_transfer']).includes(method.id as any);
+                const isChecked = (settings.acceptedPaymentMethods || ['khqr', 'bank_transfer']).includes(method.id as PaymentMethod);
                 return (
                   <div
                     key={method.id}
-                    onClick={() => togglePaymentMethod(method.id as any)}
+                    onClick={() => togglePaymentMethod(method.id as PaymentMethod)}
                     className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all ${
                       isChecked
                         ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200'
@@ -776,7 +778,7 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                 type="text"
                 value={settings.khqrImageUrl || ''}
                 onChange={e => updateSetting('khqrImageUrl', e.target.value)}
-                placeholder="/photos/khqr-delegation.png"
+                placeholder="/images/events/khqr-delegation.png"
                 className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs font-mono"
               />
               {settings.khqrImageUrl && (

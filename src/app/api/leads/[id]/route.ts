@@ -3,6 +3,8 @@ import { getLeadById, updateLeadStatus, addLeadNote, deleteLead } from '@/lib/st
 import { isAuthenticated } from '@/lib/auth';
 import { LeadStatus } from '@/lib/types';
 
+const LEAD_STATUSES: LeadStatus[] = ['NEW', 'CONTACTED', 'PROPOSAL_SENT', 'NEGOTIATING', 'WON', 'LOST'];
+
 interface RouteContext {
   params: Promise<{ id: string }>;
 }
@@ -23,7 +25,11 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   if (!authed) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await context.params;
-  const body = await req.json();
+  const body = await req.json().catch(() => ({}));
+
+  if (body.status && !LEAD_STATUSES.includes(body.status)) {
+    return NextResponse.json({ error: `Invalid status "${body.status}"` }, { status: 400 });
+  }
 
   let updatedLead = null;
 

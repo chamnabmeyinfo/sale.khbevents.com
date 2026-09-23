@@ -4,6 +4,8 @@ import {
   RoutingDeliveryStatus, 
   Lead 
 } from './types';
+import { errorMessage } from '@/lib/errors';
+import { toWhatsAppNumber } from './phone';
 
 export const defaultStaffList: RoundRobinStaff[] = [
   {
@@ -245,7 +247,28 @@ export function selectNextStaff(
   };
 }
 
-function escapeHtml(str: string): string {
+/**
+ * Parses a Telegram Bot API response. A proxy error page or outage returns
+ * HTML instead of JSON; report that plainly rather than as a JSON parse error.
+ */
+export interface TelegramApiResponse {
+  ok: boolean;
+  description?: string;
+  error_code?: number;
+  result?: { message_id?: number; url?: string; [key: string]: unknown };
+}
+
+export async function readTelegramResponse(res: Response): Promise<TelegramApiResponse> {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { ok: false, error_code: res.status, description: `Could not reach the Telegram API (HTTP ${res.status}). Check the server's internet access and try again.` };
+  }
+}
+
+/** Escapes text for Telegram messages sent with parse_mode 'HTML'. */
+export function escapeHtml(str: string): string {
   if (!str) return '';
   return String(str)
     .replace(/&/g, '&amp;')
@@ -269,7 +292,7 @@ export function renderLeadTemplate(
   const cleanUsername = (staff.telegramUsername || '').replace(/^@/, '');
   const staffTag = cleanUsername ? `@${cleanUsername}` : staff.name;
   const leadUrl = options?.leadUrl || `https://sale.khbevents.com/admin/leads?id=${lead.id}`;
-  const whatsappUrl = options?.whatsappUrl || `https://wa.me/${(lead.phone || '').replace(/[^0-9]/g, '')}`;
+  const whatsappUrl = options?.whatsappUrl || `https://wa.me/${toWhatsAppNumber(lead.phone)}`;
   const timeFormatted = new Date(lead.createdAt || Date.now()).toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' });
 
   return tpl
@@ -354,7 +377,7 @@ export async function sendLeadToStaffTelegram(
     lead,
     staff
   );
-  const whatsappUrl = `https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(whatsappGreeting)}`;
+  const whatsappUrl = `https://wa.me/${toWhatsAppNumber(lead.phone)}?text=${encodeURIComponent(whatsappGreeting)}`;
 
   const staffTemplate = getTemplateForStaff(staff, options?.customTemplate);
   const text = renderLeadTemplate(
@@ -378,7 +401,7 @@ export async function sendLeadToStaffTelegram(
       })
     });
 
-    const data = await res.json();
+    const data = await readTelegramResponse(res);
 
     if (res.ok && data.ok) {
       // Send CC to Manager if enabled
@@ -439,7 +462,7 @@ Lead <b>#${escapeHtml(lead.id)}</b> ពីទំព័រ <b>${escapeHtml(lead.l
             parse_mode: 'HTML'
           })
         });
-        const fallbackData = await fallbackRes.json();
+        const fallbackData = await readTelegramResponse(fallbackRes);
         fallbackSent = Boolean(fallbackRes.ok && fallbackData.ok);
       } catch (fallbackErr) {
         console.error('Fallback dispatch error:', fallbackErr);
@@ -451,11 +474,11 @@ Lead <b>#${escapeHtml(lead.id)}</b> ពីទំព័រ <b>${escapeHtml(lead.l
       error: errorDesc,
       fallbackSent
     };
-  } catch (err: any) {
+  } catch (err) {
     console.error('Round Robin Telegram dispatch error:', err);
     return {
       status: 'FAILED',
-      error: err?.message || 'Network error connecting to Telegram'
+      error: errorMessage(err, 'Network error connecting to Telegram')
     };
   }
 }
@@ -555,7 +578,7 @@ export async function testStaffTelegramConnection(
       })
     });
 
-    const data = await res.json();
+    const data = await readTelegramResponse(res);
 
     if (res.ok && data.ok) {
       return {
@@ -580,10 +603,10 @@ export async function testStaffTelegramConnection(
       error: desc,
       diagnostic
     };
-  } catch (err: any) {
+  } catch (err) {
     return {
       success: false,
-      error: err?.message || 'Network failure reaching api.telegram.org',
+      error: errorMessage(err, 'Network failure reaching api.telegram.org'),
       diagnostic: 'Network error or timeout reaching Telegram servers.'
     };
   }

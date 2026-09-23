@@ -1,7 +1,9 @@
 import SmartCityAppView from '@/components/landing/SmartCityAppView';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import { getPageBySlug, getSettings } from '@/lib/storage';
+import { getPublicSettings } from '@/lib/storage';
+import { loadPublicPage } from '@/lib/page-access';
+import PageLockScreen from '@/components/common/PageLockScreen';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,8 +31,11 @@ export default async function SlugAppPage({ params, searchParams }: PageProps) {
   }
   const sp = searchParams ? await searchParams : {};
   const initialLang: 'en' | 'kh' = sp.lang === 'kh' ? 'kh' : 'en';
-  const page = await getPageBySlug(cleanSlug);
-  const settings = await getSettings();
+  const result = await loadPublicPage(cleanSlug);
+  if (result.kind === 'not_found') notFound();
+  if (result.kind === 'locked') return <PageLockScreen page={result.stub} />;
+  const page = result.page;
+  const settings = await getPublicSettings();
 
   return <SmartCityAppView page={page || undefined} settings={settings} initialLang={initialLang} />;
 }
