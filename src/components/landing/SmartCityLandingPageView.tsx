@@ -11,6 +11,18 @@ import { currentSeatPrice } from '@/lib/seat-price';
 
 import { CONTENT, GENERAL, type PageFacts, type SalePhase } from './smart-city-content';
 
+/** Days, hours, minutes and seconds left in `diffMs`, zero-padded for display. */
+function countdownParts(diffMs: number) {
+  const diff = Math.max(0, diffMs);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return {
+    d: pad(Math.floor(diff / 86400000)),
+    h: pad(Math.floor((diff % 86400000) / 3600000)),
+    m: pad(Math.floor((diff % 3600000) / 60000)),
+    s: pad(Math.floor((diff % 60000) / 1000)),
+  };
+}
+
 /** Which stage of the sale a moment falls in, from the page deadlines. */
 function salePhaseAt(now: number, earlyBird: string, registration: string, departure: string, hasDiscount: boolean): SalePhase {
   // An early-bird window only exists when the early-bird price is actually lower.
@@ -166,113 +178,6 @@ const GALLERY_ITEMS = [
   { src: '/images/events/photo_2026-09-16_22-01-09 (8).jpg', alt: 'One Pillar Pagoda Hanoi', badge: 'One Pillar Pagoda' },
 ];
 
-const DEFAULT_SPEAKERS = [
-  {
-    id: 'speaker-1',
-    name: 'Dr. Nguyen Van Tuan',
-    title: 'Senior Vice President',
-    organization: 'Vietnam Coffee & Cocoa Association (VICOFA)',
-    topic: 'Supply Chain Optimization & Direct Roastery Sourcing for ASEAN Buyers',
-    track: 'F&B Trade Trends',
-    avatar: '/images/events/photo_2026-09-16_22-01-09 (2).jpg',
-    sessionTime: 'Day 2 • 10:30 AM'
-  },
-  {
-    id: 'speaker-2',
-    name: 'Ms. Le Thi Mai',
-    title: 'Smart City Urban Integration Director',
-    organization: 'Vietnam IoT & Retail Tech Consortium',
-    topic: 'AI Surveillance, Automated POS & Next-Gen Smart City Infrastructure',
-    track: 'Smart Retail Tech',
-    avatar: '/images/events/photo_2026-09-16_22-01-09 (6).jpg',
-    sessionTime: 'Day 2 • 02:00 PM'
-  },
-  {
-    id: 'speaker-3',
-    name: 'Oknha Bunleng Heng',
-    title: 'Chairman',
-    organization: 'Cambodia-Vietnam Bilateral Chamber of Commerce',
-    topic: 'Cross-Border Customs Clearance, Tariffs & Import Logistics 2026',
-    track: 'Trade Policy',
-    avatar: '/images/events/photo_2026-09-16_22-01-09 (5).jpg',
-    sessionTime: 'Day 3 • 09:30 AM'
-  }
-];
-
-const DEFAULT_ARTISTS = [
-  {
-    id: 'artist-1',
-    name: 'Hanoi Heritage Instrumentalists',
-    role: 'Traditional Vietnamese Acoustic Ensemble',
-    genre: 'Traditional & Fusion Folk',
-    stageName: 'Welcome Banquet Gala',
-    stageTime: 'Day 1 • 07:30 PM',
-    image: '/images/events/photo_2026-09-16_22-01-09 (4).jpg',
-    bio: 'Renowned folk masters performing authentic Vietnamese strings and percussion during the welcome delegation dinner.'
-  },
-  {
-    id: 'artist-2',
-    name: 'Halong Sunset Acoustic Duo',
-    role: 'Live Acoustic Performance',
-    genre: 'Smooth Jazz & Acoustic Pop',
-    stageName: 'UNESCO Halong Cruise Deck',
-    stageTime: 'Day 4 • 12:30 PM',
-    image: '/images/events/photo_2026-09-16_22-01-09 (11).jpg',
-    bio: 'Soulful acoustic melodies accompanying VIP delegates along the breathtaking karst seascape of Halong Bay.'
-  }
-];
-
-const DEFAULT_EXPO_BOOTHS = [
-  {
-    id: 'booth-1',
-    name: 'Standard B2B Shell Scheme',
-    size: '9m² (3m x 3m)',
-    price: '$1,200',
-    availableCount: 4,
-    totalCount: 10,
-    popular: false,
-    inclusions: [
-      'Standard fascia board with company name & booth number',
-      '1 info counter & 2 folding chairs',
-      '2 fluorescent spotlights & 5A power plug',
-      'Official Trade Expo exhibitor badges (2x)',
-      'Listing in Official Trade Directory'
-    ]
-  },
-  {
-    id: 'booth-2',
-    name: 'Premium Corner Booth',
-    size: '18m² (6m x 3m)',
-    price: '$2,200',
-    availableCount: 2,
-    totalCount: 5,
-    popular: true,
-    inclusions: [
-      'Dual frontage corner position (High foot traffic)',
-      'Upgraded display counters & lockable storage',
-      '4 spotlight fixtures & dedicated 10A power',
-      'VIP Buyer business matching sessions (5x)',
-      'Half-page feature in delegation catalogue'
-    ]
-  },
-  {
-    id: 'booth-3',
-    name: 'Raw Space Island Pavilion',
-    size: '36m² (6m x 6m)',
-    price: '$3,800',
-    availableCount: 1,
-    totalCount: 2,
-    popular: false,
-    inclusions: [
-      'Four-side open island pavilion positioning',
-      'Full custom build & staging freedom',
-      '3-phase 30A industrial power connectivity',
-      'Dedicated bilateral matchmaking meeting lounge',
-      'Full-page feature in delegation catalogue & stage recognition'
-    ]
-  }
-];
-
 // SVG icons map
 const ICONS: Record<string, React.ReactNode> = {
   chart: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
@@ -329,12 +234,13 @@ const SMART_CITY_DEFAULT_ORDER = [
 export default function SmartCityLandingPageView({ page, settings, initialLang }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh' } = {}) {
   const [lang, setLang] = useState<'en' | 'kh'>(initialLang || 'en');
   const [heroSlide, setHeroSlide] = useState(0);
+  // Slides get their image only once they are about to show, so the page does not download six photos up front.
+  const [preloadedSlides, setPreloadedSlides] = useState(2);
   const [activeItinTab, setActiveItinTab] = useState(0);
   const [activeMatchProfile, setActiveMatchProfile] = useState<'cafe' | 'tech' | 'distributor'>('cafe');
   const [selectedSeat, setSelectedSeat] = useState(20);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [countdown, setCountdown] = useState({ d: '00', h: '00', m: '00', s: '00' });
   const [regName, setRegName] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regProfile, setRegProfile] = useState('Cafe & Tea Business');
@@ -354,6 +260,15 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
   const [phase, setPhase] = useState<SalePhase>(() => salePhaseAt(Date.now(), effEarlyBirdDeadline, effRegistrationDeadline, effDepartureDate, hasDiscount));
   const isEarlyBird = phase === 'early';
   const currentPrice = currentSeatPrice(page?.packages, isEarlyBird, effEarlyBirdPrice, effRegularPrice);
+  const countdownTargetFor = (p: SalePhase) => ({
+    early: new Date(effEarlyBirdDeadline).getTime(),
+    standard: new Date(effRegistrationDeadline).getTime(),
+    final: new Date(effDepartureDate).getTime(),
+    departed: 0,
+  })[p];
+  // Starts with the real remaining time (no "00d 00h" flash); the seconds differ between server
+  // and client by design, so the spans that render them carry suppressHydrationWarning.
+  const [countdown, setCountdown] = useState(() => countdownParts(countdownTargetFor(phase) - Date.now()));
   const effPhone = page?.isolatedSettings?.phone || settings?.phone || GENERAL.contactPhone;
   const effTgUsername = page?.isolatedSettings?.telegramUsername || settings?.telegramUsername || GENERAL.contactTelegramUsername;
   const effTgUrl = `/api/round-robin?page=${encodeURIComponent(page?.slug || 'smart-city-tea-cafe')}&redirect=true`;
@@ -418,19 +333,20 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
   // Effective Booths, Speakers, Artists (fallback to rich defaults if not configured)
   // Older Supabase rows stored extra page fields under formConfig._extra.
   const formExtraBooths = (page?.formConfig as { _extra?: { expoBooths?: LandingPage['expoBooths'] } } | undefined)?._extra?.expoBooths;
-  const effectiveBooths = (page?.expoBooths && page.expoBooths.length > 0)
+  const effectiveBooths: NonNullable<LandingPage['expoBooths']> = (page?.expoBooths && page.expoBooths.length > 0)
     ? page.expoBooths
     : (Array.isArray(formExtraBooths) && formExtraBooths.length > 0)
     ? formExtraBooths
-    : DEFAULT_EXPO_BOOTHS;
+    : [];
 
-  const effectiveSpeakers = (page?.speakers && page.speakers.length > 0)
-    ? page.speakers
-    : DEFAULT_SPEAKERS;
+  const effectiveSpeakers: NonNullable<LandingPage['speakers']> = (page?.speakers && page.speakers.length > 0) ? page.speakers : [];
 
-  const effectiveArtists = (page?.artists && page.artists.length > 0)
-    ? page.artists
-    : DEFAULT_ARTISTS;
+  const effectiveArtists: NonNullable<LandingPage['artists']> = (page?.artists && page.artists.length > 0) ? page.artists : [];
+
+  // These sections have no defaults: they show only when the CMS holds real entries.
+  const showSpeakers = isVisible('speakers') && effectiveSpeakers.length > 0;
+  const showArtists = isVisible('artists') && effectiveArtists.length > 0;
+  const showBooths = isVisible('expoBooths') && effectiveBooths.length > 0;
 
   // Merge dynamic page data into active language content
   const baseContent = CONTENT[lang];
@@ -471,6 +387,11 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
     pillDate: baseContent.pillDate(facts.departureDate, page?.eventTime || baseContent.pillDuration),
     pillDest: isKh ? (khTrans?.venue || baseContent.pillDest) : (page?.venue || baseContent.pillDest),
     pillSeats: baseContent.pillSeats(facts),
+    heroProof: baseContent.heroProof(facts),
+    urgencyShort: baseContent.urgencyShort(facts),
+    statusSeats: baseContent.statusSeats(facts),
+    statusLeft: baseContent.statusLeft(facts),
+    statusDeparts: baseContent.statusDeparts(facts),
     navCta: baseContent.navCta(facts),
     navCtaMobile: baseContent.navCtaMobile(facts),
     coreValues: isKh
@@ -538,6 +459,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
   useEffect(() => {
     const timer = setInterval(() => {
       setHeroSlide(s => (s + 1) % (heroSlides.length || 1));
+      setPreloadedSlides(n => Math.min(heroSlides.length, n + 1));
     }, 5500);
     return () => clearInterval(timer);
   }, [heroSlides.length]);
@@ -554,22 +476,30 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
       const now = Date.now();
       const current = salePhaseAt(now, effEarlyBirdDeadline, effRegistrationDeadline, effDepartureDate, hasDiscount);
       setPhase(current);
-      const diff = Math.max(0, targets[current] - now);
-      const d = Math.floor(diff / 86400000);
-      const h = Math.floor((diff % 86400000) / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
-      setCountdown({
-        d: String(d).padStart(2, '0'),
-        h: String(h).padStart(2, '0'),
-        m: String(m).padStart(2, '0'),
-        s: String(s).padStart(2, '0'),
-      });
+      setCountdown(countdownParts(targets[current] - now));
     }
     tick();
     const iv = setInterval(tick, 1000);
     return () => clearInterval(iv);
   }, [effEarlyBirdDeadline, effRegistrationDeadline, effDepartureDate, hasDiscount]);
+
+  // ── Reveal-on-scroll. Sections already on screen are marked first, so nothing flashes,
+  //    and the `js-reveal` class is only added once JS runs, so without JS everything stays visible.
+  useEffect(() => {
+    const root = document.querySelector('.smart-city-landing');
+    if (!root || typeof IntersectionObserver === 'undefined') return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const sections = Array.from(root.querySelectorAll('section'));
+    sections.forEach(sec => { if (sec.getBoundingClientRect().top < window.innerHeight) sec.classList.add('in-view'); });
+    root.classList.add('js-reveal');
+    const io = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) { entry.target.classList.add('in-view'); io.unobserve(entry.target); }
+      }
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+    sections.forEach(sec => { if (!sec.classList.contains('in-view')) io.observe(sec); });
+    return () => { io.disconnect(); root.classList.remove('js-reveal'); };
+  }, []);
 
   // ── Language toggle with persistence
   const switchLang = (l: 'en' | 'kh') => {
@@ -673,34 +603,94 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
         <section className="hero-section" id="overview">
           <div className="hero-slider">
             {heroSlides.map((src, i) => (
-              <div key={i} className={`hero-slide${heroSlide === i ? ' active' : ''}`} style={{ backgroundImage: `url('${src}')` }} />
+              <div key={i} className={`hero-slide${heroSlide === i ? ' active' : ''}`} style={i < preloadedSlides ? { backgroundImage: `url('${src}')` } : undefined} />
             ))}
           </div>
           <div className="hero-overlay" />
           <div className="hero-slider-dots">
             {heroSlides.map((_, i) => (
-              <span key={i} className={`hero-dot${heroSlide === i ? ' active' : ''}`} onClick={() => setHeroSlide(i)} />
+              <span key={i} className={`hero-dot${heroSlide === i ? ' active' : ''}`} onClick={() => { setHeroSlide(i); setPreloadedSlides(n => Math.max(n, i + 1)); }} />
             ))}
           </div>
           <div className="container hero-content">
-            <div className="hero-badge">
-              <span className="badge-dot" />
-              <span>{c.badge}</span>
-            </div>
-            <h1 className="hero-title">{c.heroTitle}</h1>
-            {c.heroHeadlineHighlight && <p className="hero-headline-sub">{c.heroHeadlineHighlight}</p>}
-            <p className="hero-subtitle">{c.heroSubtitle}</p>
+            <div className="hero-grid">
+              <div className="hero-copy">
+                <div className="hero-badge">
+                  <span className="badge-dot" />
+                  <span>{c.badge}</span>
+                </div>
+                <h1 className="hero-title">{c.heroTitle}</h1>
+                {c.heroHeadlineHighlight && <p className="hero-headline-sub">{c.heroHeadlineHighlight}</p>}
+                <p className="hero-subtitle">{c.heroSubtitle}</p>
 
-            <div className="hero-cta-group">
-              <a href={page?.heroCtaLink || "#core-value"} className="btn-primary-hero">
-                {ICONS.plus}
-                <span>{c.heroCtaDiscover}</span>
-              </a>
-            </div>
-            <a href={(page?.heroCtaLink || '#core-value') === '#register' ? '#core-value' : '#register'} className="hero-skip-link">{c.heroSkipLink}</a>
-            <div className="hero-risk-note">
-              {ICONS.check}
-              <span>{c.heroRiskNote}</span>
+                <div className="hero-cta-group">
+                  <a
+                    href={page?.heroCtaLink || '#register'}
+                    className="btn-primary-hero"
+                    onClick={() => trackLandingEvent(page, 'cta_click', { placement: 'hero' }, lang)}
+                  >
+                    {ICONS.plus}
+                    <span>{c.heroCtaDiscover}</span>
+                  </a>
+                  <a
+                    href={(page?.heroCtaLink || '#register') === '#register' ? '#core-value' : '#register'}
+                    className="btn-secondary-hero"
+                  >
+                    {c.heroSecondaryCta}
+                  </a>
+                </div>
+                <div className="hero-risk-note">
+                  {ICONS.check}
+                  <span>{c.heroRiskNote}</span>
+                </div>
+                {localClaimed > 0 && (
+                  <div className="hero-proof-row">
+                    <div className="avatar-stack" aria-hidden="true">
+                      {c.proofStripIcons.map((icon, i) => (
+                        <div key={i} className="avatar-chip" style={{ zIndex: 5 - i }}>{icon}</div>
+                      ))}
+                    </div>
+                    <span>{c.heroProof}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Live reservation status: real seat count, real countdown, one price, one action. */}
+              <aside className="hero-status-card" aria-label={c.statusTitle}>
+                <div className="status-head">
+                  <span className="status-title">{c.statusTitle}</span>
+                  <span className="status-live"><span className="pulse-dot" aria-hidden="true" />{c.statusLeft}</span>
+                </div>
+                <div
+                  className="seat-progress"
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={effTotalSeats}
+                  aria-valuenow={localClaimed}
+                  aria-label={c.statusSeats}
+                >
+                  <div className="seat-progress-fill" style={{ width: `${Math.min(100, Math.round((localClaimed / Math.max(1, effTotalSeats)) * 100))}%` }} />
+                </div>
+                <div className="status-seats">{c.statusSeats}</div>
+                <div className="status-meta">
+                  <div>
+                    <span className="status-meta-label">{phase === 'final' ? c.statusDeparts : c.countdownTitle}</span>
+                    <span className="status-meta-value" suppressHydrationWarning>{countdown.d}d {countdown.h}h {countdown.m}m</span>
+                  </div>
+                  <div>
+                    <span className="status-meta-label">{c.statusPriceLabel}</span>
+                    <span className="status-meta-value status-price">${currentPrice}</span>
+                  </div>
+                </div>
+                <a
+                  href="#register"
+                  className="btn-status-cta"
+                  onClick={() => trackLandingEvent(page, 'cta_click', { placement: 'hero_status' }, lang)}
+                >
+                  {c.statusCta}
+                </a>
+                <div className="status-note">{c.statusNote}</div>
+              </aside>
             </div>
 
             <div className="hero-pills-grid">
@@ -708,7 +698,6 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
               <div className="hero-pill"><span className="hero-pill-icon">📍</span><span>{c.pillDest}</span></div>
               <div className="hero-pill"><span className="hero-pill-icon">🏢</span><span>{c.pillExpos}</span></div>
               <div className="hero-pill"><span className="hero-pill-icon">🚢</span><span>{c.pillCruise}</span></div>
-              <div className="hero-pill highlight-pill"><span className="hero-pill-icon">👥</span><span>{c.pillSeats}</span></div>
             </div>
           </div>
         </section>
@@ -980,7 +969,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
 
       case 'speakers':
         // SPEAKERS
-        if (!isVisible('speakers')) return null;
+        if (!showSpeakers) return null;
         return (
         <section className="section-padding speakers-section" id="speakers" style={{ background: '#0B132B' }}>
           <div className="container">
@@ -1076,7 +1065,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
 
       case 'artists':
         // ARTISTS
-        if (!isVisible('artists')) return null;
+        if (!showArtists) return null;
         return (
         <section className="section-padding artists-section" id="artists" style={{ background: '#070D1E' }}>
           <div className="container">
@@ -1322,7 +1311,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
 
       case 'expoBooths':
         // EXPOBOOTHS
-        if (!isVisible('expoBooths')) return null;
+        if (!showBooths) return null;
         return (
         <section className="section-padding booths-section" id="expo-booths" style={{ background: '#0B132B' }}>
           <div className="container">
@@ -1388,7 +1377,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                     <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginLeft: '6px' }}>/ full expo duration</span>
                   </div>
                   <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
-                    {('features' in booth ? booth.features : booth.inclusions)?.map((inc: string, iIdx: number) => (
+                    {booth.features?.map((inc: string, iIdx: number) => (
                       <li key={iIdx} style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.8)', display: 'flex', alignItems: 'flex-start', gap: '8px', lineHeight: 1.5 }}>
                         <span style={{ color: '#10B981', fontWeight: 700 }}>✓</span>
                         <span>{inc}</span>
@@ -1516,13 +1505,13 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                 <div className="countdown-text-sub">{c.countdownSub}</div>
               </div>
               <div className="countdown-timer-units">
-                <div className="time-unit-box"><div className="time-value">{countdown.d}</div><div className="time-label">{c.countdownUnits.d}</div></div>
+                <div className="time-unit-box"><div className="time-value" suppressHydrationWarning>{countdown.d}</div><div className="time-label">{c.countdownUnits.d}</div></div>
                 <span className="time-colon">:</span>
-                <div className="time-unit-box"><div className="time-value">{countdown.h}</div><div className="time-label">{c.countdownUnits.h}</div></div>
+                <div className="time-unit-box"><div className="time-value" suppressHydrationWarning>{countdown.h}</div><div className="time-label">{c.countdownUnits.h}</div></div>
                 <span className="time-colon">:</span>
-                <div className="time-unit-box"><div className="time-value">{countdown.m}</div><div className="time-label">{c.countdownUnits.m}</div></div>
+                <div className="time-unit-box"><div className="time-value" suppressHydrationWarning>{countdown.m}</div><div className="time-label">{c.countdownUnits.m}</div></div>
                 <span className="time-colon">:</span>
-                <div className="time-unit-box"><div className="time-value">{countdown.s}</div><div className="time-label">{c.countdownUnits.s}</div></div>
+                <div className="time-unit-box"><div className="time-value" suppressHydrationWarning>{countdown.s}</div><div className="time-label">{c.countdownUnits.s}</div></div>
               </div>
             </div>
           </div>
@@ -1627,6 +1616,31 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                     <div className="pass-security-seal"><span>✓ KHB VERIFIED</span></div>
                   </div>
                 </div>
+                {page?.isolatedSettings?.coordinatorName && (
+                  <div className="coordinator-card">
+                    <div className="coordinator-avatar" aria-hidden="true">
+                      {page.isolatedSettings.coordinatorName.split(' ').map(w => w[0]).slice(0, 2).join('')}
+                    </div>
+                    <div className="coordinator-info">
+                      <div className="coordinator-label">{c.coordinatorLabel}</div>
+                      <div className="coordinator-name">{page.isolatedSettings.coordinatorName}</div>
+                      {page.isolatedSettings.coordinatorRole && <div className="coordinator-role">{page.isolatedSettings.coordinatorRole}</div>}
+                      <div className="coordinator-note">{c.coordinatorNote}</div>
+                    </div>
+                    <div className="coordinator-actions">
+                      <a href={`tel:${effPhone.replace(/\s/g, '')}`} className="coordinator-btn">📞 {c.coordinatorCall}</a>
+                      <a
+                        href={tgUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="coordinator-btn coordinator-btn-tg"
+                        onClick={() => trackLandingEvent(page, 'telegram_click', { placement: 'coordinator_card' }, lang)}
+                      >
+                        {TG_ICON(16)}<span>{c.coordinatorChat}</span>
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Form */}
@@ -1770,11 +1784,11 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
         <div className="urgency-bar">
           <div className="container urgency-inner">
             <span className="urgency-fire">🔥</span>
-            <span className="urgency-msg">{c.earlyBirdNotice}</span>
+            <span className="urgency-msg urgency-msg-full">{c.earlyBirdNotice}</span>
+            <span className="urgency-msg urgency-msg-short">{c.urgencyShort}</span>
             <span className="urgency-countdown" aria-hidden="true">
-              <b>{countdown.d}</b>d&nbsp;<b>{countdown.h}</b>h&nbsp;<b>{countdown.m}</b>m&nbsp;<b>{countdown.s}</b>s
+              <b suppressHydrationWarning>{countdown.d}</b>d&nbsp;<b suppressHydrationWarning>{countdown.h}</b>h&nbsp;<b suppressHydrationWarning>{countdown.m}</b>m&nbsp;<b suppressHydrationWarning>{countdown.s}</b>s
             </span>
-            <a href="#register" className="urgency-cta">{c.navCta}</a>
           </div>
         </div>
       )}
@@ -1790,12 +1804,8 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
           <ul className="nav-links">
             {isVisible('problems') && <li><a href="#problem" className="nav-link">{c.navWhy}</a></li>}
             {isVisible('valueStack') && <li><a href="#value" className="nav-link">{c.navPackage}</a></li>}
-            {isVisible('speakers') && <li><a href="#speakers" className="nav-link">{lang === 'kh' ? 'វាគ្មិន' : 'Speakers'}</a></li>}
-            {isVisible('artists') && <li><a href="#artists" className="nav-link">{lang === 'kh' ? 'សិល្បករ' : 'Artists'}</a></li>}
             {isVisible('itinerary') && <li><a href="#itinerary" className="nav-link">{c.navItinerary}</a></li>}
-            {isVisible('gallery') && <li><a href="#gallery" className="nav-link">{lang === 'kh' ? 'កម្រងរូបភាព' : 'Gallery'}</a></li>}
             {isVisible('urgency') && <li><a href="#seats" className="nav-link">{c.navSeats}</a></li>}
-            {isVisible('expoBooths') && <li><a href="#expo-booths" className="nav-link">{lang === 'kh' ? 'ស្តង់ពិព័រណ៍' : 'Booths'}</a></li>}
             {isVisible('packages') && <li><a href="#pricing" className="nav-link">{c.navPricing}</a></li>}
             {isVisible('faqs') && <li><a href="#faq" className="nav-link">{c.navFaq}</a></li>}
           </ul>
@@ -1868,15 +1878,14 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
         <ul className="mobile-drawer-links">
           {isVisible('problems') && <li><a href="#problem" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navWhy}</a></li>}
           {isVisible('valueStack') && <li><a href="#value" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navPackage}</a></li>}
-          {isVisible('speakers') && <li><a href="#speakers" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'វាគ្មិនកិត្តិយស' : 'Speakers'}</a></li>}
-          {isVisible('artists') && <li><a href="#artists" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'សិល្បករ' : 'Artists'}</a></li>}
+          {showSpeakers && <li><a href="#speakers" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'វាគ្មិនកិត្តិយស' : 'Speakers'}</a></li>}
+          {showArtists && <li><a href="#artists" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'សិល្បករ' : 'Artists'}</a></li>}
           {isVisible('itinerary') && <li><a href="#itinerary" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navItinerary}</a></li>}
           {isVisible('gallery') && <li><a href="#gallery" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'កម្រងរូបភាព' : 'Gallery'}</a></li>}
           {isVisible('urgency') && <li><a href="#seats" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navSeats}</a></li>}
-          {isVisible('expoBooths') && <li><a href="#expo-booths" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'ស្តង់ពិព័រណ៍' : 'Booths'}</a></li>}
+          {showBooths && <li><a href="#expo-booths" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{lang === 'kh' ? 'ស្តង់ពិព័រណ៍' : 'Booths'}</a></li>}
           {isVisible('packages') && <li><a href="#pricing" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navPricing}</a></li>}
           {isVisible('faqs') && <li><a href="#faq" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>{c.navFaq}</a></li>}
-          <li><Link href="/smart-city-tea-cafe/optin" className="mobile-drawer-link" onClick={() => setDrawerOpen(false)}>⚡ Fast 30s Opt-in</Link></li>
           {(isVisible('form') || isVisible('packages')) && <li><a href="#register" className="mobile-drawer-link highlight" onClick={() => setDrawerOpen(false)}>{c.navCtaMobile}</a></li>}
         </ul>
         <div className="mobile-drawer-footer">
@@ -1971,9 +1980,6 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             {isVisible('urgency') && <li><a href="#seats">{c.footerLinks.seats}</a></li>}
             {isVisible('packages') && <li><a href="#pricing">{c.footerLinks.pricing}</a></li>}
             {isVisible('faqs') && <li><a href="#faq">{c.footerLinks.faq}</a></li>}
-            <li><Link href="/smart-city-tea-cafe/app">Mobile App Shell</Link></li>
-            <li><Link href="/smart-city-tea-cafe/optin">Fast Opt-in</Link></li>
-            <li><Link href="/admin">Organizer CMS</Link></li>
           </ul>
         </div>
       </footer>

@@ -76,6 +76,21 @@ const en = {
   pillExpos: '2 international expos in one trip',
   pillCruise: 'Halong Bay cruise included',
   pillSeats: (f: PageFacts) => `${f.totalSeats} seats · ${f.seatsLeft} left`,
+  heroSecondaryCta: 'See what is included',
+  heroProof: (f: PageFacts) => `${f.claimedSeats} business owners have already reserved`,
+  /** Short form of the notice bar for phones. */
+  urgencyShort: (f: PageFacts): string => f.phase === 'departed'
+    ? 'This delegation has departed'
+    : `${f.seatsLeft} of ${f.totalSeats} seats left · departs ${f.departureDate}`,
+
+  // ── Hero reservation-status card
+  statusTitle: 'Reservation status',
+  statusSeats: (f: PageFacts) => `${f.claimedSeats} of ${f.totalSeats} seats taken`,
+  statusLeft: (f: PageFacts): string => f.seatsLeft > 0 ? `${f.seatsLeft} left` : 'Waitlist only',
+  statusDeparts: (f: PageFacts) => `Departs ${f.departureDate}`,
+  statusPriceLabel: 'Seat price, all-inclusive',
+  statusCta: 'Hold my seat now',
+  statusNote: 'No payment today',
 
   // ── Navigation
   navWhy: 'Why go',
@@ -89,9 +104,9 @@ const en = {
 
   // ── Core value
   coreValueTag: 'What you take home',
-  coreValueTitle: 'Four outcomes this trip buys your business',
+  coreValueTitle: 'What this trip buys your business',
   coreValueSubtitle: 'Before you look at the price, look at what comes back with you. None of these can be bought from a screenshot or through a broker.',
-  coreValueBridge: 'Everything below exists to deliver these four outcomes.',
+  coreValueBridge: 'Everything below exists to deliver these outcomes.',
   coreValues: [
     { num: '01', icon: 'chart', title: 'Factory-direct pricing', desc: 'Buy at the source and cut 25 to 35% off what brokers charge. One negotiated container order can pay for the whole trip.' },
     { num: '02', icon: 'shield', title: 'Trust built face to face', desc: 'Walk the factory floor, see the QC lab and look your supplier in the eye before a single dollar is wired.' },
@@ -308,6 +323,10 @@ const en = {
   secureNote: 'No payment today · Tax invoice sent on Telegram',
   orChat: 'Prefer to talk first?',
   telegramDirectBtn: (f: PageFacts) => `Message ${f.coordinatorName} on Telegram`,
+  coordinatorLabel: 'Your coordinator',
+  coordinatorCall: 'Call',
+  coordinatorChat: 'Telegram',
+  coordinatorNote: 'Replies within 15 minutes in business hours.',
   profileOptions: [
     { value: 'Cafe & Tea Business', label: 'Cafe or tea brand' },
     { value: 'Smart City & Retail Tech', label: 'Smart city / tech' },
@@ -400,6 +419,20 @@ const kh: SmartCityCopy = {
   pillExpos: 'ពិព័រណ៍អន្តរជាតិ ២ ក្នុងដំណើរតែមួយ',
   pillCruise: 'រួមបញ្ចូលកប៉ាល់ហាឡុងបេ',
   pillSeats: (f) => `${f.totalSeats} កៅអី · នៅសល់ ${f.seatsLeft}`,
+  heroSecondaryCta: 'មើលអ្វីដែលរួមបញ្ចូល',
+  heroProof: (f) => `ម្ចាស់អាជីវកម្ម ${f.claimedSeats} នាក់បានកក់រួចហើយ`,
+  urgencyShort: (f): string => f.phase === 'departed'
+    ? 'ដំណើរនេះបានចេញរួចហើយ'
+    : `នៅសល់ ${f.seatsLeft} ក្នុង ${f.totalSeats} កៅអី · ចេញដំណើរ ${f.departureDate}`,
+
+  // ── Hero reservation-status card
+  statusTitle: 'ស្ថានភាពការកក់',
+  statusSeats: (f) => `បានយក ${f.claimedSeats} ក្នុង ${f.totalSeats} កៅអី`,
+  statusLeft: (f): string => f.seatsLeft > 0 ? `នៅសល់ ${f.seatsLeft}` : 'បញ្ជីរង់ចាំប៉ុណ្ណោះ',
+  statusDeparts: (f) => `ចេញដំណើរ ${f.departureDate}`,
+  statusPriceLabel: 'តម្លៃកៅអី រួមទាំងអស់',
+  statusCta: 'រក្សាកៅអីខ្ញុំឥឡូវ',
+  statusNote: 'មិនបង់ប្រាក់ថ្ងៃនេះ',
 
   // ── Navigation
   navWhy: 'ហេតុអ្វីទៅ',
@@ -413,9 +446,9 @@ const kh: SmartCityCopy = {
 
   // ── Core value
   coreValueTag: 'អ្វីដែលលោកអ្នកយកទៅផ្ទះ',
-  coreValueTitle: 'លទ្ធផល ៤ ដែលដំណើរនេះនាំមកឱ្យអាជីវកម្មលោកអ្នក',
+  coreValueTitle: 'អ្វីដែលដំណើរនេះនាំមកឱ្យអាជីវកម្មលោកអ្នក',
   coreValueSubtitle: 'មុននឹងមើលតម្លៃ សូមមើលអ្វីដែលត្រឡប់មកជាមួយលោកអ្នក។ ទាំងនេះមិនអាចទិញបានពីរូបថត ឬតាមឈ្មួញកណ្តាលឡើយ។',
-  coreValueBridge: 'អ្វីៗខាងក្រោមទាំងអស់ មានដើម្បីផ្តល់លទ្ធផល ៤ នេះ។',
+  coreValueBridge: 'អ្វីៗខាងក្រោមទាំងអស់ មានដើម្បីផ្តល់លទ្ធផលទាំងនេះ។',
   coreValues: [
     { num: '01', icon: 'chart', title: 'តម្លៃផ្ទាល់ពីរោងចក្រ', desc: 'ទិញពីប្រភពផ្ទាល់ កាត់បន្ថយ ២៥ ដល់ ៣៥% ពីតម្លៃឈ្មួញកណ្តាល។ ការចរចាកុងតឺន័រតែមួយ អាចសងថ្លៃដំណើរទាំងមូល។' },
     { num: '02', icon: 'shield', title: 'ទំនុកចិត្តពីការជួបផ្ទាល់', desc: 'ដើរមើលរោងចក្រ មើលបន្ទប់ត្រួតពិនិត្យគុណភាព និងជួបអ្នកផ្គត់ផ្គង់ផ្ទាល់ មុនផ្ទេរប្រាក់មួយដុល្លារ។' },
@@ -631,6 +664,10 @@ const kh: SmartCityCopy = {
   secureNote: 'មិនបង់ប្រាក់ថ្ងៃនេះ · វិក្កយបត្រពន្ធផ្ញើតាម Telegram',
   orChat: 'ចង់និយាយមុនមែនទេ?',
   telegramDirectBtn: (f) => `ផ្ញើសារទៅ ${f.coordinatorName} តាម Telegram`,
+  coordinatorLabel: 'អ្នកសម្របសម្រួលរបស់លោកអ្នក',
+  coordinatorCall: 'ទូរស័ព្ទ',
+  coordinatorChat: 'Telegram',
+  coordinatorNote: 'ឆ្លើយតបក្នុង ១៥ នាទី ក្នុងម៉ោងធ្វើការ។',
   profileOptions: [
     { value: 'Cafe & Tea Business', label: 'ម៉ាកកាហ្វេ ឬតែ' },
     { value: 'Smart City & Retail Tech', label: 'Smart City / បច្ចេកវិទ្យា' },

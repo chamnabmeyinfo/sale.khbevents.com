@@ -3413,3 +3413,401 @@ body.lang-kh .trust-info p {
     animation: none;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONVERSION REDESIGN
+   One slim urgency strip, a two-column hero with a live reservation-status
+   card, the primary action inside the first phone screen, a coordinator card
+   beside the form, reveal-on-scroll motion, and a calmer footer.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Urgency strip: fixed height so the sticky header sits flush under it */
+.smart-city-landing .urgency-bar {
+  padding: 0;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+}
+.smart-city-landing .urgency-inner {
+  justify-content: center;
+  gap: 12px;
+  min-height: 34px;
+}
+.smart-city-landing .urgency-msg {
+  flex: 0 1 auto;
+  font-size: 0.82rem;
+}
+.smart-city-landing .urgency-msg-short { display: none; }
+.smart-city-landing .urgency-countdown {
+  font-variant-numeric: tabular-nums;
+  padding: 2px 10px;
+  font-size: 0.76rem;
+}
+.smart-city-landing .site-header { top: 34px; }
+
+/* ── Hero grid */
+.smart-city-landing .hero-section { padding: 64px 0 56px; }
+.smart-city-landing .hero-content {
+  align-items: stretch;
+  text-align: left;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(300px, 380px);
+  gap: 48px;
+  align-items: center;
+}
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.smart-city-landing .hero-title {
+  max-width: 720px;
+  margin-top: 18px;
+}
+.smart-city-landing .hero-subtitle { max-width: 600px; }
+.smart-city-landing .hero-headline-sub {
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  max-width: 720px;
+}
+.smart-city-landing .hero-cta-group {
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: 26px;
+  gap: 12px;
+}
+.btn-secondary-hero {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-inverted);
+  padding: 14px 24px;
+  border-radius: var(--r-full);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  /* Dark glass, so the label stays readable over bright parts of the photo. */
+  background: rgba(9, 30, 20, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+.btn-secondary-hero:hover {
+  border-color: var(--gold);
+  color: var(--gold-light);
+  background: rgba(229, 169, 60, 0.12);
+}
+.hero-proof-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+.hero-proof-row .avatar-stack { display: flex; }
+.hero-proof-row .avatar-chip {
+  width: 32px;
+  height: 32px;
+  margin-left: -9px;
+  border: 2px solid var(--primary-950);
+  background: var(--surface);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+.hero-proof-row .avatar-chip:first-child { margin-left: 0; }
+.smart-city-landing .hero-pills-grid {
+  justify-content: flex-start;
+  margin-top: 34px;
+}
+
+/* ── Reservation-status card */
+.hero-status-card {
+  background: rgba(255, 255, 255, 0.97);
+  color: var(--text-heading);
+  border-radius: var(--r-xl);
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 34px 70px -24px rgba(0, 0, 0, 0.6);
+}
+.status-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.status-title {
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.status-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--terracotta);
+  background: rgba(192, 90, 62, 0.1);
+  padding: 4px 10px;
+  border-radius: var(--r-full);
+  white-space: nowrap;
+}
+.status-live .pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--terracotta);
+  animation: seatPulse 1.6s ease-in-out infinite;
+}
+.seat-progress {
+  height: 10px;
+  background: var(--surface-subtle);
+  border-radius: var(--r-full);
+  overflow: hidden;
+}
+.seat-progress-fill {
+  height: 100%;
+  border-radius: var(--r-full);
+  background: linear-gradient(90deg, var(--primary-600), var(--primary-400));
+  transition: width 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.status-seats {
+  margin-top: 9px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.status-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border-subtle);
+}
+.status-meta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.status-meta-label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.status-meta-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.status-price {
+  font-size: 1.45rem;
+  color: var(--primary-700);
+}
+.btn-status-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 18px;
+  padding: 14px 18px;
+  border-radius: var(--r-full);
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--primary-950);
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  box-shadow: 0 14px 30px -10px rgba(229, 169, 60, 0.75);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-status-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px -10px rgba(229, 169, 60, 0.85);
+}
+.status-note {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* ── Coordinator card under the pass preview */
+.coordinator-card {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-card);
+}
+.coordinator-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: var(--text-inverted);
+  background: linear-gradient(135deg, var(--primary-700), var(--primary-500));
+}
+.coordinator-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.coordinator-name {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-heading);
+}
+.coordinator-role {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.coordinator-note {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary-700);
+}
+.coordinator-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+}
+.coordinator-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--r-full);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  background: var(--surface-subtle);
+  border: 1.5px solid var(--border-subtle);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.coordinator-btn:hover { transform: translateY(-1px); }
+.coordinator-btn-tg {
+  color: var(--text-inverted);
+  background: var(--tg-blue);
+  border-color: var(--tg-blue);
+}
+
+/* ── One published price card sits centred instead of hugging the left */
+.pricing-cards-grid:has(> :only-child) {
+  grid-template-columns: minmax(0, 460px);
+  justify-content: center;
+}
+
+/* ── Reveal on scroll (only once JS has added .js-reveal) */
+.smart-city-landing section :is(.section-header, .core-card, .problem-card, .audience-card, .value-item, .value-total-card, .step-card, .pricing-card, .itinerary-day-card, .faq-item, .testimonial-card, .guarantee-card, .seat-board-card, .matchmaker-display-card) {
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+.smart-city-landing.js-reveal section:not(.in-view) :is(.section-header, .core-card, .problem-card, .audience-card, .value-item, .value-total-card, .step-card, .pricing-card, .itinerary-day-card, .faq-item, .testimonial-card, .guarantee-card, .seat-board-card, .matchmaker-display-card) {
+  opacity: 0;
+  transform: translateY(18px);
+}
+.smart-city-landing section.in-view :is(.core-card, .problem-card, .audience-card, .value-item, .step-card, .faq-item):nth-child(2) { transition-delay: 0.07s; }
+.smart-city-landing section.in-view :is(.core-card, .problem-card, .audience-card, .value-item, .step-card, .faq-item):nth-child(3) { transition-delay: 0.14s; }
+.smart-city-landing section.in-view :is(.core-card, .problem-card, .audience-card, .value-item, .step-card, .faq-item):nth-child(4) { transition-delay: 0.21s; }
+.smart-city-landing section.in-view :is(.core-card, .problem-card, .audience-card, .value-item, .step-card, .faq-item):nth-child(n + 5) { transition-delay: 0.28s; }
+
+@media (max-width: 1024px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  /* On one column the form comes first; the pass preview and coordinator follow it. */
+  .boarding-pass-experience-grid .pass-form-column { order: -1; }
+  .hero-status-card {
+    max-width: 520px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  /* The first screen: badge, headline, one line of context, the button. */
+  .smart-city-landing .hero-section { padding: 26px 0 40px; }
+  .smart-city-landing .hero-badge {
+    font-size: 0.64rem;
+    letter-spacing: 0.04em;
+    padding: 6px 12px;
+  }
+  .smart-city-landing .hero-title {
+    font-size: 2rem;
+    line-height: 1.12;
+    margin-top: 14px;
+  }
+  .smart-city-landing .hero-headline-sub {
+    font-size: 0.98rem;
+    margin-top: 10px;
+  }
+  .smart-city-landing .hero-subtitle {
+    font-size: 0.95rem;
+    line-height: 1.55;
+    margin-top: 10px;
+  }
+  .smart-city-landing .hero-cta-group {
+    margin-top: 18px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .smart-city-landing .btn-primary-hero {
+    padding: 15px 22px;
+    font-size: 1rem;
+  }
+  .btn-secondary-hero {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 20px;
+  }
+  .smart-city-landing .hero-risk-note {
+    font-size: 0.78rem;
+    margin-top: 14px;
+  }
+  .hero-proof-row {
+    font-size: 0.82rem;
+    margin-top: 16px;
+  }
+  .hero-status-card { padding: 18px; }
+  .smart-city-landing .hero-pills-grid { margin-top: 22px; }
+  .smart-city-landing .hero-pill {
+    font-size: 0.76rem;
+    padding: 7px 12px;
+  }
+  .smart-city-landing .urgency-msg-full { display: none; }
+  .smart-city-landing .urgency-msg-short { display: inline; }
+  /* The sticky bottom bar already carries Telegram; the floating button only hid content. */
+  .smart-city-landing .floating-telegram-btn { display: none; }
+  .smart-city-landing .value-item {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+  .smart-city-landing .value-item-details p { font-size: 0.8rem; }
+  .coordinator-card { padding: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seat-progress-fill { transition: none; }
+}

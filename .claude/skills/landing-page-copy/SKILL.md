@@ -51,6 +51,13 @@ formulas and worked examples are in `references/business-trip-page.md`.
 14. **FAQ**: objections in the order buyers raise them, visa and payment first.
 15. **Final CTA**: seats left, who is already in, what happens if they wait.
 
+## Design rules
+
+Copy is only half of a page that converts. Read `references/design.md` before
+touching layout, section order, buttons or motion: it covers the first screen
+on desktop and phone, the reservation-status card, section rhythm, button
+consistency, trust placement, motion and performance.
+
 ## Writing rules
 
 - Lead with the specific: "Meet 30+ roasters and machine makers in one hall"

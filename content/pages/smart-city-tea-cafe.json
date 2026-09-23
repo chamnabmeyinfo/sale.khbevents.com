@@ -186,8 +186,31 @@
   "packages": [],
   "testimonials": [],
   "sectionVisibility": {
-    "testimonials": false
+    "testimonials": false,
+    "speakers": false,
+    "artists": false,
+    "expoBooths": false
   },
+  "sectionOrder": [
+    "hero",
+    "highlights",
+    "coreValues",
+    "problems",
+    "audiences",
+    "valueStack",
+    "matchmaker",
+    "itinerary",
+    "gallery",
+    "urgency",
+    "testimonials",
+    "packages",
+    "guarantee",
+    "form",
+    "faqs",
+    "speakers",
+    "artists",
+    "expoBooths"
+  ],
   "guarantee": {
     "badge": "100% risk-free reservation",
     "title": "Your reservation is risk-free",

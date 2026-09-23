@@ -83,7 +83,15 @@ const pack = {
   packages: [],
   // No real quotes yet. The section is hidden until genuine testimonials are added in the admin.
   testimonials: [],
-  sectionVisibility: { testimonials: false },
+  // Speakers, artists and booths have no real entries either; the template shows nothing for them.
+  sectionVisibility: { testimonials: false, speakers: false, artists: false, expoBooths: false },
+  // The order a buyer decides in: outcome, proof, problem, fit, what you get, who you meet,
+  // the days, the photos, then scarcity, price, the three steps, the form, and objections last.
+  sectionOrder: [
+    'hero', 'highlights', 'coreValues', 'problems', 'audiences', 'valueStack', 'matchmaker',
+    'itinerary', 'gallery', 'urgency', 'testimonials', 'packages', 'guarantee', 'form', 'faqs',
+    'speakers', 'artists', 'expoBooths',
+  ],
   guarantee: { badge: '100% risk-free reservation', title: en.guaranteeTitle, subtitle: en.guaranteeText, points: en.guaranteePoints },
   faqs: enFaqs,
   formConfig: {
