@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import { 
   Plus, 
@@ -15,7 +15,8 @@ import {
   Users, 
   FileText,
   Activity,
-  Sliders
+  Sliders,
+  Upload
 } from 'lucide-react';
 import { LandingPage } from '@/lib/types';
 
@@ -23,11 +24,31 @@ interface PagesManagerClientProps {
   initialPages: LandingPage[];
 }
 
+const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/**
+ * Lay a content pack over a page. Nested settings objects (urgency, formConfig,
+ * isolatedSettings, sectionVisibility, ...) merge key by key, so a pack that only
+ * sets `urgency.regularPrice` leaves the deadlines and seat counts the admin
+ * typed in. Arrays and scalars are replaced whole.
+ */
+export function mergeContentPack(base: LandingPage, pack: Partial<LandingPage>): LandingPage {
+  const out: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(pack)) {
+    const current = out[key];
+    out[key] = isPlainObject(value) && isPlainObject(current) ? { ...current, ...value } : value;
+  }
+  return out as unknown as LandingPage;
+}
+
 export default function PagesManagerClient({ initialPages }: PagesManagerClientProps) {
   const [pages, setPages] = useState<LandingPage[]>(initialPages);
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const [activeTab, setActiveTab] = useState<string>('ALL');
 
@@ -108,6 +129,65 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
     }
   };
 
+  /**
+   * Import a content pack (content/pages/*.json). Fields in the file are merged over the
+   * existing page with the same slug, so settings the file leaves out (Telegram token,
+   * tracking IDs, counters) are kept. A new slug creates a draft page.
+   */
+  const handleImportFile = async (file: File) => {
+    setImporting(true);
+    try {
+      const text = await file.text();
+      let pack: Partial<LandingPage>;
+      try {
+        pack = JSON.parse(text);
+      } catch {
+        alert('That file is not valid JSON.');
+        return;
+      }
+      if (!pack || typeof pack !== 'object' || !pack.slug) {
+        alert('The file needs at least a "slug" field.');
+        return;
+      }
+      // Never let a file overwrite identity or counters.
+      const { id: _id, viewsCount: _v, leadsCount: _l, createdAt: _c, updatedAt: _u, ...fields } = pack;
+      void _id; void _v; void _l; void _c; void _u;
+
+      const existing = pages.find(p => p.slug === fields.slug);
+      if (existing) {
+        if (!confirm(`Update "${existing.title}" (/${existing.slug}) with the content in ${file.name}?\nFields not in the file are kept.`)) return;
+        const current = await fetch(`/api/pages/${existing.id}`).then(r => r.json()).catch(() => null);
+        const base: LandingPage = current?.page || existing;
+        const merged = mergeContentPack(base, fields);
+        const res = await fetch(`/api/pages/${existing.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...merged, id: existing.id, slug: existing.slug, title: fields.title || base.title }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.page) { alert(data.error || 'Import failed'); return; }
+        setPages(pages.map(p => (p.id === existing.id ? data.page : p)));
+        alert(`"${data.page.title}" updated from ${file.name}. The live page refreshes within a minute.`);
+      } else {
+        if (!fields.title) { alert('A new page needs a "title" field.'); return; }
+        const res = await fetch('/api/pages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...fields, status: 'draft' }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.page) { alert(data.error || 'Import failed'); return; }
+        setPages([data.page, ...pages]);
+        alert(`Created draft "${data.page.title}" from ${file.name}.`);
+      }
+    } catch {
+      alert('Error importing file');
+    } finally {
+      setImporting(false);
+      if (importInputRef.current) importInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header bar */}
@@ -122,13 +202,32 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
           </p>
         </div>
 
-        <Link
+        <div className="flex items-center gap-2">
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f); }}
+          />
+          <button
+            type="button"
+            onClick={() => importInputRef.current?.click()}
+            disabled={importing}
+            title="Import a page content pack (JSON) — updates the page with the same slug"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 dark:border-emerald-800 bg-white dark:bg-[#0A1610] text-slate-700 dark:text-gray-200 font-bold text-xs uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-emerald-950/40 transition-all cursor-pointer disabled:opacity-60"
+          >
+            <Upload className="w-4 h-4" />
+            <span>{importing ? 'Importing…' : 'Import JSON'}</span>
+          </button>
+          <Link
           href="/admin/pages/new"
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4 text-black stroke-[3]" />
           <span>+ Create New Landing Page</span>
-        </Link>
+          </Link>
+        </div>
       </div>
 
       {/* Sub Menu Tabs */}

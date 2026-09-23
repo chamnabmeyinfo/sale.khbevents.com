@@ -70,7 +70,7 @@
 .smart-city-app img { max-width: 100%; display: block; }
 .smart-city-app a { text-decoration: none; color: inherit; }
 .smart-city-app ul { list-style: none; }
-.smart-city-app button { font-family: inherit; border: none; background: none; cursor: pointer; color: inherit; }
+:where(.smart-city-app) button { font-family: inherit; border: none; background: none; cursor: pointer; color: inherit; }
 .smart-city-app input, .smart-city-app select { font-family: inherit; }
 
 .smart-city-app ::selection { background: var(--primary-100); color: var(--primary-900); }
