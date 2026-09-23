@@ -7,8 +7,9 @@ import { STAFF_COOKIE, rememberStaffCookie } from '@/lib/staff-cookie';
 /**
  * "Chat on Telegram" clicks from the landing pages.
  *
- * GET ?page=<slug>&redirect=true sends the visitor straight to the assigned
- * staff member's Telegram chat. Only the choice of person happens before the
+ * GET ?page=<slug> sends the visitor straight to the assigned staff member's
+ * Telegram chat (add &format=json to inspect the decision instead). An optional
+ * &text=... is passed on to Telegram as the prefilled first message. Only the choice of person happens before the
  * redirect; alerts and logs are written after the response.
  *
  * A cookie remembers who the visitor was assigned to for as long as the admin's
@@ -20,6 +21,13 @@ import { STAFF_COOKIE, rememberStaffCookie } from '@/lib/staff-cookie';
 export const runtime = 'nodejs';
 
 
+/** Adds Telegram's prefilled-message parameter to a personal chat link (bot deep links keep their payload). */
+function withPrefilledText(url: string, text: string | null): string {
+  const clean = (text || '').trim();
+  if (!clean || url.includes('?')) return url;
+  return `${url}?text=${encodeURIComponent(clean.slice(0, 500))}`;
+}
+
 async function fallbackUrl(slug: string): Promise<string> {
   const [page, settings] = await Promise.all([getPageBySlug(slug), getSettings()]);
   return resolveFallbackTelegramUrl({
@@ -28,7 +36,7 @@ async function fallbackUrl(slug: string): Promise<string> {
   });
 }
 
-async function route(req: NextRequest, slug: string, redirectMode: boolean) {
+async function route(req: NextRequest, slug: string, redirectMode: boolean, text: string | null = null) {
   const visitorIp = getClientIp(req.headers);
   const userAgent = req.headers.get('user-agent') || undefined;
   const preferredStaffId = req.cookies.get(STAFF_COOKIE)?.value || undefined;
@@ -46,7 +54,7 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean) {
 
   if (routeResult) {
     const res = redirectMode
-      ? NextResponse.redirect(routeResult.targetTelegramUrl)
+      ? NextResponse.redirect(withPrefilledText(routeResult.targetTelegramUrl, text))
       : NextResponse.json({
           success: true,
           routed: true,
@@ -66,7 +74,7 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean) {
 
   const targetTelegramUrl = await fallbackUrl(slug);
   if (redirectMode) {
-    return NextResponse.redirect(targetTelegramUrl);
+    return NextResponse.redirect(withPrefilledText(targetTelegramUrl, text));
   }
   return NextResponse.json({
     success: true,
@@ -81,7 +89,10 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean) {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    return await route(req, searchParams.get('page') || 'home', searchParams.get('redirect') === 'true');
+    // A browser following a link always gets the redirect; JSON is opt-in. A stray
+    // "redirect=true?text=..." from a badly joined link must still redirect.
+    const wantsJson = searchParams.get('format') === 'json' || searchParams.get('redirect') === 'false';
+    return await route(req, searchParams.get('page') || 'home', !wantsJson, searchParams.get('text'));
   } catch (error) {
     console.error('Round Robin route error:', error);
     return NextResponse.json({ success: false, error: 'Routing failed' }, { status: 500 });

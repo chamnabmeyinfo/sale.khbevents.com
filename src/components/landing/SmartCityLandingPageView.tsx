@@ -589,7 +589,8 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
 
   // Telegram msg for concierge
   const tgMsg = encodeURIComponent(`Hello KHB Events, I want to reserve Seat #${regSeat} for the Vietnam Delegation 2026. My name is ${regName.trim() || 'Guest'}.`);
-  const tgConciergeUrl = `${tgUrl}?text=${tgMsg}`;
+  // tgUrl already carries a query string, so the prefilled message is an extra parameter.
+  const tgConciergeUrl = `${tgUrl}&text=${tgMsg}`;
 
 
 
