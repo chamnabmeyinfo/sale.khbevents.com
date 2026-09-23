@@ -19,28 +19,12 @@ import {
   Upload
 } from 'lucide-react';
 import { LandingPage } from '@/lib/types';
+import { isContentPack, mergeContentPack } from '@/lib/content-pack';
 
 interface PagesManagerClientProps {
   initialPages: LandingPage[];
 }
 
-const isPlainObject = (v: unknown): v is Record<string, unknown> =>
-  typeof v === 'object' && v !== null && !Array.isArray(v);
-
-/**
- * Lay a content pack over a page. Nested settings objects (urgency, formConfig,
- * isolatedSettings, sectionVisibility, ...) merge key by key, so a pack that only
- * sets `urgency.regularPrice` leaves the deadlines and seat counts the admin
- * typed in. Arrays and scalars are replaced whole.
- */
-export function mergeContentPack(base: LandingPage, pack: Partial<LandingPage>): LandingPage {
-  const out: Record<string, unknown> = { ...base };
-  for (const [key, value] of Object.entries(pack)) {
-    const current = out[key];
-    out[key] = isPlainObject(value) && isPlainObject(current) ? { ...current, ...value } : value;
-  }
-  return out as unknown as LandingPage;
-}
 
 export default function PagesManagerClient({ initialPages }: PagesManagerClientProps) {
   const [pages, setPages] = useState<LandingPage[]>(initialPages);
@@ -138,20 +122,18 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
     setImporting(true);
     try {
       const text = await file.text();
-      let pack: Partial<LandingPage>;
+      let parsed: unknown;
       try {
-        pack = JSON.parse(text);
+        parsed = JSON.parse(text);
       } catch {
         alert('That file is not valid JSON.');
         return;
       }
-      if (!pack || typeof pack !== 'object' || !pack.slug) {
+      if (!isContentPack(parsed)) {
         alert('The file needs at least a "slug" field.');
         return;
       }
-      // Never let a file overwrite identity or counters.
-      const { id: _id, viewsCount: _v, leadsCount: _l, createdAt: _c, updatedAt: _u, ...fields } = pack;
-      void _id; void _v; void _l; void _c; void _u;
+      const fields = parsed;
 
       const existing = pages.find(p => p.slug === fields.slug);
       if (existing) {
@@ -173,7 +155,7 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
         const res = await fetch('/api/pages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...fields, status: 'draft' }),
+          body: JSON.stringify({ ...fields, id: undefined, viewsCount: 0, leadsCount: 0, createdAt: undefined, updatedAt: undefined, status: 'draft' }),
         });
         const data = await res.json();
         if (!res.ok || !data.page) { alert(data.error || 'Import failed'); return; }
