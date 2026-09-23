@@ -13,14 +13,18 @@ import {
   RoundRobinStaff,
   RoundRobinSettings,
   RoundRobinLog,
-  RoutingDeliveryStatus
+  RoutingDeliveryStatus,
+  AssignmentReason
 } from './types';
 import {
   defaultRoundRobinSettings,
   selectNextStaff,
-  eligibleStaff,
   cleanTelegramUsername,
   readTelegramResponse,
+  rememberedStaff,
+  sameCustomer,
+  phoneKey,
+  visitorMemoryMs,
   sendLeadToStaffTelegram,
   escapeHtml
 } from './round-robin';
@@ -742,6 +746,34 @@ export async function getLeadById(id: string): Promise<Lead | null> {
   return db.leads.find((l) => l.id === id) || null;
 }
 
+/**
+ * The most recent earlier lead from the same customer (phone or email) inside the
+ * memory window, so a returning customer stays with their salesperson.
+ */
+async function findPreviousLeadOfCustomer(lead: Pick<Lead, 'phone' | 'email' | 'id'>, windowMs: number): Promise<Lead | null> {
+  if (!phoneKey(lead.phone) && !lead.email?.trim()) return null;
+  const since = Date.now() - windowMs;
+  // Phone formats differ between visits ("+855 12 777 666" vs "012777666"), so a
+  // text search cannot find them: compare normalized numbers over the recent leads.
+  let recent: Lead[] = [];
+  try {
+    recent = await getLeads();
+  } catch (err) {
+    console.error('Returning-customer lookup error:', err);
+  }
+  return (
+    recent
+      .filter((l) => l.id !== lead.id && l.routing?.staffId && new Date(l.createdAt).getTime() >= since && sameCustomer(lead, l))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] || null
+  );
+}
+
+/** Cookie lifetime for the "same salesperson" memory, in seconds (0 = memory off). */
+export async function getVisitorMemorySeconds(): Promise<number> {
+  const rr = await getRoundRobinSettings();
+  return Math.floor(visitorMemoryMs(rr) / 1000);
+}
+
 export async function createLead(leadData: {
   landingPageSlug: string;
   landingPageTitle?: string;
@@ -763,6 +795,8 @@ export async function createLead(leadData: {
   referrer?: string;
   ip?: string;
   userAgent?: string;
+  /** Staff id from the visitor's cookie (set when they clicked a Telegram button or sent a form before). */
+  preferredStaffId?: string;
 }): Promise<Lead> {
   const db = await getDatabase();
   let pageTitle = leadData.landingPageTitle || leadData.landingPageSlug;
@@ -825,8 +859,25 @@ export async function createLead(leadData: {
   const botToken = page?.isolatedSettings?.telegramBotToken || systemSettings.telegramBotToken;
 
   if (effectiveRrSettings) {
-    // With a bot token, prefer people who can actually receive the alert (Chat ID set).
-    const selection = selectNextStaff(effectiveRrSettings, { need: botToken ? 'chatId' : undefined });
+    const need = botToken ? 'chatId' as const : undefined;
+    let assignmentReason: AssignmentReason = 'rotation';
+
+    // 1. Same customer as an earlier lead (phone or email) → same salesperson, even from another device.
+    let remembered: RoundRobinStaff | null = null;
+    if (visitorMemoryMs(effectiveRrSettings) > 0) {
+      const previous = await findPreviousLeadOfCustomer(newLead, visitorMemoryMs(effectiveRrSettings));
+      remembered = rememberedStaff(effectiveRrSettings, previous?.routing?.staffId, need);
+      if (remembered) assignmentReason = 'returning_customer';
+    }
+    // 2. Same browser as an earlier click or form → same salesperson.
+    if (!remembered) {
+      remembered = rememberedStaff(effectiveRrSettings, leadData.preferredStaffId, need);
+      if (remembered) assignmentReason = 'returning_visitor';
+    }
+    // 3. Otherwise the rotation. With a bot token, prefer people who can actually receive the alert.
+    const selection = remembered
+      ? { staff: remembered, effectivePercentage: remembered.percentage || 0, nextIndex: effectiveRrSettings.lastAssignedIndex || 0 }
+      : selectNextStaff(effectiveRrSettings, { need });
     if (selection) {
       const { staff, effectivePercentage, nextIndex } = selection;
       // Advance the rotation before awaiting Telegram, so a second lead arriving
@@ -852,7 +903,12 @@ export async function createLead(leadData: {
             enableManagerNotification: Boolean(effectiveRrSettings.enableManagerNotification),
             customTemplate: effectiveRrSettings.customMessageTemplate,
             customWhatsappMessage: effectiveRrSettings.customWhatsappMessage,
-            defer: runAfterResponse
+            defer: runAfterResponse,
+            noteLine: assignmentReason === 'returning_customer'
+              ? '🔁 <b>អតិថិជនចាស់របស់អ្នក / Returning customer:</b> this person contacted us before and was assigned to you.'
+              : assignmentReason === 'returning_visitor'
+                ? '🔁 <b>Returning visitor:</b> this person clicked through to you earlier and now sent the form.'
+                : undefined
           }
         );
       }
@@ -871,7 +927,8 @@ export async function createLead(leadData: {
         fallbackChatId: effectiveRrSettings.fallbackChatId,
         fallbackSent: dispatchResult.fallbackSent,
         routedAt: now,
-        routeType: 'FORM_SUBMISSION'
+        routeType: 'FORM_SUBMISSION',
+        assignmentReason
       };
 
       // Update staff live performance counters
@@ -910,7 +967,8 @@ export async function createLead(leadData: {
         telegramMessageId: dispatchResult.messageId,
         deliveryError: dispatchResult.error,
         visitorIp: newLead.ip,
-        userAgent: newLead.userAgent
+        userAgent: newLead.userAgent,
+        assignmentReason
       };
       db.roundRobinLogs.unshift(auditLog);
       if (db.roundRobinLogs.length > 500) db.roundRobinLogs.length = 500;
@@ -1434,6 +1492,8 @@ export interface DirectContactRoute {
   logId: string;
   /** Same visitor again: sent to the same person, nobody re-alerted, nothing re-counted. */
   repeat: boolean;
+  /** How long the visitor's browser should remember this person (0 = memory off). */
+  rememberSeconds: number;
 }
 
 /**
@@ -1462,14 +1522,15 @@ export async function recordDirectContactRoute(params: {
     return null;
   }
 
-  const eligible = eligibleStaff(rrSettings, 'username');
-  const sticky = params.preferredStaffId ? eligible.find((s) => s.id === params.preferredStaffId) : undefined;
+  const rememberSeconds = Math.floor(visitorMemoryMs(rrSettings) / 1000);
+  const sticky = rememberedStaff(rrSettings, params.preferredStaffId, 'username');
   if (sticky) {
     return {
       staff: sticky,
       targetTelegramUrl: `https://t.me/${cleanTelegramUsername(sticky.telegramUsername)}`,
       logId: '',
-      repeat: true
+      repeat: true,
+      rememberSeconds
     };
   }
   if (params.allowNewAssignment === false) return null;
@@ -1555,7 +1616,8 @@ export async function recordDirectContactRoute(params: {
       deliveryError: alertNote,
       targetTelegramUrl,
       visitorIp: params.visitorIp,
-      userAgent: params.userAgent
+      userAgent: params.userAgent,
+      assignmentReason: 'rotation'
     };
 
     if (!db.roundRobinLogs) db.roundRobinLogs = [];
@@ -1568,6 +1630,6 @@ export async function recordDirectContactRoute(params: {
     }
   });
 
-  return { staff, targetTelegramUrl, logId, repeat: false };
+  return { staff, targetTelegramUrl, logId, repeat: false, rememberSeconds };
 }
 

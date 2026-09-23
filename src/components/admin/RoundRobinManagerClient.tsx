@@ -37,6 +37,7 @@ import {
   RoundRobinStaff,
   RoundRobinLog,
   RoundRobinAlgorithm,
+  RememberVisitorMonths,
   SystemSettings,
   Lead
 } from '@/lib/types';
@@ -48,7 +49,9 @@ import {
   renderLeadTemplate,
   renderWhatsappGreeting,
   roundRobinHealth,
-  isPlaceholderStaff
+  isPlaceholderStaff,
+  REMEMBER_VISITOR_OPTIONS,
+  DEFAULT_REMEMBER_VISITOR_MONTHS
 } from '@/lib/round-robin';
 import { errorMessage } from '@/lib/errors';
 
@@ -1310,6 +1313,24 @@ export default function RoundRobinManagerClient({
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">
+                  Remember a visitor for
+                </label>
+                <select
+                  value={settings.rememberVisitorMonths ?? DEFAULT_REMEMBER_VISITOR_MONTHS}
+                  onChange={(e) => setSettings({ ...settings, rememberVisitorMonths: Number(e.target.value) as RememberVisitorMonths })}
+                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-semibold focus:border-amber-400 focus:outline-none"
+                >
+                  {REMEMBER_VISITOR_OPTIONS.map((m) => (
+                    <option key={m} value={m}>{m === 0 ? 'Off (every contact re-enters the rotation)' : `${m} month${m > 1 ? 's' : ''}`}</option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">
+                  Same browser (cookie) or same phone number / email → same salesperson, with no second alert. After this period they re-enter the rotation.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">
                   Fallback Manager Telegram Chat ID
                 </label>
                 <input
@@ -1836,6 +1857,11 @@ export default function RoundRobinManagerClient({
                               <span className="font-bold text-amber-600 dark:text-amber-400 ml-1">
                                 [{log.routeType === 'FORM_SUBMISSION' ? 'FORM' : 'CLICK'}]
                               </span>
+                              {log.assignmentReason && log.assignmentReason !== 'rotation' && (
+                                <span className="font-bold text-sky-700 dark:text-sky-300 ml-1" title="Kept with the same salesperson">
+                                  🔁 {log.assignmentReason === 'returning_customer' ? 'Returning customer' : 'Returning visitor'}
+                                </span>
+                              )}
                             </div>
                           </td>
 

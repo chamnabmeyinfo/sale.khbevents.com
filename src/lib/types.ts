@@ -821,6 +821,12 @@ export interface RoundRobinStaff {
 
 export type RoundRobinAlgorithm = 'weighted_percentage' | 'strict_round_robin' | 'random_weighted';
 
+/** How long a visitor or customer stays with the salesperson they were first given. 0 = off. */
+export type RememberVisitorMonths = 0 | 1 | 2 | 3 | 6;
+
+/** Why a lead or click went to this person. */
+export type AssignmentReason = 'rotation' | 'returning_visitor' | 'returning_customer';
+
 export interface RoundRobinSettings {
   enabled: boolean;
   algorithm: RoundRobinAlgorithm;
@@ -833,6 +839,7 @@ export interface RoundRobinSettings {
   lastUpdated?: string;
   customMessageTemplate?: string; // Customizable template for staff Telegram alerts
   customWhatsappMessage?: string; // Customizable pre-filled WhatsApp greeting text
+  rememberVisitorMonths?: RememberVisitorMonths; // Same visitor or customer → same salesperson for this long (default 1)
 }
 
 export type RoutingDeliveryStatus = 'DELIVERED' | 'FAILED' | 'FALLBACK' | 'PENDING';
@@ -851,6 +858,7 @@ export interface RoutingDetail {
   fallbackSent?: boolean;
   routedAt: string;
   routeType: 'FORM_SUBMISSION' | 'DIRECT_CONTACT_CLICK';
+  assignmentReason?: AssignmentReason;
 }
 
 export interface RoundRobinLog {
@@ -874,4 +882,5 @@ export interface RoundRobinLog {
   targetTelegramUrl?: string;
   visitorIp?: string;
   userAgent?: string;
+  assignmentReason?: AssignmentReason;
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLeads, createLead } from '@/lib/storage';
+import { getLeads, createLead, getVisitorMemorySeconds } from '@/lib/storage';
+import { STAFF_COOKIE, rememberStaffCookie } from '@/lib/staff-cookie';
 import { isAuthenticated } from '@/lib/auth';
 import { rateLimitByIp, tooManyRequests, getClientIp } from '@/lib/rate-limit';
 
@@ -67,14 +68,20 @@ export async function POST(req: NextRequest) {
       utmContent: body.utmContent,
       referrer: body.referrer,
       ip,
-      userAgent
+      userAgent,
+      preferredStaffId: req.cookies.get(STAFF_COOKIE)?.value || undefined
     });
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       message: 'Inquiry received successfully! Our event consultant will contact you shortly.',
       leadId: newLead.id
     });
+    // Keep this visitor with the same salesperson for later clicks and forms.
+    if (newLead.routing?.staffId) {
+      rememberStaffCookie(res, newLead.routing.staffId, await getVisitorMemorySeconds());
+    }
+    return res;
   } catch (error) {
     console.error('Lead submission error:', error);
     return NextResponse.json(

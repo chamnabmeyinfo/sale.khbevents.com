@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPageBySlug, getSettings, recordDirectContactRoute } from '@/lib/storage';
 import { rateLimitByIp, getClientIp } from '@/lib/rate-limit';
 import { resolveFallbackTelegramUrl } from '@/lib/round-robin';
+import { STAFF_COOKIE, rememberStaffCookie } from '@/lib/staff-cookie';
 
 /**
  * "Chat on Telegram" clicks from the landing pages.
@@ -10,16 +11,14 @@ import { resolveFallbackTelegramUrl } from '@/lib/round-robin';
  * staff member's Telegram chat. Only the choice of person happens before the
  * redirect; alerts and logs are written after the response.
  *
- * A cookie remembers who the visitor was assigned to, so clicking again (or
- * from another button) lands on the same person without alerting a second
- * one. When nobody can take the click, the visitor goes to the configured
+ * A cookie remembers who the visitor was assigned to for as long as the admin's
+ * "Remember visitor" setting says, so clicking again (or sending the form later)
+ * lands on the same person without alerting a second one. When nobody can take the click, the visitor goes to the configured
  * contact account, or the bot as a last resort.
  */
 
 export const runtime = 'nodejs';
 
-const STICKY_COOKIE = 'khb_rr_staff';
-const STICKY_MAX_AGE = 30 * 24 * 60 * 60;
 
 async function fallbackUrl(slug: string): Promise<string> {
   const [page, settings] = await Promise.all([getPageBySlug(slug), getSettings()]);
@@ -32,7 +31,7 @@ async function fallbackUrl(slug: string): Promise<string> {
 async function route(req: NextRequest, slug: string, redirectMode: boolean) {
   const visitorIp = getClientIp(req.headers);
   const userAgent = req.headers.get('user-agent') || undefined;
-  const preferredStaffId = req.cookies.get(STICKY_COOKIE)?.value || undefined;
+  const preferredStaffId = req.cookies.get(STAFF_COOKIE)?.value || undefined;
 
   // A returning visitor is sent to the same person without new alerts, so the
   // limit only caps how many *new* assignments one address can trigger.
@@ -61,13 +60,7 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean) {
           },
           logId: routeResult.logId
         });
-    res.cookies.set(STICKY_COOKIE, routeResult.staff.id, {
-      maxAge: STICKY_MAX_AGE,
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      path: '/'
-    });
+    rememberStaffCookie(res, routeResult.staff.id, routeResult.rememberSeconds);
     return res;
   }
 

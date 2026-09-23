@@ -128,3 +128,27 @@ describe('roundRobinHealth', () => {
     expect(items).toEqual([expect.objectContaining({ level: 'ok' })]);
   });
 });
+
+describe('visitor memory', () => {
+  it('turns months into a window, default one month, off with 0', async () => {
+    const { visitorMemoryMs, rememberedStaff, sameCustomer, phoneKey } = await import('../round-robin');
+    const day = 24 * 60 * 60 * 1000;
+    expect(visitorMemoryMs({})).toBe(30 * day);
+    expect(visitorMemoryMs({ rememberVisitorMonths: 6 })).toBe(180 * day);
+    expect(visitorMemoryMs({ rememberVisitorMonths: 0 })).toBe(0);
+
+    const s = settings([person('a'), person('b', { isActive: false }), person('c', { telegramUsername: '' })]);
+    expect(rememberedStaff(s, 'a', 'username')!.id).toBe('a');
+    expect(rememberedStaff(s, 'b', 'username')).toBeNull();
+    expect(rememberedStaff(s, 'c', 'username')).toBeNull();
+    expect(rememberedStaff(s, 'c', 'chatId')!.id).toBe('c');
+    expect(rememberedStaff({ ...s, rememberVisitorMonths: 0 }, 'a', 'username')).toBeNull();
+
+    expect(phoneKey('+855 12 777 666')).toBe('12777666');
+    expect(phoneKey('012777666')).toBe('12777666');
+    expect(sameCustomer({ phone: '+855 12 777 666' }, { phone: '012 777 666', email: 'x@y.com' })).toBe(true);
+    expect(sameCustomer({ phone: '011 111 111', email: 'A@Y.com ' }, { phone: '012 777 666', email: 'a@y.com' })).toBe(true);
+    expect(sameCustomer({ phone: '011 111 111' }, { phone: '012 777 666' })).toBe(false);
+    expect(sameCustomer({ phone: '', email: '' }, { phone: '', email: '' })).toBe(false);
+  });
+});

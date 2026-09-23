@@ -2,6 +2,7 @@ import {
   RoundRobinStaff, 
   RoundRobinSettings, 
   RoutingDeliveryStatus, 
+  RememberVisitorMonths,
   Lead 
 } from './types';
 import { errorMessage } from '@/lib/errors';
@@ -128,6 +129,45 @@ export function getTemplateForStaff(
   return (globalCustomTemplate && globalCustomTemplate.trim())
     ? globalCustomTemplate
     : DEFAULT_KHMER_TELEGRAM_TEMPLATE;
+}
+
+/** Choices for "remember a visitor": months, 0 turns the memory off. */
+export const REMEMBER_VISITOR_OPTIONS: RememberVisitorMonths[] = [0, 1, 2, 3, 6];
+export const DEFAULT_REMEMBER_VISITOR_MONTHS: RememberVisitorMonths = 1;
+
+/** Memory window in milliseconds (0 when the memory is off). A month counts as 30 days. */
+export function visitorMemoryMs(settings: Pick<RoundRobinSettings, 'rememberVisitorMonths'>): number {
+  const months = settings.rememberVisitorMonths ?? DEFAULT_REMEMBER_VISITOR_MONTHS;
+  return REMEMBER_VISITOR_OPTIONS.includes(months) ? months * 30 * 24 * 60 * 60 * 1000 : 0;
+}
+
+/** Phone digits that identify a customer regardless of formatting: last 8 digits, ignoring a leading 0 or +855. */
+export function phoneKey(phone?: string | null): string {
+  const digits = (phone || '').replace(/\D/g, '');
+  if (digits.length < 7) return '';
+  return digits.slice(-8);
+}
+
+export const emailKey = (email?: string | null) => (email || '').trim().toLowerCase();
+
+/** Two leads from the same customer: same phone, or same non-empty email. */
+export function sameCustomer(a: { phone?: string; email?: string }, b: { phone?: string; email?: string }): boolean {
+  const pa = phoneKey(a.phone);
+  if (pa && pa === phoneKey(b.phone)) return true;
+  const ea = emailKey(a.email);
+  return Boolean(ea) && ea === emailKey(b.email);
+}
+
+/**
+ * The salesperson a returning visitor or customer should stay with, if they are
+ * still able to take the assignment. Null means: use the rotation.
+ */
+export function rememberedStaff(settings: RoundRobinSettings, staffId: string | undefined, need?: StaffRequirement): RoundRobinStaff | null {
+  if (!staffId || visitorMemoryMs(settings) <= 0) return null;
+  // Same eligibility as the rotation: a remembered person who could not take a
+  // fresh assignment (inactive, no username for a click, no Chat ID while
+  // colleagues have one) is not kept either.
+  return eligibleStaff(settings, need).find((s) => s.id === staffId) || null;
 }
 
 /** What the assignee must have so the route actually reaches them. */
@@ -395,6 +435,8 @@ export async function sendLeadToStaffTelegram(
     customWhatsappMessage?: string;
     /** Runs the manager copy after the response (server passes runAfterResponse); default is fire-and-forget. */
     defer?: (task: () => Promise<unknown>) => void;
+    /** Extra line shown above the lead card, e.g. "returning customer". */
+    noteLine?: string;
   }
 ): Promise<{
   status: RoutingDeliveryStatus;
@@ -423,12 +465,13 @@ export async function sendLeadToStaffTelegram(
   const whatsappUrl = `https://wa.me/${toWhatsAppNumber(lead.phone)}?text=${encodeURIComponent(whatsappGreeting)}`;
 
   const staffTemplate = getTemplateForStaff(staff, options?.customTemplate);
-  const text = renderLeadTemplate(
+  const card = renderLeadTemplate(
     staffTemplate,
     lead,
     staff,
     { leadUrl, whatsappUrl }
   );
+  const text = options?.noteLine ? `${options.noteLine}\n\n${card}` : card;
 
   const telegramApiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
 

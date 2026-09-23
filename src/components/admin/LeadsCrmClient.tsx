@@ -661,6 +661,11 @@ export default function LeadsCrmClient({ initialLeads, pages, initialStatus, ini
                     <div>
                       <span className="text-[10px] text-slate-400 block">Assigned Staff Rep:</span>
                       <strong className="text-slate-900 dark:text-white">{selectedLead.routing.staffName}</strong>
+                      {selectedLead.routing.assignmentReason && selectedLead.routing.assignmentReason !== 'rotation' && (
+                        <span className="block text-[10px] font-bold text-sky-700 dark:text-sky-300">
+                          🔁 {selectedLead.routing.assignmentReason === 'returning_customer' ? 'Returning customer, kept with their rep' : 'Returning visitor, kept with their rep'}
+                        </span>
+                      )}
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-400 block">Telegram Handle:</span>
