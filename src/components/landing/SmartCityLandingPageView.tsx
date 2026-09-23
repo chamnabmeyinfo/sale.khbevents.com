@@ -7,6 +7,7 @@ import LandingPageTracking, { trackLandingEvent } from '@/components/common/Land
 import FlagIcon from '@/components/common/FlagIcon';
 import { safeRedirectUrl } from '@/lib/safe-url';
 import { readUtmParams } from '@/lib/utm';
+import { currentSeatPrice } from '@/lib/seat-price';
 
 import { CONTENT, GENERAL, type PageFacts, type SalePhase } from './smart-city-content';
 
@@ -352,6 +353,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
   const hasDiscount = effEarlyBirdPrice < effRegularPrice;
   const [phase, setPhase] = useState<SalePhase>(() => salePhaseAt(Date.now(), effEarlyBirdDeadline, effRegistrationDeadline, effDepartureDate, hasDiscount));
   const isEarlyBird = phase === 'early';
+  const currentPrice = currentSeatPrice(page?.packages, isEarlyBird, effEarlyBirdPrice, effRegularPrice);
   const effPhone = page?.isolatedSettings?.phone || settings?.phone || GENERAL.contactPhone;
   const effTgUsername = page?.isolatedSettings?.telegramUsername || settings?.telegramUsername || GENERAL.contactTelegramUsername;
   const effTgUrl = `/api/round-robin?page=${encodeURIComponent(page?.slug || 'smart-city-tea-cafe')}&redirect=true`;
@@ -440,7 +442,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
     phase,
     earlyBirdPrice: effEarlyBirdPrice,
     regularPrice: effRegularPrice,
-    currentPrice: isEarlyBird ? effEarlyBirdPrice : effRegularPrice,
+    currentPrice,
     savings: Math.max(0, effRegularPrice - effEarlyBirdPrice),
     totalSeats: effTotalSeats,
     claimedSeats: localClaimed,
@@ -613,7 +615,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
           fullName: regName.trim(),
           phone: regPhone.trim(),
           message: `Seat #${regSeat} | Profile: ${regProfile}`,
-          packageInterest: isEarlyBird ? `Early Bird $${effEarlyBirdPrice}` : `Standard $${effRegularPrice}`,
+          packageInterest: `${isEarlyBird ? 'Early Bird' : 'Standard'} $${currentPrice}`,
           landingPageSlug: page?.slug || 'smart-city-tea-cafe',
           landingPageTitle: page?.title || 'Smart City, Tea & Cafe Business Trip to Vietnam 2026',
           source: 'landing_page',
@@ -630,7 +632,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
         trackLandingEvent(page, 'form_submit', {
           seat: regSeat,
           profile: regProfile,
-          value: isEarlyBird ? effEarlyBirdPrice : effRegularPrice,
+          value: currentPrice,
         }, lang);
 
         const redirectTarget = safeRedirectUrl(page?.isolatedSettings?.redirectUrl);
@@ -886,7 +888,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
                   <span className="value-total-label">{c.valueStackPayLabel}</span>
                   <div className="value-total-price">
                     <span className="price-currency-sm">$</span>
-                    <span>{effEarlyBirdPrice}</span>
+                    <span>{currentPrice}</span>
                   </div>
                 </div>
                 <a href="#register" className="btn-value-cta">{c.valueCtaBtn}</a>
@@ -1772,7 +1774,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang }
             <span className="urgency-countdown" aria-hidden="true">
               <b>{countdown.d}</b>d&nbsp;<b>{countdown.h}</b>h&nbsp;<b>{countdown.m}</b>m&nbsp;<b>{countdown.s}</b>s
             </span>
-            <a href="#register" className="urgency-cta">Claim ${effEarlyBirdPrice} →</a>
+            <a href="#register" className="urgency-cta">{c.navCta}</a>
           </div>
         </div>
       )}
