@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, GripVertical, ImagePlus, Link2, Loader2, Star, Trash2, Upload } from 'lucide-react';
 import { uploadImage } from '@/lib/image-upload-client';
 import { useLanguage } from '@/context/LanguageContext';
+import MediaLibrary from './MediaLibrary';
 
 /**
  * Ordered photo list with upload, drag-to-arrange, arrow buttons, "make cover",
@@ -22,8 +23,6 @@ interface ImageManagerProps {
   hint?: string;
 }
 
-interface UploadedFile { url: string; name: string; createdAt?: string }
-
 function move<T>(list: T[], from: number, to: number): T[] {
   if (from === to || from < 0 || to < 0 || from >= list.length || to >= list.length) return list;
   const next = list.slice();
@@ -37,21 +36,12 @@ const fileLabel = (url: string) => decodeURIComponent(url.split('/').pop() || ur
 export default function ImageManager({ images, onChange, library = [], title, hint }: ImageManagerProps) {
   const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [uploaded, setUploaded] = useState<UploadedFile[]>([]);
+  const [libraryVersion, setLibraryVersion] = useState(0);
   const [pending, setPending] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [urlDraft, setUrlDraft] = useState('');
   const [dragFrom, setDragFrom] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch('/api/uploads')
-      .then(r => (r.ok ? r.json() : { files: [] }))
-      .then(data => { if (!cancelled && Array.isArray(data.files)) setUploaded(data.files); })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, []);
 
   const add = (url: string) => {
     const clean = url.trim();
@@ -69,17 +59,17 @@ export default function ImageManager({ images, onChange, library = [], title, hi
       try {
         const data = await uploadImage(original);
         added.push(data.url);
-        setUploaded(prev => [{ url: data.url, name: data.name }, ...prev]);
       } catch (e) {
         setError(e instanceof Error ? e.message : t('image.uploadFailed'));
       } finally {
         setPending(p => p - 1);
       }
     }
-    if (added.length) onChange([...images, ...added.filter(u => !images.includes(u))]);
+    if (added.length) {
+      onChange([...images, ...added.filter(u => !images.includes(u))]);
+      setLibraryVersion(v => v + 1);
+    }
   };
-
-  const libraryItems = [...uploaded.map(f => f.url), ...library].filter((u, i, all) => all.indexOf(u) === i && !images.includes(u));
 
   return (
     <div className="space-y-4">
@@ -183,26 +173,10 @@ export default function ImageManager({ images, onChange, library = [], title, hi
         </button>
       </div>
 
-      {/* Library: uploaded first, then presets; one click adds */}
-      {libraryItems.length > 0 && (
-        <div className="space-y-1.5">
-          <div className="text-[11px] font-semibold text-slate-500 dark:text-gray-400">{t('image.library')}</div>
-          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
-            {libraryItems.map(photo => (
-              <button
-                key={photo}
-                type="button"
-                onClick={() => add(photo)}
-                title={fileLabel(photo)}
-                className="rounded-xl overflow-hidden aspect-[4/3] border border-slate-200 dark:border-emerald-900/40 hover:border-amber-400 hover:scale-105 transition-all cursor-pointer group relative"
-              >
-                <img src={photo} alt="" className="w-full h-full object-cover" loading="lazy" />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold">{t('image.addOverlay')}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Library: uploaded photos (rename, delete) then presets; one click adds */}
+      <div className="pt-3 border-t border-slate-100 dark:border-emerald-950/60">
+        <MediaLibrary onPick={add} exclude={images} presets={library} reloadKey={libraryVersion} />
+      </div>
     </div>
   );
 }

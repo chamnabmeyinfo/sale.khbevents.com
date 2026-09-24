@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mkdir, readdir, stat, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { requireAdmin } from '@/lib/auth';
-import { getSupabase } from '@/lib/supabase';
+import { LOCAL_UPLOAD_DIR, listLibrary, uploadStorage } from '@/lib/upload-store';
 import { ALLOWED_IMAGE_TYPES, MAX_UPLOAD_BYTES, UPLOAD_BUCKET, isAllowedImageType, safeUploadName } from '@/lib/uploads';
 
 /**
@@ -13,17 +13,14 @@ import { ALLOWED_IMAGE_TYPES, MAX_UPLOAD_BYTES, UPLOAD_BUCKET, isAllowedImageTyp
  * bucket `page-images` (created on first use). Without Supabase, local development
  * writes to public/uploads and serves them through /api/uploads/[name].
  *
- * GET → { files: [{ url, name, createdAt }] } the library of uploaded images, newest first.
+ * GET → { files: [{ url, name, createdAt, label, usedBy }] } the photo library, newest first.
+ * Rename and delete: /api/uploads/[name].
  */
 
 export const runtime = 'nodejs';
 
-const LOCAL_DIR = path.join(process.cwd(), 'public', 'uploads');
-
-function storageReady(): SupabaseClient | null {
-  // The anon key cannot write to storage, so only a service-role client counts.
-  return process.env.SUPABASE_SERVICE_ROLE_KEY ? getSupabase() : null;
-}
+const LOCAL_DIR = LOCAL_UPLOAD_DIR;
+const storageReady = uploadStorage;
 
 async function ensureBucket(supabase: SupabaseClient): Promise<void> {
   const { data } = await supabase.storage.getBucket(UPLOAD_BUCKET);
@@ -89,32 +86,7 @@ export async function GET() {
   if (unauthorized) return unauthorized;
 
   try {
-    const supabase = storageReady();
-    if (supabase) {
-      const { data: bucket } = await supabase.storage.getBucket(UPLOAD_BUCKET);
-      if (!bucket) return NextResponse.json({ success: true, files: [] });
-      const { data, error } = await supabase.storage
-        .from(UPLOAD_BUCKET)
-        .list('', { limit: 200, sortBy: { column: 'created_at', order: 'desc' } });
-      if (error) throw error;
-      const files = (data || [])
-        .filter(f => f.name && !f.name.startsWith('.'))
-        .map(f => ({
-          name: f.name,
-          url: supabase.storage.from(UPLOAD_BUCKET).getPublicUrl(f.name).data.publicUrl,
-          createdAt: f.created_at,
-        }));
-      return NextResponse.json({ success: true, files });
-    }
-
-    const names = await readdir(LOCAL_DIR).catch(() => [] as string[]);
-    const files = await Promise.all(
-      names
-        .filter(n => !n.startsWith('.'))
-        .map(async n => ({ name: n, url: `/api/uploads/${n}`, createdAt: (await stat(path.join(LOCAL_DIR, n))).mtime.toISOString() })),
-    );
-    files.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    return NextResponse.json({ success: true, files });
+    return NextResponse.json({ success: true, files: await listLibrary() });
   } catch (error) {
     console.error('Upload list error:', error);
     return NextResponse.json({ success: false, error: 'Could not list uploads.' }, { status: 500 });

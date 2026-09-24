@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
-import { Loader2, Upload, X } from 'lucide-react';
+import { Images, Loader2, Upload, X } from 'lucide-react';
 import { uploadImage } from '@/lib/image-upload-client';
 import { useLanguage } from '@/context/LanguageContext';
+import MediaLibrary from './MediaLibrary';
 
 /**
  * One image: a URL box with an Upload button, a thumbnail preview and a clear button.
@@ -28,6 +29,7 @@ export default function ImageField({ label, value, onChange, placeholder, hint, 
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   const handleFiles = async (files: FileList | null) => {
     const file = files?.[0];
@@ -83,12 +85,27 @@ export default function ImageField({ label, value, onChange, placeholder, hint, 
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
           <span>{busy ? t('common.uploading') : t('common.upload')}</span>
         </button>
+        <button
+          type="button"
+          onClick={() => setLibraryOpen(o => !o)}
+          aria-expanded={libraryOpen}
+          title={t('media.pickFromLibrary')}
+          aria-label={t('media.pickFromLibrary')}
+          className={`p-2 rounded-lg border cursor-pointer shrink-0 ${libraryOpen ? 'border-amber-400 bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300' : 'border-slate-300 dark:border-emerald-900/60 text-slate-600 dark:text-gray-300 hover:border-amber-400'}`}
+        >
+          <Images className="w-3.5 h-3.5" />
+        </button>
         {value && (
           <button type="button" onClick={() => onChange('')} title={t('image.clear')} aria-label={t('image.clearImage')} className="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer shrink-0">
             <X className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
+      {libraryOpen && (
+        <div className="mt-2 p-3 rounded-xl border border-slate-200 dark:border-emerald-900/60 bg-slate-50 dark:bg-black/20">
+          <MediaLibrary compact maxEdge={maxEdge} exclude={value ? [value] : []} onPick={url => { onChange(url); setLibraryOpen(false); }} />
+        </div>
+      )}
       {error && <p className="mt-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400">{error}</p>}
       {hint && !error && <p className="mt-1 text-[11px] text-slate-500 dark:text-gray-400">{hint}</p>}
     </div>

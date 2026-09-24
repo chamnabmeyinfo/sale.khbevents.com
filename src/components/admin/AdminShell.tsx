@@ -31,6 +31,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     if (pathname.startsWith('/admin/leads')) return t('crumb.leads');
     if (pathname.startsWith('/admin/round-robin')) return t('crumb.roundRobin');
     if (pathname.startsWith('/admin/ads')) return t('crumb.ads');
+    if (pathname.startsWith('/admin/media')) return t('crumb.media');
     if (pathname.startsWith('/admin/settings')) return t('crumb.settings');
     if (pathname.startsWith('/admin/guide')) return t('crumb.guide');
     return t('crumb.admin');
@@ -42,7 +43,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const userName = isSuperAdmin ? 'Admin KHB' : 'Chamnam Mey';
 
   return (
-    <div className="admin-shell min-h-screen bg-[#F8FAFC] dark:bg-[#070E0A] text-slate-900 dark:text-gray-100 selection:bg-amber-400 selection:text-black transition-colors duration-200">
+    <div className="admin-shell min-h-screen bg-[#F8FAFC] dark:bg-[#070E0A] text-slate-900 dark:text-gray-100 selection:bg-[#FBBF24] selection:text-black transition-colors duration-200">
       {/* Left Aside Navigation (Fixed on desktop, sliding drawer on mobile) */}
       <AdminSidebar />
 

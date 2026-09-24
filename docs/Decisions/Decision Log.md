@@ -26,6 +26,16 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-24 — Renaming a library photo changes its display name, not its file
+
+- **Decision:** In the Photo Library, rename sets a name shown in the admin. The stored file and its public address never change.
+- **Why:** Pages and popups save the photo's address. Renaming the file would break every page that shows it.
+- **Details:** Names are kept in the `media_library` row of `system_settings`. Deleting a photo that is still used asks first and names the pages and popups.
+- **Decided by:** Claude with owner approval.
+- **Affects:** [[Image Uploads]].
+
+---
+
 ## 2026-09-24 — Drag and drop pages store their sections on the page itself
 
 - **Decision:** A page made in the drag and drop builder has `template: builder` and a `builder` document: one Offer (price, stock, deadline, button action), a brand colour, and the list of sections. Every section reads its facts from the Offer. In Supabase the document is stored in the page's `form_config._extra`.

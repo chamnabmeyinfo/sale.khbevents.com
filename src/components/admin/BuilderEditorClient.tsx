@@ -684,7 +684,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
             <ExternalLink className="w-3.5 h-3.5" />{t('builder.view')}
           </a>
           {meta.status !== 'published' ? (
-            <button type="button" disabled={saving} onClick={() => save('published')} className="px-3 py-2 rounded-xl text-[11px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer disabled:opacity-50">{t('builder.publish')}</button>
+            <button type="button" disabled={saving} onClick={() => save('published')} className="px-3 py-2 rounded-xl text-[11px] font-bold bg-emerald-600 hover:bg-emerald-500 text-[#fff] on-dark cursor-pointer disabled:opacity-50">{t('builder.publish')}</button>
           ) : (
             <button type="button" disabled={saving} onClick={() => save('draft')} className="px-3 py-2 rounded-xl text-[11px] font-bold bg-slate-100 dark:bg-emerald-950 text-slate-700 dark:text-emerald-300 cursor-pointer disabled:opacity-50">{t('builder.unpublish')}</button>
           )}
@@ -766,7 +766,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
                           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-400 text-black text-[10px] font-extrabold shadow cursor-grab">
                             <GripVertical className="w-3 h-3" />{pick(BLOCK_DEFINITIONS[block.type].name, uiLang)}
                           </span>
-                          {hints.length > 0 && <span className="px-1.5 py-1 rounded-md bg-rose-600 text-white text-[10px] font-extrabold shadow" title={hints.join('\n')}>{hints.length}</span>}
+                          {hints.length > 0 && <span className="px-1.5 py-1 rounded-md bg-rose-600 text-[#fff] on-dark text-[10px] font-extrabold shadow" title={hints.join('\n')}>{hints.length}</span>}
                         </div>
                         <div className={`absolute top-2 right-2 z-10 flex items-center gap-1 ${isSel ? '' : 'opacity-0 group-hover:opacity-100'} transition-opacity`} onClick={(e) => e.stopPropagation()}>
                           <button type="button" className={ICON_BTN} disabled={index === 0} onClick={() => move(index, index - 1)} aria-label={t('builder.moveUp')} title={t('builder.moveUp')}><ArrowUp className="w-3.5 h-3.5" /></button>

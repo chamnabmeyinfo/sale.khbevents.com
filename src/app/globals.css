@@ -274,3 +274,17 @@ html.lang-kh .admin-shell .font-mono,
 html.lang-kh .admin-login .font-mono {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
 }
+
+/* White text on a coloured chip or button in the admin. Light mode otherwise turns
+   admin text dark (see the amber and text-white rules above); this keeps it white. */
+html.light .on-dark,
+html.light .on-dark * {
+  color: #FFFFFF !important;
+}
+
+/* Admin language switch: the public app view's white button text must not leak
+   into the light admin header. */
+html.light .admin-shell .lang-btn:not(.active),
+html.light .admin-login .lang-btn:not(.active) {
+  color: #334155;
+}

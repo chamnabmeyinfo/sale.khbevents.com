@@ -56,6 +56,8 @@ Suggested order: lock the database first, then change the token and the password
 
 ### Code problems found while writing the vault
 
+- [ ] **Light mode forces black text on public pages and the login page.** `DynamicLandingPageView.tsx`, `MainSalesView.tsx` and `app/admin/login/page.tsx` carry `selection:bg-amber-400`, which matches the gold-button rule in `globals.css` and turns all their text black in light mode. The admin was fixed on 2026-09-24 (see [[Image Uploads]]). #for-claude
+
 Found by checking the notes against the code on 2026-09-24. Each needs the owner's go-ahead before Claude changes the code.
 
 - [ ] **Wrong price on the app view.** `/smart-city-tea-cafe/app` shows **$499** in its button, countdown label and total, typed into `src/components/landing/SmartCityAppView.tsx`, whatever the admin price is. The real price is $550. Fix first: visitors can see it today. → [[Smart City Tea and Cafe Vietnam 2026]] #for-claude

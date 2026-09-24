@@ -805,6 +805,8 @@ export interface DatabaseSchema {
   popupAds?: PopupAdsState;
   // Per-ad counters (views / clicks / closes), keyed by ad id.
   popupAdStats?: PopupAdStatsMap;
+  // Display names of uploaded photos, keyed by storage file name (admin photo library).
+  mediaLibrary?: import('./media-library').MediaMeta;
 }
 
 // ─── Popup ads ─────────────────────────────────────────────────────────────

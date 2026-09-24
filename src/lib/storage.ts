@@ -35,6 +35,7 @@ import { isSupabaseConfigured } from './supabase';
 import { runAfterResponse } from './after-response';
 import { defaultPopupAdsState, normalizePopupAdsState, selectPublicPopupAds } from './popup-ads';
 import { normalizeBuilderDoc } from './builder';
+import { normalizeMediaMeta, type MediaMeta } from './media-library';
 import {
   supabaseGetPages,
   supabaseGetPageBySlug,
@@ -60,6 +61,8 @@ import {
   supabaseSetMarker,
   supabaseGetPopupAds,
   supabaseSavePopupAds,
+  supabaseGetMediaMeta,
+  supabaseSaveMediaMeta,
   supabaseGetPopupAdStats,
   supabaseSavePopupAdStats
 } from './supabase-store';
@@ -1202,6 +1205,33 @@ export async function savePopupAds(input: unknown): Promise<PopupAdsState> {
   }
   invalidateCache('popup-ads');
   return state;
+}
+
+/** Display names of uploaded photos (admin photo library). Always read fresh: admin only. */
+export async function getMediaMeta(): Promise<MediaMeta> {
+  if (isSupabaseConfigured()) {
+    try {
+      const remote = await supabaseGetMediaMeta();
+      if (remote === undefined) return {};
+      if (remote !== null) return normalizeMediaMeta(remote);
+    } catch (err) {
+      console.error('Supabase getMediaMeta error:', err);
+    }
+  }
+  const db = await getDatabase();
+  return normalizeMediaMeta(db.mediaLibrary);
+}
+
+export async function saveMediaMeta(input: MediaMeta): Promise<MediaMeta> {
+  const meta = normalizeMediaMeta(input);
+  const db = await getDatabase();
+  db.mediaLibrary = meta;
+  await saveDatabase(db);
+  if (isSupabaseConfigured()) {
+    const ok = await supabaseSaveMediaMeta(meta);
+    if (!ok) throw new Error('Could not save the photo name. Try again.');
+  }
+  return meta;
 }
 
 /**

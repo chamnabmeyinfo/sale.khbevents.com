@@ -3,7 +3,7 @@ type: feature
 tags: [system, feature, images, uploads]
 updated: 2026-09-24
 admin_path: /admin/pages
-admin_menu: Landing Pages CMS and Ads & Popups (image fields)
+admin_menu: Landing Pages CMS → Photo Library, and every image field
 source:
   - src/lib/uploads.ts
   - src/lib/image-upload-client.ts
@@ -11,6 +11,10 @@ source:
   - src/app/api/uploads/[name]/route.ts
   - src/components/admin/ImageField.tsx
   - src/components/admin/ImageManager.tsx
+  - src/components/admin/MediaLibrary.tsx
+  - src/app/admin/media/page.tsx
+  - src/lib/media-library.ts
+  - src/lib/upload-store.ts
   - src/components/admin/PageEditor.tsx
   - src/components/admin/IsolatedSettingsEditor.tsx
   - src/components/admin/AdsManagerClient.tsx
@@ -42,6 +46,21 @@ Every image field has an upload button next to the address box ("Paste an image 
 | Page editor → Dedicated Settings | KHQR **QR code image** | 1200 px |
 | Ads & Popups → Content | **Picture (optional)** | 1600 px |
 
+## Photo Library (add, view, rename, delete)
+
+Admin → Landing Pages CMS → **Photo Library** (`/admin/media`) lists every uploaded photo. The same library opens inside the page editor (under the photo list) and from the **library button** beside every single image field, including the drag and drop builder.
+
+| Action | How | What happens |
+|---|---|---|
+| Add | **Upload to library**, or drop image files on the library | Shrunk and stored like any upload |
+| Find | Search box: matches the display name or the file name | |
+| View | Click a photo on the library page, or the open icon | Opens full size in a new tab |
+| Use | In a picker, click a photo | Added to the page or field; photos already used there show **Added** |
+| Rename | Pencil icon, or click the name; Enter saves, Esc cancels | Changes only the name shown in the library. The file and its address stay the same, so pages keep working |
+| Delete | Bin icon | Deletes the file. If a page or popup still shows it, the library lists them and asks **Delete anyway** or **Cancel** |
+
+A green **Used N×** tag shows how many pages and popups contain the photo (drafts included). Preset photos from the site itself are marked **Preset** and cannot be renamed or deleted here.
+
 ## How to use it
 
 For one image:
@@ -69,7 +88,9 @@ For the hero slideshow and gallery:
 | Small PNGs | PNGs under 400 KB stay PNG, so logos and QR codes keep crisp edges | same |
 | GIFs | Sent as they are, so animation is kept | same |
 | File names | `<time>-<random>-<cleaned name>.<type>`. The original name is only a readable hint, and the extension comes from the file's MIME type, not its name | `safeUploadName` |
-| Library | Uploaded files newest first (up to 200), plus preset photos | `src/app/api/uploads/route.ts`, `ImageManager.tsx` |
+| Library | Uploaded files newest first (up to 1000), plus preset photos | `src/lib/upload-store.ts`, `MediaLibrary.tsx` |
+| Display names | Stored as the `media_library` JSON row in `system_settings` (locally in `data/db.json`), keyed by file name, 80 characters at most | `src/lib/media-library.ts` |
+| Rename and delete | `PATCH` / `DELETE /api/uploads/<file name>`, admins only; only names the upload route creates are accepted | `src/app/api/uploads/[name]/route.ts` |
 | Who can upload | Logged-in admins only | `requireAdmin` |
 
 ## How it works
@@ -77,7 +98,7 @@ For the hero slideshow and gallery:
 1. The admin picks a file. `prepareForUpload` shrinks and re-encodes it in the browser.
 2. The browser sends it to `POST /api/uploads`.
 3. The server checks the type and size, gives it a safe name and stores it in the `page-images` bucket. It returns the public address, which the field saves on the page.
-4. `GET /api/uploads` lists the library for the photo picker.
+4. `GET /api/uploads` lists the library with display names and where each photo is used.
 
 Without Supabase (local development) files go to `public/uploads` and are served by `/api/uploads/<name>`.
 

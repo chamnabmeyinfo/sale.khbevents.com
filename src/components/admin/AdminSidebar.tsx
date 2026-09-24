@@ -30,6 +30,7 @@ import {
   BarChart3,
   Megaphone,
   BookOpen,
+  Images,
   type LucideIcon
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -63,7 +64,7 @@ export default function AdminSidebar() {
   // Expanded sub-menus state (default: all expanded or auto-expanded based on pathname)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     dashboard: pathname === '/admin',
-    pages: pathname.startsWith('/admin/pages'),
+    pages: pathname.startsWith('/admin/pages') || pathname.startsWith('/admin/media') || pathname.startsWith('/admin/builder'),
     leads: pathname.startsWith('/admin/leads'),
     roundRobin: pathname.startsWith('/admin/round-robin'),
     ads: pathname.startsWith('/admin/ads'),
@@ -104,9 +105,10 @@ export default function AdminSidebar() {
       label: t('nav.pages'),
       icon: FileText,
       href: '/admin/pages',
-      isActive: pathname.startsWith('/admin/pages'),
+      isActive: pathname.startsWith('/admin/pages') || pathname.startsWith('/admin/media') || pathname.startsWith('/admin/builder'),
       subItems: [
         { label: t('nav.pages.all'), href: '/admin/pages', icon: Layers },
+        { label: t('nav.pages.media'), href: '/admin/media', icon: Images },
         { label: t('nav.pages.new'), href: '/admin/pages/new', icon: PlusCircle, isHighlight: true },
         { label: t('nav.pages.smartCity'), href: '/admin/pages/page-smart-city', icon: Sparkles },
         { label: t('nav.pages.analytics'), href: '/admin/pages/page-smart-city/analytics', icon: Activity },

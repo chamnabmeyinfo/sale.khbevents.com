@@ -589,6 +589,15 @@ export async function supabaseSavePopupAdStats(stats: PopupAdStatsMap): Promise<
   return writeJsonRow('popup_ad_stats', stats);
 }
 
+/** Photo library display names, or undefined when no row exists yet, or null when Supabase is unavailable. */
+export async function supabaseGetMediaMeta(): Promise<unknown> {
+  return readJsonRow<unknown>('media_library');
+}
+
+export async function supabaseSaveMediaMeta(meta: unknown): Promise<boolean> {
+  return writeJsonRow('media_library', meta);
+}
+
 // Small key/value markers, stored as rows in system_settings like the data above.
 export async function supabaseGetMarker(id: string): Promise<string | null> {
   const supabase = getSupabase();
