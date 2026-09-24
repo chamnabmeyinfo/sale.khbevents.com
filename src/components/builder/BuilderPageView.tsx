@@ -3,7 +3,7 @@
 import React from 'react';
 import type { LandingPage, PopupAd } from '@/lib/types';
 import type { Lang } from '@/lib/builder';
-import { normalizeBuilderDoc } from '@/lib/builder';
+import { ctaOpensTelegram, effectiveOffer, normalizeBuilderDoc } from '@/lib/builder';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
 import PopupAdsHost from '@/components/common/PopupAds';
 import { popupStorageKeys } from '@/lib/popup-ads';
@@ -11,9 +11,12 @@ import { useStoredChoice, useUrlParam } from '@/lib/use-browser-state';
 import { BlockView, BuilderRoot, useNow } from './BuilderBlocks';
 
 /** Public view of a page made with the drag-and-drop builder. */
-export default function BuilderPageView({ page, initialLang = 'en', popupAds, popupPreviewId }: {
+export default function BuilderPageView({ page, initialLang = 'en', serverNowMs, popupAds, popupPreviewId }: {
   page: LandingPage;
+  /** From ?lang=, else the page's default language. */
   initialLang?: Lang;
+  /** Server render time, so prices match between the server HTML and the first browser render. */
+  serverNowMs?: number;
   popupAds?: PopupAd[];
   popupPreviewId?: string;
 }) {
@@ -22,6 +25,9 @@ export default function BuilderPageView({ page, initialLang = 'en', popupAds, po
   const [storedLang, setStoredLang] = useStoredChoice<Lang>('khb_lang', ['en', 'kh'] as const, initialLang);
   const lang: Lang = urlLang === 'kh' || urlLang === 'en' ? urlLang : storedLang;
   const nowMs = useNow();
+
+  const priceNow = effectiveOffer(doc.offer, nowMs ?? serverNowMs ?? null).price;
+  const leadValue = doc.offer.currency === 'USD' && priceNow ? priceNow : undefined;
 
   const switchLang = (next: Lang) => {
     setStoredLang(next);
@@ -51,10 +57,11 @@ export default function BuilderPageView({ page, initialLang = 'en', popupAds, po
               lang,
               slug: page.slug,
               nowMs,
-              onCta: (b) => trackLandingEvent(page, doc.offer.cta.action === 'telegram' ? 'telegram_click' : 'cta_click', { placement: `builder_${b.type}` }, lang),
+              serverNowMs,
+              onCta: (b) => trackLandingEvent(page, ctaOpensTelegram(doc.offer) ? 'telegram_click' : 'cta_click', { placement: `builder_${b.type}` }, lang),
               onLead: (b) => {
                 // No names or phone numbers in tracking: the lead itself is in Leads.
-                trackLandingEvent(page, 'form_submit', { placement: `builder_${b.type}`, ...(doc.offer.currency === 'USD' && doc.offer.price ? { value: doc.offer.price } : {}) }, lang);
+                trackLandingEvent(page, 'form_submit', { placement: `builder_${b.type}`, ...(leadValue ? { value: leadValue } : {}) }, lang);
                 try {
                   localStorage.setItem(popupStorageKeys.leadSent, '1');
                 } catch {}

@@ -71,13 +71,15 @@ export interface FaqBlock extends BlockBase {
 }
 
 /** Icons a benefit can show; drawn by the renderer. */
-export const BENEFIT_ICONS = ['sparkles', 'check', 'star', 'shield', 'clock', 'gift', 'heart', 'truck', 'chat', 'users', 'leaf', 'award'] as const;
+export const BENEFIT_ICONS = ['sparkles', 'check', 'star', 'shield', 'clock', 'gift', 'heart', 'truck', 'chat', 'users', 'leaf', 'award', 'tent', 'glasses', 'briefcase', 'plane'] as const;
 export type BenefitIcon = (typeof BENEFIT_ICONS)[number];
 
 export interface BenefitItem {
   icon: BenefitIcon;
   title: Bi;
   text?: Bi;
+  /** Optional "Official website" link, e.g. a trade fair's site. */
+  link?: string;
 }
 
 export interface BenefitsBlock extends BlockBase {
@@ -121,6 +123,9 @@ export interface FormBlock extends BlockBase {
   /** Name and phone are always asked; these add optional fields. */
   askEmail: boolean;
   askMessage: boolean;
+  /** Optional choice list, e.g. "Which sector interests you?". Sent with the lead. */
+  interestLabel?: Bi;
+  interestOptions?: Bi[];
   submitLabel: Bi;
   successTitle: Bi;
   successText?: Bi;
@@ -150,6 +155,11 @@ export interface BuilderOffer {
   priceNote?: Bi;
   /** ISO date the offer or discount ends; drives the countdown. */
   deadline?: string;
+  /** Countdown heading for the deadline, e.g. "Registration closes in". */
+  deadlineLabel?: Bi;
+  /** Early-bird price, charged instead of `price` until `earlyUntil`; then `price` applies by itself. */
+  earlyPrice?: number | null;
+  earlyUntil?: string;
   /** Seats or stock; both null hides the counter. */
   stockTotal: number | null;
   stockLeft: number | null;
@@ -167,6 +177,8 @@ export interface BuilderBrand {
 
 export interface BuilderDoc {
   version: 1;
+  /** Language a first-time visitor sees; the EN/ខ្មែរ switch still works. */
+  defaultLang?: Lang;
   offer: BuilderOffer;
   brand: BuilderBrand;
   blocks: BuilderBlock[];
@@ -498,7 +510,7 @@ function normalizeBlock(v: unknown): BuilderBlock | null {
     const items = Array.isArray(o.items)
       ? o.items.slice(0, 12).map((it) => {
           const r = obj(it);
-          return { icon: oneOf(r.icon, BENEFIT_ICONS, 'check'), title: bi(r.title, 120), text: optBi(r.text, 400) };
+          return { icon: oneOf(r.icon, BENEFIT_ICONS, 'check'), title: bi(r.title, 120), text: optBi(r.text, 400), link: url(r.link) };
         }).filter((it) => hasText(it.title))
       : [];
     return {
@@ -546,6 +558,8 @@ function normalizeBlock(v: unknown): BuilderBlock | null {
       sub: optBi(o.sub, 300),
       askEmail: o.askEmail === true,
       askMessage: o.askMessage === true,
+      interestLabel: optBi(o.interestLabel, 120),
+      interestOptions: Array.isArray(o.interestOptions) ? o.interestOptions.slice(0, 10).map((x) => bi(x, 120)).filter(hasText) : [],
       submitLabel: bi(o.submitLabel, 60, b.submitLabel),
       successTitle: bi(o.successTitle, 120, b.successTitle),
       successText: optBi(o.successText, 300),
@@ -569,6 +583,7 @@ function normalizeOffer(v: unknown): BuilderOffer {
   const ctaRaw = (o.cta && typeof o.cta === 'object' ? o.cta : {}) as Record<string, unknown>;
   const action = oneOf(ctaRaw.action, ['telegram', 'url'] as const, 'telegram');
   const deadlineMs = typeof o.deadline === 'string' ? new Date(o.deadline).getTime() : NaN;
+  const earlyMs = typeof o.earlyUntil === 'string' ? new Date(o.earlyUntil).getTime() : NaN;
   const stockTotal = num(o.stockTotal, 0, 1_000_000);
   const stockLeftRaw = num(o.stockLeft, 0, 1_000_000);
   return {
@@ -578,6 +593,9 @@ function normalizeOffer(v: unknown): BuilderOffer {
     currency: oneOf(o.currency, ['USD', 'KHR'] as const, 'USD'),
     priceNote: optBi(o.priceNote, 60),
     deadline: Number.isFinite(deadlineMs) ? new Date(deadlineMs).toISOString() : undefined,
+    deadlineLabel: optBi(o.deadlineLabel, 60),
+    earlyPrice: num(o.earlyPrice, 0, 1_000_000_000),
+    earlyUntil: Number.isFinite(earlyMs) ? new Date(earlyMs).toISOString() : undefined,
     stockTotal,
     stockLeft: stockLeftRaw !== null && stockTotal !== null ? Math.min(stockLeftRaw, stockTotal) : stockLeftRaw,
     stockLabel: bi(o.stockLabel, 40, d.stockLabel),
@@ -602,6 +620,7 @@ export function normalizeBuilderDoc(input: unknown): BuilderDoc {
   }
   return {
     version: 1,
+    defaultLang: oneOf(o.defaultLang, ['en', 'kh'] as const, 'en'),
     offer: normalizeOffer(o.offer),
     brand: {
       accent: HEX.test(accent) ? accent : DEFAULT_ACCENT,
@@ -681,6 +700,43 @@ export function stockTakenPercent(offer: Pick<BuilderOffer, 'stockTotal' | 'stoc
 export function offerCtaHref(offer: BuilderOffer, slug: string): string {
   if (offer.cta.action === 'url' && offer.cta.url) return offer.cta.url;
   return `/api/round-robin?page=${encodeURIComponent(slug)}&redirect=true`;
+}
+
+export interface EffectiveOffer {
+  /** Price the buyer pays right now. */
+  price: number | null;
+  /** Higher price to strike through, or null. */
+  compareAtPrice: number | null;
+  /** What the countdown counts to, and why. */
+  countdownTo?: string;
+  countdownKind: 'early' | 'offer';
+}
+
+/**
+ * Price and countdown at a moment in time. While an early-bird price is open
+ * (lower than the regular price, before `earlyUntil`) it is charged and the
+ * regular price is struck through; afterwards the regular price applies and the
+ * countdown moves to the offer deadline, with no edit needed. `nowMs` null
+ * (not known yet) counts as "early bird still open".
+ */
+export function effectiveOffer(offer: BuilderOffer, nowMs: number | null): EffectiveOffer {
+  const early = offer.earlyPrice ?? null;
+  const until = offer.earlyUntil ? new Date(offer.earlyUntil).getTime() : NaN;
+  const earlyValid = early !== null && Number.isFinite(until) && (offer.price === null || early < offer.price);
+  if (earlyValid && (nowMs === null || nowMs < until)) {
+    return { price: early, compareAtPrice: offer.price, countdownTo: offer.earlyUntil, countdownKind: 'early' };
+  }
+  return { price: offer.price, compareAtPrice: offer.compareAtPrice, countdownTo: offer.deadline, countdownKind: 'offer' };
+}
+
+/** A link that is safe to render (http/https or a site path), else undefined. */
+export function safeLink(v: unknown): string | undefined {
+  return typeof v === 'string' && v ? url(v) : undefined;
+}
+
+/** True when the main button opens Telegram (round robin or a t.me link). */
+export function ctaOpensTelegram(offer: BuilderOffer): boolean {
+  return offer.cta.action === 'telegram' || /^https:\/\/(t\.me|telegram\.me)\//i.test(offer.cta.url || '');
 }
 
 // ─── Health hints (editor) ─────────────────────────────────────────────────

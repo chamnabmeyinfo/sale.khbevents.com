@@ -7,7 +7,10 @@ import SmartCityLandingPageView from '@/components/landing/SmartCityLandingPageV
 import SmartCityAppView from '@/components/landing/SmartCityAppView';
 import SmartCityOptinView from '@/components/landing/SmartCityOptinView';
 import BuilderPageView from '@/components/builder/BuilderPageView';
+import { normalizeBuilderDoc } from '@/lib/builder';
+import { serverNowMs } from '@/lib/popup-ads';
 import { Metadata } from 'next';
+import type { LandingPage } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -87,7 +90,20 @@ export default async function CampaignPage({ params, searchParams }: PageProps) 
 
   // Pages made with the drag-and-drop builder render their own components.
   if (page?.template === 'builder' && page.builder) {
-    return <BuilderPageView page={page} initialLang={initialLang} {...popupProps} />;
+    const builderLang = sp.lang === 'kh' || sp.lang === 'en' ? sp.lang : normalizeBuilderDoc(page.builder).defaultLang || 'en';
+    // Send the browser only what a builder page uses: the rest of the record (form and
+    // contact settings, old template copy) is admin data, not page content.
+    const publicPage = {
+      id: page.id,
+      slug: page.slug,
+      title: page.title,
+      category: page.category,
+      status: page.status,
+      template: page.template,
+      tracking: page.tracking,
+      builder: page.builder,
+    } as LandingPage;
+    return <BuilderPageView page={publicPage} initialLang={builderLang} serverNowMs={serverNowMs()} {...popupProps} />;
   }
 
   if (cleanSlug === 'smart-city-tea-cafe') {

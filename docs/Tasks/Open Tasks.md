@@ -33,6 +33,13 @@ Suggested order: lock the database first, then change the token and the password
 - [ ] Choose the **Remember a visitor for** period in Admin → Staff Round Robin → Advanced Routing Engine Rules & Fallbacks. Choices: Off, 1, 2, 3 or 6 months. The default in the repo is 1 month. → [[Round Robin]] #owner
 - [ ] Decide whether to run a popup, and create the first one if wanted. → [[Create a Popup]], [[Ads and Popups]] #owner
 
+### Korea trip
+
+- [ ] Confirm the early-bird date. The caption says "before 31/9/26"; the page uses 30 September 2026. Change it in the builder if needed. → [[Korea Sourcing Trip Seoul 2026]] #owner
+- [ ] Send real photos for the Korea page (hero and social sharing), and a day-by-day itinerary if it should be shown. → [[Korea Sourcing Trip Seoul 2026]] #owner
+- [ ] Decide whether the Korea page's Telegram button goes to Mr. Tim Vutha directly (as now) or through Round Robin. → [[Round Robin]] #owner
+- [ ] Send the caption for the second new trip. #owner
+
 ### Page builder
 
 - [ ] Try **New drag & drop page** in Admin → Landing Pages CMS with one real product and say what feels hard or missing. → [[Page Builder]] #owner

@@ -3,6 +3,8 @@ import {
   BLOCK_TYPES,
   blockHints,
   countdown,
+  ctaOpensTelegram,
+  effectiveOffer,
   createBlock,
   defaultBuilderDoc,
   discountPercent,
@@ -165,5 +167,47 @@ describe('sales page components', () => {
     expect(blockHints(createBlock('form'))).toEqual([]);
     const empty = normalizeBuilderDoc({ blocks: [{ type: 'included', title: { en: 'X', kh: 'ក' }, items: [] }] }).blocks[0];
     expect(blockHints(empty)).toEqual(['noItems']);
+  });
+});
+
+describe('early-bird pricing, language and links', () => {
+  const offer = normalizeBuilderDoc({
+    offer: { price: 799, earlyPrice: 750, earlyUntil: '2026-09-30T16:59:59Z', deadline: '2026-10-15T16:59:59Z', cta: { action: 'url', url: 'https://t.me/VuthaTim' } },
+  }).offer;
+
+  it('charges the early-bird price until its date, then the regular price by itself', () => {
+    const before = effectiveOffer(offer, Date.parse('2026-09-24T00:00:00Z'));
+    expect(before).toMatchObject({ price: 750, compareAtPrice: 799, countdownKind: 'early', countdownTo: '2026-09-30T16:59:59.000Z' });
+    expect(discountPercent(before)).toBe(6);
+    const after = effectiveOffer(offer, Date.parse('2026-10-01T00:00:00Z'));
+    expect(after).toMatchObject({ price: 799, compareAtPrice: null, countdownKind: 'offer', countdownTo: '2026-10-15T16:59:59.000Z' });
+    expect(effectiveOffer(offer, null).price).toBe(750);
+  });
+
+  it('ignores an early-bird price that is not lower than the price', () => {
+    const odd = { ...offer, earlyPrice: 900 };
+    expect(effectiveOffer(odd, Date.parse('2026-09-24T00:00:00Z')).price).toBe(799);
+  });
+
+  it('treats a t.me link as Telegram', () => {
+    expect(ctaOpensTelegram(offer)).toBe(true);
+    expect(ctaOpensTelegram({ ...offer, cta: { action: 'url', url: 'https://example.com' } })).toBe(false);
+    expect(ctaOpensTelegram({ ...offer, cta: { action: 'telegram' } })).toBe(true);
+  });
+
+  it('keeps the default language, safe links and form choices', () => {
+    const doc = normalizeBuilderDoc({
+      defaultLang: 'kh',
+      blocks: [
+        { type: 'benefits', title: { en: 'Fairs' }, items: [{ icon: 'glasses', title: { en: 'Optic fair' }, link: 'https://kopticsfair.com/en/' }, { icon: 'tent', title: { en: 'X' }, link: 'javascript:alert(1)' }] },
+        { type: 'form', title: { en: 'Join' }, interestLabel: { en: 'Sector?' }, interestOptions: [{ en: 'Camping' }, { en: '' }, 'Eyewear'] },
+      ],
+    });
+    expect(doc.defaultLang).toBe('kh');
+    expect(normalizeBuilderDoc({}).defaultLang).toBe('en');
+    const benefits = doc.blocks[0] as BenefitsBlock;
+    expect(benefits.items[0]).toMatchObject({ icon: 'glasses', link: 'https://kopticsfair.com/en/' });
+    expect(benefits.items[1].link).toBeUndefined();
+    expect((doc.blocks[1] as FormBlock).interestOptions).toEqual([{ en: 'Camping' }, { en: 'Eyewear' }]);
   });
 });

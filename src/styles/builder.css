@@ -237,6 +237,9 @@
 .kb-theme-brand .kb-benefit__icon { color: #FFFFFF; }
 .kb-benefit__title { margin: 14px 0 6px; font-size: 1.12rem; font-weight: 800; line-height: 1.3; }
 .kb-benefit__text { margin: 0; color: var(--kb-muted); font-size: 0.97rem; }
+.kb-benefit__link { display: inline-flex; gap: 4px; margin-top: 8px; font-size: 0.9rem; font-weight: 700; color: var(--kb-accent-dark); text-decoration: underline; text-underline-offset: 3px; }
+.kb-theme-dark .kb-benefit__link, .kb-theme-brand .kb-benefit__link { color: var(--kb-accent); }
+.kb-theme-brand .kb-benefit__link { color: #FFFFFF; }
 .kb-benefit-rows { display: grid; gap: 22px; max-width: 760px; text-align: left; }
 .kb-align-center .kb-benefit-rows { margin: 0 auto; }
 .kb-benefit-rows .kb-benefit { display: flex; gap: 16px; align-items: flex-start; }
@@ -274,9 +277,9 @@
 .kb-leadform { display: grid; gap: 14px; padding: 24px; border-radius: var(--kb-radius-card); background: #FFFFFF; color: #0D1912; border: 1px solid #E7E2D6; box-shadow: 0 40px 80px -48px rgba(0, 0, 0, 0.55); text-align: left; }
 .kb-field { display: grid; gap: 6px; }
 .kb-field span { font-size: 0.88rem; font-weight: 700; color: #33443A; }
-.kb-field input, .kb-field textarea { width: 100%; min-height: 50px; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #D9D3C4; background: #FBF9F5; color: #0D1912; font: 500 1rem/1.4 var(--kb-font); }
+.kb-field input, .kb-field textarea, .kb-field select { width: 100%; min-height: 50px; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #D9D3C4; background: #FBF9F5; color: #0D1912; font: 500 1rem/1.4 var(--kb-font); }
 .kb-field textarea { resize: vertical; }
-.kb-field input:focus, .kb-field textarea:focus { outline: none; border-color: var(--kb-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--kb-accent) 30%, transparent); }
+.kb-field input:focus, .kb-field textarea:focus, .kb-field select:focus { outline: none; border-color: var(--kb-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--kb-accent) 30%, transparent); }
 .kb-leadform .kb-btn { border: 0; margin-top: 4px; font-family: var(--kb-font); }
 .kb-leadform .kb-btn:disabled { opacity: 0.7; cursor: progress; transform: none; }
 .kb-theme-brand .kb-leadform .kb-btn { background: linear-gradient(135deg, var(--kb-accent), var(--kb-accent-dark)); color: var(--kb-on-accent); }

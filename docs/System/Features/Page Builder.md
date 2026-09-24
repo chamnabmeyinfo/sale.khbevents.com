@@ -48,6 +48,15 @@ Undo and redo cover the last 60 changes. The browser warns before leaving with u
 
 The saving (for example "Save 25%") shows only when the previous price is higher than the price. The countdown hides itself when the date passes. Only use a real previous price and real stock: see [[Copy Rules]].
 
+## Pricing, language and extra options
+
+- **Early-bird price:** page settings → Offer → "Early-bird price" and "until". Before the date the price card shows the early-bird price with the normal price struck through and an "Early-bird price ends in" countdown; after it, the normal price and the offer countdown, with no edit needed.
+- **Countdown heading:** for example "Registration closes in".
+- **Language visitors see first:** English or ខ្មែរ per page. `?lang=en` or `?lang=kh` in a link overrides it.
+- **Benefit links:** each benefit can link to a website ("Official website"), used for trade fairs.
+- **Choice question on the lead form:** for example "Which sector interests you?". The answer is saved with the lead (`eventType`).
+- **Button to a t.me link** counts as Telegram (icon and tracking).
+
 ## Public page
 
 - The Telegram button goes through `/api/round-robin?page=<web address>&redirect=true`, so leads are shared fairly. See [[Round Robin]].
@@ -60,6 +69,10 @@ The saving (for example "Save 25%") shows only when the previous price is higher
 - Sends to the same place as other page forms: the lead appears in Leads & CRM Pipeline and goes to the next salesperson in [[Round Robin]] (a returning visitor stays with the same salesperson).
 - After sending: a thank-you message and, when the page button is Telegram, a "Continue on Telegram" button. Popups set to hide after a lead stop showing.
 - Tracking records `form_submit` with the placement only, never the name or phone. See [[Leads CRM]].
+
+## Pages made from a content pack
+
+A builder page can also ship as a content pack (`content/pages/<slug>.json` with `template: builder` and a `builder` document), like [[Korea Sourcing Trip Seoul 2026]]. It is applied once per file version on the production build. After that, edit the page in the builder: a new version of the pack file would replace the builder edits.
 
 ## How it is stored
 

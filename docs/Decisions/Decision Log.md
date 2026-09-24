@@ -26,6 +26,16 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-24 — One page per trip: the Korea page was rebuilt at its existing link
+
+- **Decision:** The Korea trip keeps `/korea-b2b-trip-2026`. Its content was replaced with a drag and drop builder page written only from the owner's caption, instead of adding a second page for the same trip.
+- **Why:** The old page was live with invented testimonials, seat counts and partners, and with Vietnam text from its template. Two pages for one trip would split visitors and keep the invented content online. Keeping the link keeps ads and posts working.
+- **Details:** The main button opens the trip contact's Telegram directly; the form still sends leads to the CRM. Shipped as a content pack.
+- **Decided by:** Owner (chose "fix the existing page").
+- **Affects:** [[Korea Sourcing Trip Seoul 2026]], [[Page Builder]].
+
+---
+
 ## 2026-09-24 — Renaming a library photo changes its display name, not its file
 
 - **Decision:** In the Photo Library, rename sets a name shown in the admin. The stored file and its public address never change.

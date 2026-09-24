@@ -16,7 +16,7 @@ import type {
   OfferBlock,
   StepsBlock,
 } from '@/lib/builder';
-import { countdown, discountPercent, formatPrice, offerCtaHref, pick, stockTakenPercent } from '@/lib/builder';
+import { countdown, ctaOpensTelegram, discountPercent, effectiveOffer, formatPrice, offerCtaHref, pick, safeLink, stockTakenPercent } from '@/lib/builder';
 
 /**
  * Renders builder components. The same code draws the editor canvas and the
@@ -32,6 +32,8 @@ export interface RenderContext {
   slug: string;
   /** Current time for countdowns; null until mounted (keeps server HTML stable). */
   nowMs: number | null;
+  /** Server time of this render, used for prices until the clock ticks (keeps server and browser HTML equal). */
+  serverNowMs?: number;
   /** Editor mode: links do not navigate. */
   editing?: boolean;
   onCta?: (block: BuilderBlock) => void;
@@ -45,12 +47,14 @@ const UI = {
     name: 'Your name', phone: 'Phone or Telegram', email: 'Email (optional)', message: 'Message (optional)',
     sending: 'Sending…', required: 'Please write your name and phone number.', failed: 'Sending failed. Please try again, or use the Telegram button.',
     continueTelegram: 'Continue on Telegram',
+    earlyEndsIn: 'Early-bird price ends in', website: 'Official website', choose: 'Choose one',
   },
   kh: {
     save: 'សន្សំ {n}%', left: '{n} {label}', endsIn: 'ការផ្តល់ជូនបញ្ចប់ក្នុង', d: 'ថ្ងៃ', h: 'ម៉ោង', m: 'នាទី', s: 'វិនាទី', from: 'តម្លៃ',
     name: 'ឈ្មោះរបស់អ្នក', phone: 'លេខទូរស័ព្ទ ឬ Telegram', email: 'អ៊ីមែល (មិនចាំបាច់)', message: 'សារ (មិនចាំបាច់)',
     sending: 'កំពុងផ្ញើ…', required: 'សូមសរសេរឈ្មោះ និងលេខទូរស័ព្ទរបស់អ្នក។', failed: 'ការផ្ញើមិនបានសម្រេច។ សូមព្យាយាមម្តងទៀត ឬប្រើប៊ូតុង Telegram។',
     continueTelegram: 'បន្តតាម Telegram',
+    earlyEndsIn: 'តម្លៃពិសេសបញ្ចប់ក្នុងរយៈពេល', website: 'គេហទំព័រផ្លូវការ', choose: 'សូមជ្រើសរើស',
   },
 } as const;
 
@@ -70,6 +74,10 @@ const ICON_PATHS: Record<BenefitIcon, React.ReactNode> = {
   users: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.5 3.3-5.5 6.5-5.5s5.9 2 6.5 5.5M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.8c2 .7 3.2 2.5 3.5 5.2" /></>,
   leaf: <path d="M11 20A7 7 0 0 1 4 13c0-6 5-9 16-9 0 11-3 16-9 16zM4 21c3-5 6-8 10-10" />,
   award: <><circle cx="12" cy="9" r="6" /><path d="m8.5 14-1.5 8 5-3 5 3-1.5-8" /></>,
+  tent: <><path d="M3 20 12 4l9 16z" /><path d="m12 20-3.5-7h7z" /></>,
+  glasses: <><circle cx="6.5" cy="14" r="3.5" /><circle cx="17.5" cy="14" r="3.5" /><path d="M10 14h4M3 14l1.5-6M21 14l-1.5-6" /></>,
+  briefcase: <><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18" /></>,
+  plane: <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />,
 };
 
 export function BenefitIconSvg({ icon }: { icon: BenefitIcon }) {
@@ -122,7 +130,8 @@ function SectionBackground({ image }: { image?: string }) {
 function CtaButton({ label, block, ctx, variant = 'primary' }: { label: string; block: BuilderBlock; ctx: RenderContext; variant?: 'primary' | 'block' }) {
   if (!label) return null;
   const href = offerCtaHref(ctx.offer, ctx.slug);
-  const external = ctx.offer.cta.action === 'telegram' || /^https?:/i.test(href);
+  const telegram = ctaOpensTelegram(ctx.offer);
+  const external = telegram || /^https?:/i.test(href);
   return (
     <a
       className={`kb-btn kb-btn--${variant}`}
@@ -138,7 +147,7 @@ function CtaButton({ label, block, ctx, variant = 'primary' }: { label: string; 
         ctx.onCta?.(block);
       }}
     >
-      {ctx.offer.cta.action === 'telegram' && (
+      {telegram && (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z" />
         </svg>
@@ -148,14 +157,18 @@ function CtaButton({ label, block, ctx, variant = 'primary' }: { label: string; 
   );
 }
 
+/** Price and countdown right now: the ticking clock once mounted, else the server's render time. */
+const offerNow = (ctx: RenderContext) => effectiveOffer(ctx.offer, ctx.nowMs ?? ctx.serverNowMs ?? null);
+
 function PriceLine({ ctx, size = 'md' }: { ctx: RenderContext; size?: 'md' | 'lg' }) {
   const { offer, lang } = ctx;
-  if (offer.price === null) return null;
-  const off = discountPercent(offer);
+  const now = offerNow(ctx);
+  if (now.price === null) return null;
+  const off = discountPercent(now);
   return (
     <div className={`kb-price kb-price--${size}`}>
-      <span className="kb-price__now">{formatPrice(offer.price, offer.currency)}</span>
-      {off > 0 && <span className="kb-price__was">{formatPrice(offer.compareAtPrice, offer.currency)}</span>}
+      <span className="kb-price__now">{formatPrice(now.price, offer.currency)}</span>
+      {off > 0 && <span className="kb-price__was">{formatPrice(now.compareAtPrice, offer.currency)}</span>}
       {off > 0 && <span className="kb-price__save">{fill(UI[lang].save, { n: off })}</span>}
       {offer.priceNote && <span className="kb-price__note">{pick(offer.priceNote, lang)}</span>}
     </div>
@@ -178,11 +191,13 @@ function StockBar({ ctx }: { ctx: RenderContext }) {
 
 function Countdown({ ctx, compact = false }: { ctx: RenderContext; compact?: boolean }) {
   const { offer, lang, nowMs } = ctx;
-  if (!offer.deadline) return null;
+  const target = offerNow(ctx);
+  if (!target.countdownTo) return null;
   // Before mount the numbers are unknown: reserve the space so nothing jumps.
-  const c = nowMs === null ? null : countdown(offer.deadline, nowMs);
+  const c = nowMs === null ? null : countdown(target.countdownTo, nowMs);
   if (c && c.ended) return null;
   const t = UI[lang];
+  const label = target.countdownKind === 'early' ? t.earlyEndsIn : pick(offer.deadlineLabel, lang) || t.endsIn;
   const parts: Array<[number | null, string]> = [
     [c ? c.days : null, t.d],
     [c ? c.hours : null, t.h],
@@ -191,7 +206,7 @@ function Countdown({ ctx, compact = false }: { ctx: RenderContext; compact?: boo
   ];
   return (
     <div className={`kb-countdown${compact ? ' kb-countdown--compact' : ''}`}>
-      <div className="kb-countdown__label">{t.endsIn}</div>
+      <div className="kb-countdown__label">{label}</div>
       <div className="kb-countdown__boxes">
         {parts.map(([value, unit]) => (
           <div className="kb-countdown__box" key={unit}>
@@ -339,6 +354,11 @@ function Benefits({ block, ctx }: { block: BenefitsBlock; ctx: RenderContext }) 
               <div>
                 <h3 className="kb-benefit__title">{pick(it.title, lang)}</h3>
                 {it.text && <p className="kb-benefit__text">{pick(it.text, lang)}</p>}
+                {safeLink(it.link) && (
+                  <a className="kb-benefit__link" href={ctx.editing ? undefined : safeLink(it.link)} target="_blank" rel="noopener noreferrer">
+                    {UI[lang].website} <span aria-hidden="true">↗</span>
+                  </a>
+                )}
               </div>
             </div>
           ))}
@@ -423,10 +443,13 @@ function Steps({ block, ctx }: { block: StepsBlock; ctx: RenderContext }) {
 function LeadFormBlock({ block, ctx }: { block: FormBlock; ctx: RenderContext }) {
   const { lang, offer } = ctx;
   const t = UI[lang];
-  const [values, setValues] = useState({ fullName: '', phone: '', email: '', message: '' });
+  const [values, setValues] = useState({ fullName: '', phone: '', email: '', message: '', interest: '' });
+  const options = (block.interestOptions || []).filter((o) => pick(o, lang));
   const [state, setState] = useState<'idle' | 'sending' | 'done'>('idle');
   const [error, setError] = useState('');
-  const set = (k: keyof typeof values) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setValues((v) => ({ ...v, [k]: e.target.value }));
+  const set = (k: keyof typeof values) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setValues((v) => ({ ...v, [k]: e.target.value }));
+
+  const interestChoice = options[Number(values.interest)] as (typeof options)[number] | undefined;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -448,13 +471,15 @@ function LeadFormBlock({ block, ctx }: { block: FormBlock; ctx: RenderContext })
           email: block.askEmail ? values.email.trim() : '',
           message: block.askMessage ? values.message.trim() : undefined,
           packageInterest: pick(offer.name, 'en') || undefined,
+          // The chosen option in English for the sales team, whatever language the visitor used.
+          eventType: interestChoice ? pick(interestChoice, 'en') : undefined,
           landingPageSlug: ctx.slug,
           utmSource: params.get('utm_source') || undefined,
           utmMedium: params.get('utm_medium') || undefined,
           utmCampaign: params.get('utm_campaign') || undefined,
           utmContent: params.get('utm_content') || undefined,
           referrer: document.referrer || undefined,
-          customFields: { language: lang },
+          customFields: { language: lang, ...(interestChoice ? { interest: pick(interestChoice, 'en') } : {}) },
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -473,7 +498,7 @@ function LeadFormBlock({ block, ctx }: { block: FormBlock; ctx: RenderContext })
         <span className="kb-leadform__done-icon"><CheckMark /></span>
         <h3 className="kb-leadform__done-title">{pick(block.successTitle, lang)}</h3>
         {block.successText && <p className="kb-leadform__done-text">{pick(block.successText, lang)}</p>}
-        {offer.cta.action === 'telegram' && <CtaButton label={t.continueTelegram} block={block} ctx={ctx} />}
+        {ctaOpensTelegram(offer) && <CtaButton label={t.continueTelegram} block={block} ctx={ctx} />}
       </div>
     ) : (
       <form className="kb-leadform" onSubmit={submit} noValidate>
@@ -489,6 +514,15 @@ function LeadFormBlock({ block, ctx }: { block: FormBlock; ctx: RenderContext })
           <label className="kb-field">
             <span>{t.email}</span>
             <input name="email" type="email" autoComplete="email" value={values.email} onChange={set('email')} disabled={ctx.editing} />
+          </label>
+        )}
+        {options.length > 0 && (
+          <label className="kb-field">
+            <span>{pick(block.interestLabel, lang) || t.choose}</span>
+            <select name="interest" value={values.interest} onChange={set('interest')} disabled={ctx.editing}>
+              <option value="">{t.choose}</option>
+              {options.map((o, i) => <option key={i} value={String(i)}>{pick(o, lang)}</option>)}
+            </select>
           </label>
         )}
         {block.askMessage && (

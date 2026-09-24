@@ -467,6 +467,10 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
               </div>
               <BiInput label={t('builder.benefits.title')} value={it.title} onChange={(v) => setItems(b.items.map((x, j) => (j === i ? { ...x, title: v } : x)))} />
               <BiInput label={t('builder.benefits.text')} value={it.text} multiline onChange={(v) => setItems(b.items.map((x, j) => (j === i ? { ...x, text: v } : x)))} />
+              <div>
+                <label className={LABEL}>{t('builder.benefits.link')}</label>
+                <input className={INPUT} placeholder="https://…" value={it.link || ''} onChange={(e) => setItems(b.items.map((x, j) => (j === i ? { ...x, link: e.target.value || undefined } : x)))} />
+              </div>
             </div>
           ))}
           <AddRow label={t('builder.benefits.add')} onClick={() => setItems([...b.items, { icon: 'check', title: { en: '' } }], false)} />
@@ -540,6 +544,22 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
           {t('builder.form.askMessage')}
         </label>
       </div>
+      <div className="space-y-2">
+        <BiInput label={t('builder.form.interestLabel')} value={b.interestLabel} onChange={(v) => updateBlock(b.id, { interestLabel: v })} hint={t('builder.form.interestHint')} />
+        {(b.interestOptions || []).map((opt, i) => {
+          const list = b.interestOptions || [];
+          return (
+            <div key={i} className={ROW}>
+              <div className={ROW_HEAD}>
+                <span className={ROW_LABEL}>{t('builder.form.option', { n: i + 1 })}</span>
+                <RowTools index={i} count={list.length} onMove={(to) => updateBlock(b.id, { interestOptions: moveBlock(list, i, to) }, false)} onRemove={() => updateBlock(b.id, { interestOptions: list.filter((_, j) => j !== i) }, false)} />
+              </div>
+              <BiInput label="" value={opt} onChange={(v) => updateBlock(b.id, { interestOptions: list.map((x, j) => (j === i ? v : x)) })} />
+            </div>
+          );
+        })}
+        {(b.interestOptions || []).length < 10 && <AddRow label={t('builder.form.addOption')} onClick={() => updateBlock(b.id, { interestOptions: [...(b.interestOptions || []), { en: '' }] }, false)} />}
+      </div>
       <BiInput label={t('builder.form.submit')} value={b.submitLabel} onChange={(v) => updateBlock(b.id, { submitLabel: v })} />
       <BiInput label={t('builder.form.successTitle')} value={b.successTitle} onChange={(v) => updateBlock(b.id, { successTitle: v })} />
       <BiInput label={t('builder.form.successText')} value={b.successText} onChange={(v) => updateBlock(b.id, { successText: v })} multiline />
@@ -577,6 +597,15 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
               <input className={`${INPUT} font-mono`} value={meta.slug} onChange={(e) => setMeta({ ...meta, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })} />
             </div>
           </div>
+          <div>
+            <label className={LABEL}>{t('builder.page.defaultLang')}</label>
+            <div className="flex gap-1">
+              {(['en', 'kh'] as const).map((l) => (
+                <button key={l} type="button" className={SEG((doc.defaultLang || 'en') === l)} onClick={() => setDoc((d) => ({ ...d, defaultLang: l }))}>{l === 'en' ? 'English' : 'ខ្មែរ'}</button>
+              ))}
+            </div>
+            <p className={HINT}>{t('builder.page.defaultLangHint')}</p>
+          </div>
         </Section>
         <Section title={t('builder.offer')}>
           <p className={HINT}>{t('builder.offer.intro')}</p>
@@ -599,12 +628,26 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
             <input className={INPUT} type="number" min={0} value={o.compareAtPrice ?? ''} onChange={(e) => setOffer({ compareAtPrice: numOrNull(e.target.value) })} />
             <p className={HINT}>{t('builder.offer.compareAtHint')}</p>
           </div>
+          <div className="p-2.5 rounded-xl border border-amber-200 dark:border-amber-400/30 bg-amber-50/60 dark:bg-amber-400/5 space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className={LABEL}>{t('builder.offer.earlyPrice')}</label>
+                <input className={INPUT} type="number" min={0} value={o.earlyPrice ?? ''} onChange={(e) => setOffer({ earlyPrice: numOrNull(e.target.value) })} />
+              </div>
+              <div>
+                <label className={LABEL}>{t('builder.offer.earlyUntil')}</label>
+                <input className={INPUT} type="datetime-local" value={toLocalInput(o.earlyUntil)} onChange={(e) => setOffer({ earlyUntil: fromLocalInput(e.target.value) }, false)} />
+              </div>
+            </div>
+            <p className={HINT}>{t('builder.offer.earlyHint')}</p>
+          </div>
           <BiInput label={t('builder.offer.priceNote')} value={o.priceNote} onChange={(v) => setOffer({ priceNote: v })} />
           <div>
             <label className={LABEL}>{t('builder.offer.deadline')}</label>
             <input className={INPUT} type="datetime-local" value={toLocalInput(o.deadline)} onChange={(e) => setOffer({ deadline: fromLocalInput(e.target.value) }, false)} />
             <p className={HINT}>{t('builder.offer.deadlineHint')}</p>
           </div>
+          <BiInput label={t('builder.offer.deadlineLabel')} value={o.deadlineLabel} onChange={(v) => setOffer({ deadlineLabel: v })} hint={t('builder.offer.deadlineLabelHint')} />
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className={LABEL}>{t('builder.offer.stockTotal')}</label>
