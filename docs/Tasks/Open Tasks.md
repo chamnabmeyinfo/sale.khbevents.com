@@ -64,6 +64,8 @@ Found by checking the notes against the code on 2026-09-24. Each needs the owner
 
 ## Questions to settle
 
+- [ ] Answer the "To confirm" questions in [[Landing Page Builder Roadmap]] so the builder matches what you imagine. #owner
+
 These come from the "To confirm" sections of the feature notes. Answer them here or in [[Decision Log]].
 
 - [ ] Where does the owner set the registration and early-bird deadlines today? The page editor in the repo has no date field for them. → [[Launch a New Trip Page]] #owner

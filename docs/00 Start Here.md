@@ -30,6 +30,7 @@ New here? Read [[How to Use This Vault]] first.
 
 - [[Open Tasks]]: what still needs doing, and who does it.
 - [[Decision Log]]: what we decided, when, and why.
+- [[Landing Page Builder Roadmap]]: where the landing page system is going, phase by phase.
 - [[Project History]]: what was built, in order.
 - Sessions folder: one short log per working session with Claude.
 

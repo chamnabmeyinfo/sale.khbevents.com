@@ -26,6 +26,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-24 — Build our own landing page system that sells anything
+
+- **Decision:** Keep and grow our own landing page system instead of moving to an off-the-shelf builder. It must be easy to use and able to sell anything: seats, products, services, digital products, or leads by conversation.
+- **Why:** Off-the-shelf builders lack the parts that fit our market: Telegram round robin, Khmer and English everywhere, and the leads CRM. Building around an "Offer" (what is sold, its price and its action) lets one system serve every kind of product.
+- **Decided by:** Owner. The plan was proposed by Claude.
+- **Affects:** [[Landing Page Builder Roadmap]], [[Landing Pages CMS]].
+
 ## 2026-09-24 — No secrets in the vault
 
 - **Decision:** The vault never holds passwords, bot tokens, chat IDs, database keys, environment variable values or customer contact data. Notes say where a secret lives instead, for example "Vercel → Project → Settings → Environment Variables" or "Admin → Settings & Security → Instant Telegram Alerts".
