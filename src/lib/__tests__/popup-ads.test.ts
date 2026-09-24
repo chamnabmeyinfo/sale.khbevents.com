@@ -17,6 +17,8 @@ import {
   nextOpening,
   parseSmartReasons,
   popupSkipReason,
+  sourceAlias,
+  visitSources,
   settingsFromPublicAds,
   smartScore,
   smartShouldShow,
@@ -410,5 +412,39 @@ describe('popup check (why a popup shows or not)', () => {
     expect(inAppBrowserName('Mozilla/5.0 (Linux; Android 14; wv) AppleWebKit/537.36 Chrome/128.0 Mobile Safari/537.36 Telegram-Android/11.2.0')).toBe('Telegram');
     expect(inAppBrowserName('Mozilla/5.0 (Linux; Android 14; wv) AppleWebKit/537.36 Chrome/128.0 Mobile Safari/537.36 musical_ly_2023')).toBe('TikTok');
     expect(inAppBrowserName('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1')).toBeNull();
+  });
+});
+
+describe('where a visit came from', () => {
+  const TG_ANDROID = 'Mozilla/5.0 (Linux; Android 14; wv) AppleWebKit/537.36 Chrome/128.0 Mobile Safari/537.36 Telegram-Android/11.2.0';
+  const MESSENGER = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 [FBAN/MessengerForiOS;FBAV/470.0]';
+  const SAFARI = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+  it('reads the link tag, the app browser and the referring site', () => {
+    expect(visitSources({ utmSource: 'Telegram', userAgent: SAFARI })).toEqual(['telegram']);
+    expect(visitSources({ userAgent: TG_ANDROID })).toEqual(['telegram']);
+    expect(visitSources({ userAgent: SAFARI, referrer: 'https://t.me/' })).toEqual(['telegram']);
+    expect(visitSources({ userAgent: SAFARI, referrer: 'https://l.facebook.com/l.php?u=x' })).toEqual(['facebook']);
+    expect(visitSources({ userAgent: MESSENGER })).toEqual(['messenger', 'facebook']);
+    expect(visitSources({ userAgent: SAFARI, referrer: 'https://www.google.com/' })).toEqual(['google']);
+    // A plain link typed or opened in the phone browser: nothing known.
+    expect(visitSources({ userAgent: SAFARI, referrer: '' })).toEqual([]);
+    // Moving between pages of this site is not a source.
+    expect(visitSources({ userAgent: SAFARI, referrer: 'https://sale.khbevents.com/', ownHost: 'sale.khbevents.com' })).toEqual([]);
+  });
+
+  it('treats common spellings as the same source', () => {
+    expect(sourceAlias(' FB ')).toBe('facebook');
+    expect(sourceAlias('tg')).toBe('telegram');
+    expect(normalizePopupAd({ ...ad(), utmSources: ['TG', 'Facebook.com', 'telegram'] }, NOW)!.utmSources).toEqual(['telegram', 'facebook']);
+  });
+
+  it('shows a "telegram" popup to visits from Telegram, not to others', () => {
+    const settings: PopupAdsSettings = { enabled: true, globalCooldownHours: 0 };
+    const tgOnly = ad({ utmSources: ['telegram'] });
+    expect(popupSkipReason(tgOnly, settings, visitor({ sources: ['telegram'] }))).toBeNull();
+    expect(popupSkipReason(tgOnly, settings, visitor({ utmSource: 'tg' }))).toBeNull();
+    expect(popupSkipReason(tgOnly, settings, visitor({ sources: [] }))).toBe('source');
+    expect(popupSkipReason(ad({ utmSources: ['facebook'] }), settings, visitor({ sources: ['messenger', 'facebook'] }))).toBeNull();
   });
 });

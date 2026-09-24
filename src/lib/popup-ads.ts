@@ -70,6 +70,8 @@ export const popupStorageKeys = {
   firstSeen: 'khb_first_seen',
   /** utm_source of the visit, kept for the browser session. */
   utmSource: 'khb_utm_source',
+  /** Where this visit came from (utm_source, app browser, referring site), kept for the browser session. */
+  visitSources: 'khb_visit_sources',
   /** Number of visits (browser sessions) to the site, for smart timing. */
   visits: 'khb_visits',
   /** Set once per browser session so a visit is counted once. */
@@ -268,7 +270,7 @@ function normalizeAdvanced(v: Record<string, unknown>): Partial<PopupAd> {
   if (exclude.length) out.excludePages = exclude;
   if (v.visitors !== undefined) out.visitors = oneOf(v.visitors, ['all', 'new', 'returning'] as const, 'all');
   const utm = Array.isArray(v.utmSources)
-    ? Array.from(new Set(v.utmSources.map((s) => clampStr(s, 60).toLowerCase()).filter((s) => /^[a-z0-9._-]+$/.test(s)))).slice(0, 20)
+    ? Array.from(new Set(v.utmSources.map((s) => sourceAlias(clampStr(s, 60))).filter((s) => /^[a-z0-9._-]+$/.test(s)))).slice(0, 20)
     : [];
   if (utm.length) out.utmSources = utm;
   const hours = normalizeHours(v.hours);
@@ -388,6 +390,8 @@ export interface PopupVisitorContext {
   returning?: boolean;
   /** utm_source of this visit, lower case. */
   utmSource?: string;
+  /** Where this visit came from: utm_source, the social app's browser, the referring site (see visitSources). */
+  sources?: string[];
   /** When any popup was last shown to this visitor (ms), for the global cooldown. */
   lastAnyShownAt?: number;
   /** When this ad was last shown to this visitor (ms). */
@@ -419,7 +423,10 @@ export function popupSkipReason(ad: PopupAd, settings: PopupAdsSettings, ctx: Po
   if (ad.hideAfterLead && ctx.leadSent) return 'lead';
   if (ad.visitors === 'new' && ctx.returning) return 'visitors';
   if (ad.visitors === 'returning' && !ctx.returning) return 'visitors';
-  if (ad.utmSources?.length && !(ctx.utmSource && ad.utmSources.includes(ctx.utmSource))) return 'source';
+  if (ad.utmSources?.length) {
+    const seen = new Set([...(ctx.sources || []), ...(ctx.utmSource ? [sourceAlias(ctx.utmSource)] : [])]);
+    if (!ad.utmSources.some((s) => seen.has(sourceAlias(s)))) return 'source';
+  }
   if (!withinHours(ad.hours, ctx.nowMs)) return 'hours';
   if (!frequencyAllows(ad.frequency, ctx.shownAt(ad.id), ctx.shownThisSession(ad.id), ctx.nowMs)) return 'frequency';
   if (
@@ -586,8 +593,64 @@ export const SKIP_REASON_TEXT: Record<PopupSkipReason, string> = {
   language: 'not for this language',
   lead: 'this browser already sent the form',
   visitors: 'not for this kind of visitor (new / returning)',
-  source: 'visit did not come from the chosen ad source',
+  source: 'this visit did not come from the chosen sources',
   hours: 'outside office hours (Phnom Penh time)',
   frequency: 'already shown to this browser (how often per visitor)',
   cooldown: 'another popup was shown recently (cooldown)',
 };
+
+// ─── Where a visit came from ───────────────────────────────────────────────
+
+const SOURCE_ALIASES: Record<string, string> = {
+  fb: 'facebook', 'facebook.com': 'facebook', meta: 'facebook',
+  ig: 'instagram', 'instagram.com': 'instagram', insta: 'instagram',
+  tg: 'telegram', 't.me': 'telegram', 'telegram.org': 'telegram',
+  tt: 'tiktok', 'tiktok.com': 'tiktok',
+  yt: 'youtube', 'youtube.com': 'youtube',
+  twitter: 'x',
+};
+
+/** One spelling per source: "FB", "fb" and "facebook.com" all mean facebook. */
+export function sourceAlias(value: string): string {
+  const v = value.trim().toLowerCase();
+  return SOURCE_ALIASES[v] || v;
+}
+
+const REFERRER_SOURCES: Array<[RegExp, string]> = [
+  [/(^|\.)(facebook\.com|fb\.com|fb\.me|fb\.watch)$/, 'facebook'],
+  [/(^|\.)messenger\.com$/, 'messenger'],
+  [/(^|\.)instagram\.com$/, 'instagram'],
+  [/(^|\.)(t\.me|telegram\.me|telegram\.org)$/, 'telegram'],
+  [/(^|\.)tiktok\.com$/, 'tiktok'],
+  [/(^|\.)(youtube\.com|youtu\.be)$/, 'youtube'],
+  [/(^|\.)google\.[a-z.]+$/, 'google'],
+  [/(^|\.)(x\.com|twitter\.com|t\.co)$/, 'x'],
+  [/(^|\.)linkedin\.com$/, 'linkedin'],
+];
+
+/**
+ * Where this visit came from, as simple names (facebook, messenger, instagram,
+ * telegram, tiktok, google…): the link's utm_source, the social app whose
+ * built-in browser opened the page, and the site the visitor came from.
+ * Messenger also counts as facebook. Telegram on iPhone often gives none of
+ * these, so links posted there should carry ?utm_source=telegram.
+ */
+export function visitSources(input: { utmSource?: string | null; userAgent?: string; referrer?: string; ownHost?: string }): string[] {
+  const out = new Set<string>();
+  if (input.utmSource) out.add(sourceAlias(input.utmSource));
+  const app = input.userAgent ? inAppBrowserName(input.userAgent) : null;
+  if (app && app !== 'In-app browser') out.add(app.toLowerCase());
+  if (input.referrer) {
+    try {
+      const host = new URL(input.referrer).hostname.toLowerCase();
+      if (host && host !== (input.ownHost || '').toLowerCase()) {
+        const match = REFERRER_SOURCES.find(([re]) => re.test(host));
+        if (match) out.add(match[1]);
+      }
+    } catch {
+      // Not a URL: ignore.
+    }
+  }
+  if (out.has('messenger')) out.add('facebook');
+  return Array.from(out);
+}

@@ -84,7 +84,7 @@ Found by checking the notes against the code on 2026-09-24. Each needs the owner
 - [ ] **Token still in the fallback database.** After rotating the bot token, remove the old one from `data/db.json` (the local and cPanel fallback). It was removed from the in-admin guide and `FEATURE_BLUEPRINT.md` on 2026-09-24. → [[Rotate the Telegram Bot Token]] #for-claude
 
 - [ ] After two to four weeks of a smart popup, compare its click rate and **Why it showed** reasons with the fixed-delay popups; tune the sensitivity. → [[Ads and Popups]] #owner
-- [ ] The live **Telegram quick chat** popup has office hours Mon–Sat 08:00–18:00 and shows only on phones, as a Bottom banner after 10 s without moving. Check these are the settings you want (the chat bubble layout and smart timing are available). → [[Ads and Popups]] #owner
+- [ ] The live **Telegram quick chat** popup is set to **Only visitors who came from: telegram**, so people from Facebook, Google or a plain link never see it. Empty that field if every visitor should see it, and add `?utm_source=telegram` to links posted in Telegram. → [[Ads and Popups]] #owner
 - [ ] Optional: switch on a **Telegram quick chat** popup (Admin → Ads & Popups → starter) for the trip pages, with office hours set to when the sales team can reply. → [[Create a Popup]] #owner
 
 ## Questions to settle

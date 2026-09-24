@@ -44,6 +44,7 @@ import {
   popupAdStatus,
   previewPath,
   nextOpening,
+  sourceAlias,
   withinHours,
 } from '@/lib/popup-ads';
 import { PopupAdCard, popupDefaults } from '@/components/common/PopupAds';
@@ -467,6 +468,9 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                       </td>
                       <td className="py-2.5 px-3">
                         <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${STATUS_PILL[status]}`}>{t(STATUS_LABEL[status])}</span>
+                        {ad.utmSources?.length ? (
+                          <div className="mt-1 text-[10px] font-semibold text-amber-700 dark:text-amber-400">{t('ads.onlyFrom', { list: ad.utmSources.join(', ') })}</div>
+                        ) : null}
                         {status === 'active' && ad.hours && !withinHours(ad.hours, nowMs) && (
                           <div className="mt-1 text-[10px] font-semibold text-amber-700 dark:text-amber-400">{t('ads.outsideHours', { when: nextOpening(ad.hours, nowMs) || '—' })}</div>
                         )}
@@ -807,8 +811,9 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                       </div>
                       <div>
                         <label className={LABEL}>{t('ads.utm')}</label>
-                        <input className={INPUT} value={(editing.utmSources || []).join(', ')} placeholder="facebook, tiktok" onChange={(e) => setEditing({ ...editing, utmSources: e.target.value.split(',').map((x) => x.trim().toLowerCase()).filter(Boolean) })} />
+                        <SourcesInput key={editing.id} className={INPUT} value={editing.utmSources || []} onChange={(list) => setEditing({ ...editing, utmSources: list.length ? list : undefined })} />
                         <span className={HINT}>{t('ads.utmHint')}</span>
+                        {(editing.utmSources?.length ?? 0) > 0 && <span className="block text-[11px] font-semibold text-amber-700 dark:text-amber-400">{t('ads.utmWarn')}</span>}
                       </div>
                       <div className="sm:col-span-2">
                         <label className="flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-gray-200 cursor-pointer">
@@ -883,5 +888,21 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
         </div>
       )}
     </div>
+  );
+}
+
+/** Comma-separated source names. Keeps what is typed (commas included) and saves the cleaned list. */
+function SourcesInput({ value, onChange, className }: { value: string[]; onChange: (list: string[]) => void; className: string }) {
+  const [draft, setDraft] = useState(value.join(', '));
+  return (
+    <input
+      className={className}
+      value={draft}
+      placeholder="telegram, facebook, tiktok"
+      onChange={(e) => {
+        setDraft(e.target.value);
+        onChange(Array.from(new Set(e.target.value.split(',').map((x) => sourceAlias(x)).filter(Boolean))));
+      }}
+    />
   );
 }

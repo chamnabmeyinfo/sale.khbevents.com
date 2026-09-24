@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { PopupAd, PopupAdSmartSensitivity } from '@/lib/types';
-import { pickPopupToShow, pickText, popupStorageKeys, inAppBrowserName, nextOpening, popupSkipReason, resolveCtaHref, RETURNING_AFTER_MS, settingsFromPublicAds, SKIP_REASON_TEXT, smartShouldShow, SMART_RULES, type PopupVisitorContext, type PublicPopupAd } from '@/lib/popup-ads';
+import { pickPopupToShow, pickText, popupStorageKeys, inAppBrowserName, nextOpening, popupSkipReason, resolveCtaHref, RETURNING_AFTER_MS, settingsFromPublicAds, SKIP_REASON_TEXT, smartShouldShow, SMART_RULES, visitSources, type PopupVisitorContext, type PublicPopupAd } from '@/lib/popup-ads';
 import { getDeviceType, trackClientEvent } from '@/components/common/LandingPageTracking';
 import { useStoredChoice, useUrlParam } from '@/lib/use-browser-state';
 
@@ -367,6 +367,12 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
     const urlSource = new URLSearchParams(window.location.search).get('utm_source')?.trim().toLowerCase();
     if (urlSource) writeSession(popupStorageKeys.utmSource, urlSource);
     const utmSource = urlSource || readSession(popupStorageKeys.utmSource) || undefined;
+    // Where the visit came from, worked out on the first page of the visit and kept for the session.
+    const sources = Array.from(new Set([
+      ...(readSession(popupStorageKeys.visitSources) || '').split(',').filter(Boolean),
+      ...visitSources({ utmSource, userAgent: navigator.userAgent, referrer: document.referrer, ownHost: window.location.hostname }),
+    ]));
+    if (sources.length) writeSession(popupStorageKeys.visitSources, sources.join(','));
     // Visit pattern for smart timing: visits from this browser and pages opened in this visit.
     let visits = numberOrUndefined(readLocal(popupStorageKeys.visits)) ?? 0;
     if (readSession(popupStorageKeys.visitCounted) !== '1') {
@@ -383,6 +389,7 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
       lang: langRef.current,
       returning: firstSeen !== undefined && nowMs - firstSeen > RETURNING_AFTER_MS,
       utmSource,
+      sources,
       leadSent: readLocal(popupStorageKeys.leadSent) === '1',
       lastAnyShownAt: numberOrUndefined(readLocal(popupStorageKeys.lastAny)),
       shownAt: (id) => numberOrUndefined(readLocal(popupStorageKeys.shown(id))),
@@ -392,13 +399,13 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
     const debugPanel = new URLSearchParams(window.location.search).get('popup_debug') === '1';
     if (debugPanel) {
       setDebugInfo({
-        browser: `${inAppBrowserName(navigator.userAgent) || 'Normal browser'} · ${device}`,
+        browser: `${inAppBrowserName(navigator.userAgent) || 'Normal browser'} · ${device} · came from: ${sources.join(', ') || 'not known'}`,
         rows: ads.map((a) => {
           const why = popupSkipReason(a, settings, visitor);
           const opens = why === 'hours' ? nextOpening(a.hours, nowMs) : null;
           const status = a.id === ad?.id
             ? `SHOWS (trigger: ${a.trigger.type}${a.trigger.type === 'delay' ? ` ${a.trigger.seconds ?? 8} s` : a.trigger.type === 'idle' ? ` ${a.trigger.idleSeconds ?? 20} s without moving` : a.trigger.type === 'smart' ? `, ${a.trigger.sensitivity ?? 'balanced'}` : ''})`
-            : why ? `hidden: ${SKIP_REASON_TEXT[why]}${opens ? `, opens ${opens}` : ''}` : 'hidden: a higher-priority popup shows instead';
+            : why ? `hidden: ${SKIP_REASON_TEXT[why]}${opens ? `, opens ${opens}` : ''}${why === 'source' ? ` (${(a.utmSources || []).join(', ')})` : ''}` : 'hidden: a higher-priority popup shows instead';
           return { name: a.name, status };
         }),
       });
