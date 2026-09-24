@@ -16,6 +16,7 @@ import type {
   OfferBlock,
   StepsBlock,
 } from '@/lib/builder';
+import { parseVideoSource } from '@/lib/video-embed';
 import { countdown, ctaOpensTelegram, discountPercent, effectiveOffer, formatPrice, offerCtaHref, pick, safeLink, stockTakenPercent } from '@/lib/builder';
 
 /**
@@ -116,15 +117,39 @@ function sectionClass(block: BuilderBlock): string {
     `kb-theme-${s.theme}`,
     `kb-align-${s.align}`,
     `kb-space-${s.spacing}`,
-    s.bgImage ? 'kb-has-bg' : '',
+    s.bgImage || s.bgVideo ? 'kb-has-bg' : '',
   ].filter(Boolean).join(' ');
 }
 
-function SectionBackground({ image }: { image?: string }) {
-  if (!image) return null;
+/** Starts a muted background video: React does not always render `muted` in server HTML, and browsers only autoplay muted video. */
+function startMuted(el: HTMLVideoElement | null) {
+  if (!el) return;
+  el.muted = true;
+  el.defaultMuted = true;
+  el.play?.().catch(() => {});
+}
+
+function SectionBackground({ image, video }: { image?: string; video?: string }) {
+  const v = video ? parseVideoSource(video) : null;
+  if (!image && !v) return null;
   return (
-    <div className="kb-bg" aria-hidden="true">
-      <img src={image} alt="" loading="lazy" decoding="async" />
+    <div className={`kb-bg${v ? ' kb-bg--video' : ''}`} aria-hidden="true">
+      {image && <img className="kb-bg__poster" src={image} alt="" loading="lazy" decoding="async" />}
+      {v?.provider === 'file' && (
+        <video className="kb-bg__media kb-bg__video" src={v.src} poster={image} ref={startMuted} autoPlay muted loop playsInline preload="metadata" tabIndex={-1} />
+      )}
+      {v && v.provider !== 'file' && (
+        <iframe
+          className="kb-bg__media kb-bg__frame"
+          src={v.src}
+          title=""
+          tabIndex={-1}
+          loading="lazy"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          referrerPolicy="strict-origin-when-cross-origin"
+          style={{ '--kb-video-ratio': v.aspect } as React.CSSProperties}
+        />
+      )}
     </div>
   );
 }
@@ -227,7 +252,7 @@ function Hero({ block, ctx }: { block: HeroBlock; ctx: RenderContext }) {
   const priceChip = ctx.offer.price !== null;
   return (
     <section className={sectionClass(block)}>
-      {fullbleed ? <SectionBackground image={block.image || block.style.bgImage} /> : <SectionBackground image={block.style.bgImage} />}
+      <SectionBackground image={fullbleed ? block.image || block.style.bgImage : block.style.bgImage} video={block.style.bgVideo} />
       <div className="kb-container kb-hero__grid">
         <div className="kb-hero__copy">
           {block.badge && <span className="kb-badge">{pick(block.badge, lang)}</span>}
@@ -261,7 +286,7 @@ function Offer({ block, ctx }: { block: OfferBlock; ctx: RenderContext }) {
   if (block.variant === 'banner') {
     return (
       <section className={sectionClass(block)}>
-        <SectionBackground image={block.style.bgImage} />
+        <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
         <div className="kb-container kb-offer-banner">
           <div className="kb-offer-banner__main">
             <div className="kb-offer-banner__title">{pick(block.title, lang) || name}</div>
@@ -279,7 +304,7 @@ function Offer({ block, ctx }: { block: OfferBlock; ctx: RenderContext }) {
   }
   return (
     <section className={sectionClass(block)}>
-      <SectionBackground image={block.style.bgImage} />
+      <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
       <div className="kb-container">
         <div className="kb-offer-card">
           {name && <div className="kb-offer-card__name">{name}</div>}
@@ -310,7 +335,7 @@ function Faq({ block, ctx }: { block: FaqBlock; ctx: RenderContext }) {
   const items = block.items.filter((i) => pick(i.q, lang));
   return (
     <section className={sectionClass(block)}>
-      <SectionBackground image={block.style.bgImage} />
+      <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
       <div className="kb-container">
         <h2 className="kb-section-title">{pick(block.title, lang)}</h2>
         {block.variant === 'columns' ? (
@@ -345,7 +370,7 @@ function Benefits({ block, ctx }: { block: BenefitsBlock; ctx: RenderContext }) 
   const items = block.items.filter((i) => pick(i.title, lang));
   return (
     <section className={sectionClass(block)}>
-      <SectionBackground image={block.style.bgImage} />
+      <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
       <div className="kb-container">
         <h2 className="kb-section-title">{pick(block.title, lang)}</h2>
         {block.sub && <p className="kb-section-sub">{pick(block.sub, lang)}</p>}
@@ -388,7 +413,7 @@ function Included({ block, ctx }: { block: IncludedBlock; ctx: RenderContext }) 
   );
   return (
     <section className={sectionClass(block)}>
-      <SectionBackground image={block.style.bgImage} />
+      <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
       <div className="kb-container">
         {block.variant === 'split' ? (
           <div className="kb-included-split">
@@ -420,7 +445,7 @@ function Steps({ block, ctx }: { block: StepsBlock; ctx: RenderContext }) {
   const items = block.items.filter((i) => pick(i.title, lang));
   return (
     <section className={sectionClass(block)}>
-      <SectionBackground image={block.style.bgImage} />
+      <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
       <div className="kb-container">
         <h2 className="kb-section-title">{pick(block.title, lang)}</h2>
         <ol className={block.variant === 'timeline' ? 'kb-timeline' : 'kb-stepcards'}>
@@ -550,7 +575,7 @@ function LeadFormBlock({ block, ctx }: { block: FormBlock; ctx: RenderContext })
 
   return (
     <section className={sectionClass(block)} id={`form-${block.id}`}>
-      <SectionBackground image={block.style.bgImage} />
+      <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
       <div className="kb-container">
         {block.variant === 'split' ? (
           <div className="kb-form-split">
@@ -581,7 +606,7 @@ function FinalCta({ block, ctx }: { block: FinalCtaBlock; ctx: RenderContext }) 
   if (block.variant === 'split') {
     return (
       <section className={sectionClass(block)}>
-        <SectionBackground image={block.style.bgImage} />
+        <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
         <div className="kb-container kb-final-split">
           <div>
             <h2 className="kb-final__title">{pick(block.headline, lang)}</h2>
@@ -600,7 +625,7 @@ function FinalCta({ block, ctx }: { block: FinalCtaBlock; ctx: RenderContext }) 
   }
   return (
     <section className={sectionClass(block)}>
-      <SectionBackground image={block.style.bgImage} />
+      <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
       <div className="kb-container kb-final">
         <h2 className="kb-final__title">{pick(block.headline, lang)}</h2>
         {block.sub && <p className="kb-section-sub">{pick(block.sub, lang)}</p>}

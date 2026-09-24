@@ -53,6 +53,7 @@ next-env.d.ts
 
 # admin image uploads in local development (production uses Supabase Storage)
 /public/uploads/
+/public/uploads-video/
 
 # Obsidian vault (docs/): shared settings are committed; per-device state is not
 /docs/.obsidian/workspace.json

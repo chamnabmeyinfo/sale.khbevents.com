@@ -57,6 +57,26 @@ The saving (for example "Save 25%") shows only when the previous price is higher
 - **Choice question on the lead form:** for example "Which sector interests you?". The answer is saved with the lead (`eventType`).
 - **Button to a t.me link** counts as Telegram (icon and tracking).
 
+## Background video
+
+Every section can play a silent, looping video behind its text: select the section → Design → **Background video**.
+
+| Source | How | Notes |
+|---|---|---|
+| Upload | **Upload** beside the field: MP4, WebM or MOV, up to 50 MB | Plays most smoothly. Sent from the browser straight to Supabase Storage (bucket `page-videos`, created on the first upload), so Vercel's 4.5 MB limit does not apply |
+| YouTube | Paste the link, a Shorts link or the embed code | Muted, looped, no controls; plays smoothly |
+| Vimeo | Paste the link (unlisted links keep their code) or the embed code | Uses Vimeo's background mode |
+| Facebook | Paste a video or reel link, or the embed code | May show Facebook's own buttons and may not play on some phones |
+| TikTok | Paste a video link or the embed code | Vertical; may show TikTok's buttons and may not play on some phones |
+| Video file link | Any https link ending in .mp4 or .webm | Hosted elsewhere |
+
+- Anything else (another site's embed code, a normal web page) is refused, so an embed can never put an unknown site inside the page.
+- The video covers the whole section without black bars and is darkened like a background photo. Choose **Dark** or **Brand** colours so the text stays readable.
+- The **Background photo** is the poster: it shows while the video loads, and instead of the video for visitors whose phone or computer is set to reduce motion.
+- Short (10 to 30 seconds), calm clips work best. A video uses mobile data; keep uploads small.
+
+Source: `src/lib/video-embed.ts` (accepted sources), `src/app/api/uploads/video/route.ts` (upload), `src/components/admin/VideoField.tsx`.
+
 ## Public page
 
 - The Telegram button goes through `/api/round-robin?page=<web address>&redirect=true`, so leads are shared fairly. See [[Round Robin]].

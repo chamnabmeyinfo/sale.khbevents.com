@@ -39,6 +39,7 @@ import {
 } from '@/lib/builder';
 import { BenefitIconSvg, BlockView, BuilderRoot, useNow } from '@/components/builder/BuilderBlocks';
 import ImageField from './ImageField';
+import VideoField from './VideoField';
 import { useLanguage } from '@/context/LanguageContext';
 import { errorMessage } from '@/lib/errors';
 
@@ -358,6 +359,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
           </div>
         </div>
         <ImageField label={t('builder.bgImage')} value={block.style.bgImage || ''} onChange={(v) => setStyle({ bgImage: v || undefined })} maxEdge={1920} hint={t('builder.bgImageHint')} compact />
+        <VideoField label={t('builder.bgVideo')} value={block.style.bgVideo || ''} onChange={(v) => setStyle({ bgVideo: v || undefined })} hint={t('builder.bgVideoHint')} />
       </Section>
     );
   };

@@ -3,6 +3,15 @@ import type { Dictionary } from '../index';
 /** Photo library (admin → Photo Library, and the library inside every image picker). */
 export const media: Dictionary = {
   en: {
+    'video.placeholder': 'Paste a link or embed code, or upload',
+    'video.upload': 'Upload an MP4, WebM or MOV video (up to 50 MB)',
+    'video.uploading': 'Uploading the video. Large files can take a minute.',
+    'video.remove': 'Remove the video',
+    'video.notSupported': 'Not a supported video. Paste a YouTube, Vimeo, Facebook or TikTok link or embed code, or a link ending in .mp4 or .webm.',
+    'video.recognised': '{source} video',
+    'video.socialNote': '(may show the site\'s own buttons and may not play on some phones; YouTube, Vimeo or an uploaded file play most smoothly)',
+    'builder.bgVideo': 'Background video (optional)',
+    'builder.bgVideoHint': 'Plays silently on a loop behind the text. The background photo shows while it loads and for visitors who turn off motion. Short, calm clips work best; choose Dark or Brand colours so the text stays readable.',
     'media.title': 'Photo library',
     'media.pageTitle': 'Photo Library',
     'media.pageIntro': 'Every photo uploaded to the portal. Upload new photos, rename them so they are easy to find, and delete the ones you no longer need. A green tag shows how many pages or popups use a photo.',
@@ -38,6 +47,15 @@ export const media: Dictionary = {
     'media.hint': 'Rename changes only the name shown here; pages keep working. Drop image files anywhere on the library to upload them.',
   },
   kh: {
+    'video.placeholder': 'បិទភ្ជាប់តំណ ឬកូដ embed ឬផ្ទុកឡើង',
+    'video.upload': 'ផ្ទុកឡើងវីដេអូ MP4, WebM ឬ MOV (រហូតដល់ 50 MB)',
+    'video.uploading': 'កំពុងផ្ទុកឡើងវីដេអូ។ ឯកសារធំអាចចំណាយពេលមួយនាទី។',
+    'video.remove': 'ដកវីដេអូចេញ',
+    'video.notSupported': 'មិនមែនជាវីដេអូដែលគាំទ្រទេ។ សូមបិទភ្ជាប់តំណ ឬកូដ embed ពី YouTube, Vimeo, Facebook ឬ TikTok ឬតំណដែលបញ្ចប់ដោយ .mp4 ឬ .webm។',
+    'video.recognised': 'វីដេអូ {source}',
+    'video.socialNote': '(អាចបង្ហាញប៊ូតុងរបស់គេហទំព័រនោះ ហើយអាចមិនលេងលើទូរស័ព្ទខ្លះ។ YouTube, Vimeo ឬឯកសារផ្ទុកឡើង លេងបានរលូនជាង)',
+    'builder.bgVideo': 'វីដេអូផ្ទៃខាងក្រោយ (មិនចាំបាច់)',
+    'builder.bgVideoHint': 'លេងដោយគ្មានសំឡេង និងវិលជុំនៅពីក្រោយអត្ថបទ។ រូបភាពផ្ទៃខាងក្រោយបង្ហាញពេលកំពុងផ្ទុក និងសម្រាប់អ្នកដែលបិទចលនា។ វីដេអូខ្លីៗ ស្ងប់ៗ ល្អបំផុត។ ជ្រើសពណ៌ Dark ឬ Brand ដើម្បីឱ្យអត្ថបទងាយអាន។',
     'media.title': 'បណ្ណាល័យរូបថត',
     'media.pageTitle': 'បណ្ណាល័យរូបថត',
     'media.pageIntro': 'រូបថតទាំងអស់ដែលបានផ្ទុកឡើងក្នុងប្រព័ន្ធ។ ផ្ទុកឡើងរូបថតថ្មី ប្តូរឈ្មោះដើម្បីងាយស្វែងរក និងលុបរូបថតដែលលែងត្រូវការ។ ស្លាកពណ៌បៃតងបង្ហាញចំនួនទំព័រ ឬ popup ដែលកំពុងប្រើរូបថតនោះ។',

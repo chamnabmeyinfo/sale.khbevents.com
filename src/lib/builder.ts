@@ -1,4 +1,5 @@
 import { safeRedirectUrl } from './safe-url';
+import { cleanVideoUrl } from './video-embed';
 
 /**
  * Drag-and-drop page builder: data model and pure rules.
@@ -28,8 +29,10 @@ export interface BlockStyle {
   theme: BlockTheme;
   align: BlockAlign;
   spacing: BlockSpacing;
-  /** Optional background photo (darkened for legibility). */
+  /** Optional background photo (darkened for legibility). With a video it is the poster. */
   bgImage?: string;
+  /** Optional silent looping background video: an uploaded file, a video file link, or a YouTube, Vimeo, Facebook or TikTok link. */
+  bgVideo?: string;
 }
 
 interface BlockBase {
@@ -453,6 +456,7 @@ function normalizeStyle(v: unknown, fallback: BlockStyle): BlockStyle {
     align: oneOf(o.align, ['left', 'center'] as const, fallback.align),
     spacing: oneOf(o.spacing, ['compact', 'normal', 'roomy'] as const, fallback.spacing),
     bgImage: url(o.bgImage),
+    bgVideo: cleanVideoUrl(o.bgVideo),
   };
 }
 

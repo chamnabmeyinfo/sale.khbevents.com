@@ -43,6 +43,8 @@ Suggested order: lock the database first, then change the token and the password
 
 ### Page builder
 
+- [ ] Try a background video on the live site: one upload and one YouTube link, on a phone and a computer. → [[Page Builder]] #owner
+
 - [ ] Try **New drag & drop page** in Admin → Landing Pages CMS with one real product and say what feels hard or missing. → [[Page Builder]] #owner
 
 ### Setup

@@ -211,3 +211,16 @@ describe('early-bird pricing, language and links', () => {
     expect((doc.blocks[1] as FormBlock).interestOptions).toEqual([{ en: 'Camping' }, { en: 'Eyewear' }]);
   });
 });
+
+describe('background video', () => {
+  it('keeps supported videos in their canonical form and drops the rest', () => {
+    const doc = normalizeBuilderDoc({
+      blocks: [
+        { type: 'hero', headline: { en: 'A' }, style: { theme: 'dark', bgVideo: '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>' } },
+        { type: 'hero', headline: { en: 'B' }, style: { theme: 'dark', bgVideo: 'https://evil.example.com/embed' } },
+        { type: 'hero', headline: { en: 'C' }, style: { theme: 'dark', bgVideo: '/api/uploads/video/abc-12345678-clip.webm' } },
+      ],
+    });
+    expect(doc.blocks.map((b) => b.style.bgVideo)).toEqual(['https://www.youtube.com/watch?v=dQw4w9WgXcQ', undefined, '/api/uploads/video/abc-12345678-clip.webm']);
+  });
+});

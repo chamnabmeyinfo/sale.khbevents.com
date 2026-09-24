@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { VIDEO_EXTENSIONS } from './uploads-shared';
 
 /** Supabase Storage bucket that holds admin-uploaded page images. Public read, service-role write. */
 export const UPLOAD_BUCKET = 'page-images';
@@ -37,4 +38,13 @@ export function safeUploadName(originalName: string, mime: string, now: number =
     .replace(/^-+|-+$/g, '')
     .slice(0, 40) || 'image';
   return `${now.toString(36)}-${randomBytes(4).toString('hex')}-${base}.${ext}`;
+}
+
+// ─── Background videos ─────────────────────────────────────────────────────
+// Limits shared with the browser live in ./uploads-shared (no Node imports there).
+export { ALLOWED_VIDEO_TYPES, MAX_VIDEO_BYTES, VIDEO_BUCKET, VIDEO_NAME, isAllowedVideoType } from './uploads-shared';
+
+/** Same naming rule as images: `<time>-<random>-<slug>.<ext>`, extension from the MIME type. */
+export function safeVideoName(originalName: string, mime: string, now: number = Date.now()): string {
+  return safeUploadName(originalName, 'image/jpeg', now).replace(/\.jpg$/, `.${VIDEO_EXTENSIONS[mime] ?? 'bin'}`);
 }

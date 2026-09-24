@@ -66,6 +66,17 @@
 /* Background photo, darkened so text always reads */
 .kb-bg { position: absolute; inset: 0; z-index: -1; overflow: hidden; }
 .kb-bg img { width: 100%; height: 100%; object-fit: cover; }
+/* Background video: covers the section like a photo (no black bars), never takes clicks. */
+.kb-bg--video { container-type: size; }
+.kb-bg__media { position: absolute; pointer-events: none; border: 0; }
+.kb-bg__video { inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.kb-bg__frame {
+  top: 50%;
+  left: 50%;
+  width: max(100cqw, calc(100cqh * var(--kb-video-ratio, 1.7778)));
+  height: max(100cqh, calc(100cqw / var(--kb-video-ratio, 1.7778)));
+  transform: translate(-50%, -50%);
+}
 .kb-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7, 14, 10, 0.55), rgba(7, 14, 10, 0.78)); }
 .kb-theme-light .kb-bg::after { background: linear-gradient(180deg, rgba(251, 249, 245, 0.82), rgba(251, 249, 245, 0.94)); }
 .kb-has-bg.kb-theme-dark, .kb-has-bg.kb-theme-brand { background: #0B1712; }
@@ -329,6 +340,7 @@
 .kb-langbar button[aria-pressed='true'] { background: var(--kb-accent); color: var(--kb-on-accent); }
 
 @media (prefers-reduced-motion: reduce) {
+  .kb-bg__media { display: none; }
   .kb-btn, .kb-stock__fill, .kb-faq-item summary svg { transition: none; }
   .kb-btn:hover { transform: none; }
 }
