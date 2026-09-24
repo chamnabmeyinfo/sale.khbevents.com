@@ -38,3 +38,25 @@ export function mergeContentPack(base: LandingPage, pack: Partial<LandingPage>):
   }
   return out as unknown as LandingPage;
 }
+
+/**
+ * Suggested feature images (content/feature-images.json: { "<slug>": "<image address>" }).
+ * A suggestion is applied once, and only to a page that has no feature image yet,
+ * so an image the owner chose is never replaced.
+ */
+export type FeatureImageDecision = 'apply' | 'already-applied' | 'owner-chose';
+
+export function featureImageDecision(currentOgImage: string | undefined, suggested: string, lastApplied: string | null): FeatureImageDecision {
+  if (lastApplied === suggested) return 'already-applied';
+  if (currentOgImage && currentOgImage.trim()) return 'owner-chose';
+  return 'apply';
+}
+
+export function parseFeatureImages(value: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!isPlainObject(value)) return out;
+  for (const [slug, image] of Object.entries(value)) {
+    if (/^[a-z0-9-]{1,120}$/.test(slug) && typeof image === 'string' && /^(\/(?!\/)|https:\/\/)\S+$/.test(image)) out[slug] = image;
+  }
+  return out;
+}

@@ -65,7 +65,9 @@ Every campaign page has one **feature image**: the photo that stands for the pag
 - Until one is chosen, the first photo on the page is used (classic hero cover; builder hero photo, a section background, the first gallery photo or the offer photo). A page with no photo at all shows **No feature image** on its card in the page list.
 - Link previews use the full address (`https://sale.khbevents.com/...`), which Facebook and Telegram need.
 
-Source: `src/lib/feature-image.ts`.
+Suggested feature images ship in `content/feature-images.json` (`{ "<slug>": "<image address>" }`). The production build applies each suggestion once, and only to a page that has no feature image yet, so an image chosen in the admin is never replaced.
+
+Source: `src/lib/feature-image.ts`, `featureImageDecision` in `src/lib/content-pack.ts`.
 
 ## Photos and animation
 

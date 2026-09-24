@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isContentPack, mergeContentPack } from '@/lib/content-pack';
+import { featureImageDecision, isContentPack, mergeContentPack, parseFeatureImages } from '@/lib/content-pack';
 import type { LandingPage } from '@/lib/types';
 
 const page = {
@@ -62,5 +62,23 @@ describe('isContentPack', () => {
     expect(isContentPack([{ slug: 'trip' }])).toBe(false);
     expect(isContentPack('trip')).toBe(false);
     expect(isContentPack(null)).toBe(false);
+  });
+});
+
+describe('suggested feature images', () => {
+  it('applies once, and never over an image the owner chose', () => {
+    expect(featureImageDecision(undefined, '/a.jpg', null)).toBe('apply');
+    expect(featureImageDecision('', '/a.jpg', null)).toBe('apply');
+    expect(featureImageDecision('/mine.jpg', '/a.jpg', null)).toBe('owner-chose');
+    expect(featureImageDecision('', '/a.jpg', '/a.jpg')).toBe('already-applied');
+    expect(featureImageDecision('', '/b.jpg', '/a.jpg')).toBe('apply');
+  });
+
+  it('accepts only site paths and https images for plain slugs', () => {
+    expect(parseFeatureImages({ 'korea-trip': '/images/a.jpg', 'x': 'https://cdn.example.com/b.jpg', 'Bad Slug': '/c.jpg', y: 'javascript:alert(1)', z: '//evil.com/d.jpg', w: 5 })).toEqual({
+      'korea-trip': '/images/a.jpg',
+      x: 'https://cdn.example.com/b.jpg',
+    });
+    expect(parseFeatureImages(null)).toEqual({});
   });
 });

@@ -897,7 +897,8 @@
         "speakers",
         "artists",
         "expoBooths"
-      ]
+      ],
+      "ogImage": "/images/events/photo_2026-09-16_22-01-09.jpg"
     },
     {
       "id": "page-korea-b2b-2026",
@@ -1031,7 +1032,7 @@
       },
       "metaTitle": "ដំណើរទស្សនកិច្ចពាណិជ្ជកម្មកូរ៉េខាងត្បូង ២៥-២៨ វិច្ឆិកា ២០២៦ | KHB Events",
       "metaDescription": "ទស្សនាពិព័រណ៍ ៣ នៅសេអ៊ូល៖ សម្ភារៈបោះតង់ និងដំណើរកម្សាន្ត វ៉ែនតា សម្ភារៈការិយាល័យ និង Premium Gifts។ រួមបញ្ចូលសំបុត្រយន្តហោះ សណ្ឋាគារ និងមគ្គុទេសក៍ ៣ ភាសា។ $799 ឬ $750 ចុះឈ្មោះមុន។",
-      "ogImage": "",
+      "ogImage": "/images/campaigns/korea-sourcing-trip-seoul-2026.jpg",
       "viewsCount": 0,
       "leadsCount": 0,
       "createdAt": "2026-09-22T02:15:00.000Z",
@@ -1553,7 +1554,7 @@
       "heroCtaText": "ជជែកជាមួយ Mr. Tim Vutha តាម Telegram",
       "heroCtaLink": "https://t.me/VuthaTim",
       "heroImage": "",
-      "ogImage": "",
+      "ogImage": "/images/campaigns/korea-robot-food-trip-seoul-2026.jpg",
       "eventDate": "2026-11-04",
       "eventTime": "4 ថ្ងៃ / 3 យប់ (4-7 វិច្ឆិកា 2026)",
       "venue": "ទីក្រុងសេអ៊ូល ប្រទេសកូរ៉េខាងត្បូង",

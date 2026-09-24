@@ -19,7 +19,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { isContentPack, mergeContentPack } from '../src/lib/content-pack';
+import { featureImageDecision, isContentPack, mergeContentPack, parseFeatureImages } from '../src/lib/content-pack';
 import {
   supabaseGetMarker,
   supabaseGetPageBySlug,
@@ -47,10 +47,7 @@ async function main(): Promise<void> {
   }
 
   const files = readdirSync(PACK_DIR).filter(f => f.endsWith('.json')).sort();
-  if (files.length === 0) {
-    log('nothing to apply: no packs found.');
-    return;
-  }
+  if (files.length === 0) log('nothing to apply: no packs found.');
 
   for (const file of files) {
     const raw = readFileSync(join(PACK_DIR, file), 'utf8');
@@ -93,6 +90,39 @@ async function main(): Promise<void> {
     await supabaseSavePage(merged);
     const remembered = await supabaseSetMarker(markerId, hash);
     log(`${file}: applied to /${parsed.slug} (${hash})${remembered ? '' : ', but the marker could not be saved so it will be re-applied next build'}.`);
+  }
+
+  await applyFeatureImages();
+}
+
+/** Suggested feature images: set once, only on pages that have none (never replaces the owner's choice). */
+async function applyFeatureImages(): Promise<void> {
+  const file = 'content/feature-images.json';
+  if (!existsSync(file)) return;
+  let suggestions: Record<string, string>;
+  try {
+    suggestions = parseFeatureImages(JSON.parse(readFileSync(file, 'utf8')));
+  } catch {
+    log(`${file}: not valid JSON, skipped.`);
+    return;
+  }
+  for (const [slug, image] of Object.entries(suggestions)) {
+    const markerId = `feature_image:${slug}`;
+    const page = await supabaseGetPageBySlug(slug);
+    if (!page) {
+      log(`feature image: no page /${slug}, skipped.`);
+      continue;
+    }
+    const decision = featureImageDecision(page.ogImage, image, await supabaseGetMarker(markerId));
+    if (decision === 'already-applied') continue;
+    if (decision === 'owner-chose') {
+      log(`feature image: /${slug} already has one, left as it is.`);
+      await supabaseSetMarker(markerId, image);
+      continue;
+    }
+    await supabaseSavePage({ ...page, ogImage: image, updatedAt: new Date().toISOString() });
+    await supabaseSetMarker(markerId, image);
+    log(`feature image: set on /${slug}.`);
   }
 }
 
