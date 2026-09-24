@@ -13,10 +13,13 @@ import {
   resolveCtaHref,
   safeSecondaryHref,
   selectPublicPopupAds,
+  parseSmartReasons,
   settingsFromPublicAds,
+  smartScore,
+  smartShouldShow,
   withinHours,
 } from '../popup-ads';
-import type { PopupVisitorContext } from '../popup-ads';
+import type { PopupVisitorContext, SmartSignals } from '../popup-ads';
 import type { PopupAd, PopupAdsSettings, PopupAdsState } from '../types';
 
 const NOW = '2026-10-01T10:00:00.000Z';
@@ -304,5 +307,72 @@ describe('advanced popup settings', () => {
     expect(settingsFromPublicAds([]).globalCooldownHours).toBe(12);
     const zero = selectPublicPopupAds(state([ad()], { globalCooldownHours: 0 }), 'korea', nowMs);
     expect(settingsFromPublicAds(zero).globalCooldownHours).toBe(0);
+  });
+});
+
+describe('smart timing', () => {
+  const quiet: SmartSignals = {
+    activeSeconds: 0, maxScrollPercent: 0, priceSeen: false, formSeen: false, typing: false,
+    scrollBacks: 0, pagesThisVisit: 1, visits: 1, leaving: false, pausedSeconds: 0,
+  };
+  const sig = (o: Partial<SmartSignals>): SmartSignals => ({ ...quiet, ...o });
+
+  it('keeps and cleans the sensitivity of a smart trigger', () => {
+    expect(normalizePopupAd({ ...ad(), trigger: { type: 'smart' } }, NOW)!.trigger).toEqual({ type: 'smart', sensitivity: 'balanced' });
+    expect(normalizePopupAd({ ...ad(), trigger: { type: 'smart', sensitivity: 'eager' } }, NOW)!.trigger.sensitivity).toBe('eager');
+    expect(normalizePopupAd({ ...ad(), trigger: { type: 'smart', sensitivity: 'wild' } }, NOW)!.trigger.sensitivity).toBe('balanced');
+  });
+
+  it('adds up interest points and lists the strongest reasons first', () => {
+    expect(smartScore(quiet)).toEqual({ score: 0, reasons: [] });
+    const r = smartScore(sig({ activeSeconds: 20, maxScrollPercent: 60, priceSeen: true }));
+    expect(r.score).toBe(10 + 15 + 15);
+    expect(r.reasons).toEqual(['scroll', 'price', 'time']);
+    // Time and scroll are capped.
+    expect(smartScore(sig({ activeSeconds: 600, maxScrollPercent: 400 })).score).toBe(30 + 25);
+  });
+
+  it('leaves quick visitors alone and shows to interested ones', () => {
+    // A lot of interest but only 6 seconds in: balanced waits for 10 s.
+    expect(smartShouldShow(sig({ activeSeconds: 6, maxScrollPercent: 100, priceSeen: true, formSeen: true }), 'balanced').show).toBe(false);
+    expect(smartShouldShow(sig({ activeSeconds: 6, maxScrollPercent: 100, priceSeen: true, formSeen: true }), 'eager').show).toBe(true);
+    // Reading 30 s and scrolled 80% with the price seen: balanced shows, gentle waits.
+    const reader = sig({ activeSeconds: 30, maxScrollPercent: 80, priceSeen: true });
+    expect(smartShouldShow(reader, 'balanced').show).toBe(true);
+    expect(smartShouldShow(reader, 'gentle').show).toBe(false);
+    // Just sitting on the page for a minute is not enough.
+    expect(smartShouldShow(sig({ activeSeconds: 60 }), 'balanced').show).toBe(false);
+  });
+
+  it('never interrupts a visitor typing in the form', () => {
+    const keen = sig({ activeSeconds: 60, maxScrollPercent: 100, priceSeen: true, formSeen: true, leaving: true });
+    expect(smartShouldShow({ ...keen, typing: true }, 'eager').show).toBe(false);
+    expect(smartShouldShow(keen, 'eager').show).toBe(true);
+  });
+
+  it('asks a visitor who is leaving once half the points are earned', () => {
+    const leaving = sig({ activeSeconds: 5, maxScrollPercent: 20, leaving: true });
+    // 2.5 + 5 + 25 = 32.5 → 33, above half of balanced (25) even before the minimum time.
+    expect(smartShouldShow(leaving, 'balanced').show).toBe(true);
+    // Leaving after 2 seconds is a bounce: left alone.
+    expect(smartShouldShow({ ...leaving, activeSeconds: 2 }, 'balanced').show).toBe(false);
+    // Gentle needs 35 points before asking a leaving visitor.
+    expect(smartShouldShow(leaving, 'gentle').show).toBe(false);
+  });
+
+  it('counts returning visitors, several pages and re-reading', () => {
+    const r = smartScore(sig({ visits: 3, pagesThisVisit: 2, scrollBacks: 2, activeSeconds: 12, pausedSeconds: 9 }));
+    expect(r.reasons).toEqual(expect.arrayContaining(['returning', 'pages', 'reread', 'pause', 'time']));
+    expect(r.score).toBe(6 + 10 + 10 + 10 + 10);
+  });
+
+  it('counts a started form more than a seen one', () => {
+    expect(smartScore(sig({ formSeen: true })).score).toBe(15);
+    expect(smartScore(sig({ formSeen: true, formStarted: true })).score).toBe(25);
+  });
+
+  it('accepts only known reasons from a beacon', () => {
+    expect(parseSmartReasons('price,time,<script>,price,scroll,form')).toEqual(['price', 'time', 'scroll']);
+    expect(parseSmartReasons(42)).toEqual([]);
   });
 });

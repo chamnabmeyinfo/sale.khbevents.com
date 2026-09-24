@@ -26,6 +26,16 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-24 — Smart popup timing uses plain rules, not a trained model
+
+- **Decision:** The "Smart timing" trigger adds up interest points (reading time, scroll, price or form seen, re-reading, several pages, return visit, leaving) in the visitor's browser and shows the popup at a threshold set by the sensitivity.
+- **Why:** The site's traffic is too small to train a model, and rules can be explained and tuned. Nothing personal leaves the browser; only the top reasons are counted per popup.
+- **Details:** Never while typing in the form or after the form was sent. Reasons per view and click appear in the admin list.
+- **Decided by:** Claude with owner approval (owner asked for a feature that decides the popup moment automatically).
+- **Affects:** [[Ads and Popups]].
+
+---
+
 ## 2026-09-24 — One page per trip: the Korea page was rebuilt at its existing link
 
 - **Decision:** The Korea trip keeps `/korea-b2b-trip-2026`. Its content was replaced with a drag and drop builder page written only from the owner's caption, instead of adding a second page for the same trip.

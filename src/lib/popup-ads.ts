@@ -5,6 +5,8 @@ import type {
   PopupAdFrequency,
   PopupAdHours,
   PopupAdSecondary,
+  PopupAdSmartReason,
+  PopupAdSmartSensitivity,
   PopupAdStatus,
   PopupAdTemplate,
   PopupAdTheme,
@@ -31,7 +33,8 @@ export const MAX_POPUP_ADS = 50;
 
 export const POPUP_TEMPLATES: PopupAdTemplate[] = ['chat', 'card', 'bottom-sheet', 'banner', 'image'];
 export const POPUP_THEMES: PopupAdTheme[] = ['dark', 'light', 'brand'];
-export const POPUP_TRIGGERS: PopupAdTriggerType[] = ['immediate', 'delay', 'scroll', 'exit_intent', 'idle'];
+export const POPUP_TRIGGERS: PopupAdTriggerType[] = ['smart', 'immediate', 'delay', 'scroll', 'exit_intent', 'idle'];
+export const SMART_SENSITIVITIES = ['gentle', 'balanced', 'eager'] as const;
 export const POPUP_POSITIONS = ['center', 'bottom-right', 'bottom-left'] as const;
 export const POPUP_SIZES = ['sm', 'md', 'lg'] as const;
 export const POPUP_ANIMATIONS = ['zoom', 'fade', 'slide', 'bounce'] as const;
@@ -67,6 +70,12 @@ export const popupStorageKeys = {
   firstSeen: 'khb_first_seen',
   /** utm_source of the visit, kept for the browser session. */
   utmSource: 'khb_utm_source',
+  /** Number of visits (browser sessions) to the site, for smart timing. */
+  visits: 'khb_visits',
+  /** Set once per browser session so a visit is counted once. */
+  visitCounted: 'khb_visit_counted',
+  /** Pages opened in this browser session, for smart timing. */
+  pagesThisVisit: 'khb_pages_visit',
 };
 
 /** A visitor counts as returning once their first visit is older than this. */
@@ -161,6 +170,7 @@ export function normalizePopupAd(input: unknown, nowIso: string, existing?: Popu
   if (triggerType === 'delay') trigger.seconds = clampNum(triggerRaw.seconds, 0, 600, 8);
   if (triggerType === 'scroll') trigger.percent = clampNum(triggerRaw.percent, 1, 100, 40);
   if (triggerType === 'idle') trigger.idleSeconds = clampNum(triggerRaw.idleSeconds, 3, 600, 20);
+  if (triggerType === 'smart') trigger.sensitivity = oneOf(triggerRaw.sensitivity, SMART_SENSITIVITIES, 'balanced');
 
   let pages: 'all' | string[] = 'all';
   if (Array.isArray(v.pages)) {
@@ -452,4 +462,87 @@ export function previewPath(ad: Pick<PopupAd, 'id' | 'pages'>): string {
   const slug = previewSlug(ad);
   const base = slug === HOME_SLUG ? '/' : `/${slug}`;
   return `${base}?popup_preview=${encodeURIComponent(ad.id)}`;
+}
+
+// ─── Smart timing ──────────────────────────────────────────────────────────
+//
+// A 'smart' popup waits until the visitor shows interest instead of a fixed
+// delay. The browser measures a few signals on this page view (nothing leaves
+// the browser, no personal data) and adds up points; the popup shows once the
+// points reach the threshold for the chosen sensitivity. Plain rules, not a
+// trained model: every decision can be explained with the reasons returned.
+
+export interface SmartSignals {
+  /** Seconds on the page while the tab was visible and the visitor active. */
+  activeSeconds: number;
+  /** Deepest scroll so far, 0–100. */
+  maxScrollPercent: number;
+  /** The price or offer section has been on screen. */
+  priceSeen: boolean;
+  /** The registration form has been on screen. */
+  formSeen: boolean;
+  /** The visitor typed in the form (and has not sent it). Counts more than just seeing it. */
+  formStarted?: boolean;
+  /** The visitor is typing in a form (or typed in the last few seconds): never interrupt. */
+  typing: boolean;
+  /** Times the visitor scrolled back up a good distance to read something again. */
+  scrollBacks: number;
+  /** Pages opened in this visit, this one included. */
+  pagesThisVisit: number;
+  /** Visits to the site from this browser, this one included. */
+  visits: number;
+  /** The visitor seems about to leave (pointer to the top on desktop, fast scroll to the top on phones). */
+  leaving: boolean;
+  /** Seconds since the last scroll, tap or key, after having been active. */
+  pausedSeconds: number;
+}
+
+export type SmartReason = PopupAdSmartReason;
+export const SMART_REASONS: SmartReason[] = ['time', 'scroll', 'price', 'form', 'reread', 'pages', 'returning', 'leaving', 'pause'];
+
+/** Known reasons from a comma-separated beacon value, at most three. */
+export function parseSmartReasons(value: unknown): SmartReason[] {
+  if (typeof value !== 'string') return [];
+  const list = value.split(',').map((r) => r.trim()).filter((r): r is SmartReason => (SMART_REASONS as string[]).includes(r));
+  return Array.from(new Set(list)).slice(0, 3);
+}
+
+export const SMART_RULES: Record<PopupAdSmartSensitivity, { threshold: number; minSeconds: number }> = {
+  gentle: { threshold: 70, minSeconds: 20 },
+  balanced: { threshold: 50, minSeconds: 10 },
+  eager: { threshold: 35, minSeconds: 5 },
+};
+
+/** Interest points for this page view, with the signals that earned them. */
+export function smartScore(s: SmartSignals): { score: number; reasons: SmartReason[] } {
+  const parts: Array<[SmartReason, number]> = [
+    ['time', Math.min(s.activeSeconds, 60) * 0.5],
+    ['scroll', Math.max(0, Math.min(s.maxScrollPercent, 100)) * 0.25],
+    ['price', s.priceSeen ? 15 : 0],
+    ['form', s.formStarted ? 25 : s.formSeen ? 15 : 0],
+    ['reread', s.scrollBacks >= 2 ? 10 : 0],
+    ['pages', s.pagesThisVisit >= 2 ? 10 : 0],
+    ['returning', s.visits >= 2 ? 10 : 0],
+    ['leaving', s.leaving ? 25 : 0],
+    ['pause', s.pausedSeconds >= 8 && s.activeSeconds >= 10 ? 10 : 0],
+  ];
+  const earned = parts.filter(([, p]) => p > 0);
+  const score = Math.round(earned.reduce((sum, [, p]) => sum + p, 0));
+  const reasons = earned.sort((a, b) => b[1] - a[1]).map(([r]) => r);
+  return { score, reasons };
+}
+
+/**
+ * Whether a smart popup should appear now. Never while the visitor types in a
+ * form, never before the minimum time (so people who bounce in a few seconds
+ * are left alone), except that a visitor about to leave with half the points
+ * already earned is asked before they go.
+ */
+export function smartShouldShow(s: SmartSignals, sensitivity: PopupAdSmartSensitivity = 'balanced'): { show: boolean; score: number; reasons: SmartReason[] } {
+  const rules = SMART_RULES[sensitivity] || SMART_RULES.balanced;
+  const { score, reasons } = smartScore(s);
+  if (s.typing) return { show: false, score, reasons };
+  if (s.leaving && s.activeSeconds >= 3 && score >= rules.threshold / 2) return { show: true, score, reasons };
+  if (s.activeSeconds < rules.minSeconds) return { show: false, score, reasons };
+  return { show: score >= rules.threshold, score, reasons };
 }

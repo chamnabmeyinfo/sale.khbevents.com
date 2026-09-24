@@ -33,7 +33,7 @@ import {
 } from './round-robin';
 import { isSupabaseConfigured } from './supabase';
 import { runAfterResponse } from './after-response';
-import { defaultPopupAdsState, normalizePopupAdsState, selectPublicPopupAds } from './popup-ads';
+import { defaultPopupAdsState, normalizePopupAdsState, parseSmartReasons, selectPublicPopupAds, type SmartReason } from './popup-ads';
 import { normalizeBuilderDoc } from './builder';
 import { normalizeMediaMeta, type MediaMeta } from './media-library';
 import {
@@ -1261,13 +1261,22 @@ export async function getPopupAdStats(): Promise<PopupAdStatsMap> {
  * Counts one popup event. Runs after the tracking response; the Supabase row is
  * read-modify-write, so counts are approximate under heavy concurrency.
  */
-export async function recordPopupAdEvent(adId: string, kind: 'view' | 'click' | 'close'): Promise<void> {
+export async function recordPopupAdEvent(adId: string, kind: 'view' | 'click' | 'close', reasons: SmartReason[] = []): Promise<void> {
   const now = new Date().toISOString();
   const bump = (stats: PopupAdStatsMap) => {
     const s = stats[adId] || { views: 0, clicks: 0, closes: 0 };
     if (kind === 'view') { s.views += 1; s.lastViewAt = now; }
     if (kind === 'click') { s.clicks += 1; s.lastClickAt = now; }
     if (kind === 'close') s.closes += 1;
+    if (kind !== 'close' && reasons.length) {
+      s.smart = s.smart || {};
+      for (const r of reasons) {
+        const c = s.smart[r] || { views: 0, clicks: 0 };
+        if (kind === 'view') c.views += 1;
+        else c.clicks += 1;
+        s.smart[r] = c;
+      }
+    }
     stats[adId] = s;
     return stats;
   };
@@ -1401,7 +1410,8 @@ export async function recordTrackingEvent(payload: RecordTrackingPayload): Promi
     const adId = typeof payload.eventData?.adId === 'string' ? payload.eventData.adId : '';
     if (adId) {
       const kind = eventType === 'popup_view' ? 'view' : eventType === 'popup_click' ? 'click' : 'close';
-      runAfterResponse(() => recordPopupAdEvent(adId, kind));
+      const reasons = parseSmartReasons(payload.eventData?.smartReasons);
+      runAfterResponse(() => recordPopupAdEvent(adId, kind, reasons));
     }
   }
 }

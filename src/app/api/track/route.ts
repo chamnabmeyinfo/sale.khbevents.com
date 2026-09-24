@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { parseSmartReasons } from '@/lib/popup-ads';
 import { recordTrackingEvent, RecordTrackingPayload } from '@/lib/storage';
 import { TrackingEventType } from '@/lib/types';
 import { rateLimitByIp } from '@/lib/rate-limit';
@@ -50,6 +51,8 @@ export async function POST(req: NextRequest) {
         template: str(eventData?.template, 20),
         trigger: str(eventData?.trigger, 20),
         action: str(eventData?.action, 20),
+        smartReasons: parseSmartReasons(eventData?.smartReasons).join(',') || undefined,
+        smartScore: typeof eventData?.smartScore === 'number' && Number.isFinite(eventData.smartScore) ? Math.max(0, Math.min(200, Math.round(eventData.smartScore))) : undefined,
       };
     }
     if (slug) {

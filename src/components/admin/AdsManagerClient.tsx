@@ -38,6 +38,8 @@ import {
   POPUP_SIZES,
   POPUP_TEMPLATES,
   POPUP_TRIGGERS,
+  SMART_RULES,
+  SMART_SENSITIVITIES,
   newPopupAd,
   popupAdStatus,
   previewPath,
@@ -79,6 +81,7 @@ const TRIGGER_LABEL: Record<PopupAdTriggerType, string> = {
   scroll: 'ads.trigger.scroll',
   exit_intent: 'ads.trigger.exitIntent',
   idle: 'ads.trigger.idle',
+  smart: 'ads.trigger.smart',
 };
 
 const DAY_KEYS = ['ads.day.sun', 'ads.day.mon', 'ads.day.tue', 'ads.day.wed', 'ads.day.thu', 'ads.day.fri', 'ads.day.sat'];
@@ -132,7 +135,7 @@ const STARTERS: Array<{ key: string; label: string; detail: string; build: (now:
       launcher: true,
       agentName: 'KHB Events',
       agentRole: { en: 'Sales team · usually replies in minutes', kh: 'ក្រុមលក់ · ជាធម្មតាឆ្លើយក្នុងពេលប៉ុន្មាននាទី' },
-      trigger: { type: 'delay', seconds: 12 },
+      trigger: { type: 'smart', sensitivity: 'balanced' },
       frequency: 'session',
     }),
   },
@@ -463,6 +466,16 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                       <td className="py-2.5 px-3 text-slate-600 dark:text-gray-300">
                         <div>{ad.pages === 'all' ? t('ads.allPages') : t(ad.pages.length > 1 ? 'ads.pagesCount' : 'ads.pageCount', { n: ad.pages.length })} · {ad.devices === 'all' ? t('ads.allDevices') : t(`ads.device.${ad.devices}`)}</div>
                         <div className="text-[11px]">{t(TRIGGER_LABEL[ad.trigger.type])}{ad.trigger.type === 'delay' ? ` (${ad.trigger.seconds ?? 8}s)` : ad.trigger.type === 'scroll' ? ` (${ad.trigger.percent ?? 40}%)` : ''} · {t(FREQUENCY_LABEL[ad.frequency])}</div>
+                        {s.smart && Object.keys(s.smart).length > 0 && (
+                          <div className="text-[10px] text-slate-500 dark:text-gray-400" title={t('ads.smartReasonsTitle')}>
+                            {t('ads.smartReasons')}{' '}
+                            {(Object.entries(s.smart) as Array<[string, { views: number; clicks: number }]>)
+                              .sort((a, b) => b[1].views - a[1].views)
+                              .slice(0, 3)
+                              .map(([r, c]) => `${t(`ads.reason.${r}`)} ${c.clicks}/${c.views}`)
+                              .join(' · ')}
+                          </div>
+                        )}
                         {(ad.startAt || ad.endAt) && (
                           <div className="text-[10px] text-slate-400">{ad.startAt ? t('ads.from', { date: fmtPhnomPenh(ad.startAt) }) : ''}{ad.startAt && ad.endAt ? ' ' : ''}{ad.endAt ? t('ads.until', { date: fmtPhnomPenh(ad.endAt) }) : ''} {t('ads.phnomPenh')}</div>
                         )}
@@ -726,7 +739,7 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                       </div>
                       <div>
                         <label className={LABEL}>{t('ads.showIt')}</label>
-                        <select className={INPUT} value={editing.trigger.type} onChange={(e) => setEditing({ ...editing, trigger: { type: e.target.value as PopupAdTriggerType, seconds: editing.trigger.seconds ?? 8, percent: editing.trigger.percent ?? 40 } })}>
+                        <select className={INPUT} value={editing.trigger.type} onChange={(e) => { const type = e.target.value as PopupAdTriggerType; setEditing({ ...editing, trigger: { type, seconds: editing.trigger.seconds ?? 8, percent: editing.trigger.percent ?? 40, ...(type === 'smart' ? { sensitivity: editing.trigger.sensitivity ?? 'balanced' } : {}) } }); }}>
                           {POPUP_TRIGGERS.map((tr) => <option key={tr} value={tr}>{t(TRIGGER_LABEL[tr])}</option>)}
                         </select>
                         {editing.trigger.type === 'delay' && (
@@ -740,6 +753,14 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                           </div>
                         )}
                         {editing.trigger.type === 'exit_intent' && <span className={HINT}>{t('ads.exitHint')}</span>}
+                        {editing.trigger.type === 'smart' && (
+                          <div className="mt-2 space-y-1.5">
+                            <select aria-label={t('ads.smartSensitivity')} className={INPUT} value={editing.trigger.sensitivity ?? 'balanced'} onChange={(e) => setEditing({ ...editing, trigger: { ...editing.trigger, sensitivity: e.target.value as (typeof SMART_SENSITIVITIES)[number] } })}>
+                              {SMART_SENSITIVITIES.map((v) => <option key={v} value={v}>{t(`ads.smart.${v}`, { s: SMART_RULES[v].minSeconds })}</option>)}
+                            </select>
+                            <span className={HINT}>{t('ads.smartHint')}</span>
+                          </div>
+                        )}
                         {editing.trigger.type === 'idle' && (
                           <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-600 dark:text-gray-300">
                             <input type="number" min={3} max={600} className={`${INPUT} max-w-[100px]`} value={editing.trigger.idleSeconds ?? 20} onChange={(e) => setEditing({ ...editing, trigger: { ...editing.trigger, idleSeconds: Number(e.target.value) || 20 } })} /> {t('ads.idleSeconds')}

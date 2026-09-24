@@ -98,6 +98,37 @@ All optional. A popup saved before 2026-09-24 has none of them and looks exactly
 | After scrolling down | `scroll` | 40% of the page (1 to 100) |
 | When the visitor is about to leave | `exit_intent` | Desktop: the pointer leaves through the top. Phones: after 15 seconds or 60% scrolled, whichever comes first |
 | When the visitor stops moving | `idle` | 20 seconds with no scroll, pointer, tap or key (3 to 600) |
+| Smart timing (when the visitor shows interest) | `smart` | Sensitivity Balanced. See [[#Smart timing]] |
+
+## Smart timing
+
+The popup waits until the visitor shows interest instead of a fixed delay. It is a points system in the visitor's browser, not a trained model: the traffic is too small to learn from, and plain rules can be explained. Nothing personal is stored.
+
+| Signal | Reason shown in the admin | Points |
+|---|---|---|
+| Active reading time (tab visible, some activity in the last 30 s) | reading time | 0.5 per second, up to 30 |
+| Deepest scroll | scrolled far | 0.25 per percent, up to 25 |
+| The price or offer section was on screen (`#pricing`, the builder Offer section) | saw the price | 15 |
+| The form was on screen / the visitor typed in it | saw the form | 15 / 25 |
+| Scrolled back up 300 px or more, twice | read back up | 10 |
+| Second page or more in this visit | several pages | 10 |
+| Second visit or more from this browser | came back | 10 |
+| About to leave (desktop: pointer out through the top; phones: back at the top after reading half the page) | about to leave | 25 |
+| Stopped for 8 s after at least 10 s of reading | paused | 10 |
+
+| Sensitivity | Shows at | Never before |
+|---|---|---|
+| Gentle | 70 points | 20 s |
+| Balanced | 50 points | 10 s |
+| Eager | 35 points | 5 s |
+
+- Never while the visitor types in a form, and not for 5 seconds after.
+- A visitor about to leave is asked once they have half the points and 3 seconds on the page, even before the minimum time.
+- Never after the visitor sent the form on that page, when **Hide from visitors who already sent the form** is on.
+- Someone who opens the page and does nothing does not see it.
+- Each view and click carries its top three reasons. The list shows **Why it showed (clicks/views)** per reason, stored as `smart` in the popup's stats. Use it to see which moments lead to Telegram chats.
+- Add `?popup_debug=1` to a page link to see the points in the browser console.
+- The **Telegram quick chat** starter uses smart timing, Balanced.
 
 ## Frequency per visitor
 

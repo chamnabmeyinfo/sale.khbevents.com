@@ -825,7 +825,11 @@ export type PopupAdAnimation = 'zoom' | 'fade' | 'slide' | 'bounce';
 export type PopupAdRadius = 'sharp' | 'soft' | 'round';
 export type PopupAdOverlay = 'none' | 'light' | 'dark';
 export type PopupAdVisitors = 'all' | 'new' | 'returning';
-export type PopupAdTriggerType = 'immediate' | 'delay' | 'scroll' | 'exit_intent' | 'idle';
+export type PopupAdTriggerType = 'immediate' | 'delay' | 'scroll' | 'exit_intent' | 'idle' | 'smart';
+/** How readily a 'smart' popup appears: gentle waits for strong interest, eager shows sooner. */
+export type PopupAdSmartSensitivity = 'gentle' | 'balanced' | 'eager';
+/** A visitor signal that made a 'smart' popup appear. */
+export type PopupAdSmartReason = 'time' | 'scroll' | 'price' | 'form' | 'reread' | 'pages' | 'returning' | 'leaving' | 'pause';
 /** How often one visitor may see the same popup ('always' = every page view). */
 export type PopupAdFrequency = 'always' | 'session' | 'day' | 'week' | 'month' | 'forever';
 export type PopupAdCtaAction = 'url' | 'telegram' | 'register' | 'close';
@@ -841,6 +845,8 @@ export interface PopupAdTrigger {
   percent?: number;
   /** Seconds without scrolling, tapping or moving, for 'idle'. */
   idleSeconds?: number;
+  /** How readily a 'smart' popup appears. Default balanced. */
+  sensitivity?: PopupAdSmartSensitivity;
 }
 
 /** Days and hours (Cambodia time) when a popup may show, e.g. while staff answer Telegram. */
@@ -945,6 +951,8 @@ export interface PopupAdStats {
   closes: number;
   lastViewAt?: string;
   lastClickAt?: string;
+  /** Smart popups: views and clicks per reason it appeared (a view counts for each of its top reasons). */
+  smart?: Partial<Record<PopupAdSmartReason, { views: number; clicks: number }>>;
 }
 
 export type PopupAdStatsMap = Record<string, PopupAdStats>;

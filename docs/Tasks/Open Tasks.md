@@ -83,6 +83,7 @@ Found by checking the notes against the code on 2026-09-24. Each needs the owner
 - [ ] **Per-page lead counts and pixels.** Page cards and per-page conversion on Supabase do not count new leads, and ad-pixel Lead events fire only on the Smart City views. → [[Tracking and Analytics]] #for-claude
 - [ ] **Token still in the fallback database.** After rotating the bot token, remove the old one from `data/db.json` (the local and cPanel fallback). It was removed from the in-admin guide and `FEATURE_BLUEPRINT.md` on 2026-09-24. → [[Rotate the Telegram Bot Token]] #for-claude
 
+- [ ] After two to four weeks of a smart popup, compare its click rate and **Why it showed** reasons with the fixed-delay popups; tune the sensitivity. → [[Ads and Popups]] #owner
 - [ ] Optional: switch on a **Telegram quick chat** popup (Admin → Ads & Popups → starter) for the trip pages, with office hours set to when the sales team can reply. → [[Create a Popup]] #owner
 
 ## Questions to settle

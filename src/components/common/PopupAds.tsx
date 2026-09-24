@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
-import type { PopupAd } from '@/lib/types';
-import { pickPopupToShow, pickText, popupStorageKeys, resolveCtaHref, RETURNING_AFTER_MS, settingsFromPublicAds, type PublicPopupAd } from '@/lib/popup-ads';
+import type { PopupAd, PopupAdSmartSensitivity } from '@/lib/types';
+import { pickPopupToShow, pickText, popupStorageKeys, resolveCtaHref, RETURNING_AFTER_MS, settingsFromPublicAds, smartShouldShow, type PublicPopupAd } from '@/lib/popup-ads';
 import { getDeviceType, trackClientEvent } from '@/components/common/LandingPageTracking';
 import { useStoredChoice, useUrlParam } from '@/lib/use-browser-state';
 
@@ -327,6 +327,8 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
   /** After closing: show the small round button that opens the popup again. */
   const [launcherShown, setLauncherShown] = useState(false);
   const viewedRef = useRef(false);
+  /** Why a smart popup appeared (score and top reasons), sent with the view event. */
+  const smartRef = useRef<{ score: number; reasons: string } | null>(null);
 
   // Decide after mount only: storage, device and time must not affect the server HTML.
   // The decision runs on the next tick so the effect itself never sets state.
@@ -357,6 +359,15 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
     const urlSource = new URLSearchParams(window.location.search).get('utm_source')?.trim().toLowerCase();
     if (urlSource) writeSession(popupStorageKeys.utmSource, urlSource);
     const utmSource = urlSource || readSession(popupStorageKeys.utmSource) || undefined;
+    // Visit pattern for smart timing: visits from this browser and pages opened in this visit.
+    let visits = numberOrUndefined(readLocal(popupStorageKeys.visits)) ?? 0;
+    if (readSession(popupStorageKeys.visitCounted) !== '1') {
+      visits += 1;
+      writeLocal(popupStorageKeys.visits, String(visits));
+      writeSession(popupStorageKeys.visitCounted, '1');
+    }
+    const pagesThisVisit = (numberOrUndefined(readSession(popupStorageKeys.pagesThisVisit)) ?? 0) + 1;
+    writeSession(popupStorageKeys.pagesThisVisit, String(pagesThisVisit));
     const ad = pickPopupToShow(ads, settingsFromPublicAds(ads), {
       nowMs,
       device,
@@ -376,6 +387,8 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
       if (fired) return;
       fired = true;
       cleanups.forEach((c) => c());
+      // The visitor may have sent the form on this page after the popup was chosen.
+      if (ad.hideAfterLead && readLocal(popupStorageKeys.leadSent) === '1') return;
       setVisible(true);
     };
     const onScrollPast = (percent: number) => {
@@ -392,6 +405,116 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
       cleanups.push(() => window.clearTimeout(id));
     };
 
+    /**
+     * Smart timing: measure interest on this page view and show the popup
+     * when smartShouldShow says so. Everything stays in the browser.
+     */
+    function watchInterest(sensitivity: PopupAdSmartSensitivity) {
+      const debug = new URLSearchParams(window.location.search).get('popup_debug') === '1';
+      let activeSeconds = 0;
+      let lastActivity = Date.now();
+      let maxScrollPercent = 0;
+      let priceSeen = false;
+      let formSeen = false;
+      let lastTyped = 0;
+      let scrollBacks = 0;
+      let peakY = window.scrollY;
+      let countedBack = false;
+      let leaving = false;
+      let lastY = window.scrollY;
+
+      const evaluate = () => {
+        const now = Date.now();
+        const el = document.activeElement;
+        const inField = !!el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) && !el.closest('.khb-popup');
+        const result = smartShouldShow({
+          activeSeconds,
+          maxScrollPercent,
+          priceSeen,
+          formSeen,
+          formStarted: lastTyped > 0,
+          typing: inField || now - lastTyped < 5000,
+          scrollBacks,
+          pagesThisVisit,
+          visits,
+          leaving,
+          pausedSeconds: (now - lastActivity) / 1000,
+        }, sensitivity);
+        leaving = false;
+        if (debug) console.info('[popup smart]', sensitivity, result.score, result.reasons.join(','), result.show ? 'SHOW' : '');
+        if (result.show) {
+          smartRef.current = { score: result.score, reasons: result.reasons.slice(0, 3).join(',') };
+          fire();
+        }
+      };
+
+      const markActive = () => { lastActivity = Date.now(); };
+      const onScroll = () => {
+        markActive();
+        const y = window.scrollY;
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        if (max > 0) maxScrollPercent = Math.max(maxScrollPercent, (y / max) * 100);
+        // Re-reading: scrolled back up at least 300 px, counted once per upward move.
+        if (y > lastY) {
+          if (countedBack) { countedBack = false; peakY = y; }
+          peakY = Math.max(peakY, y);
+        } else if (!countedBack && peakY - y > 300) {
+          scrollBacks += 1;
+          countedBack = true;
+        }
+        // Phones: back at the top after reading half the page often means "leaving".
+        if (device === 'mobile' && maxScrollPercent >= 50 && y < 150 && lastY >= 150) {
+          leaving = true;
+          evaluate();
+        }
+        lastY = y;
+      };
+      const onType = (e: Event) => {
+        const target = e.target as HTMLElement | null;
+        if (target && !target.closest('.khb-popup')) lastTyped = Date.now();
+      };
+      const onLeave = (e: MouseEvent) => {
+        if (e.clientY > 0) return;
+        leaving = true;
+        evaluate();
+      };
+      const activity = ['pointermove', 'pointerdown', 'keydown', 'touchstart'] as const;
+      activity.forEach((ev) => window.addEventListener(ev, markActive, { passive: true }));
+      window.addEventListener('scroll', onScroll, { passive: true });
+      document.addEventListener('input', onType, true);
+      if (device === 'desktop') document.addEventListener('mouseleave', onLeave);
+
+      // Sections that show interest when they come on screen.
+      const observer = typeof IntersectionObserver === 'function'
+        ? new IntersectionObserver((entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              if ((entry.target as HTMLElement).dataset.khbSmart === 'price') priceSeen = true;
+              else formSeen = true;
+            }
+          }, { threshold: 0.3 })
+        : null;
+      if (observer) {
+        document.querySelectorAll<HTMLElement>('#pricing, section.kb-offer, [data-khb-price]').forEach((el) => { el.dataset.khbSmart = 'price'; observer.observe(el); });
+        document.querySelectorAll<HTMLElement>('#register, section[id^="form-"]').forEach((el) => { el.dataset.khbSmart = 'form'; observer.observe(el); });
+      }
+
+      // Once a second: count active reading time (tab visible, some activity in the last 30 s).
+      const tick = window.setInterval(() => {
+        if (document.visibilityState === 'visible' && Date.now() - lastActivity < 30000) activeSeconds += 1;
+        evaluate();
+      }, 1000);
+
+      cleanups.push(() => {
+        window.clearInterval(tick);
+        activity.forEach((ev) => window.removeEventListener(ev, markActive));
+        window.removeEventListener('scroll', onScroll);
+        document.removeEventListener('input', onType, true);
+        document.removeEventListener('mouseleave', onLeave);
+        observer?.disconnect();
+      });
+    }
+
     const trigger = ad.trigger;
     if (trigger.type === 'immediate') {
       fire();
@@ -407,6 +530,8 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
       const events = ['scroll', 'pointermove', 'pointerdown', 'keydown', 'touchstart'] as const;
       events.forEach((ev) => window.addEventListener(ev, reset, { passive: true }));
       cleanups.push(() => { window.clearTimeout(timer); events.forEach((ev) => window.removeEventListener(ev, reset)); });
+    } else if (trigger.type === 'smart') {
+      watchInterest(trigger.sensitivity ?? 'balanced');
     } else if (device === 'desktop') {
       // Exit intent: the pointer leaves through the top of the window.
       const onLeave = (e: MouseEvent) => { if (e.clientY <= 0) fire(); };
@@ -429,7 +554,7 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
       writeLocal(popupStorageKeys.shown(active.id), stamp);
       writeLocal(popupStorageKeys.lastAny, stamp);
       writeSession(popupStorageKeys.sessionShown(active.id), '1');
-      trackClientEvent(pageSlug, 'popup_view', { adId: active.id, adName: active.name, template: active.template, trigger: active.trigger.type }, langRef.current);
+      trackClientEvent(pageSlug, 'popup_view', { adId: active.id, adName: active.name, template: active.template, trigger: active.trigger.type, ...(smartRef.current ? { smartScore: smartRef.current.score, smartReasons: smartRef.current.reasons } : {}) }, langRef.current);
     }
     // Only popups that dim the page block scrolling; the chat bubble and banner leave the page usable.
     const lock = popupDefaults(active).overlay !== 'none' && active.template !== 'banner' && active.template !== 'chat';
@@ -465,7 +590,7 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
   const onCta = useCallback((href: string | null) => {
     if (!active) return;
     if (!preview) {
-      trackClientEvent(pageSlug, 'popup_click', { adId: active.id, adName: active.name, template: active.template, action: active.cta.action }, langRef.current);
+      trackClientEvent(pageSlug, 'popup_click', { adId: active.id, adName: active.name, template: active.template, action: active.cta.action, ...(smartRef.current ? { smartReasons: smartRef.current.reasons } : {}) }, langRef.current);
     }
     close('click');
     if (preview) return;

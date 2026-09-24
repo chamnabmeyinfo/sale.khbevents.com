@@ -39,7 +39,7 @@ A popup gives a hesitating visitor one clear next step: ask on Telegram, reserve
   - **Show on:** all pages (optionally **Except these pages**), or pick the pages.
   - **Devices** and **Language**.
   - Optional: **Visitors** (everyone, first visit only, returning only), **Only visitors from these ad sources** (utm_source), **Only during office hours** (Phnom Penh time).
-  - **Show it:** as soon as the page loads, after a few seconds, after scrolling down, when the visitor is about to leave, or when the visitor stops moving.
+  - **Show it:** as soon as the page loads, after a few seconds, after scrolling down, when the visitor is about to leave, when the visitor stops moving, or **Smart timing** (shows when the visitor shows interest; pick Gentle, Balanced or Eager).
   - **How often per visitor:** from every page view to only once, ever.
   - **Start** and **End** (your local time). Empty start means now; empty end means until paused.
   - **Priority:** the higher number wins when two popups could show.
