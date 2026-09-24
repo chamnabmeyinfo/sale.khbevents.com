@@ -11,7 +11,10 @@ import {
   popupAdStatus,
   previewPath,
   resolveCtaHref,
+  safeSecondaryHref,
   selectPublicPopupAds,
+  settingsFromPublicAds,
+  withinHours,
 } from '../popup-ads';
 import type { PopupVisitorContext } from '../popup-ads';
 import type { PopupAd, PopupAdsSettings, PopupAdsState } from '../types';
@@ -204,5 +207,102 @@ describe('cta and text helpers', () => {
     expect(pickText(undefined, 'en')).toBe('');
     expect(previewPath(ad())).toBe('/smart-city-tea-cafe?popup_preview=ad-1');
     expect(previewPath(ad({ pages: ['main-sales'] }))).toBe('/?popup_preview=ad-1');
+  });
+});
+
+// NOW is Thursday 1 Oct 2026, 17:00 in Phnom Penh (UTC+7).
+describe('advanced popup settings', () => {
+  it('keeps valid design and targeting settings and drops invalid ones', () => {
+    const cleaned = normalizePopupAd(
+      {
+        ...ad(),
+        template: 'chat',
+        position: 'bottom-left',
+        size: 'huge',
+        animation: 'bounce',
+        overlay: 'none',
+        agentName: 'KHB Events',
+        secondary: { label: { en: 'Call us' }, href: 'tel:+855 12 345 678' },
+        countdownTo: '2026-10-31T16:59:00.000Z',
+        autoCloseSeconds: 9999,
+        launcher: true,
+        excludePages: ['Korea-B2B-Trip-2026', 'bad slug!'],
+        visitors: 'returning',
+        utmSources: ['Facebook', 'tik tok', 'facebook'],
+        hours: { days: [1, 2, 9], from: '08:00', to: '18:00' },
+        trigger: { type: 'idle', idleSeconds: 1 },
+      },
+      NOW
+    )!;
+    expect(cleaned.template).toBe('chat');
+    expect(cleaned.position).toBe('bottom-left');
+    expect(cleaned.size).toBe('md');
+    expect(cleaned.animation).toBe('bounce');
+    expect(cleaned.overlay).toBe('none');
+    expect(cleaned.agentName).toBe('KHB Events');
+    expect(cleaned.secondary).toEqual({ label: { en: 'Call us' }, href: 'tel:+85512345678' });
+    expect(cleaned.countdownTo).toBe('2026-10-31T16:59:00.000Z');
+    expect(cleaned.autoCloseSeconds).toBe(600);
+    expect(cleaned.launcher).toBe(true);
+    expect(cleaned.excludePages).toEqual(['korea-b2b-trip-2026']);
+    expect(cleaned.visitors).toBe('returning');
+    expect(cleaned.utmSources).toEqual(['facebook']);
+    expect(cleaned.hours).toEqual({ days: [1, 2], from: '08:00', to: '18:00' });
+    expect(cleaned.trigger).toEqual({ type: 'idle', idleSeconds: 3 });
+  });
+
+  it('leaves old popups unchanged when the new settings are missing', () => {
+    const cleaned = normalizePopupAd(ad(), NOW)!;
+    for (const key of ['position', 'size', 'animation', 'overlay', 'secondary', 'hours', 'visitors', 'utmSources', 'launcher', 'excludePages']) {
+      expect(cleaned).not.toHaveProperty(key);
+    }
+  });
+
+  it('rejects unsafe second-button links and bad office hours', () => {
+    expect(safeSecondaryHref('javascript:alert(1)')).toBeUndefined();
+    expect(safeSecondaryHref('tel:abc')).toBeUndefined();
+    expect(safeSecondaryHref('https://t.me/khbevents')).toBe('https://t.me/khbevents');
+    const noHref = normalizePopupAd({ ...ad(), secondary: { label: { en: 'x' }, href: 'javascript:alert(1)' } }, NOW)!;
+    expect(noHref.secondary).toBeUndefined();
+    expect(normalizePopupAd({ ...ad(), hours: { days: [1], from: '09:00', to: '09:00' } }, NOW)!.hours).toBeUndefined();
+    expect(normalizePopupAd({ ...ad(), hours: { days: [1], from: '25:00', to: '09:00' } }, NOW)!.hours).toBeUndefined();
+  });
+
+  it('skips excluded pages only when all pages are targeted', () => {
+    expect(adTargetsPage({ pages: 'all', excludePages: ['korea'] }, 'korea')).toBe(false);
+    expect(adTargetsPage({ pages: 'all', excludePages: ['korea'] }, 'vietnam')).toBe(true);
+    expect(adTargetsPage({ pages: ['korea'], excludePages: ['korea'] }, 'korea')).toBe(true);
+    const live = selectPublicPopupAds(state([ad({ excludePages: ['korea'] })]), 'korea', nowMs);
+    expect(live).toEqual([]);
+  });
+
+  it('checks office hours in Phnom Penh time, including overnight windows', () => {
+    expect(withinHours(undefined, nowMs)).toBe(true);
+    expect(withinHours({ days: [4], from: '08:00', to: '18:00' }, nowMs)).toBe(true);
+    expect(withinHours({ days: [4], from: '08:00', to: '17:00' }, nowMs)).toBe(false);
+    expect(withinHours({ days: [1, 2, 3, 5, 6], from: '08:00', to: '18:00' }, nowMs)).toBe(false);
+    // 20:00–02:00 started on Wednesday: 01:00 Thursday counts as Wednesday night.
+    const thu1am = new Date('2026-09-30T18:00:00.000Z').getTime();
+    expect(withinHours({ days: [3], from: '20:00', to: '02:00' }, thu1am)).toBe(true);
+    expect(withinHours({ days: [4], from: '20:00', to: '02:00' }, thu1am)).toBe(false);
+    expect(withinHours({ days: [4], from: '20:00', to: '02:00' }, nowMs)).toBe(false);
+  });
+
+  it('filters by new or returning visitors, ad source and office hours', () => {
+    const settings: PopupAdsSettings = { enabled: true, globalCooldownHours: 0 };
+    expect(pickPopupToShow([ad({ visitors: 'new' })], settings, visitor({ returning: true }))).toBeNull();
+    expect(pickPopupToShow([ad({ visitors: 'new' })], settings, visitor({ returning: false }))).not.toBeNull();
+    expect(pickPopupToShow([ad({ visitors: 'returning' })], settings, visitor())).toBeNull();
+    expect(pickPopupToShow([ad({ utmSources: ['facebook'] })], settings, visitor())).toBeNull();
+    expect(pickPopupToShow([ad({ utmSources: ['facebook'] })], settings, visitor({ utmSource: 'facebook' }))).not.toBeNull();
+    expect(pickPopupToShow([ad({ hours: { days: [0], from: '08:00', to: '18:00' } })], settings, visitor())).toBeNull();
+  });
+
+  it('sends the saved cooldown to the page so the browser applies it', () => {
+    const live = selectPublicPopupAds(state([ad()], { globalCooldownHours: 3 }), 'korea', nowMs);
+    expect(settingsFromPublicAds(live).globalCooldownHours).toBe(3);
+    expect(settingsFromPublicAds([]).globalCooldownHours).toBe(12);
+    const zero = selectPublicPopupAds(state([ad()], { globalCooldownHours: 0 }), 'korea', nowMs);
+    expect(settingsFromPublicAds(zero).globalCooldownHours).toBe(0);
   });
 });

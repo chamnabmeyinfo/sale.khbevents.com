@@ -74,7 +74,7 @@ Suggested order: lock the database first, then change the token and the password
 Found by checking the notes against the code on 2026-09-24. Each needs the owner's go-ahead before Claude changes the code.
 
 - [ ] **Wrong price on the app view.** `/smart-city-tea-cafe/app` shows **$499** in its button, countdown label and total, typed into `src/components/landing/SmartCityAppView.tsx`, whatever the admin price is. The real price is $550. Fix first: visitors can see it today. → [[Smart City Tea and Cafe Vietnam 2026]] #for-claude
-- [ ] **Popup cooldown setting has no effect.** The **Cooldown between popups (hours)** value saved in Admin → Ads & Popups never reaches the live site, which always waits 12 hours. The live popup must read the saved setting. → [[Ads and Popups]] #for-claude
+- [x] **Popup cooldown setting has no effect.** Fixed 2026-09-24: the saved value now reaches the live site. See [[2026-09-24 Advanced popups and Telegram chat]]. → [[Ads and Popups]]
 - [ ] **Khmer spelling on the live page.** The Khmer copy in `src/components/landing/smart-city-content.ts` and `content/pages/smart-city-tea-cafe.json` types ៃ where ៀ or ែ belongs (for example រៃបចំ, តៃ, ខៃ, រយៃពេល). Fix after a native speaker confirms the list in [[FAQ Answers]]. #for-claude
 - [ ] **New pages start published with a sample testimonial.** A new page in the editor defaults to published and is pre-filled with an invented testimonial and example FAQ, price, seats and deadline. Default to draft and start empty. → [[Launch a New Trip Page]] #for-claude
 - [ ] **No date fields for deadlines.** The page editor has no input for the early-bird and registration deadlines (see the question below). #for-claude
@@ -83,6 +83,8 @@ Found by checking the notes against the code on 2026-09-24. Each needs the owner
 - [ ] **Per-page lead counts and pixels.** Page cards and per-page conversion on Supabase do not count new leads, and ad-pixel Lead events fire only on the Smart City views. → [[Tracking and Analytics]] #for-claude
 - [ ] **Token still in the fallback database.** After rotating the bot token, remove the old one from `data/db.json` (the local and cPanel fallback). It was removed from the in-admin guide and `FEATURE_BLUEPRINT.md` on 2026-09-24. → [[Rotate the Telegram Bot Token]] #for-claude
 
+- [ ] Optional: switch on a **Telegram quick chat** popup (Admin → Ads & Popups → starter) for the trip pages, with office hours set to when the sales team can reply. → [[Create a Popup]] #owner
+
 ## Questions to settle
 
 - [ ] Answer the "To confirm" questions in [[Landing Page Builder Roadmap]] so the builder matches what you imagine. #owner
@@ -90,7 +92,7 @@ Found by checking the notes against the code on 2026-09-24. Each needs the owner
 These come from the "To confirm" sections of the feature notes. Answer them here or in [[Decision Log]].
 
 - [ ] Where does the owner set the registration and early-bird deadlines today? The page editor in the repo has no date field for them. → [[Launch a New Trip Page]] #owner
-- [ ] Should the **Cooldown between popups (hours)** value in the admin reach the live site? Today the live site uses the built-in 12 hours. → [[Ads and Popups]] #owner
+- [x] Should the **Cooldown between popups (hours)** value in the admin reach the live site? Yes, fixed 2026-09-24 as the open task asked. Today the live site uses the built-in 12 hours. → [[Ads and Popups]] #owner
 
 ## Done
 

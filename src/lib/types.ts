@@ -817,9 +817,15 @@ export interface BilingualText {
   kh?: string;
 }
 
-export type PopupAdTemplate = 'card' | 'bottom-sheet' | 'banner' | 'image';
-export type PopupAdTheme = 'dark' | 'light';
-export type PopupAdTriggerType = 'immediate' | 'delay' | 'scroll' | 'exit_intent';
+export type PopupAdTemplate = 'card' | 'bottom-sheet' | 'banner' | 'image' | 'chat';
+export type PopupAdTheme = 'dark' | 'light' | 'brand';
+export type PopupAdPosition = 'center' | 'bottom-right' | 'bottom-left';
+export type PopupAdSize = 'sm' | 'md' | 'lg';
+export type PopupAdAnimation = 'zoom' | 'fade' | 'slide' | 'bounce';
+export type PopupAdRadius = 'sharp' | 'soft' | 'round';
+export type PopupAdOverlay = 'none' | 'light' | 'dark';
+export type PopupAdVisitors = 'all' | 'new' | 'returning';
+export type PopupAdTriggerType = 'immediate' | 'delay' | 'scroll' | 'exit_intent' | 'idle';
 /** How often one visitor may see the same popup ('always' = every page view). */
 export type PopupAdFrequency = 'always' | 'session' | 'day' | 'week' | 'month' | 'forever';
 export type PopupAdCtaAction = 'url' | 'telegram' | 'register' | 'close';
@@ -833,6 +839,23 @@ export interface PopupAdTrigger {
   seconds?: number;
   /** Scroll depth 0–100, for 'scroll'. */
   percent?: number;
+  /** Seconds without scrolling, tapping or moving, for 'idle'. */
+  idleSeconds?: number;
+}
+
+/** Days and hours (Cambodia time) when a popup may show, e.g. while staff answer Telegram. */
+export interface PopupAdHours {
+  /** 0 = Sunday … 6 = Saturday. */
+  days: number[];
+  /** "HH:MM", 24-hour. */
+  from: string;
+  to: string;
+}
+
+/** Optional second button, e.g. "Call us" (tel:) or a link. */
+export interface PopupAdSecondary {
+  label: BilingualText;
+  href: string;
 }
 
 export interface PopupAdCta {
@@ -871,6 +894,34 @@ export interface PopupAd {
   priority: number;
   /** Never show to a visitor who already sent the registration form. */
   hideAfterLead: boolean;
+
+  // ── Advanced design and rules (all optional; older popups keep their look) ──
+  position?: PopupAdPosition;
+  size?: PopupAdSize;
+  animation?: PopupAdAnimation;
+  radius?: PopupAdRadius;
+  /** Page dimming behind the popup. */
+  overlay?: PopupAdOverlay;
+  /** Clicking outside the popup closes it. */
+  closeOnBackdrop?: boolean;
+  /** Chat design: who answers (the picture is their photo). */
+  agentName?: string;
+  agentRole?: BilingualText;
+  secondary?: PopupAdSecondary;
+  /** Countdown shown in the popup; hidden once passed. */
+  countdownTo?: string;
+  countdownLabel?: BilingualText;
+  /** Close by itself after this many seconds (0 or missing = stays open). */
+  autoCloseSeconds?: number;
+  /** After closing, keep a small round button on the page that opens it again. */
+  launcher?: boolean;
+  /** With pages 'all': pages where it never shows. */
+  excludePages?: string[];
+  visitors?: PopupAdVisitors;
+  /** Only for visitors arriving with one of these utm_source values (case-insensitive). */
+  utmSources?: string[];
+  /** Only on these days and hours (Cambodia time). */
+  hours?: PopupAdHours;
   createdAt: string;
   updatedAt: string;
 }

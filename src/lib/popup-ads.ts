@@ -3,6 +3,8 @@ import type {
   PopupAd,
   PopupAdCtaAction,
   PopupAdFrequency,
+  PopupAdHours,
+  PopupAdSecondary,
   PopupAdStatus,
   PopupAdTemplate,
   PopupAdTheme,
@@ -27,9 +29,16 @@ export const serverNowMs = (): number => Date.now();
 export const DEFAULT_ACCENT = '#E5A93C';
 export const MAX_POPUP_ADS = 50;
 
-export const POPUP_TEMPLATES: PopupAdTemplate[] = ['card', 'bottom-sheet', 'banner', 'image'];
-export const POPUP_THEMES: PopupAdTheme[] = ['dark', 'light'];
-export const POPUP_TRIGGERS: PopupAdTriggerType[] = ['immediate', 'delay', 'scroll', 'exit_intent'];
+export const POPUP_TEMPLATES: PopupAdTemplate[] = ['chat', 'card', 'bottom-sheet', 'banner', 'image'];
+export const POPUP_THEMES: PopupAdTheme[] = ['dark', 'light', 'brand'];
+export const POPUP_TRIGGERS: PopupAdTriggerType[] = ['immediate', 'delay', 'scroll', 'exit_intent', 'idle'];
+export const POPUP_POSITIONS = ['center', 'bottom-right', 'bottom-left'] as const;
+export const POPUP_SIZES = ['sm', 'md', 'lg'] as const;
+export const POPUP_ANIMATIONS = ['zoom', 'fade', 'slide', 'bounce'] as const;
+export const POPUP_RADII = ['sharp', 'soft', 'round'] as const;
+export const POPUP_OVERLAYS = ['none', 'light', 'dark'] as const;
+/** Cambodia has no daylight saving: always UTC+7. */
+const PHNOM_PENH_OFFSET_MS = 7 * 60 * 60 * 1000;
 export const POPUP_FREQUENCIES: PopupAdFrequency[] = ['always', 'session', 'day', 'week', 'month', 'forever'];
 export const POPUP_CTA_ACTIONS: PopupAdCtaAction[] = ['telegram', 'register', 'url', 'close'];
 
@@ -54,7 +63,14 @@ export const popupStorageKeys = {
   sessionShown: (adId: string) => `khb_popup_s_${adId}`,
   lastAny: 'khb_popup_last',
   leadSent: 'khb_lead_sent',
+  /** First time this browser saw the site (ms), to tell new from returning visitors. */
+  firstSeen: 'khb_first_seen',
+  /** utm_source of the visit, kept for the browser session. */
+  utmSource: 'khb_utm_source',
 };
+
+/** A visitor counts as returning once their first visit is older than this. */
+export const RETURNING_AFTER_MS = 30 * 60 * 1000;
 
 // ─── Text helpers ──────────────────────────────────────────────────────────
 
@@ -144,6 +160,7 @@ export function normalizePopupAd(input: unknown, nowIso: string, existing?: Popu
   const trigger: PopupAdTrigger = { type: triggerType };
   if (triggerType === 'delay') trigger.seconds = clampNum(triggerRaw.seconds, 0, 600, 8);
   if (triggerType === 'scroll') trigger.percent = clampNum(triggerRaw.percent, 1, 100, 40);
+  if (triggerType === 'idle') trigger.idleSeconds = clampNum(triggerRaw.idleSeconds, 3, 600, 20);
 
   let pages: 'all' | string[] = 'all';
   if (Array.isArray(v.pages)) {
@@ -180,9 +197,73 @@ export function normalizePopupAd(input: unknown, nowIso: string, existing?: Popu
     endAt: endAt && startAt && endAt < startAt ? undefined : endAt,
     priority: clampNum(v.priority, 0, 1000, 10),
     hideAfterLead: v.hideAfterLead === undefined ? true : Boolean(v.hideAfterLead),
+    ...normalizeAdvanced(v),
     createdAt: existing?.createdAt || isoOrUndefined(v.createdAt) || nowIso,
     updatedAt: nowIso,
   };
+}
+
+const TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const slugList = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? Array.from(new Set(value.map((s) => clampStr(s, 120).toLowerCase()).filter((s) => /^[a-z0-9_-]+$/.test(s))))
+    : [];
+
+/** A safe second-button address: a normal link, or a phone number (tel:). */
+export function safeSecondaryHref(value: unknown): string | undefined {
+  const raw = clampStr(value, 2000);
+  if (/^tel:\+?[0-9][0-9 ()-]{4,24}$/.test(raw)) return raw.replace(/[ ()-]/g, '');
+  return safeRedirectUrl(raw) || undefined;
+}
+
+function normalizeHours(value: unknown): PopupAdHours | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const v = value as Record<string, unknown>;
+  const days = Array.isArray(v.days)
+    ? Array.from(new Set(v.days.map((d) => Number(d)).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))).sort()
+    : [];
+  const from = typeof v.from === 'string' && TIME.test(v.from) ? v.from : '';
+  const to = typeof v.to === 'string' && TIME.test(v.to) ? v.to : '';
+  if (!days.length || !from || !to || from === to) return undefined;
+  return { days, from, to };
+}
+
+/** The optional design and targeting settings; missing values keep the old behaviour. */
+function normalizeAdvanced(v: Record<string, unknown>): Partial<PopupAd> {
+  const out: Partial<PopupAd> = {};
+  if (v.position !== undefined) out.position = oneOf(v.position, POPUP_POSITIONS, 'center');
+  if (v.size !== undefined) out.size = oneOf(v.size, POPUP_SIZES, 'md');
+  if (v.animation !== undefined) out.animation = oneOf(v.animation, POPUP_ANIMATIONS, 'zoom');
+  if (v.radius !== undefined) out.radius = oneOf(v.radius, POPUP_RADII, 'soft');
+  if (v.overlay !== undefined) out.overlay = oneOf(v.overlay, POPUP_OVERLAYS, 'dark');
+  if (v.closeOnBackdrop !== undefined) out.closeOnBackdrop = Boolean(v.closeOnBackdrop);
+  const agentName = clampStr(v.agentName, 60);
+  if (agentName) out.agentName = agentName;
+  const agentRole = normalizeBilingual(v.agentRole, 60);
+  if (agentRole) out.agentRole = agentRole;
+  if (v.secondary && typeof v.secondary === 'object') {
+    const sec = v.secondary as Record<string, unknown>;
+    const label = normalizeBilingual(sec.label, 40);
+    const href = safeSecondaryHref(sec.href);
+    if (label && href) out.secondary = { label, href } satisfies PopupAdSecondary;
+  }
+  const countdownTo = isoOrUndefined(v.countdownTo);
+  if (countdownTo) out.countdownTo = countdownTo;
+  const countdownLabel = normalizeBilingual(v.countdownLabel, 60);
+  if (countdownLabel) out.countdownLabel = countdownLabel;
+  const autoClose = clampNum(v.autoCloseSeconds, 0, 600, 0);
+  if (autoClose > 0) out.autoCloseSeconds = autoClose;
+  if (v.launcher) out.launcher = true;
+  const exclude = slugList(v.excludePages);
+  if (exclude.length) out.excludePages = exclude;
+  if (v.visitors !== undefined) out.visitors = oneOf(v.visitors, ['all', 'new', 'returning'] as const, 'all');
+  const utm = Array.isArray(v.utmSources)
+    ? Array.from(new Set(v.utmSources.map((s) => clampStr(s, 60).toLowerCase()).filter((s) => /^[a-z0-9._-]+$/.test(s)))).slice(0, 20)
+    : [];
+  if (utm.length) out.utmSources = utm;
+  const hours = normalizeHours(v.hours);
+  if (hours) out.hours = hours;
+  return out;
 }
 
 /** Cleans a whole settings object; invalid ads are dropped, duplicate ids keep the first. */
@@ -230,10 +311,26 @@ export function popupAdStatus(ad: PopupAd, nowMs: number): PopupAdStatus {
   return 'active';
 }
 
-export function adTargetsPage(ad: Pick<PopupAd, 'pages'>, slug: string): boolean {
-  if (ad.pages === 'all') return true;
+export function adTargetsPage(ad: Pick<PopupAd, 'pages' | 'excludePages'>, slug: string): boolean {
   const clean = slug.toLowerCase().trim();
+  if (ad.pages === 'all') return !(ad.excludePages || []).includes(clean);
   return ad.pages.includes(clean);
+}
+
+/** True when the time falls inside the popup's days and hours (Cambodia time). No hours = any time. */
+export function withinHours(hours: PopupAdHours | undefined, nowMs: number): boolean {
+  if (!hours) return true;
+  const local = new Date(nowMs + PHNOM_PENH_OFFSET_MS);
+  const minutes = local.getUTCHours() * 60 + local.getUTCMinutes();
+  const toMin = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+  const from = toMin(hours.from);
+  const to = toMin(hours.to);
+  const day = local.getUTCDay();
+  if (from < to) return hours.days.includes(day) && minutes >= from && minutes < to;
+  // Overnight window (e.g. 20:00 to 02:00): the early hours belong to the previous day.
+  if (minutes >= from) return hours.days.includes(day);
+  if (minutes < to) return hours.days.includes((day + 6) % 7);
+  return false;
 }
 
 /** Highest priority first, then most recently edited. */
@@ -246,18 +343,29 @@ export function sortByPriority(ads: PopupAd[]): PopupAd[] {
  * inside the schedule, targets this page. A preview id is always included (first),
  * whatever its state, so the admin can look at a draft.
  */
+/** A popup as sent to a public page: it carries the site-wide cooldown so the browser applies the saved setting. */
+export type PublicPopupAd = PopupAd & { siteCooldownHours?: number };
+
 export function selectPublicPopupAds(
   state: PopupAdsState,
   slug: string,
   nowMs: number,
   options: { previewId?: string } = {}
-): PopupAd[] {
+): PublicPopupAd[] {
   const preview = options.previewId ? state.ads.find((a) => a.id === options.previewId) : undefined;
   if (!state.settings.enabled && !preview) return [];
   const live = state.settings.enabled
     ? sortByPriority(state.ads.filter((a) => a.enabled && isWithinSchedule(a, nowMs) && adTargetsPage(a, slug)))
     : [];
-  return preview ? [preview, ...live.filter((a) => a.id !== preview.id)] : live;
+  const list = preview ? [preview, ...live.filter((a) => a.id !== preview.id)] : live;
+  const cooldown = state.settings.globalCooldownHours;
+  return list.map((a) => ({ ...a, siteCooldownHours: cooldown }));
+}
+
+/** The site-wide rules as far as a public page knows them. */
+export function settingsFromPublicAds(ads: PublicPopupAd[]): PopupAdsSettings {
+  const hours = ads.find((a) => typeof a.siteCooldownHours === 'number')?.siteCooldownHours;
+  return { ...defaultPopupAdsSettings, globalCooldownHours: hours ?? defaultPopupAdsSettings.globalCooldownHours };
 }
 
 export interface PopupVisitorContext {
@@ -266,6 +374,10 @@ export interface PopupVisitorContext {
   lang: 'en' | 'kh';
   /** Visitor already sent the registration form. */
   leadSent: boolean;
+  /** First visit more than RETURNING_AFTER_MS ago. */
+  returning?: boolean;
+  /** utm_source of this visit, lower case. */
+  utmSource?: string;
   /** When any popup was last shown to this visitor (ms), for the global cooldown. */
   lastAnyShownAt?: number;
   /** When this ad was last shown to this visitor (ms). */
@@ -297,6 +409,10 @@ export function pickPopupToShow(ads: PopupAd[], settings: PopupAdsSettings, ctx:
     if (ad.devices !== 'all' && ad.devices !== ctx.device) continue;
     if (ad.languages !== 'all' && ad.languages !== ctx.lang) continue;
     if (ad.hideAfterLead && ctx.leadSent) continue;
+    if (ad.visitors === 'new' && ctx.returning) continue;
+    if (ad.visitors === 'returning' && !ctx.returning) continue;
+    if (ad.utmSources?.length && !(ctx.utmSource && ad.utmSources.includes(ctx.utmSource))) continue;
+    if (!withinHours(ad.hours, ctx.nowMs)) continue;
     if (!frequencyAllows(ad.frequency, ctx.shownAt(ad.id), ctx.shownThisSession(ad.id), ctx.nowMs)) continue;
     if (
       ad.frequency !== 'always' &&

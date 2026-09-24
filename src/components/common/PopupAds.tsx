@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { PopupAd } from '@/lib/types';
-import { defaultPopupAdsSettings, pickPopupToShow, pickText, popupStorageKeys, resolveCtaHref } from '@/lib/popup-ads';
+import { pickPopupToShow, pickText, popupStorageKeys, resolveCtaHref, RETURNING_AFTER_MS, settingsFromPublicAds, type PublicPopupAd } from '@/lib/popup-ads';
 import { getDeviceType, trackClientEvent } from '@/components/common/LandingPageTracking';
 import { useStoredChoice, useUrlParam } from '@/lib/use-browser-state';
 
@@ -27,6 +27,53 @@ function shade(hex: string, amount: number): string {
   const b = ch(n & 255);
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
 }
+
+/** The look a popup gets when an option was never set (older popups keep their design). */
+export function popupDefaults(ad: PopupAd) {
+  const chat = ad.template === 'chat';
+  return {
+    position: ad.position ?? (chat ? 'bottom-right' : 'center'),
+    size: ad.size ?? 'md',
+    animation: ad.animation ?? (chat ? 'slide' : 'zoom'),
+    radius: ad.radius ?? 'soft',
+    overlay: ad.template === 'banner' || chat ? ad.overlay ?? 'none' : ad.overlay ?? (ad.template === 'bottom-sheet' ? 'light' : 'dark'),
+    closeOnBackdrop: ad.closeOnBackdrop ?? true,
+  };
+}
+
+/** Time left until a date, ticking once a second after mount (null before, so server HTML stays stable). */
+function useCountdown(iso?: string) {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    if (!iso) return;
+    const tick = () => setNow(Date.now());
+    const first = window.setTimeout(tick, 0);
+    const id = window.setInterval(tick, 1000);
+    return () => { window.clearTimeout(first); window.clearInterval(id); };
+  }, [iso]);
+  if (!iso || now === null) return null;
+  const diff = new Date(iso).getTime() - now;
+  if (!Number.isFinite(diff) || diff <= 0) return null;
+  return {
+    d: Math.floor(diff / 86_400_000),
+    h: Math.floor(diff / 3_600_000) % 24,
+    m: Math.floor(diff / 60_000) % 60,
+    s: Math.floor(diff / 1000) % 60,
+  };
+}
+
+const TelegramIcon = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z" />
+  </svg>
+);
+
+/** Avatar letters: a short all-caps first word as is (KHB), otherwise the first letters of two words. */
+const initials = (name: string) => {
+  const words = name.split(/\s+/).filter(Boolean);
+  if (words[0] && /^[A-Z]{2,3}$/.test(words[0])) return words[0];
+  return words.slice(0, 2).map((w) => w[0]).join('').toUpperCase() || 'K';
+};
 
 export interface PopupAdCardProps {
   ad: PopupAd;
@@ -55,17 +102,30 @@ export function PopupAdCard({ ad, lang, pageSlug, onClose, onCta, inline = false
   const badge = pickText(ad.badge, lang);
   const ctaLabel = pickText(ad.cta.label, lang);
   const dismiss = pickText(ad.dismissLabel, lang);
-  const showImage = Boolean(ad.imageUrl) && !isBanner;
-
-  // Focus moves into the dialog when it opens on the live page.
+  const isChat = ad.template === 'chat';
+  const showImage = Boolean(ad.imageUrl) && !isBanner && !isChat;
+  const look = popupDefaults(ad);
+  const secondaryLabel = ad.secondary ? pickText(ad.secondary.label, lang) : '';
+  const countdown = useCountdown(ad.countdownTo);
+  const cdLabel = pickText(ad.countdownLabel, lang) || (lang === 'kh' ? 'នៅសល់' : 'Ends in');
+  const telegram = ad.cta.action === 'telegram';
+  // Chat design: a short "typing" moment before the message appears (not in the admin preview).
+  const [typing, setTyping] = useState(isChat && !inline);
   useEffect(() => {
-    if (inline || !open) return;
+    if (!isChat || inline || !open) return;
+    const id = window.setTimeout(() => setTyping(false), 1100);
+    return () => window.clearTimeout(id);
+  }, [isChat, inline, open]);
+
+  // Focus moves into the dialog when it opens on the live page (not for the chat bubble, which does not block the page).
+  useEffect(() => {
+    if (inline || !open || isChat) return;
     const previous = document.activeElement as HTMLElement | null;
     panelRef.current?.focus({ preventScroll: true });
     return () => {
       if (previous && typeof previous.focus === 'function') previous.focus({ preventScroll: true });
     };
-  }, [inline, open]);
+  }, [inline, open, isChat]);
 
   const handleCta = (e: React.MouseEvent) => {
     if (!href || href === '#register' || (!external && !newTab)) {
@@ -83,23 +143,64 @@ export function PopupAdCard({ ad, lang, pageSlug, onClose, onCta, inline = false
       rel={newTab ? 'noreferrer' : undefined}
       onClick={handleCta}
     >
-      {ctaLabel}
+      {telegram && <TelegramIcon />}
+      <span>{ctaLabel}</span>
     </a>
   ) : (
     <button type="button" className="khb-popup__cta" onClick={handleCta}>{ctaLabel}</button>
   );
 
-  return (
-    <div
-      className={`khb-popup khb-popup--${ad.template} khb-popup--${ad.theme}${inline ? ' khb-popup--inline' : ''}${open ? ' is-open' : ''}${lang === 'kh' ? ' lang-kh' : ''}${showImage ? ' has-image' : ''}`}
-      style={{ '--khb-accent': accent, '--khb-accent-dark': shade(accent, 0.22) } as React.CSSProperties}
+  const secondary = ad.secondary && secondaryLabel ? (
+    <a
+      className="khb-popup__secondary"
+      href={ad.secondary.href}
+      target={/^https?:/i.test(ad.secondary.href) ? '_blank' : undefined}
+      rel={/^https?:/i.test(ad.secondary.href) ? 'noreferrer' : undefined}
+      onClick={(e) => { if (inline) e.preventDefault(); }}
     >
-      {!inline && !isBanner && <div className="khb-popup__backdrop" onClick={onClose} aria-hidden="true" />}
+      {ad.secondary.href.startsWith('tel:') && (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z" /></svg>
+      )}
+      <span>{secondaryLabel}</span>
+    </a>
+  ) : null;
+
+  const countdownRow = countdown ? (
+    <div className="khb-popup__countdown" aria-live="off">
+      <span className="khb-popup__countdown-label">{cdLabel}</span>
+      <span className="khb-popup__countdown-boxes">
+        {([[countdown.d, lang === 'kh' ? 'ថ្ងៃ' : 'd'], [countdown.h, lang === 'kh' ? 'ម៉ោង' : 'h'], [countdown.m, lang === 'kh' ? 'នាទី' : 'm'], [countdown.s, lang === 'kh' ? 'វិ' : 's']] as const).map(([v, u]) => (
+          <span key={u}><b>{String(v).padStart(2, '0')}</b>{u}</span>
+        ))}
+      </span>
+    </div>
+  ) : null;
+
+  const className = [
+    'khb-popup',
+    `khb-popup--${ad.template}`,
+    `khb-popup--${ad.theme}`,
+    `khb-pos-${look.position}`,
+    `khb-size-${look.size}`,
+    `khb-anim-${look.animation}`,
+    `khb-radius-${look.radius}`,
+    `khb-overlay-${look.overlay}`,
+    inline ? 'khb-popup--inline' : '',
+    open ? 'is-open' : '',
+    lang === 'kh' ? 'lang-kh' : '',
+    showImage ? 'has-image' : '',
+  ].filter(Boolean).join(' ');
+
+  return (
+    <div className={className} style={{ '--khb-accent': accent, '--khb-accent-dark': shade(accent, 0.22) } as React.CSSProperties}>
+      {!inline && look.overlay !== 'none' && (
+        <div className="khb-popup__backdrop" onClick={look.closeOnBackdrop ? onClose : undefined} aria-hidden="true" />
+      )}
       <div
         ref={panelRef}
         className="khb-popup__panel"
         role="dialog"
-        aria-modal={!inline && !isBanner}
+        aria-modal={!inline && look.overlay !== 'none' && !isBanner && !isChat}
         aria-labelledby={titleId}
         tabIndex={-1}
       >
@@ -108,22 +209,60 @@ export function PopupAdCard({ ad, lang, pageSlug, onClose, onCta, inline = false
             <path d="M6 6l12 12M18 6L6 18" />
           </svg>
         </button>
-        {showImage && (
-          <div className="khb-popup__media">
-            <img src={ad.imageUrl} alt="" decoding="async" />
-          </div>
-        )}
-        <div className="khb-popup__content">
-          {badge && <span className="khb-popup__badge">{badge}</span>}
-          <h2 id={titleId} className="khb-popup__title">{title}</h2>
-          {body && <p className="khb-popup__body">{body}</p>}
-          <div className="khb-popup__actions">
-            {cta}
-            {dismiss && (
-              <button type="button" className="khb-popup__dismiss" onClick={onClose}>{dismiss}</button>
+        {isChat ? (
+          <>
+            <div className="khb-chat__head">
+              <span className="khb-chat__avatar">
+                {ad.imageUrl ? <img src={ad.imageUrl} alt="" decoding="async" /> : <span>{initials(ad.agentName || 'KHB')}</span>}
+                <i className="khb-chat__online" aria-hidden="true" />
+              </span>
+              <span className="khb-chat__who">
+                <b>{ad.agentName || 'KHB Events'}</b>
+                <small>{pickText(ad.agentRole, lang) || (lang === 'kh' ? 'ជាធម្មតាឆ្លើយក្នុងពេលប៉ុន្មាននាទី' : 'Usually replies in minutes')}</small>
+              </span>
+            </div>
+            <div className="khb-chat__thread">
+              {typing ? (
+                <div className="khb-chat__bubble khb-chat__typing" aria-label={lang === 'kh' ? 'កំពុងសរសេរ' : 'Typing'}><i /><i /><i /></div>
+              ) : (
+                <div className="khb-chat__bubble">
+                  {badge && <span className="khb-popup__badge">{badge}</span>}
+                  <h2 id={titleId} className="khb-chat__title">{title}</h2>
+                  {body && <p className="khb-chat__text">{body}</p>}
+                </div>
+              )}
+            </div>
+            <div className="khb-popup__content khb-chat__actions">
+              {countdownRow}
+              <div className="khb-popup__actions">
+                {cta}
+                {secondary}
+                {dismiss && <button type="button" className="khb-popup__dismiss" onClick={onClose}>{dismiss}</button>}
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {showImage && (
+              <div className="khb-popup__media">
+                <img src={ad.imageUrl} alt="" decoding="async" />
+              </div>
             )}
-          </div>
-        </div>
+            <div className="khb-popup__content">
+              {badge && <span className="khb-popup__badge">{badge}</span>}
+              <h2 id={titleId} className="khb-popup__title">{title}</h2>
+              {body && <p className="khb-popup__body">{body}</p>}
+              {countdownRow}
+              <div className="khb-popup__actions">
+                {cta}
+                {secondary}
+                {dismiss && (
+                  <button type="button" className="khb-popup__dismiss" onClick={onClose}>{dismiss}</button>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -131,7 +270,7 @@ export function PopupAdCard({ ad, lang, pageSlug, onClose, onCta, inline = false
 
 export interface PopupAdsHostProps {
   /** Popups the server already filtered for this page (enabled, in schedule, targeted). */
-  ads?: PopupAd[];
+  ads?: PublicPopupAd[];
   pageSlug: string;
   /** Current page language; when omitted the host reads ?lang= and the stored choice. */
   lang?: 'en' | 'kh';
@@ -185,6 +324,8 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
   const [active, setActive] = useState<PopupAd | null>(null);
   const [visible, setVisible] = useState(false);
   const [preview, setPreview] = useState(false);
+  /** After closing: show the small round button that opens the popup again. */
+  const [launcherShown, setLauncherShown] = useState(false);
   const viewedRef = useRef(false);
 
   // Decide after mount only: storage, device and time must not affect the server HTML.
@@ -208,10 +349,20 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
     }
 
     const device = getDeviceType() === 'desktop' ? 'desktop' : 'mobile';
-    const ad = pickPopupToShow(ads, defaultPopupAdsSettings, {
-      nowMs: Date.now(),
+    const nowMs = Date.now();
+    // New or returning visitor: remember the first visit in this browser.
+    const firstSeen = numberOrUndefined(readLocal(popupStorageKeys.firstSeen));
+    if (firstSeen === undefined) writeLocal(popupStorageKeys.firstSeen, String(nowMs));
+    // Ad source: utm_source of this visit, kept for the session as visitors move between pages.
+    const urlSource = new URLSearchParams(window.location.search).get('utm_source')?.trim().toLowerCase();
+    if (urlSource) writeSession(popupStorageKeys.utmSource, urlSource);
+    const utmSource = urlSource || readSession(popupStorageKeys.utmSource) || undefined;
+    const ad = pickPopupToShow(ads, settingsFromPublicAds(ads), {
+      nowMs,
       device,
       lang: langRef.current,
+      returning: firstSeen !== undefined && nowMs - firstSeen > RETURNING_AFTER_MS,
+      utmSource,
       leadSent: readLocal(popupStorageKeys.leadSent) === '1',
       lastAnyShownAt: numberOrUndefined(readLocal(popupStorageKeys.lastAny)),
       shownAt: (id) => numberOrUndefined(readLocal(popupStorageKeys.shown(id))),
@@ -248,6 +399,14 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
       afterMs((trigger.seconds ?? 8) * 1000);
     } else if (trigger.type === 'scroll') {
       onScrollPast(trigger.percent ?? 40);
+    } else if (trigger.type === 'idle') {
+      // Idle: no scrolling, tapping, typing or pointer movement for N seconds.
+      const idleMs = (trigger.idleSeconds ?? 20) * 1000;
+      let timer = window.setTimeout(fire, idleMs);
+      const reset = () => { window.clearTimeout(timer); timer = window.setTimeout(fire, idleMs); };
+      const events = ['scroll', 'pointermove', 'pointerdown', 'keydown', 'touchstart'] as const;
+      events.forEach((ev) => window.addEventListener(ev, reset, { passive: true }));
+      cleanups.push(() => { window.clearTimeout(timer); events.forEach((ev) => window.removeEventListener(ev, reset)); });
     } else if (device === 'desktop') {
       // Exit intent: the pointer leaves through the top of the window.
       const onLeave = (e: MouseEvent) => { if (e.clientY <= 0) fire(); };
@@ -272,7 +431,8 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
       writeSession(popupStorageKeys.sessionShown(active.id), '1');
       trackClientEvent(pageSlug, 'popup_view', { adId: active.id, adName: active.name, template: active.template, trigger: active.trigger.type }, langRef.current);
     }
-    const lock = active.template !== 'banner';
+    // Only popups that dim the page block scrolling; the chat bubble and banner leave the page usable.
+    const lock = popupDefaults(active).overlay !== 'none' && active.template !== 'banner' && active.template !== 'chat';
     const previousOverflow = document.body.style.overflow;
     if (lock) document.body.style.overflow = 'hidden';
     const onKey = (e: KeyboardEvent) => {
@@ -292,7 +452,15 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
       trackClientEvent(pageSlug, 'popup_close', { adId: active.id, adName: active.name, template: active.template }, langRef.current);
     }
     setVisible(false);
+    if (active?.launcher) setLauncherShown(true);
   }, [active, preview, pageSlug]);
+
+  // Auto-close after the chosen number of seconds.
+  useEffect(() => {
+    if (!visible || !active?.autoCloseSeconds || preview) return;
+    const id = window.setTimeout(() => close('close'), active.autoCloseSeconds * 1000);
+    return () => window.clearTimeout(id);
+  }, [visible, active, preview, close]);
 
   const onCta = useCallback((href: string | null) => {
     if (!active) return;
@@ -302,7 +470,8 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
     close('click');
     if (preview) return;
     if (href === '#register') {
-      const target = document.getElementById('register');
+      // Classic pages use #register; drag-and-drop pages give each form section an id of form-<block>.
+      const target = document.getElementById('register') || document.querySelector<HTMLElement>('section[id^="form-"]');
       if (target) {
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else {
@@ -316,7 +485,26 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
     // 'telegram' and new-tab links are handled by the anchor itself.
   }, [active, preview, close, pageSlug]);
 
-  if (!active || !visible) return null;
+  if (!active) return null;
+  if (!visible) {
+    if (!launcherShown) return null;
+    const telegram = active.cta.action === 'telegram';
+    const look = popupDefaults(active);
+    return (
+      <button
+        type="button"
+        className={`khb-launcher khb-launcher--${look.position === 'bottom-left' ? 'left' : 'right'}${telegram ? ' khb-launcher--telegram' : ''}`}
+        style={{ '--khb-accent': active.accent || '#E5A93C' } as React.CSSProperties}
+        onClick={() => { setLauncherShown(false); setVisible(true); }}
+        aria-label={pickText(active.cta.label, lang) || pickText(active.title, lang)}
+        title={pickText(active.cta.label, lang)}
+      >
+        {telegram ? <TelegramIcon size={26} /> : (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg>
+        )}
+      </button>
+    );
+  }
   return (
     <PopupAdCard
       ad={active}

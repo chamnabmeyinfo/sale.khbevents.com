@@ -30,14 +30,19 @@ import type {
 } from '@/lib/types';
 import {
   DEFAULT_ACCENT,
+  POPUP_ANIMATIONS,
   POPUP_FREQUENCIES,
+  POPUP_OVERLAYS,
+  POPUP_POSITIONS,
+  POPUP_RADII,
+  POPUP_SIZES,
   POPUP_TEMPLATES,
   POPUP_TRIGGERS,
   newPopupAd,
   popupAdStatus,
   previewPath,
 } from '@/lib/popup-ads';
-import { PopupAdCard } from '@/components/common/PopupAds';
+import { PopupAdCard, popupDefaults } from '@/components/common/PopupAds';
 import ImageField from './ImageField';
 import { errorMessage } from '@/lib/errors';
 import { useLanguage } from '@/context/LanguageContext';
@@ -61,6 +66,7 @@ const BTN_SECONDARY = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg b
 
 /** Translation keys for the option maps; the labels come from t(). */
 const TEMPLATE_INFO: Record<PopupAdTemplate, { label: string; detail: string }> = {
+  chat: { label: 'ads.template.chat', detail: 'ads.template.chatDetail' },
   card: { label: 'ads.template.card', detail: 'ads.template.cardDetail' },
   'bottom-sheet': { label: 'ads.template.bottomSheet', detail: 'ads.template.bottomSheetDetail' },
   banner: { label: 'ads.template.banner', detail: 'ads.template.bannerDetail' },
@@ -72,7 +78,10 @@ const TRIGGER_LABEL: Record<PopupAdTriggerType, string> = {
   delay: 'ads.trigger.delay',
   scroll: 'ads.trigger.scroll',
   exit_intent: 'ads.trigger.exitIntent',
+  idle: 'ads.trigger.idle',
 };
+
+const DAY_KEYS = ['ads.day.sun', 'ads.day.mon', 'ads.day.tue', 'ads.day.wed', 'ads.day.thu', 'ads.day.fri', 'ads.day.sat'];
 
 const FREQUENCY_LABEL: Record<PopupAdFrequency, string> = {
   always: 'ads.freq.always',
@@ -106,6 +115,27 @@ const STATUS_PILL: Record<ReturnType<typeof popupAdStatus>, string> = {
 
 /** Ready-made popups the admin can start from. Copy is truthful: no invented numbers or dates. */
 const STARTERS: Array<{ key: string; label: string; detail: string; build: (now: string) => PopupAd }> = [
+  {
+    key: 'chat',
+    label: 'ads.starter.chat',
+    detail: 'ads.starter.chatDetail',
+    build: (now) => newPopupAd(now, {
+      name: 'Telegram quick chat',
+      title: { en: 'Hi! Any question about the trip?', kh: 'សួស្តី! មានសំណួរអំពីដំណើរនេះទេ?' },
+      body: { en: 'Message us on Telegram for a faster answer about the price, dates and what is included.', kh: 'ផ្ញើសារមកយើងតាម Telegram ដើម្បីទទួលចម្លើយលឿនអំពីតម្លៃ កាលបរិច្ឆេទ និងអ្វីដែលរួមបញ្ចូល។' },
+      cta: { label: { en: 'Chat on Telegram', kh: 'ជជែកតាម Telegram' }, action: 'telegram' },
+      dismissLabel: { en: 'Maybe later', kh: 'ពេលក្រោយ' },
+      template: 'chat',
+      position: 'bottom-right',
+      overlay: 'none',
+      animation: 'slide',
+      launcher: true,
+      agentName: 'KHB Events',
+      agentRole: { en: 'Sales team · usually replies in minutes', kh: 'ក្រុមលក់ · ជាធម្មតាឆ្លើយក្នុងពេលប៉ុន្មាននាទី' },
+      trigger: { type: 'delay', seconds: 12 },
+      frequency: 'session',
+    }),
+  },
   {
     key: 'telegram',
     label: 'ads.starter.telegram',
@@ -521,6 +551,37 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                       )}
                     </div>
                     <BiField label={t('ads.dismissLink')} value={editing.dismissLabel} max={40} placeholderEn={t('ads.dismissPh')} onChange={(v) => setEditing({ ...editing, dismissLabel: v })} />
+                    {editing.template === 'chat' && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-900">
+                        <div>
+                          <label className={LABEL}>{t('ads.agentName')}</label>
+                          <input className={INPUT} value={editing.agentName || ''} maxLength={60} placeholder="KHB Events" onChange={(e) => setEditing({ ...editing, agentName: e.target.value || undefined })} />
+                          <span className={HINT}>{t('ads.agentNameHint')}</span>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <BiField label={t('ads.agentRole')} value={editing.agentRole} max={60} placeholderEn={t('ads.agentRolePh')} onChange={(v) => setEditing({ ...editing, agentRole: v })} />
+                        </div>
+                      </div>
+                    )}
+                    <div className="p-3 rounded-xl border border-slate-200 dark:border-emerald-900/60 space-y-3">
+                      <div className="text-xs font-bold text-slate-800 dark:text-gray-200">{t('ads.secondary')}</div>
+                      <BiField label={t('ads.secondaryLabel')} value={editing.secondary?.label} max={40} placeholderEn={t('ads.secondaryLabelPh')} onChange={(v) => setEditing({ ...editing, secondary: v ? { label: v, href: editing.secondary?.href || '' } : undefined })} />
+                      <div>
+                        <label className={LABEL}>{t('ads.secondaryHref')}</label>
+                        <input className={INPUT} value={editing.secondary?.href || ''} placeholder="tel:+85560815515 or https://…" onChange={(e) => setEditing({ ...editing, secondary: { label: editing.secondary?.label || { en: '' }, href: e.target.value } })} />
+                        <span className={HINT}>{t('ads.secondaryHint')}</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl border border-slate-200 dark:border-emerald-900/60">
+                      <div>
+                        <label className={LABEL}>{t('ads.countdownTo')}</label>
+                        <input type="datetime-local" className={INPUT} value={toLocalInput(editing.countdownTo)} onChange={(e) => setEditing({ ...editing, countdownTo: fromLocalInput(e.target.value) })} />
+                        <span className={HINT}>{t('ads.countdownHint')}</span>
+                      </div>
+                      <div>
+                        <BiField label={t('ads.countdownLabel')} value={editing.countdownLabel} max={60} placeholderEn={t('ads.countdownLabelPh')} onChange={(v) => setEditing({ ...editing, countdownLabel: v })} />
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -540,9 +601,10 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className={LABEL}>{t('ads.colours')}</label>
-                        <select className={INPUT} value={editing.theme} onChange={(e) => setEditing({ ...editing, theme: e.target.value === 'light' ? 'light' : 'dark' })}>
+                        <select className={INPUT} value={editing.theme} onChange={(e) => setEditing({ ...editing, theme: e.target.value as PopupAd['theme'] })}>
                           <option value="dark">{t('ads.theme.dark')}</option>
                           <option value="light">{t('ads.theme.light')}</option>
+                          <option value="brand">{t('ads.theme.brand')}</option>
                         </select>
                       </div>
                       <div>
@@ -555,6 +617,57 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                         <span className={HINT}>{t('ads.goldHint')}</span>
                       </div>
                     </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {editing.template !== 'banner' && editing.template !== 'bottom-sheet' && (
+                        <div>
+                          <label className={LABEL}>{t('ads.position')}</label>
+                          <select className={INPUT} value={popupDefaults(editing).position} onChange={(e) => setEditing({ ...editing, position: e.target.value as PopupAd['position'] })}>
+                            {POPUP_POSITIONS.map((v) => <option key={v} value={v}>{t(`ads.position.${v}`)}</option>)}
+                          </select>
+                        </div>
+                      )}
+                      <div>
+                        <label className={LABEL}>{t('ads.size')}</label>
+                        <select className={INPUT} value={popupDefaults(editing).size} onChange={(e) => setEditing({ ...editing, size: e.target.value as PopupAd['size'] })}>
+                          {POPUP_SIZES.map((v) => <option key={v} value={v}>{t(`ads.size.${v}`)}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className={LABEL}>{t('ads.animation')}</label>
+                        <select className={INPUT} value={popupDefaults(editing).animation} onChange={(e) => setEditing({ ...editing, animation: e.target.value as PopupAd['animation'] })}>
+                          {POPUP_ANIMATIONS.map((v) => <option key={v} value={v}>{t(`ads.animation.${v}`)}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className={LABEL}>{t('ads.corners')}</label>
+                        <select className={INPUT} value={popupDefaults(editing).radius} onChange={(e) => setEditing({ ...editing, radius: e.target.value as PopupAd['radius'] })}>
+                          {POPUP_RADII.map((v) => <option key={v} value={v}>{t(`ads.corners.${v}`)}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className={LABEL}>{t('ads.overlay')}</label>
+                        <select className={INPUT} value={popupDefaults(editing).overlay} onChange={(e) => setEditing({ ...editing, overlay: e.target.value as PopupAd['overlay'] })}>
+                          {POPUP_OVERLAYS.map((v) => <option key={v} value={v}>{t(`ads.overlay.${v}`)}</option>)}
+                        </select>
+                        <span className={HINT}>{t('ads.overlayHint')}</span>
+                      </div>
+                      <div>
+                        <label className={LABEL}>{t('ads.autoClose')}</label>
+                        <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-gray-300">
+                          <input type="number" min={0} max={600} className={`${INPUT} max-w-[100px]`} value={editing.autoCloseSeconds ?? 0} onChange={(e) => setEditing({ ...editing, autoCloseSeconds: Math.max(0, Number(e.target.value) || 0) || undefined })} /> {t('ads.autoCloseUnit')}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-emerald-950/60">
+                      <label className="flex items-center gap-2 text-xs text-slate-800 dark:text-gray-200 cursor-pointer">
+                        <input type="checkbox" checked={popupDefaults(editing).closeOnBackdrop} onChange={(e) => setEditing({ ...editing, closeOnBackdrop: e.target.checked })} className="w-4 h-4 accent-amber-400" />
+                        {t('ads.closeOnBackdrop')}
+                      </label>
+                      <label className="flex items-center gap-2 text-xs text-slate-800 dark:text-gray-200 cursor-pointer">
+                        <input type="checkbox" checked={Boolean(editing.launcher)} onChange={(e) => setEditing({ ...editing, launcher: e.target.checked || undefined })} className="w-4 h-4 accent-amber-400" />
+                        {t('ads.launcher')} <span className="text-[10px] text-slate-500 dark:text-gray-400">{t('ads.launcherHint')}</span>
+                      </label>
+                    </div>
                   </div>
                 )}
 
@@ -566,6 +679,22 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                         <input type="checkbox" checked={editing.pages === 'all'} onChange={(e) => setEditing({ ...editing, pages: e.target.checked ? 'all' : [] })} className="w-4 h-4 accent-amber-400" />
                         {t('ads.allPages')}
                       </label>
+                      {editing.pages === 'all' && (
+                        <details className="pl-1">
+                          <summary className="text-[11px] font-bold text-slate-600 dark:text-gray-300 cursor-pointer">{t('ads.exceptPages', { n: editing.excludePages?.length || 0 })}</summary>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-2">
+                            {pages.map((p) => {
+                              const list = editing.excludePages || [];
+                              return (
+                                <label key={p.slug} className="flex items-center gap-2 text-[11px] text-slate-700 dark:text-gray-300 cursor-pointer">
+                                  <input type="checkbox" checked={list.includes(p.slug)} onChange={(e) => setEditing({ ...editing, excludePages: e.target.checked ? [...list, p.slug] : list.filter((x) => x !== p.slug) })} className="w-4 h-4 accent-rose-500" />
+                                  {p.title}
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </details>
+                      )}
                       {editing.pages !== 'all' && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pl-1">
                           {pages.map((p) => {
@@ -611,6 +740,11 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                           </div>
                         )}
                         {editing.trigger.type === 'exit_intent' && <span className={HINT}>{t('ads.exitHint')}</span>}
+                        {editing.trigger.type === 'idle' && (
+                          <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-600 dark:text-gray-300">
+                            <input type="number" min={3} max={600} className={`${INPUT} max-w-[100px]`} value={editing.trigger.idleSeconds ?? 20} onChange={(e) => setEditing({ ...editing, trigger: { ...editing.trigger, idleSeconds: Number(e.target.value) || 20 } })} /> {t('ads.idleSeconds')}
+                          </div>
+                        )}
                       </div>
                       <div>
                         <label className={LABEL}>{t('ads.howOften')}</label>
@@ -632,6 +766,45 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                         <label className={LABEL}>{t('ads.priority')}</label>
                         <input type="number" min={0} max={1000} className={INPUT} value={editing.priority} onChange={(e) => setEditing({ ...editing, priority: Number(e.target.value) || 0 })} />
                         <span className={HINT}>{t('ads.priorityHint')}</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-emerald-950/60">
+                      <div>
+                        <label className={LABEL}>{t('ads.visitors')}</label>
+                        <select className={INPUT} value={editing.visitors || 'all'} onChange={(e) => setEditing({ ...editing, visitors: e.target.value as PopupAd['visitors'] })}>
+                          <option value="all">{t('ads.visitors.all')}</option><option value="new">{t('ads.visitors.new')}</option><option value="returning">{t('ads.visitors.returning')}</option>
+                        </select>
+                        <span className={HINT}>{t('ads.visitorsHint')}</span>
+                      </div>
+                      <div>
+                        <label className={LABEL}>{t('ads.utm')}</label>
+                        <input className={INPUT} value={(editing.utmSources || []).join(', ')} placeholder="facebook, tiktok" onChange={(e) => setEditing({ ...editing, utmSources: e.target.value.split(',').map((x) => x.trim().toLowerCase()).filter(Boolean) })} />
+                        <span className={HINT}>{t('ads.utmHint')}</span>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-gray-200 cursor-pointer">
+                          <input type="checkbox" checked={Boolean(editing.hours)} onChange={(e) => setEditing({ ...editing, hours: e.target.checked ? { days: [1, 2, 3, 4, 5, 6], from: '08:00', to: '18:00' } : undefined })} className="w-4 h-4 accent-amber-400" />
+                          {t('ads.hours')}
+                        </label>
+                        {editing.hours && (
+                          <div className="mt-2 space-y-2 pl-6">
+                            <div className="flex flex-wrap gap-1">
+                              {DAY_KEYS.map((k, d) => {
+                                const on = editing.hours!.days.includes(d);
+                                return (
+                                  <button key={k} type="button" onClick={() => setEditing({ ...editing, hours: { ...editing.hours!, days: on ? editing.hours!.days.filter((x) => x !== d) : [...editing.hours!.days, d].sort() } })} className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer ${on ? 'bg-amber-400 text-black' : 'bg-slate-100 dark:bg-emerald-950 text-slate-600 dark:text-gray-300'}`}>{t(k)}</button>
+                                );
+                              })}
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-gray-300">
+                              <input type="time" className={`${INPUT} max-w-[120px]`} value={editing.hours.from} onChange={(e) => setEditing({ ...editing, hours: { ...editing.hours!, from: e.target.value } })} />
+                              <span>–</span>
+                              <input type="time" className={`${INPUT} max-w-[120px]`} value={editing.hours.to} onChange={(e) => setEditing({ ...editing, hours: { ...editing.hours!, to: e.target.value } })} />
+                              <span>{t('ads.phnomPenh')}</span>
+                            </div>
+                            <span className={HINT}>{t('ads.hoursHint')}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-emerald-950/60">
@@ -658,8 +831,8 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                     ))}
                   </div>
                 </div>
-                <div className={`rounded-[28px] border-8 border-slate-800 dark:border-black bg-[#FBF9F5] dark:bg-[#070E0A] p-3 w-full max-w-[390px] mx-auto min-h-[520px] flex ${editing.template === 'card' || editing.template === 'image' ? 'items-center' : 'items-end'}`}>
-                  <div className="w-full">
+                <div className={`rounded-[28px] border-8 border-slate-800 dark:border-black bg-[#FBF9F5] dark:bg-[#070E0A] p-3 w-full max-w-[390px] mx-auto min-h-[520px] flex ${(editing.template === 'card' || editing.template === 'image') && popupDefaults(editing).position === 'center' ? 'items-center' : 'items-end'} ${popupDefaults(editing).position === 'bottom-left' ? 'justify-start' : popupDefaults(editing).position === 'bottom-right' ? 'justify-end' : 'justify-center'}`}>
+                  <div className={editing.template === 'chat' || popupDefaults(editing).size === 'sm' ? 'w-[88%]' : 'w-full'}>
                     <PopupAdCard ad={editing} lang={previewLang} pageSlug={previewSlugFor(editing)} inline onClose={() => {}} onCta={() => {}} />
                   </div>
                 </div>

@@ -29,16 +29,17 @@ A popup gives a hesitating visitor one clear next step: ask on Telegram, reserve
 ## Steps
 
 - [ ] **1.** Open **Admin → Ads & Popups** (`/admin/ads`).
-- [ ] **2.** Click a starter (**Ask us on Telegram**, **Reserve a seat**, **Before you go**) or **New popup**. The editor opens with a live preview.
+- [ ] **2.** Click a starter (**Telegram quick chat**, **Ask us on Telegram**, **Reserve a seat**, **Before you go**) or **New popup**. **Telegram quick chat** is a chat bubble in the bottom corner that sends visitors to Telegram and leaves a small Telegram button after it is closed. The editor opens with a live preview.
 - [ ] **3.** Tab **Content** (English required, **ភាសាខ្មែរ** optional and falls back to English):
   - **Internal name** (only you see it), **Small badge**, **Title**, **Text**, **Picture (optional)**.
   - **Button text** and **Button does**: Chat on Telegram (round-robin routed), Go to the registration form, Open a link, or Just close the popup.
   - **Dismiss link** (for example "Not now").
-- [ ] **4.** Tab **Design:** **Layout** (Centered card, Bottom sheet, Bottom banner, Image first), **Colours** (Dark green matches the page, or Light), **Button colour** (keep Gold unless the offer needs its own colour).
+- [ ] **4.** Tab **Design:** **Layout** (Chat bubble, Centered card, Bottom sheet, Bottom banner, Image first), **Colours** (Dark green, Light or Brand gold), **Button colour** (keep Gold unless the offer needs its own colour). Optional: **Position**, **Size**, **Entrance animation**, **Corners**, **Page behind the popup**, **Close by itself after**, **Leave a small button after closing**.
 - [ ] **5.** Tab **Rules:**
-  - **Show on:** all pages, or pick the pages.
+  - **Show on:** all pages (optionally **Except these pages**), or pick the pages.
   - **Devices** and **Language**.
-  - **Show it:** as soon as the page loads, after a few seconds, after scrolling down, or when the visitor is about to leave.
+  - Optional: **Visitors** (everyone, first visit only, returning only), **Only visitors from these ad sources** (utm_source), **Only during office hours** (Phnom Penh time).
+  - **Show it:** as soon as the page loads, after a few seconds, after scrolling down, when the visitor is about to leave, or when the visitor stops moving.
   - **How often per visitor:** from every page view to only once, ever.
   - **Start** and **End** (your local time). Empty start means now; empty end means until paused.
   - **Priority:** the higher number wins when two popups could show.

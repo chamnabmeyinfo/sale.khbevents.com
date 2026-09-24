@@ -15,6 +15,7 @@ source:
   - src/lib/storage.ts
   - src/lib/types.ts
   - src/lib/i18n/dict/ads.ts
+  - src/styles/popup-ads.css
   - README.md
 ---
 
@@ -42,10 +43,10 @@ Changes go live after you press **Done** in the editor and then **Save all**. Li
 
 ## How to use it
 
-- [ ] Click a starter (**Ask us on Telegram**, **Reserve a seat**, **Before you go**) or **New popup**.
-- [ ] **Content:** Internal name, Small badge, Title, Text, Picture, Button text, what the button does, Dismiss link. English title and English button text are required; Khmer is optional and falls back to English.
-- [ ] **Design:** Layout, colours, button colour.
-- [ ] **Rules:** pages, devices, language, trigger, how often, start and end, priority, hide after the form.
+- [ ] Click a starter (**Telegram quick chat**, **Ask us on Telegram**, **Reserve a seat**, **Before you go**) or **New popup**.
+- [ ] **Content:** Internal name, Small badge, Title, Text, Picture, Button text, what the button does, Dismiss link. Optional: a second button, a countdown, and the sender name and role for the Chat bubble. English title and English button text are required; Khmer is optional and falls back to English.
+- [ ] **Design:** Layout, colours, button colour, position, size, entrance animation, corners, page dimming, close by itself, close on outside tap, small button after closing.
+- [ ] **Rules:** pages (or all pages except some), devices, language, new or returning visitors, ad source, office hours, trigger, how often, start and end, priority, hide after the form.
 - [ ] Switch the popup on, press **Done**, then **Save all**.
 - [ ] Press **Preview** in the list to see it on the live page.
 
@@ -53,19 +54,38 @@ Changes go live after you press **Done** in the editor and then **Save all**. Li
 
 | Admin label | Code | Looks like |
 |---|---|---|
+| Chat bubble | `chat` | A message from the team in a corner, with sender name, online dot and a short typing animation. Page stays usable. Made for "Ask us on Telegram" |
 | Centered card | `card` | Classic popup in the middle, page dimmed behind |
 | Bottom sheet | `bottom-sheet` | Slides up on phones, sits in the corner on desktop. Least intrusive |
 | Bottom banner | `banner` | Slim bar at the bottom. Page stays usable, no dimming |
 | Image first | `image` | Big photo on top, text under it |
 
-Themes: Dark green (matches the page) or Light. The default button colour is the brand gold `#E5A93C`.
+Themes: Dark green (matches the page), Light, or Brand gold. The default button colour is the brand gold `#E5A93C`.
+
+## Design settings
+
+All optional. A popup saved before 2026-09-24 has none of them and looks exactly as before.
+
+| Admin label | Code | Choices and default |
+|---|---|---|
+| Position | `position` | Centre, bottom right, bottom left. Chat bubble defaults to bottom right. Ignored by Bottom sheet and Bottom banner |
+| Size | `size` | Small, Medium, Large |
+| Entrance animation | `animation` | Zoom in, Fade in, Slide up, Bounce. Chat bubble defaults to Slide up. Off for visitors who ask for reduced motion |
+| Corners | `radius` | Sharp, Soft, Round |
+| Page behind the popup | `overlay` | Not dimmed, Lightly dimmed, Dimmed. Defaults: Chat bubble and Bottom banner not dimmed, Bottom sheet lightly dimmed, others dimmed. When not dimmed the page keeps scrolling |
+| Close by itself after | `autoCloseSeconds` | 0 (stays open) to 600 seconds |
+| Close when the visitor taps outside | `closeOnBackdrop` | On by default |
+| Leave a small button after closing | `launcher` | A round button in the corner (blue Telegram button when the popup's button goes to Telegram) that opens the popup again |
+| Second button | `secondary` | Text and a link: web address, site path or `tel:` phone number |
+| Countdown | `countdownTo`, `countdownLabel` | Days, hours, minutes, seconds to a date. Hidden once it has passed. Use the deadline from the admin CMS, not a made-up one |
+| Sender name and role | `agentName`, `agentRole` | Chat bubble only. Default "KHB Events" and "Usually replies in minutes" |
 
 ## What the button can do
 
 | Admin label | Code | Effect |
 |---|---|---|
 | Chat on Telegram (round-robin routed) | `telegram` | Opens `/api/round-robin` for this page, so the visitor reaches the next salesperson. See [[Round Robin]] |
-| Go to the registration form | `register` | Scrolls to the form on the page (element `#register`); if the page has none, opens the Telegram route |
+| Go to the registration form | `register` | Scrolls to the form on the page (element `#register`, or the Form section of a drag and drop page); if the page has none, opens the Telegram route |
 | Open a link | `url` | Opens a web address or a site path, optionally in a new tab |
 | Just close the popup | `close` | Closes it |
 
@@ -77,6 +97,7 @@ Themes: Dark green (matches the page) or Light. The default button colour is the
 | After a few seconds | `delay` | 8 seconds (0 to 600) |
 | After scrolling down | `scroll` | 40% of the page (1 to 100) |
 | When the visitor is about to leave | `exit_intent` | Desktop: the pointer leaves through the top. Phones: after 15 seconds or 60% scrolled, whichever comes first |
+| When the visitor stops moving | `idle` | 20 seconds with no scroll, pointer, tap or key (3 to 600) |
 
 ## Frequency per visitor
 
@@ -96,9 +117,12 @@ Memory of what a visitor saw is kept in their browser (`localStorage` and `sessi
 Defaults for a new popup (`newPopupAd` in `src/lib/popup-ads.ts`): switched off, Centered card, Dark theme, gold button, all pages, all devices, both languages, after 8 seconds, once a day, priority 10, hide after the form **on**, button "Chat on Telegram", dismiss "Not now".
 
 - **One popup per page view.** When several could show, the highest **Priority** wins, then the most recently edited.
-- **Cooldown between popups.** After a visitor saw any popup, no popup they have not seen before shows for this many hours. Default **12** (range 0 to 720). `0` turns it off. Popups set to "Every page view" ignore it.
+- **Cooldown between popups.** After a visitor saw any popup, no popup they have not seen before shows for this many hours. Default **12** (range 0 to 720). `0` turns it off. Popups set to "Every page view" ignore it. Since 2026-09-24 the saved value reaches the live site (each public popup carries it as `siteCooldownHours`).
 - **Hide from visitors who already sent the form.** The browser remembers a sent form, and those visitors skip every popup with this option on.
-- **Targeting.** Pages: all, or chosen pages (the home page is listed as "Home page (/)"). Devices: phones and desktop, phones only, desktop only. Language: both, English readers only, Khmer readers only.
+- **Targeting.** Pages: all, or chosen pages (the home page is listed as "Home page (/)"). With all pages, **Except these pages** leaves some out. Devices: phones and desktop, phones only, desktop only. Language: both, English readers only, Khmer readers only.
+- **Visitors.** Everyone, first visit only, or returning visitors only. Returning means the browser first came to the site more than 30 minutes ago (`khb_first_seen` in `localStorage`).
+- **Ad source.** A list of `utm_source` values (for example `facebook, tiktok`). The popup shows only to visits that arrived with one of them; the source is remembered for the browser session.
+- **Office hours.** Days and a from–to time in Phnom Penh time (UTC+7). Default when switched on: Monday to Saturday, 08:00 to 18:00. An end before the start runs overnight. Useful for a chat popup so someone can reply.
 - **Schedule.** Start and End in your local time. Empty start means now; empty end means until paused. Status shows as active, scheduled, expired or paused.
 - **Limits.** At most 50 popups. Title up to 120 characters, text up to 400, button text up to 60, badge and dismiss link up to 40. The editor's **Done** button stays disabled until the English title and English button text are filled. On save, a popup with no title or no button text in either language is dropped.
 - **Picture.** Uploaded with the image field and shrunk to 1600 px on the long side. 1200×800 works best; keep words out of the picture. See [[Image Uploads]].
@@ -125,7 +149,6 @@ Defaults for a new popup (`newPopupAd` in `src/lib/popup-ads.ts`): switched off,
 
 ## Limits and gotchas
 
-- **Cooldown setting.** In the repo at the time of writing, the public popup uses the built-in cooldown of 12 hours; the value typed in the admin is saved but not passed to the visitor's browser (`PopupAdsHost` calls `pickPopupToShow` with `defaultPopupAdsSettings`). Until this is fixed, changing the cooldown in the admin has no visible effect.
 - The live preview in the editor shows only the card. Timing, frequency and dimming apply on the live page; use **Preview** from the list for the real thing.
 - A paused popup can still be previewed.
 
@@ -137,4 +160,4 @@ Defaults for a new popup (`newPopupAd` in `src/lib/popup-ads.ts`): switched off,
 
 ## To confirm
 
-- Should the admin cooldown value be wired to the public popup? (Candidate for [[Open Tasks]].)
+- Nothing open. The cooldown value was wired to the live site on 2026-09-24.
