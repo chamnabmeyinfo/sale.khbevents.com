@@ -35,6 +35,8 @@ Suggested order: lock the database first, then change the token and the password
 
 ### Korea trip
 
+- [ ] Add a feature image to both Korea pages (Admin → Landing Pages CMS → Edit → page settings → Feature image). Best size 1200 × 630. → [[Page Builder]] #owner
+
 - [ ] Confirm the early-bird date. The caption says "before 31/9/26"; the page uses 30 September 2026. Change it in the builder if needed. → [[Korea Sourcing Trip Seoul 2026]] #owner
 - [ ] Send real photos for the Korea page (hero and social sharing), and a day-by-day itinerary if it should be shown. → [[Korea Sourcing Trip Seoul 2026]] #owner
 - [ ] Decide whether the Korea page's Telegram button goes to Mr. Tim Vutha directly (as now) or through Round Robin. → [[Round Robin]] #owner

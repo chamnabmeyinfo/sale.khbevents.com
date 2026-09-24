@@ -4,7 +4,9 @@ import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { defaultBuilderDoc } from '@/lib/builder';
+import { featureImage } from '@/lib/feature-image';
 import { 
+  ImageOff,
   Plus, 
   Search, 
   ExternalLink, 
@@ -313,11 +315,18 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
             >
               <div>
                 <div className="relative h-36 overflow-hidden bg-emerald-950">
-                  <img
-                    src={page.heroImage || '/images/events/photo_2026-09-16_22-01-09.jpg'}
-                    alt={page.title}
-                    className="w-full h-full object-cover"
-                  />
+                  {featureImage(page) ? (
+                    <img src={featureImage(page)!.src} alt={page.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-slate-200 to-slate-100 dark:from-emerald-950 dark:to-[#0A1610] text-slate-500 dark:text-emerald-600">
+                      <ImageOff className="w-6 h-6" />
+                    </div>
+                  )}
+                  {!featureImage(page) && (
+                    <span className="absolute bottom-3 right-3 z-[1] text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-400 text-black shadow" title={t('pages.feature.missingHint')}>
+                      {t('pages.feature.missing')}
+                    </span>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-white/90 dark:from-[#0A1610] via-transparent to-transparent" />
                   
                   <div className="absolute top-3 left-3 flex items-center gap-2">
@@ -328,7 +337,7 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
                     }`}>
                       {page.status === 'published' ? t('pages.status.published') : page.status === 'draft' ? t('pages.status.draft') : page.status}
                     </span>
-                    <span className="text-[10px] font-medium bg-black/70 backdrop-blur-sm text-gray-200 px-2 py-0.5 rounded-md">
+                    <span className="text-[10px] font-medium bg-black/70 backdrop-blur-sm text-gray-200 on-dark px-2 py-0.5 rounded-md">
                       {page.category}
                     </span>
                   </div>

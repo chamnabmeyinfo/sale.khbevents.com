@@ -44,6 +44,7 @@ import VideoField from './VideoField';
 import ImageManager from './ImageManager';
 import { useLanguage } from '@/context/LanguageContext';
 import { errorMessage } from '@/lib/errors';
+import { featureImage } from '@/lib/feature-image';
 
 /**
  * Drag-and-drop page builder (pilot): component library on the left, the live
@@ -140,11 +141,11 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function BuilderEditorClient({ initialPage, initialDoc }: BuilderEditorClientProps) {
   const { t, lang: uiLang } = useLanguage();
   const [page, setPage] = useState<LandingPage>(initialPage);
-  const [meta, setMeta] = useState({ title: initialPage.title, slug: initialPage.slug, status: initialPage.status });
+  const [meta, setMeta] = useState({ title: initialPage.title, slug: initialPage.slug, status: initialPage.status, ogImage: initialPage.ogImage || '' });
   const [doc, setDocState] = useState<BuilderDoc>(initialDoc);
   const [past, setPast] = useState<BuilderDoc[]>([]);
   const [future, setFuture] = useState<BuilderDoc[]>([]);
-  const [savedJson, setSavedJson] = useState(() => JSON.stringify({ doc: initialDoc, meta: { title: initialPage.title, slug: initialPage.slug, status: initialPage.status } }));
+  const [savedJson, setSavedJson] = useState(() => JSON.stringify({ doc: initialDoc, meta: { title: initialPage.title, slug: initialPage.slug, status: initialPage.status, ogImage: initialPage.ogImage || '' } }));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [device, setDevice] = useState<Device>('desktop');
   const [previewLang, setPreviewLang] = useState<Lang>('en');
@@ -286,13 +287,13 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
       const res = await fetch(`/api/pages/${page.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...page, title: meta.title.trim() || t('builder.untitled'), slug: meta.slug, status, template: 'builder', builder: doc }),
+        body: JSON.stringify({ ...page, title: meta.title.trim() || t('builder.untitled'), slug: meta.slug, status, ogImage: meta.ogImage.trim(), template: 'builder', builder: doc }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.page) throw new Error(data.error || t('common.errorSaving'));
       const saved: LandingPage = data.page;
       const savedDoc = normalizeBuilderDoc(saved.builder);
-      const savedMeta = { title: saved.title, slug: saved.slug, status: saved.status };
+      const savedMeta = { title: saved.title, slug: saved.slug, status: saved.status, ogImage: saved.ogImage || '' };
       setPage(saved);
       setMeta(savedMeta);
       docRef.current = savedDoc;
@@ -630,6 +631,20 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
     return (
       <>
         <Section title={t('builder.page')}>
+          <div>
+            <ImageField
+              label={t('builder.page.feature')}
+              value={meta.ogImage}
+              onChange={(url) => setMeta({ ...meta, ogImage: url })}
+              maxEdge={1600}
+              hint={t('builder.page.featureHint')}
+            />
+            {!meta.ogImage && (
+              <p className="mt-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                {featureImage({ builder: doc }) ? t('builder.page.featureAuto') : t('builder.page.featureMissing')}
+              </p>
+            )}
+          </div>
           <div>
             <label className={LABEL}>{t('builder.page.title')}</label>
             <input className={INPUT} value={meta.title} onChange={(e) => setMeta({ ...meta, title: e.target.value })} />

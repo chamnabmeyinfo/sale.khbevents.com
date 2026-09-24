@@ -90,6 +90,8 @@ export const pages: Dictionary = {
     'pages.analytics.th.timestamp': 'Timestamp',
     'pages.analytics.direct': 'Direct',
     'pages.analytics.noEvents': 'No visitor events recorded yet. Open the live page to test event tracking!',
+    'pages.feature.missing': 'No feature image',
+    'pages.feature.missingHint': 'Add a feature image in the page editor: it shows here, on the home page and in shared links.',
   },
   kh: {
     'pages.title': 'គ្រប់គ្រងទំព័រ Landing',
@@ -172,5 +174,7 @@ export const pages: Dictionary = {
     'pages.analytics.th.timestamp': 'ពេលវេលា',
     'pages.analytics.direct': 'ផ្ទាល់',
     'pages.analytics.noEvents': 'មិនទាន់មានព្រឹត្តិការណ៍អ្នកចូលមើលទេ។ សូមបើកទំព័រផ្សាយដើម្បីសាកល្បងការតាមដាន!',
+    'pages.feature.missing': 'គ្មានរូបភាពតំណាង',
+    'pages.feature.missingHint': 'បន្ថែមរូបភាពតំណាងក្នុងកម្មវិធីកែទំព័រ៖ វាបង្ហាញនៅទីនេះ លើទំព័រដើម និងក្នុងតំណដែលចែករំលែក។',
   },
 };

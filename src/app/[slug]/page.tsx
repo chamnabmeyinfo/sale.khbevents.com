@@ -9,6 +9,7 @@ import SmartCityOptinView from '@/components/landing/SmartCityOptinView';
 import BuilderPageView from '@/components/builder/BuilderPageView';
 import { normalizeBuilderDoc } from '@/lib/builder';
 import { serverNowMs } from '@/lib/popup-ads';
+import { FEATURE_IMAGE_SIZE, featureImage } from '@/lib/feature-image';
 import { Metadata } from 'next';
 import type { LandingPage } from '@/lib/types';
 
@@ -59,6 +60,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const title = (khTrans?.metaTitle || khTrans?.title) || page.metaTitle || `${page.title} | ${settings.companyName}`;
   const description = (khTrans?.metaDescription || khTrans?.description) || page.metaDescription || page.description;
 
+  const shareImage = featureImage(page)?.src || '/images/events/photo_2026-09-16_22-01-09 (2).jpg';
   const isNoIndex = page.isolatedSettings?.searchEngineIndexing === 'noindex' || page.isolatedSettings?.accessProtection === 'password';
 
   return {
@@ -68,8 +70,9 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     openGraph: {
       title,
       description,
-      images: [page.ogImage || page.heroImage || '/images/events/photo_2026-09-16_22-01-09 (2).jpg']
-    }
+      images: [{ url: shareImage, ...FEATURE_IMAGE_SIZE, alt: page.title }]
+    },
+    twitter: { card: 'summary_large_image', title, description, images: [shareImage] }
   };
 }
 

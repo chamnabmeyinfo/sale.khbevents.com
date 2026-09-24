@@ -77,11 +77,13 @@ html.light [class*="bg-emerald-950/60"] {
   box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05) !important;
 }
 
-/* 4. Reset Dark Linear Gradients on Containers */
-html.light [class*="bg-gradient"][class*="from-[#0"],
-html.light [class*="bg-gradient"][class*="to-[#0"],
-html.light [class*="bg-gradient"][class*="from-emerald-950"],
-html.light [class*="bg-gradient"][class*="to-emerald-900"] {
+/* 4. Reset Dark Linear Gradients on Containers.
+   Gradients that fade to transparent are photo overlays, not backgrounds: resetting
+   them to white would hide the photo underneath, so they are left alone. */
+html.light [class*="bg-gradient"][class*="from-[#0"]:not([class*="to-transparent"]),
+html.light [class*="bg-gradient"][class*="to-[#0"]:not([class*="to-transparent"]),
+html.light [class*="bg-gradient"][class*="from-emerald-950"]:not([class*="to-transparent"]),
+html.light [class*="bg-gradient"][class*="to-emerald-900"]:not([class*="to-transparent"]) {
   background-image: none !important;
   background-color: #FFFFFF !important;
 }

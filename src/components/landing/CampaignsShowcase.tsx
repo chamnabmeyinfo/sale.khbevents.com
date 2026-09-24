@@ -1,5 +1,6 @@
 'use client';
 
+import { featureImage } from '@/lib/feature-image';
 import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, Calendar, MapPin, Sparkles, Award } from 'lucide-react';
@@ -41,7 +42,7 @@ export default function CampaignsShowcase({ pages }: CampaignsShowcaseProps) {
               <div>
                 <div className="relative h-52 overflow-hidden">
                   <img
-                    src={page.heroImage || '/images/events/photo_2026-09-16_22-01-09.jpg'}
+                    src={featureImage(page)?.src || '/images/events/photo_2026-09-16_22-01-09.jpg'}
                     alt={page.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />

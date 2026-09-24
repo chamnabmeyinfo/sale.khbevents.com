@@ -13,6 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // Link previews (Facebook, Telegram) need absolute image addresses.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://sale.khbevents.com'),
   title: "KHB EVENTS | Cambodia's Premier Event Management & Production",
   description: "Official sales & landing portal for KHB EVENTS. Turnkey staging, 4K LED screens, concert sound, corporate gala dinners and trade expo booth solutions.",
   icons: {

@@ -186,6 +186,10 @@ export const builder: Dictionary = {
     'builder.gallery.photos': 'Photos',
     'builder.gallery.photosHint': 'Upload, drop files or pick from the library. Drag to change the order; the first photo is the largest in the grid.',
     'builder.gallery.captions': 'Captions (optional)',
+    'builder.page.feature': 'Feature image',
+    'builder.page.featureHint': 'The photo that stands for this page: in the admin page list, on the home page and when the link is shared on Facebook or Telegram. Best size 1200 × 630.',
+    'builder.page.featureAuto': 'None chosen yet: the first photo on the page is used for now.',
+    'builder.page.featureMissing': 'No feature image yet. Shared links will show a general photo.',
   },
   kh: {
     'builder.new': 'ទំព័រអូសទម្លាក់ថ្មី',
@@ -371,5 +375,9 @@ export const builder: Dictionary = {
     'builder.gallery.photos': 'រូបភាព',
     'builder.gallery.photosHint': 'ផ្ទុកឡើង ទម្លាក់ឯកសារ ឬជ្រើសពីបណ្ណាល័យ។ អូសដើម្បីប្តូរលំដាប់ រូបទីមួយធំជាងគេក្នុងក្រឡា។',
     'builder.gallery.captions': 'ចំណងជើងរូបភាព (មិនចាំបាច់)',
+    'builder.page.feature': 'រូបភាពតំណាង',
+    'builder.page.featureHint': 'រូបភាពតំណាងទំព័រនេះ៖ ក្នុងបញ្ជីទំព័រ លើទំព័រដើម និងពេលចែករំលែកតំណលើ Facebook ឬ Telegram។ ទំហំល្អបំផុត 1200 × 630។',
+    'builder.page.featureAuto': 'មិនទាន់ជ្រើស៖ ប្រើរូបភាពទីមួយនៅលើទំព័រជាបណ្តោះអាសន្ន។',
+    'builder.page.featureMissing': 'មិនទាន់មានរូបភាពតំណាង។ តំណដែលចែករំលែកនឹងបង្ហាញរូបភាពទូទៅ។',
   },
 };

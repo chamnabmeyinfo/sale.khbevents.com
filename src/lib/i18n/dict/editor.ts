@@ -312,9 +312,9 @@ export const editor: Dictionary = {
     'editor.seo.title': 'Meta Title (Search engines & browser tab)',
     'editor.seo.desc': 'Meta Description (Search snippet & social previews)',
     'editor.seo.descPh': 'Brief summary shown on Google and Telegram link previews...',
-    'editor.seo.ogLabel': 'Social share image (Facebook, Telegram link preview)',
+    'editor.seo.ogLabel': 'Feature image (page lists, home page and shared links)',
     'editor.seo.ogPh': 'Upload a 1200×630 image or paste a URL',
-    'editor.seo.ogHint': 'Shown when the page link is shared. Leave empty to use the hero cover.',
+    'editor.seo.ogHint': 'The photo that stands for this page: in the admin page list, on the home page and when the link is shared on Facebook or Telegram. 1200 × 630 is best. Empty: the hero cover is used.',
   },
   kh: {
     // Template picker
@@ -626,8 +626,8 @@ export const editor: Dictionary = {
     'editor.seo.title': 'Meta Title (ម៉ាស៊ីនស្វែងរក និងផ្ទាំង browser)',
     'editor.seo.desc': 'Meta Description (លទ្ធផលស្វែងរក និងបណ្តាញសង្គម)',
     'editor.seo.descPh': 'សេចក្តីសង្ខេបខ្លីបង្ហាញលើ Google និង Telegram...',
-    'editor.seo.ogLabel': 'រូបភាពចែករំលែក (Facebook, Telegram)',
+    'editor.seo.ogLabel': 'រូបភាពតំណាង (បញ្ជីទំព័រ ទំព័រដើម និងតំណចែករំលែក)',
     'editor.seo.ogPh': 'ផ្ទុករូប 1200×630 ឬបិទភ្ជាប់ URL',
-    'editor.seo.ogHint': 'បង្ហាញពេលចែករំលែកតំណ។ ទុកទទេដើម្បីប្រើរូបគម្រប Hero។',
+    'editor.seo.ogHint': 'រូបភាពតំណាងទំព័រនេះ៖ ក្នុងបញ្ជីទំព័រ លើទំព័រដើម និងពេលចែករំលែកតំណលើ Facebook ឬ Telegram។ ទំហំល្អបំផុត 1200 × 630។ ទុកទទេ៖ ប្រើរូបគម្រប Hero។',
   },
 };

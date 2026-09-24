@@ -57,6 +57,16 @@ The saving (for example "Save 25%") shows only when the previous price is higher
 - **Choice question on the lead form:** for example "Which sector interests you?". The answer is saved with the lead (`eventType`).
 - **Button to a t.me link** counts as Telegram (icon and tracking).
 
+## Feature image
+
+Every campaign page has one **feature image**: the photo that stands for the page in Admin → Landing Pages CMS, on the home page's campaign list and in link previews on Facebook and Telegram (large card). Set it in the builder's page settings (click an empty spot of the page) or, for classic pages, in the editor's SEO tab ("Feature image"). Best size 1200 × 630.
+
+- It is stored in the page's `ogImage` field.
+- Until one is chosen, the first photo on the page is used (classic hero cover; builder hero photo, a section background, the first gallery photo or the offer photo). A page with no photo at all shows **No feature image** on its card in the page list.
+- Link previews use the full address (`https://sale.khbevents.com/...`), which Facebook and Telegram need.
+
+Source: `src/lib/feature-image.ts`.
+
 ## Photos and animation
 
 **Photos inside components** (select the component, then its content panel):
