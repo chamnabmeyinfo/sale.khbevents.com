@@ -17,7 +17,7 @@ import {
   pick,
   stockTakenPercent,
 } from '../builder';
-import type { BenefitsBlock, FormBlock, HeroBlock, IncludedBlock, OfferBlock, StepsBlock } from '../builder';
+import type { BenefitsBlock, FormBlock, GalleryBlock, HeroBlock, IncludedBlock, OfferBlock, StepsBlock } from '../builder';
 
 describe('registry and defaults', () => {
   it('every block type creates a valid block that survives normalization', () => {
@@ -222,5 +222,30 @@ describe('background video', () => {
       ],
     });
     expect(doc.blocks.map((b) => b.style.bgVideo)).toEqual(['https://www.youtube.com/watch?v=dQw4w9WgXcQ', undefined, '/api/uploads/video/abc-12345678-clip.webm']);
+  });
+});
+
+describe('photos, gallery and animation', () => {
+  it('defaults every section to the rise animation and keeps a chosen one', () => {
+    const doc = normalizeBuilderDoc({ blocks: [{ type: 'faq', title: { en: 'Q' } }, { type: 'faq', title: { en: 'Q' }, style: { animation: 'zoom' } }, { type: 'faq', title: { en: 'Q' }, style: { animation: 'spin' } }] });
+    expect(doc.blocks.map((b) => b.style.animation)).toEqual(['rise', 'zoom', 'rise']);
+  });
+
+  it('keeps safe photos on components and gallery items with captions', () => {
+    const doc = normalizeBuilderDoc({
+      blocks: [
+        { type: 'gallery', variant: 'carousel', title: { en: 'Photos' }, items: [{ image: '/api/uploads/a-1.jpg', caption: { en: 'Booth' } }, { image: 'javascript:alert(1)' }, { caption: { en: 'no image' } }] },
+        { type: 'offer', title: { en: 'O' }, image: 'https://cdn.example.com/p.jpg', features: [{ en: 'x' }] },
+        { type: 'steps', title: { en: 'S' }, items: [{ title: { en: 'One' }, image: '/api/uploads/b-2.jpg' }] },
+        { type: 'benefits', title: { en: 'B' }, items: [{ icon: 'star', title: { en: 'One' }, image: '/api/uploads/c-3.jpg' }] },
+      ],
+    });
+    const gallery = doc.blocks[0] as GalleryBlock;
+    expect(gallery.variant).toBe('carousel');
+    expect(gallery.items).toEqual([{ image: '/api/uploads/a-1.jpg', caption: { en: 'Booth' } }]);
+    expect((doc.blocks[1] as OfferBlock).image).toBe('https://cdn.example.com/p.jpg');
+    expect((doc.blocks[2] as StepsBlock).items[0].image).toBe('/api/uploads/b-2.jpg');
+    expect((doc.blocks[3] as BenefitsBlock).items[0].image).toBe('/api/uploads/c-3.jpg');
+    expect(blockHints(createBlock('gallery'))).toEqual(['noItems']);
   });
 });

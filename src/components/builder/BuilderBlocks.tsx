@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type {
   BenefitIcon,
   BenefitsBlock,
@@ -10,6 +10,7 @@ import type {
   FaqBlock,
   FinalCtaBlock,
   FormBlock,
+  GalleryBlock,
   HeroBlock,
   IncludedBlock,
   Lang,
@@ -49,6 +50,7 @@ const UI = {
     sending: 'Sending…', required: 'Please write your name and phone number.', failed: 'Sending failed. Please try again, or use the Telegram button.',
     continueTelegram: 'Continue on Telegram',
     earlyEndsIn: 'Early-bird price ends in', website: 'Official website', choose: 'Choose one',
+    addPhotos: 'Add photos in the panel on the right.', openPhoto: 'Open photo', previous: 'Previous', next: 'Next', close: 'Close',
   },
   kh: {
     save: 'សន្សំ {n}%', left: '{n} {label}', endsIn: 'ការផ្តល់ជូនបញ្ចប់ក្នុង', d: 'ថ្ងៃ', h: 'ម៉ោង', m: 'នាទី', s: 'វិនាទី', from: 'តម្លៃ',
@@ -56,6 +58,7 @@ const UI = {
     sending: 'កំពុងផ្ញើ…', required: 'សូមសរសេរឈ្មោះ និងលេខទូរស័ព្ទរបស់អ្នក។', failed: 'ការផ្ញើមិនបានសម្រេច។ សូមព្យាយាមម្តងទៀត ឬប្រើប៊ូតុង Telegram។',
     continueTelegram: 'បន្តតាម Telegram',
     earlyEndsIn: 'តម្លៃពិសេសបញ្ចប់ក្នុងរយៈពេល', website: 'គេហទំព័រផ្លូវការ', choose: 'សូមជ្រើសរើស',
+    addPhotos: 'បន្ថែមរូបភាពនៅផ្ទាំងខាងស្តាំ។', openPhoto: 'បើករូបភាព', previous: 'មុន', next: 'បន្ទាប់', close: 'បិទ',
   },
 } as const;
 
@@ -150,6 +153,18 @@ function SectionBackground({ image, video }: { image?: string; video?: string })
           style={{ '--kb-video-ratio': v.aspect } as React.CSSProperties}
         />
       )}
+    </div>
+  );
+}
+
+/** Position in a list, used to stagger entrance animations. */
+const nth = (i: number) => ({ '--kb-i': Math.min(i, 10) }) as React.CSSProperties;
+
+function Photo({ src, className, alt = '', eager = false }: { src?: string; className: string; alt?: string; eager?: boolean }) {
+  if (!src) return null;
+  return (
+    <div className={className}>
+      <img src={src} alt={alt} loading={eager ? 'eager' : 'lazy'} decoding="async" />
     </div>
   );
 }
@@ -251,7 +266,7 @@ function Hero({ block, ctx }: { block: HeroBlock; ctx: RenderContext }) {
   const fullbleed = block.variant === 'fullbleed';
   const priceChip = ctx.offer.price !== null;
   return (
-    <section className={sectionClass(block)}>
+    <section className={sectionClass(block)} data-anim={block.style.animation || 'rise'}>
       <SectionBackground image={fullbleed ? block.image || block.style.bgImage : block.style.bgImage} video={block.style.bgVideo} />
       <div className="kb-container kb-hero__grid">
         <div className="kb-hero__copy">
@@ -285,9 +300,10 @@ function Offer({ block, ctx }: { block: OfferBlock; ctx: RenderContext }) {
   const features = block.features.map((f) => pick(f, lang)).filter(Boolean);
   if (block.variant === 'banner') {
     return (
-      <section className={sectionClass(block)}>
+      <section className={sectionClass(block)} data-anim={block.style.animation || 'rise'}>
         <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
-        <div className="kb-container kb-offer-banner">
+        <div className={`kb-container kb-offer-banner${block.image ? ' kb-offer-banner--photo' : ''}`}>
+          <Photo src={block.image} className="kb-offer-banner__photo" />
           <div className="kb-offer-banner__main">
             <div className="kb-offer-banner__title">{pick(block.title, lang) || name}</div>
             <PriceLine ctx={ctx} />
@@ -303,10 +319,11 @@ function Offer({ block, ctx }: { block: OfferBlock; ctx: RenderContext }) {
     );
   }
   return (
-    <section className={sectionClass(block)}>
+    <section className={sectionClass(block)} data-anim={block.style.animation || 'rise'}>
       <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
       <div className="kb-container">
-        <div className="kb-offer-card">
+        <div className={`kb-offer-card${block.image ? ' kb-offer-card--photo' : ''}`}>
+          <Photo src={block.image} className="kb-offer-card__photo" />
           {name && <div className="kb-offer-card__name">{name}</div>}
           <h2 className="kb-offer-card__title">{pick(block.title, lang)}</h2>
           <PriceLine ctx={ctx} size="lg" />
@@ -315,7 +332,7 @@ function Offer({ block, ctx }: { block: OfferBlock; ctx: RenderContext }) {
           {features.length > 0 && (
             <ul className="kb-features">
               {features.map((f, i) => (
-                <li key={i}>
+                <li key={i} style={nth(i)}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
                   <span>{f}</span>
                 </li>
@@ -334,14 +351,16 @@ function Faq({ block, ctx }: { block: FaqBlock; ctx: RenderContext }) {
   const { lang } = ctx;
   const items = block.items.filter((i) => pick(i.q, lang));
   return (
-    <section className={sectionClass(block)}>
+    <section className={sectionClass(block)} data-anim={block.style.animation || 'rise'}>
       <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
       <div className="kb-container">
         <h2 className="kb-section-title">{pick(block.title, lang)}</h2>
+        <div className={block.image ? 'kb-faq-layout' : undefined}>
+        {block.image && <Photo src={block.image} className="kb-faq-media" />}
         {block.variant === 'columns' ? (
           <div className="kb-faq-cols">
             {items.map((it, i) => (
-              <div className="kb-faq-col" key={i}>
+              <div className="kb-faq-col" key={i} style={nth(i)}>
                 <h3>{pick(it.q, lang)}</h3>
                 <p>{pick(it.a, lang)}</p>
               </div>
@@ -350,7 +369,7 @@ function Faq({ block, ctx }: { block: FaqBlock; ctx: RenderContext }) {
         ) : (
           <div className="kb-faq-list">
             {items.map((it, i) => (
-              <details className="kb-faq-item" key={i} open={ctx.editing && i === 0 ? true : undefined}>
+              <details className="kb-faq-item" key={i} style={nth(i)} open={ctx.editing && i === 0 ? true : undefined}>
                 <summary>
                   <span>{pick(it.q, lang)}</span>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
@@ -360,6 +379,7 @@ function Faq({ block, ctx }: { block: FaqBlock; ctx: RenderContext }) {
             ))}
           </div>
         )}
+        </div>
       </div>
     </section>
   );
@@ -369,15 +389,15 @@ function Benefits({ block, ctx }: { block: BenefitsBlock; ctx: RenderContext }) 
   const { lang } = ctx;
   const items = block.items.filter((i) => pick(i.title, lang));
   return (
-    <section className={sectionClass(block)}>
+    <section className={sectionClass(block)} data-anim={block.style.animation || 'rise'}>
       <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
       <div className="kb-container">
         <h2 className="kb-section-title">{pick(block.title, lang)}</h2>
         {block.sub && <p className="kb-section-sub">{pick(block.sub, lang)}</p>}
         <div className={block.variant === 'rows' ? 'kb-benefit-rows' : 'kb-benefit-cards'}>
           {items.map((it, i) => (
-            <div className="kb-benefit" key={i}>
-              <span className="kb-benefit__icon"><BenefitIconSvg icon={it.icon} /></span>
+            <div className={`kb-benefit${it.image ? ' kb-benefit--photo' : ''}`} key={i} style={nth(i)}>
+              {it.image ? <Photo src={it.image} className="kb-benefit__photo" /> : <span className="kb-benefit__icon"><BenefitIconSvg icon={it.icon} /></span>}
               <div>
                 <h3 className="kb-benefit__title">{pick(it.title, lang)}</h3>
                 {it.text && <p className="kb-benefit__text">{pick(it.text, lang)}</p>}
@@ -401,7 +421,7 @@ function Included({ block, ctx }: { block: IncludedBlock; ctx: RenderContext }) 
   const list = (
     <ul className="kb-checklist">
       {items.map((f, i) => (
-        <li key={i}><CheckMark /><span>{f}</span></li>
+        <li key={i} style={nth(i)}><CheckMark /><span>{f}</span></li>
       ))}
     </ul>
   );
@@ -412,7 +432,7 @@ function Included({ block, ctx }: { block: IncludedBlock; ctx: RenderContext }) 
     </>
   );
   return (
-    <section className={sectionClass(block)}>
+    <section className={sectionClass(block)} data-anim={block.style.animation || 'rise'}>
       <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
       <div className="kb-container">
         {block.variant === 'split' ? (
@@ -444,13 +464,14 @@ function Steps({ block, ctx }: { block: StepsBlock; ctx: RenderContext }) {
   const { lang } = ctx;
   const items = block.items.filter((i) => pick(i.title, lang));
   return (
-    <section className={sectionClass(block)}>
+    <section className={sectionClass(block)} data-anim={block.style.animation || 'rise'}>
       <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
       <div className="kb-container">
         <h2 className="kb-section-title">{pick(block.title, lang)}</h2>
         <ol className={block.variant === 'timeline' ? 'kb-timeline' : 'kb-stepcards'}>
           {items.map((it, i) => (
-            <li className="kb-step" key={i}>
+            <li className={`kb-step${it.image ? ' kb-step--photo' : ''}`} key={i} style={nth(i)}>
+              <Photo src={it.image} className="kb-step__photo" />
               <span className="kb-step__num" aria-hidden="true">{i + 1}</span>
               <div>
                 <h3 className="kb-step__title">{pick(it.title, lang)}</h3>
@@ -574,12 +595,13 @@ function LeadFormBlock({ block, ctx }: { block: FormBlock; ctx: RenderContext })
   );
 
   return (
-    <section className={sectionClass(block)} id={`form-${block.id}`}>
+    <section className={sectionClass(block)} data-anim={block.style.animation || 'rise'} id={`form-${block.id}`}>
       <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
       <div className="kb-container">
         {block.variant === 'split' ? (
           <div className="kb-form-split">
             <div>
+              <Photo src={block.image} className="kb-form-photo" />
               {heading}
               <PriceLine ctx={ctx} size="lg" />
               <StockBar ctx={ctx} />
@@ -589,6 +611,7 @@ function LeadFormBlock({ block, ctx }: { block: FormBlock; ctx: RenderContext })
           </div>
         ) : (
           <div className="kb-form-card">
+            <Photo src={block.image} className="kb-form-photo" />
             {heading}
             {form}
           </div>
@@ -605,7 +628,7 @@ function FinalCta({ block, ctx }: { block: FinalCtaBlock; ctx: RenderContext }) 
   );
   if (block.variant === 'split') {
     return (
-      <section className={sectionClass(block)}>
+      <section className={sectionClass(block)} data-anim={block.style.animation || 'rise'}>
         <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
         <div className="kb-container kb-final-split">
           <div>
@@ -624,7 +647,7 @@ function FinalCta({ block, ctx }: { block: FinalCtaBlock; ctx: RenderContext }) 
     );
   }
   return (
-    <section className={sectionClass(block)}>
+    <section className={sectionClass(block)} data-anim={block.style.animation || 'rise'}>
       <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
       <div className="kb-container kb-final">
         <h2 className="kb-final__title">{pick(block.headline, lang)}</h2>
@@ -634,6 +657,78 @@ function FinalCta({ block, ctx }: { block: FinalCtaBlock; ctx: RenderContext }) 
         <div className="kb-final__cta"><CtaButton label={pick(block.ctaLabel, lang)} block={block} ctx={ctx} /></div>
         {risk}
       </div>
+    </section>
+  );
+}
+
+function Gallery({ block, ctx }: { block: GalleryBlock; ctx: RenderContext }) {
+  const { lang } = ctx;
+  const [open, setOpen] = useState<number | null>(null);
+  const track = useRef<HTMLDivElement>(null);
+  const items = block.items;
+  const carousel = block.variant === 'carousel';
+
+  useEffect(() => {
+    if (open === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(null);
+      if (e.key === 'ArrowRight') setOpen((i) => (i === null ? i : (i + 1) % items.length));
+      if (e.key === 'ArrowLeft') setOpen((i) => (i === null ? i : (i - 1 + items.length) % items.length));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, items.length]);
+
+  const slide = (dir: 1 | -1) => {
+    const el = track.current;
+    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: 'smooth' });
+  };
+
+  // A gallery without photos is only a placeholder in the editor; visitors never see an empty section.
+  if (items.length === 0 && !ctx.editing) return null;
+
+  return (
+    <section className={sectionClass(block)} data-anim={block.style.animation || 'rise'}>
+      <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
+      <div className="kb-container">
+        <h2 className="kb-section-title">{pick(block.title, lang)}</h2>
+        {block.sub && <p className="kb-section-sub">{pick(block.sub, lang)}</p>}
+        {items.length === 0 ? (
+          ctx.editing ? <div className="kb-gallery-empty">{UI[lang].addPhotos}</div> : null
+        ) : (
+          <div className={carousel ? 'kb-carousel' : undefined}>
+            <div ref={track} className={carousel ? 'kb-carousel__track' : `kb-photogrid kb-photogrid--m${items.length % 3}${items.length % 2 === 0 ? ' kb-photogrid--even' : ''}`}>
+              {items.map((it, i) => (
+                <figure className="kb-gallery__item" key={`${it.image}-${i}`} style={nth(i)}>
+                  <button type="button" className="kb-gallery__open" onClick={() => !ctx.editing && setOpen(i)} aria-label={pick(it.caption, lang) || UI[lang].openPhoto}>
+                    <img src={it.image} alt={pick(it.caption, lang)} loading="lazy" decoding="async" />
+                  </button>
+                  {it.caption && <figcaption>{pick(it.caption, lang)}</figcaption>}
+                </figure>
+              ))}
+            </div>
+            {carousel && items.length > 1 && (
+              <div className="kb-carousel__nav">
+                <button type="button" onClick={() => slide(-1)} aria-label={UI[lang].previous}>‹</button>
+                <button type="button" onClick={() => slide(1)} aria-label={UI[lang].next}>›</button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      {open !== null && items[open] && (
+        <div className="kb-lightbox" role="dialog" aria-modal="true" aria-label={pick(items[open].caption, lang) || UI[lang].openPhoto} onClick={() => setOpen(null)}>
+          <img src={items[open].image} alt={pick(items[open].caption, lang)} onClick={(e) => e.stopPropagation()} />
+          {items[open].caption && <p className="kb-lightbox__caption">{pick(items[open].caption, lang)}</p>}
+          <button type="button" className="kb-lightbox__close" onClick={() => setOpen(null)} aria-label={UI[lang].close}>×</button>
+          {items.length > 1 && (
+            <>
+              <button type="button" className="kb-lightbox__prev" onClick={(e) => { e.stopPropagation(); setOpen((open - 1 + items.length) % items.length); }} aria-label={UI[lang].previous}>‹</button>
+              <button type="button" className="kb-lightbox__next" onClick={(e) => { e.stopPropagation(); setOpen((open + 1) % items.length); }} aria-label={UI[lang].next}>›</button>
+            </>
+          )}
+        </div>
+      )}
     </section>
   );
 }
@@ -656,19 +751,77 @@ export function BlockView({ block, ctx }: { block: BuilderBlock; ctx: RenderCont
       return <LeadFormBlock block={block} ctx={ctx} />;
     case 'finalCta':
       return <FinalCta block={block} ctx={ctx} />;
+    case 'gallery':
+      return <Gallery block={block} ctx={ctx} />;
     default:
       return null;
   }
 }
 
-/** The page root: brand tokens as CSS variables, Khmer font, width container. */
+/**
+ * Scroll-in animations. Sections start hidden (CSS, only inside `[data-kb-motion]`)
+ * and get `data-kb-in` when they enter the screen, so their items animate in one
+ * after another. `data-kb-done` then removes the stagger delay so hover effects
+ * react at once. Attributes are set on the DOM, not through React props, so
+ * re-renders never undo them. Changing a section's animation in the editor
+ * replays it. Without JavaScript a <noscript> style shows everything.
+ */
+function useSectionReveal(root: React.RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const el = root.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      el?.removeAttribute('data-kb-motion');
+      return;
+    }
+    const timers = new Set<number>();
+    const reveal = (section: Element) => {
+      section.setAttribute('data-kb-in', '');
+      io.unobserve(section);
+      const t = window.setTimeout(() => { section.setAttribute('data-kb-done', ''); timers.delete(t); }, 1800);
+      timers.add(t);
+    };
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => { if (e.isIntersecting) reveal(e.target); }),
+      { rootMargin: '0px 0px -8% 0px', threshold: 0 },
+    );
+    const scan = () => {
+      el.querySelectorAll<HTMLElement>('.kb-section').forEach((section) => {
+        const anim = section.getAttribute('data-anim') || 'rise';
+        if (section.dataset.kbSeen === anim) return;
+        if (section.dataset.kbSeen) {
+          section.removeAttribute('data-kb-in');
+          section.removeAttribute('data-kb-done');
+        }
+        section.dataset.kbSeen = anim;
+        io.observe(section);
+      });
+    };
+    scan();
+    const mo = new MutationObserver(scan);
+    mo.observe(el, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-anim'] });
+    return () => {
+      io.disconnect();
+      mo.disconnect();
+      timers.forEach((t) => window.clearTimeout(t));
+    };
+  }, [root]);
+}
+
+/** The page root: brand tokens as CSS variables, Khmer font, width container, scroll-in animations. */
 export function BuilderRoot({ brand, lang, className = '', children }: { brand: BuilderBrand; lang: Lang; className?: string; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useSectionReveal(ref);
   return (
     <div
+      ref={ref}
+      data-kb-motion=""
       className={`kb-page kb-radius-${brand.radius}${lang === 'kh' ? ' kb-lang-kh' : ''} ${className}`.trim()}
       style={{ '--kb-accent': brand.accent } as React.CSSProperties}
       lang={lang === 'kh' ? 'km' : 'en'}
     >
+      <noscript>
+        <style>{'.kb-page[data-kb-motion] .kb-section:not([data-kb-in]) *{opacity:1!important;transform:none!important}'}</style>
+      </noscript>
       {children}
     </div>
   );

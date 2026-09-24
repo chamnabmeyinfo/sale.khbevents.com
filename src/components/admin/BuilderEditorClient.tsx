@@ -23,9 +23,10 @@ import {
   X,
 } from 'lucide-react';
 import type { LandingPage } from '@/lib/types';
-import type { BenefitsBlock, Bi, BlockType, BuilderBlock, BuilderDoc, FaqBlock, FinalCtaBlock, FormBlock, HeroBlock, IncludedBlock, Lang, OfferBlock, StepsBlock } from '@/lib/builder';
+import type { BenefitsBlock, Bi, BlockType, BuilderBlock, BuilderDoc, FaqBlock, FinalCtaBlock, FormBlock, GalleryBlock, HeroBlock, IncludedBlock, Lang, OfferBlock, StepsBlock } from '@/lib/builder';
 import {
   BENEFIT_ICONS,
+  BLOCK_ANIMATIONS,
   BLOCK_DEFINITIONS,
   BLOCK_TYPES,
   DEFAULT_ACCENT,
@@ -40,6 +41,7 @@ import {
 import { BenefitIconSvg, BlockView, BuilderRoot, useNow } from '@/components/builder/BuilderBlocks';
 import ImageField from './ImageField';
 import VideoField from './VideoField';
+import ImageManager from './ImageManager';
 import { useLanguage } from '@/context/LanguageContext';
 import { errorMessage } from '@/lib/errors';
 
@@ -342,6 +344,15 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
             ))}
           </div>
         </div>
+        <div>
+          <label className={LABEL}>{t('builder.animation')}</label>
+          <div className="grid grid-cols-5 gap-1">
+            {BLOCK_ANIMATIONS.map((a) => (
+              <button key={a} type="button" className={SEG((block.style.animation || 'rise') === a)} onClick={() => setStyle({ animation: a })}>{t(`builder.animation.${a}`)}</button>
+            ))}
+          </div>
+          <p className={HINT}>{t('builder.animationHint')}</p>
+        </div>
         <div className="grid grid-cols-2 gap-2">
           <div>
             <label className={LABEL}>{t('builder.align')}</label>
@@ -381,6 +392,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
         {t('builder.offer.fromPage')}{' '}
         <button type="button" onClick={() => setSelectedId(null)} className="font-bold underline cursor-pointer">{t('builder.offer.openSettings')}</button>
       </div>
+      <ImageField label={t('builder.offer.photo')} value={b.image || ''} onChange={(v) => updateBlock(b.id, { image: v || undefined }, false)} maxEdge={1600} hint={t('builder.offer.photoHint')} compact />
       <BiInput label={t('builder.offer.title')} value={b.title} onChange={(v) => updateBlock(b.id, { title: v })} />
       <div>
         <label className={LABEL}>{t('builder.offer.features')}</label>
@@ -408,6 +420,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
   const faqContent = (b: FaqBlock) => (
     <Section title={t('builder.content')}>
       <BiInput label={t('builder.faq.title')} value={b.title} onChange={(v) => updateBlock(b.id, { title: v })} />
+      <ImageField label={t('builder.faq.photo')} value={b.image || ''} onChange={(v) => updateBlock(b.id, { image: v || undefined }, false)} maxEdge={1600} hint={t('builder.faq.photoHint')} compact />
       <div className="space-y-3">
         {b.items.map((it, i) => (
           <div key={i} className="p-2.5 rounded-xl border border-slate-200 dark:border-emerald-900/60 space-y-2">
@@ -473,6 +486,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
                 <label className={LABEL}>{t('builder.benefits.link')}</label>
                 <input className={INPUT} placeholder="https://…" value={it.link || ''} onChange={(e) => setItems(b.items.map((x, j) => (j === i ? { ...x, link: e.target.value || undefined } : x)))} />
               </div>
+              <ImageField label={t('builder.item.photo')} value={it.image || ''} onChange={(v) => setItems(b.items.map((x, j) => (j === i ? { ...x, image: v || undefined } : x)), false)} maxEdge={1200} hint={t('builder.benefits.photoHint')} compact />
             </div>
           ))}
           <AddRow label={t('builder.benefits.add')} onClick={() => setItems([...b.items, { icon: 'check', title: { en: '' } }], false)} />
@@ -520,6 +534,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
               </div>
               <BiInput label={t('builder.steps.title')} value={it.title} onChange={(v) => setItems(b.items.map((x, j) => (j === i ? { ...x, title: v } : x)))} />
               <BiInput label={t('builder.steps.text')} value={it.text} multiline onChange={(v) => setItems(b.items.map((x, j) => (j === i ? { ...x, text: v } : x)))} />
+              <ImageField label={t('builder.item.photo')} value={it.image || ''} onChange={(v) => setItems(b.items.map((x, j) => (j === i ? { ...x, image: v || undefined } : x)), false)} maxEdge={1200} compact />
             </div>
           ))}
           {b.items.length < 8 && <AddRow label={t('builder.steps.add')} onClick={() => setItems([...b.items, { title: { en: '' } }], false)} />}
@@ -534,6 +549,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
       <div className="p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-900 text-[11px] text-sky-900 dark:text-sky-200">{t('builder.form.where')}</div>
       <BiInput label={t('builder.sectionTitle')} value={b.title} onChange={(v) => updateBlock(b.id, { title: v })} />
       <BiInput label={t('builder.sectionSub')} value={b.sub} onChange={(v) => updateBlock(b.id, { sub: v })} multiline />
+      <ImageField label={t('builder.form.photo')} value={b.image || ''} onChange={(v) => updateBlock(b.id, { image: v || undefined }, false)} maxEdge={1600} hint={t('builder.form.photoHint')} compact />
       <div>
         <label className={LABEL}>{t('builder.form.fields')}</label>
         <p className={HINT}>{t('builder.form.alwaysAsked')}</p>
@@ -581,6 +597,32 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
       <BiInput label={t('builder.final.risk')} value={b.riskNote} onChange={(v) => updateBlock(b.id, { riskNote: v })} />
     </Section>
   );
+
+  const galleryContent = (b: GalleryBlock) => {
+    const images = b.items.map((it) => it.image);
+    const setImages = (next: string[]) =>
+      updateBlock(b.id, { items: next.map((image) => b.items.find((it) => it.image === image) || { image }) }, false);
+    return (
+      <Section title={t('builder.content')}>
+        <BiInput label={t('builder.sectionTitle')} value={b.title} onChange={(v) => updateBlock(b.id, { title: v })} />
+        <BiInput label={t('builder.sectionSub')} value={b.sub} onChange={(v) => updateBlock(b.id, { sub: v })} multiline />
+        <ImageManager images={images} onChange={setImages} title={t('builder.gallery.photos')} hint={t('builder.gallery.photosHint')} />
+        {b.items.length > 0 && (
+          <div className="space-y-2">
+            <label className={LABEL}>{t('builder.gallery.captions')}</label>
+            {b.items.map((it, i) => (
+              <div key={it.image} className="flex gap-2 items-start">
+                <img src={it.image} alt="" className="w-12 h-10 rounded-md object-cover shrink-0 mt-5" />
+                <div className="flex-1 min-w-0">
+                  <BiInput label={`${i + 1}.`} value={it.caption} onChange={(v) => updateBlock(b.id, { items: b.items.map((x, j) => (j === i ? { ...x, caption: v } : x)) })} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+    );
+  };
 
   const pagePanel = () => {
     const o = doc.offer;
@@ -870,6 +912,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
               {selected.type === 'steps' && stepsContent(selected)}
               {selected.type === 'form' && formContent(selected)}
               {selected.type === 'finalCta' && finalContent(selected)}
+              {selected.type === 'gallery' && galleryContent(selected)}
             </>
           ) : (
             <>

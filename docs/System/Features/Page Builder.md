@@ -57,6 +57,25 @@ The saving (for example "Save 25%") shows only when the previous price is higher
 - **Choice question on the lead form:** for example "Which sector interests you?". The answer is saved with the lead (`eventType`).
 - **Button to a t.me link** counts as Telegram (icon and tracking).
 
+## Photos and animation
+
+**Photos inside components** (select the component, then its content panel):
+
+| Component | Photo |
+|---|---|
+| Benefits | Each item can have a photo; it replaces the icon |
+| How it works | Each step can have a photo |
+| Offer card | A product photo at the top of the card (beside the price in the banner) |
+| FAQ | A photo beside the questions on computers, above them on phones |
+| Lead form | A photo above the form, or beside the price in the "Offer and form" design |
+| Hero, What's included | Already had a photo |
+
+**Photo gallery** (component 9): designs **Photo grid** (the layout adapts to the number of photos so rows are always full) and **Sliding carousel** (swipe, or arrows). Add photos by upload, drag and drop or the photo library; drag to reorder; each photo can have a caption in EN and KH. Visitors can tap a photo to see it full screen (arrows and Esc work). A gallery without photos is not shown to visitors.
+
+**Entrance animation** (Design → Entrance animation): Rise (default), Fade, Zoom, Slide or None, per section. The section animates when it scrolls into view and its cards and list items follow one after another; the hero animates on load. Clicking an option in the editor replays it. Cards lift and photos zoom gently under the mouse; the stock bar fills when it appears. Visitors whose device is set to reduce motion see no animation, and pages without JavaScript show everything.
+
+Source: `src/components/builder/BuilderBlocks.tsx` (`useSectionReveal`, `Gallery`), `src/styles/builder.css`.
+
 ## Background video
 
 Every section can play a silent, looping video behind its text: select the section → Design → **Background video**.

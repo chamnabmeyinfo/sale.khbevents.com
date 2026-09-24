@@ -24,6 +24,9 @@ export interface Bi {
 export type BlockTheme = 'dark' | 'light' | 'brand';
 export type BlockAlign = 'left' | 'center';
 export type BlockSpacing = 'compact' | 'normal' | 'roomy';
+/** How a section appears when it scrolls into view. */
+export const BLOCK_ANIMATIONS = ['rise', 'fade', 'zoom', 'slide', 'none'] as const;
+export type BlockAnimation = (typeof BLOCK_ANIMATIONS)[number];
 
 export interface BlockStyle {
   theme: BlockTheme;
@@ -33,6 +36,8 @@ export interface BlockStyle {
   bgImage?: string;
   /** Optional silent looping background video: an uploaded file, a video file link, or a YouTube, Vimeo, Facebook or TikTok link. */
   bgVideo?: string;
+  /** Entrance animation; cards and list items follow one after another. */
+  animation: BlockAnimation;
 }
 
 interface BlockBase {
@@ -55,6 +60,8 @@ export interface HeroBlock extends BlockBase {
 export interface OfferBlock extends BlockBase {
   type: 'offer';
   variant: 'card' | 'banner';
+  /** Optional product photo at the top of the card (beside the price in the banner). */
+  image?: string;
   title: Bi;
   features: Bi[];
   ctaLabel: Bi;
@@ -69,6 +76,8 @@ export interface FaqItem {
 export interface FaqBlock extends BlockBase {
   type: 'faq';
   variant: 'accordion' | 'columns';
+  /** Optional photo beside the questions on wide screens. */
+  image?: string;
   title: Bi;
   items: FaqItem[];
 }
@@ -83,6 +92,8 @@ export interface BenefitItem {
   text?: Bi;
   /** Optional "Official website" link, e.g. a trade fair's site. */
   link?: string;
+  /** Optional photo; shown instead of the icon. */
+  image?: string;
 }
 
 export interface BenefitsBlock extends BlockBase {
@@ -107,6 +118,7 @@ export interface IncludedBlock extends BlockBase {
 export interface StepItem {
   title: Bi;
   text?: Bi;
+  image?: string;
 }
 
 export interface StepsBlock extends BlockBase {
@@ -121,6 +133,8 @@ export interface StepsBlock extends BlockBase {
 export interface FormBlock extends BlockBase {
   type: 'form';
   variant: 'card' | 'split';
+  /** Optional photo: above the form card, or beside the price in the split design. */
+  image?: string;
   title: Bi;
   sub?: Bi;
   /** Name and phone are always asked; these add optional fields. */
@@ -144,7 +158,20 @@ export interface FinalCtaBlock extends BlockBase {
   riskNote?: Bi;
 }
 
-export type BuilderBlock = HeroBlock | OfferBlock | FaqBlock | BenefitsBlock | IncludedBlock | StepsBlock | FormBlock | FinalCtaBlock;
+export interface GalleryItem {
+  image: string;
+  caption?: Bi;
+}
+
+export interface GalleryBlock extends BlockBase {
+  type: 'gallery';
+  variant: 'grid' | 'carousel';
+  title: Bi;
+  sub?: Bi;
+  items: GalleryItem[];
+}
+
+export type BuilderBlock = HeroBlock | OfferBlock | FaqBlock | BenefitsBlock | IncludedBlock | StepsBlock | FormBlock | FinalCtaBlock | GalleryBlock;
 export type BlockType = BuilderBlock['type'];
 
 export interface BuilderOffer {
@@ -245,7 +272,7 @@ export interface BlockDefinition {
   create: () => BuilderBlock;
 }
 
-const baseStyle = (theme: BlockTheme = 'dark', align: BlockAlign = 'left'): BlockStyle => ({ theme, align, spacing: 'normal' });
+const baseStyle = (theme: BlockTheme = 'dark', align: BlockAlign = 'left'): BlockStyle => ({ theme, align, spacing: 'normal', animation: 'rise' });
 
 export const BLOCK_DEFINITIONS: Record<BlockType, BlockDefinition> = {
   hero: {
@@ -354,6 +381,23 @@ export const BLOCK_DEFINITIONS: Record<BlockType, BlockDefinition> = {
       ],
     }),
   },
+  gallery: {
+    type: 'gallery',
+    name: { en: 'Photo gallery', kh: 'វិចិត្រសាលរូបភាព' },
+    coreValue: { en: 'Show the real thing: the product, the place, the people. Buyers trust what they can see.', kh: 'បង្ហាញរបស់ពិត៖ ផលិតផល ទីកន្លែង និងមនុស្ស។ អ្នកទិញជឿអ្វីដែលពួកគេឃើញ។' },
+    variants: [
+      { id: 'grid', name: { en: 'Photo grid', kh: 'ក្រឡារូបភាព' }, detail: { en: 'All photos at once; the first one is larger.', kh: 'រូបភាពទាំងអស់ក្នុងពេលតែមួយ រូបទីមួយធំជាង។' } },
+      { id: 'carousel', name: { en: 'Sliding carousel', kh: 'រូបភាពរំកិល' }, detail: { en: 'Photos in a row that visitors swipe or slide with arrows.', kh: 'រូបភាពជាជួរ អ្នកទស្សនាអូស ឬចុចព្រួញដើម្បីមើល។' } },
+    ],
+    create: () => ({
+      id: newBlockId(),
+      type: 'gallery',
+      variant: 'grid',
+      style: baseStyle('light', 'center'),
+      title: { en: 'See it for yourself', kh: 'មើលដោយខ្លួនឯង' },
+      items: [],
+    }),
+  },
   steps: {
     type: 'steps',
     name: { en: 'How it works', kh: 'របៀបដំណើរការ' },
@@ -457,6 +501,7 @@ function normalizeStyle(v: unknown, fallback: BlockStyle): BlockStyle {
     spacing: oneOf(o.spacing, ['compact', 'normal', 'roomy'] as const, fallback.spacing),
     bgImage: url(o.bgImage),
     bgVideo: cleanVideoUrl(o.bgVideo),
+    animation: oneOf(o.animation, BLOCK_ANIMATIONS, fallback.animation || 'rise'),
   };
 }
 
@@ -488,6 +533,7 @@ function normalizeBlock(v: unknown): BuilderBlock | null {
     return {
       id, style, type,
       variant: oneOf(o.variant, ['card', 'banner'] as const, b.variant),
+      image: url(o.image),
       title: bi(o.title, 120, { en: '' }),
       features,
       ctaLabel: bi(o.ctaLabel, 60, b.ctaLabel),
@@ -505,6 +551,7 @@ function normalizeBlock(v: unknown): BuilderBlock | null {
     return {
       id, style, type,
       variant: oneOf(o.variant, ['accordion', 'columns'] as const, b.variant),
+      image: url(o.image),
       title: bi(o.title, 120, { en: '' }),
       items,
     };
@@ -514,7 +561,7 @@ function normalizeBlock(v: unknown): BuilderBlock | null {
     const items = Array.isArray(o.items)
       ? o.items.slice(0, 12).map((it) => {
           const r = obj(it);
-          return { icon: oneOf(r.icon, BENEFIT_ICONS, 'check'), title: bi(r.title, 120), text: optBi(r.text, 400), link: url(r.link) };
+          return { icon: oneOf(r.icon, BENEFIT_ICONS, 'check'), title: bi(r.title, 120), text: optBi(r.text, 400), link: url(r.link), image: url(r.image) };
         }).filter((it) => hasText(it.title))
       : [];
     return {
@@ -542,7 +589,7 @@ function normalizeBlock(v: unknown): BuilderBlock | null {
     const items = Array.isArray(o.items)
       ? o.items.slice(0, 8).map((it) => {
           const r = obj(it);
-          return { title: bi(r.title, 120), text: optBi(r.text, 400) };
+          return { title: bi(r.title, 120), text: optBi(r.text, 400), image: url(r.image) };
         }).filter((it) => hasText(it.title))
       : [];
     return {
@@ -553,11 +600,29 @@ function normalizeBlock(v: unknown): BuilderBlock | null {
       ctaLabel: optBi(o.ctaLabel, 60),
     };
   }
+  if (type === 'gallery') {
+    const b = blank as GalleryBlock;
+    const items = Array.isArray(o.items)
+      ? o.items.slice(0, 30).flatMap((it): GalleryItem[] => {
+          const r = obj(it);
+          const image = url(r.image);
+          return image ? [{ image, caption: optBi(r.caption, 200) }] : [];
+        })
+      : [];
+    return {
+      id, style, type,
+      variant: oneOf(o.variant, ['grid', 'carousel'] as const, b.variant),
+      title: bi(o.title, 120, { en: '' }),
+      sub: optBi(o.sub, 300),
+      items,
+    };
+  }
   if (type === 'form') {
     const b = blank as FormBlock;
     return {
       id, style, type,
       variant: oneOf(o.variant, ['card', 'split'] as const, b.variant),
+      image: url(o.image),
       title: bi(o.title, 120, { en: '' }),
       sub: optBi(o.sub, 300),
       askEmail: o.askEmail === true,
@@ -773,6 +838,9 @@ export function blockHints(block: BuilderBlock): HintKey[] {
   } else if (block.type === 'steps') {
     if (!block.items.length) hints.push('noItems');
     texts.push(block.title, ...block.items.flatMap((i) => (i.text ? [i.title, i.text] : [i.title])));
+  } else if (block.type === 'gallery') {
+    if (!block.items.length) hints.push('noItems');
+    texts.push(block.title, ...block.items.flatMap((i) => (i.caption ? [i.caption] : [])));
   } else if (block.type === 'form') {
     texts.push(block.title, block.submitLabel, block.successTitle);
   } else {
