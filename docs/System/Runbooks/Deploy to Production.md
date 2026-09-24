@@ -69,6 +69,7 @@ Content packs must never overwrite the registration and early-bird deadlines. Th
 A push that changes only files in `docs/` or `CLAUDE.md` does not rebuild the live site. Saving a note in Obsidian never redeploys the website.
 
 - The rule is `ignoreCommand` in `vercel.json`, which runs `scripts/vercel-ignore-build.sh`.
+- Tested live on 2026-09-24: the note-only commit `19a9272` showed as **Canceled** in Vercel on both `main` and the working branch, and production kept serving `5d00eb5`. In the Vercel dashboard, a canceled deployment on a notes commit is the expected, healthy result.
 - The script builds whenever it is unsure: no previous deployment, a git error, or no file changes at all (for example a manual redeploy).
 - Any push that also changes code builds as usual.
 
