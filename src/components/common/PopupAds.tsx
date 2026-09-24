@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { PopupAd, PopupAdSmartSensitivity } from '@/lib/types';
-import { pickPopupToShow, pickText, popupStorageKeys, resolveCtaHref, RETURNING_AFTER_MS, settingsFromPublicAds, smartShouldShow, type PublicPopupAd } from '@/lib/popup-ads';
+import { pickPopupToShow, pickText, popupStorageKeys, inAppBrowserName, nextOpening, popupSkipReason, resolveCtaHref, RETURNING_AFTER_MS, settingsFromPublicAds, SKIP_REASON_TEXT, smartShouldShow, SMART_RULES, type PopupVisitorContext, type PublicPopupAd } from '@/lib/popup-ads';
 import { getDeviceType, trackClientEvent } from '@/components/common/LandingPageTracking';
 import { useStoredChoice, useUrlParam } from '@/lib/use-browser-state';
 
@@ -329,11 +329,19 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
   const viewedRef = useRef(false);
   /** Why a smart popup appeared (score and top reasons), sent with the view event. */
   const smartRef = useRef<{ score: number; reasons: string } | null>(null);
+  /** ?popup_debug=1: an on-screen panel that says why each popup shows or not (in-app browsers have no console). */
+  const [debugInfo, setDebugInfo] = useState<{ browser: string; rows: Array<{ name: string; status: string }>; smart?: string } | null>(null);
 
   // Decide after mount only: storage, device and time must not affect the server HTML.
   // The decision runs on the next tick so the effect itself never sets state.
   useEffect(() => {
-    if (!ads.length || noPopup === '1') return;
+    if (!ads.length || noPopup === '1') {
+      if (!ads.length && new URLSearchParams(window.location.search).get('popup_debug') === '1') {
+        const id = window.setTimeout(() => setDebugInfo({ browser: inAppBrowserName(navigator.userAgent) || 'Normal browser', rows: [] }), 0);
+        return () => window.clearTimeout(id);
+      }
+      return;
+    }
     const cleanups: Array<() => void> = [];
     const tick = window.setTimeout(() => decide(cleanups), 0);
     return () => {
@@ -368,7 +376,8 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
     }
     const pagesThisVisit = (numberOrUndefined(readSession(popupStorageKeys.pagesThisVisit)) ?? 0) + 1;
     writeSession(popupStorageKeys.pagesThisVisit, String(pagesThisVisit));
-    const ad = pickPopupToShow(ads, settingsFromPublicAds(ads), {
+    const settings = settingsFromPublicAds(ads);
+    const visitor: PopupVisitorContext = {
       nowMs,
       device,
       lang: langRef.current,
@@ -377,8 +386,23 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
       leadSent: readLocal(popupStorageKeys.leadSent) === '1',
       lastAnyShownAt: numberOrUndefined(readLocal(popupStorageKeys.lastAny)),
       shownAt: (id) => numberOrUndefined(readLocal(popupStorageKeys.shown(id))),
-      shownThisSession: (id) => readSession(popupStorageKeys.sessionShown(id)) === '1',
-    });
+      shownThisSession: (id: string) => readSession(popupStorageKeys.sessionShown(id)) === '1',
+    };
+    const ad = pickPopupToShow(ads, settings, visitor);
+    const debugPanel = new URLSearchParams(window.location.search).get('popup_debug') === '1';
+    if (debugPanel) {
+      setDebugInfo({
+        browser: `${inAppBrowserName(navigator.userAgent) || 'Normal browser'} · ${device}`,
+        rows: ads.map((a) => {
+          const why = popupSkipReason(a, settings, visitor);
+          const opens = why === 'hours' ? nextOpening(a.hours, nowMs) : null;
+          const status = a.id === ad?.id
+            ? `SHOWS (trigger: ${a.trigger.type}${a.trigger.type === 'delay' ? ` ${a.trigger.seconds ?? 8} s` : a.trigger.type === 'idle' ? ` ${a.trigger.idleSeconds ?? 20} s without moving` : a.trigger.type === 'smart' ? `, ${a.trigger.sensitivity ?? 'balanced'}` : ''})`
+            : why ? `hidden: ${SKIP_REASON_TEXT[why]}${opens ? `, opens ${opens}` : ''}` : 'hidden: a higher-priority popup shows instead';
+          return { name: a.name, status };
+        }),
+      });
+    }
     if (!ad) return;
     setActive(ad);
 
@@ -441,7 +465,11 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
           pausedSeconds: (now - lastActivity) / 1000,
         }, sensitivity);
         leaving = false;
-        if (debug) console.info('[popup smart]', sensitivity, result.score, result.reasons.join(','), result.show ? 'SHOW' : '');
+        if (debug) {
+          console.info('[popup smart]', sensitivity, result.score, result.reasons.join(','), result.show ? 'SHOW' : '');
+          const needed = SMART_RULES[sensitivity].threshold;
+          setDebugInfo((d) => (d ? { ...d, smart: `Smart timing: ${result.score}/${needed} points${result.reasons.length ? ` (${result.reasons.join(', ')})` : ''}` } : d));
+        }
         if (result.show) {
           smartRef.current = { score: result.score, reasons: result.reasons.slice(0, 3).join(',') };
           fire();
@@ -610,12 +638,22 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
     // 'telegram' and new-tab links are handled by the anchor itself.
   }, [active, preview, close, pageSlug]);
 
-  if (!active) return null;
+  const debugBox = debugInfo ? (
+    <div className="khb-popup-debug" role="status">
+      <b>Popup check</b> · {debugInfo.browser}
+      {debugInfo.rows.length === 0 && <div>No popup is live for this page.</div>}
+      {debugInfo.rows.map((r, i) => <div key={i}>{r.name}: {r.status}</div>)}
+      {debugInfo.smart && <div>{debugInfo.smart}</div>}
+    </div>
+  ) : null;
+  if (!active) return debugBox;
   if (!visible) {
-    if (!launcherShown) return null;
+    if (!launcherShown) return debugBox;
     const telegram = active.cta.action === 'telegram';
     const look = popupDefaults(active);
     return (
+      <>
+      {debugBox}
       <button
         type="button"
         className={`khb-launcher khb-launcher--${look.position === 'bottom-left' ? 'left' : 'right'}${telegram ? ' khb-launcher--telegram' : ''}`}
@@ -628,9 +666,12 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg>
         )}
       </button>
+      </>
     );
   }
   return (
+    <>
+    {debugBox}
     <PopupAdCard
       ad={active}
       lang={lang}
@@ -639,5 +680,6 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
       onClose={() => close('close')}
       onCta={onCta}
     />
+    </>
   );
 }

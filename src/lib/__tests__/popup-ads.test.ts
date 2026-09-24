@@ -13,7 +13,10 @@ import {
   resolveCtaHref,
   safeSecondaryHref,
   selectPublicPopupAds,
+  inAppBrowserName,
+  nextOpening,
   parseSmartReasons,
+  popupSkipReason,
   settingsFromPublicAds,
   smartScore,
   smartShouldShow,
@@ -374,5 +377,38 @@ describe('smart timing', () => {
   it('accepts only known reasons from a beacon', () => {
     expect(parseSmartReasons('price,time,<script>,price,scroll,form')).toEqual(['price', 'time', 'scroll']);
     expect(parseSmartReasons(42)).toEqual([]);
+  });
+});
+
+describe('popup check (why a popup shows or not)', () => {
+  const settings: PopupAdsSettings = { enabled: true, globalCooldownHours: 12 };
+
+  it('names the rule that hides a popup', () => {
+    expect(popupSkipReason(ad(), settings, visitor())).toBeNull();
+    expect(popupSkipReason(ad({ devices: 'desktop' }), settings, visitor())).toBe('device');
+    expect(popupSkipReason(ad(), settings, visitor({ leadSent: true }))).toBe('lead');
+    // The live case: Mon–Sat 08:00–18:00, visited Friday 01:55 in Phnom Penh.
+    const fri0155 = new Date('2026-09-24T18:55:00.000Z').getTime();
+    expect(popupSkipReason(ad({ hours: { days: [1, 2, 3, 4, 5, 6], from: '08:00', to: '18:00' } }), settings, visitor({ nowMs: fri0155 }))).toBe('hours');
+    expect(popupSkipReason(ad({ frequency: 'session' }), settings, visitor({ shownThisSession: () => true }))).toBe('frequency');
+    expect(popupSkipReason(ad(), settings, visitor({ lastAnyShownAt: nowMs - HOUR }))).toBe('cooldown');
+  });
+
+  it('tells when office hours open next', () => {
+    const fri0155 = new Date('2026-09-24T18:55:00.000Z').getTime();
+    expect(nextOpening({ days: [1, 2, 3, 4, 5, 6], from: '08:00', to: '18:00' }, fri0155)).toBe('Fri 08:00');
+    // Saturday 19:00 → Monday 08:00 (no Sunday).
+    const sat1900 = new Date('2026-09-26T12:00:00.000Z').getTime();
+    expect(nextOpening({ days: [1, 2, 3, 4, 5, 6], from: '08:00', to: '18:00' }, sat1900)).toBe('Mon 08:00');
+    expect(nextOpening(undefined, fri0155)).toBeNull();
+  });
+
+  it('recognises social apps\' built-in browsers', () => {
+    expect(inAppBrowserName('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [FBAN/FBIOS;FBAV/470.0.0.40.99;FBBV/1]')).toBe('Facebook');
+    expect(inAppBrowserName('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [FBAN/MessengerForiOS;FBAV/470.0]')).toBe('Messenger');
+    expect(inAppBrowserName('Mozilla/5.0 (Linux; Android 14; SM-A546E Build/UP1A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/128.0 Mobile Safari/537.36 Instagram 345.0.0.0')).toBe('Instagram');
+    expect(inAppBrowserName('Mozilla/5.0 (Linux; Android 14; wv) AppleWebKit/537.36 Chrome/128.0 Mobile Safari/537.36 Telegram-Android/11.2.0')).toBe('Telegram');
+    expect(inAppBrowserName('Mozilla/5.0 (Linux; Android 14; wv) AppleWebKit/537.36 Chrome/128.0 Mobile Safari/537.36 musical_ly_2023')).toBe('TikTok');
+    expect(inAppBrowserName('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1')).toBeNull();
   });
 });

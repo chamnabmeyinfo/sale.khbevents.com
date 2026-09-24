@@ -410,3 +410,12 @@
 .khb-popup--inline.khb-popup--banner .khb-popup__close { top: 8px; transform: none; }
 .khb-popup--inline.khb-popup--banner .khb-popup__actions { flex-direction: column; align-items: stretch; }
 .khb-popup--inline.khb-popup--banner .khb-popup__dismiss { align-self: center; }
+
+/* ── ?popup_debug=1: on-screen check for phones and in-app browsers ── */
+.khb-popup-debug {
+  position: fixed; top: 8px; left: 8px; right: 8px; z-index: 2147483000;
+  max-width: 520px; padding: 10px 12px; border-radius: 10px;
+  background: rgba(15, 23, 42, 0.92); color: #F8FAFC; font: 12px/1.45 system-ui, sans-serif;
+  pointer-events: none; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.khb-popup-debug b { color: #FBBF24; }

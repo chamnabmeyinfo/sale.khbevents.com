@@ -43,6 +43,8 @@ import {
   newPopupAd,
   popupAdStatus,
   previewPath,
+  nextOpening,
+  withinHours,
 } from '@/lib/popup-ads';
 import { PopupAdCard, popupDefaults } from '@/components/common/PopupAds';
 import ImageField from './ImageField';
@@ -409,6 +411,9 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
         <p className="text-[11px] text-slate-500 dark:text-gray-400 max-w-xl">
           {t('ads.globalNote')}
         </p>
+        <p className="text-[11px] text-slate-500 dark:text-gray-400 max-w-xl">
+          {t('ads.debugTip')}
+        </p>
       </div>
 
       {/* List */}
@@ -462,6 +467,9 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                       </td>
                       <td className="py-2.5 px-3">
                         <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${STATUS_PILL[status]}`}>{t(STATUS_LABEL[status])}</span>
+                        {status === 'active' && ad.hours && !withinHours(ad.hours, nowMs) && (
+                          <div className="mt-1 text-[10px] font-semibold text-amber-700 dark:text-amber-400">{t('ads.outsideHours', { when: nextOpening(ad.hours, nowMs) || '—' })}</div>
+                        )}
                       </td>
                       <td className="py-2.5 px-3 text-slate-600 dark:text-gray-300">
                         <div>{ad.pages === 'all' ? t('ads.allPages') : t(ad.pages.length > 1 ? 'ads.pagesCount' : 'ads.pageCount', { n: ad.pages.length })} · {ad.devices === 'all' ? t('ads.allDevices') : t(`ads.device.${ad.devices}`)}</div>
@@ -824,6 +832,9 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                               <span>{t('ads.phnomPenh')}</span>
                             </div>
                             <span className={HINT}>{t('ads.hoursHint')}</span>
+                            {!withinHours(editing.hours, nowMs) && (
+                              <span className="block text-[11px] font-semibold text-amber-700 dark:text-amber-400">{t('ads.outsideHours', { when: nextOpening(editing.hours, nowMs) || '—' })}</span>
+                            )}
                           </div>
                         )}
                       </div>

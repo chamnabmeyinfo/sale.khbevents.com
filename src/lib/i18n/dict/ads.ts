@@ -134,6 +134,8 @@ export const ads: Dictionary = {
     'ads.colours': 'Colours',
     'ads.theme.dark': 'Dark green (matches the page)',
     'ads.theme.light': 'Light',
+    'ads.outsideHours': 'Hidden right now: outside office hours. Shows again {when} (Phnom Penh).',
+    'ads.debugTip': 'To check a popup on a phone or inside Facebook, Messenger or Telegram, add ?popup_debug=1 to the page link: a box at the top says why each popup shows or not.',
     // Smart timing
     'ads.trigger.smart': 'Smart timing (when the visitor shows interest)',
     'ads.smartSensitivity': 'How readily it shows',
@@ -388,6 +390,8 @@ export const ads: Dictionary = {
     'ads.colours': 'ពណ៌',
     'ads.theme.dark': 'បៃតងចាស់ (ដូចទំព័រ)',
     'ads.theme.light': 'ភ្លឺ',
+    'ads.outsideHours': 'លាក់ឥឡូវនេះ៖ ក្រៅម៉ោងធ្វើការ។ បង្ហាញម្តងទៀត {when} (ម៉ោងភ្នំពេញ)។',
+    'ads.debugTip': 'ដើម្បីពិនិត្យ popup លើទូរស័ព្ទ ឬក្នុង Facebook, Messenger ឬ Telegram សូមបន្ថែម ?popup_debug=1 នៅចុងតំណទំព័រ៖ ប្រអប់ខាងលើប្រាប់ពីមូលហេតុដែល popup នីមួយៗបង្ហាញ ឬមិនបង្ហាញ។',
     // Smart timing
     'ads.trigger.smart': 'ពេលវេលាឆ្លាតវៃ (ពេលអ្នកទស្សនាចាប់អារម្មណ៍)',
     'ads.smartSensitivity': 'កម្រិតបង្ហាញ',

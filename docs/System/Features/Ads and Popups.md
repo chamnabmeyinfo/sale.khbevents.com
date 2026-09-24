@@ -164,6 +164,7 @@ Defaults for a new popup (`newPopupAd` in `src/lib/popup-ads.ts`): switched off,
 |---|---|
 | `?popup_preview=<popup id>` | Shows that popup at once, even when paused, ignoring its rules, and without counting a view or click. The **Preview** button in the list builds this link |
 | `?nopopup=1` | Hides all popups on that page view. Useful for screenshots and demos |
+| `?popup_debug=1` | Shows a **Popup check** box at the top of the page: which browser was detected (Facebook, Messenger, Instagram, Telegram, TikTok, LINE, Zalo, WeChat or a normal browser) and, for each popup, whether it shows (and its trigger) or why it is hidden, for example "outside office hours, opens Fri 08:00". With smart timing it also shows the points. Made for phones and in-app browsers, which have no console. Nothing is counted differently |
 
 ## Stats
 
@@ -182,6 +183,8 @@ Defaults for a new popup (`newPopupAd` in `src/lib/popup-ads.ts`): switched off,
 
 - The live preview in the editor shows only the card. Timing, frequency and dimming apply on the live page; use **Preview** from the list for the real thing.
 - A paused popup can still be previewed.
+- **Office hours hide a popup completely** outside the chosen days and times, in every browser. The admin list and the Rules tab show "Hidden right now: outside office hours" with the next opening time.
+- **Social apps' built-in browsers** (Facebook, Messenger, Instagram, Telegram, TikTok) show popups like any phone browser; checked on 2026-09-24. On Android some of them share the phone browser's memory, so a popup set to once per visit or once a day may already count as seen there.
 
 ## Related
 

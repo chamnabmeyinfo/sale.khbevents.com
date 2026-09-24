@@ -409,32 +409,51 @@ export function frequencyAllows(
   return nowMs - lastShownAtMs >= FREQUENCY_WINDOW_MS[frequency];
 }
 
+/** Why a popup is not shown to this visitor right now, or null when it may show. */
+export type PopupSkipReason = 'device' | 'language' | 'lead' | 'visitors' | 'source' | 'hours' | 'frequency' | 'cooldown';
+
+export function popupSkipReason(ad: PopupAd, settings: PopupAdsSettings, ctx: PopupVisitorContext): PopupSkipReason | null {
+  const cooldownMs = Math.max(0, settings.globalCooldownHours) * 60 * 60 * 1000;
+  if (ad.devices !== 'all' && ad.devices !== ctx.device) return 'device';
+  if (ad.languages !== 'all' && ad.languages !== ctx.lang) return 'language';
+  if (ad.hideAfterLead && ctx.leadSent) return 'lead';
+  if (ad.visitors === 'new' && ctx.returning) return 'visitors';
+  if (ad.visitors === 'returning' && !ctx.returning) return 'visitors';
+  if (ad.utmSources?.length && !(ctx.utmSource && ad.utmSources.includes(ctx.utmSource))) return 'source';
+  if (!withinHours(ad.hours, ctx.nowMs)) return 'hours';
+  if (!frequencyAllows(ad.frequency, ctx.shownAt(ad.id), ctx.shownThisSession(ad.id), ctx.nowMs)) return 'frequency';
+  if (
+    ad.frequency !== 'always' &&
+    cooldownMs > 0 &&
+    ctx.lastAnyShownAt !== undefined &&
+    ctx.nowMs - ctx.lastAnyShownAt < cooldownMs &&
+    ctx.shownAt(ad.id) === undefined
+  ) {
+    // Another popup was shown recently: do not stack a second one on the visitor.
+    return 'cooldown';
+  }
+  return null;
+}
+
 /**
  * The single popup this visitor sees on this page view, or null. Runs in the
  * browser after mount, with the visitor's device, language and storage.
  */
 export function pickPopupToShow(ads: PopupAd[], settings: PopupAdsSettings, ctx: PopupVisitorContext): PopupAd | null {
-  const cooldownMs = Math.max(0, settings.globalCooldownHours) * 60 * 60 * 1000;
-  for (const ad of sortByPriority(ads)) {
-    if (ad.devices !== 'all' && ad.devices !== ctx.device) continue;
-    if (ad.languages !== 'all' && ad.languages !== ctx.lang) continue;
-    if (ad.hideAfterLead && ctx.leadSent) continue;
-    if (ad.visitors === 'new' && ctx.returning) continue;
-    if (ad.visitors === 'returning' && !ctx.returning) continue;
-    if (ad.utmSources?.length && !(ctx.utmSource && ad.utmSources.includes(ctx.utmSource))) continue;
-    if (!withinHours(ad.hours, ctx.nowMs)) continue;
-    if (!frequencyAllows(ad.frequency, ctx.shownAt(ad.id), ctx.shownThisSession(ad.id), ctx.nowMs)) continue;
-    if (
-      ad.frequency !== 'always' &&
-      cooldownMs > 0 &&
-      ctx.lastAnyShownAt !== undefined &&
-      ctx.nowMs - ctx.lastAnyShownAt < cooldownMs &&
-      ctx.shownAt(ad.id) === undefined
-    ) {
-      // Another popup was shown recently: do not stack a second one on the visitor.
-      continue;
+  return sortByPriority(ads).find((ad) => popupSkipReason(ad, settings, ctx) === null) || null;
+}
+
+/** The next time office hours open, in Phnom Penh time as "Mon 08:00", or null when there are no hours. */
+export function nextOpening(hours: PopupAdHours | undefined, nowMs: number): string | null {
+  if (!hours) return null;
+  const names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const start = Math.floor(nowMs / 60000) * 60000;
+  for (let m = 1; m <= 8 * 24 * 60; m += 1) {
+    const t = start + m * 60000;
+    if (withinHours(hours, t)) {
+      const local = new Date(t + PHNOM_PENH_OFFSET_MS);
+      return `${names[local.getUTCDay()]} ${String(local.getUTCHours()).padStart(2, '0')}:${String(local.getUTCMinutes()).padStart(2, '0')}`;
     }
-    return ad;
   }
   return null;
 }
@@ -546,3 +565,29 @@ export function smartShouldShow(s: SmartSignals, sensitivity: PopupAdSmartSensit
   if (s.activeSeconds < rules.minSeconds) return { show: false, score, reasons };
   return { show: score >= rules.threshold, score, reasons };
 }
+
+/** Name of the social app whose built-in browser opened the page, or null for a normal browser. */
+export function inAppBrowserName(ua: string): string | null {
+  if (/FBAN\/Messenger|MessengerForiOS|Orca-Android|MessengerLite/i.test(ua)) return 'Messenger';
+  if (/Instagram/i.test(ua)) return 'Instagram';
+  if (/FBAN|FBAV|FB_IAB|FBIOS/i.test(ua)) return 'Facebook';
+  if (/Telegram/i.test(ua)) return 'Telegram';
+  if (/musical_ly|BytedanceWebview|TikTok|trill_/i.test(ua)) return 'TikTok';
+  if (/\bLine\//i.test(ua)) return 'LINE';
+  if (/Zalo/i.test(ua)) return 'Zalo';
+  if (/MicroMessenger/i.test(ua)) return 'WeChat';
+  if (/; wv\)/.test(ua)) return 'In-app browser';
+  return null;
+}
+
+/** Plain-English reason for the ?popup_debug=1 panel. */
+export const SKIP_REASON_TEXT: Record<PopupSkipReason, string> = {
+  device: 'not for this device',
+  language: 'not for this language',
+  lead: 'this browser already sent the form',
+  visitors: 'not for this kind of visitor (new / returning)',
+  source: 'visit did not come from the chosen ad source',
+  hours: 'outside office hours (Phnom Penh time)',
+  frequency: 'already shown to this browser (how often per visitor)',
+  cooldown: 'another popup was shown recently (cooldown)',
+};
