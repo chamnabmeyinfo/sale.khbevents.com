@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "sync:content": "node scripts/sync-content-packs.mjs",
-    "content:pack": "node scripts/build-smart-city-content-pack.mts"
+    "content:pack": "node scripts/build-smart-city-content-pack.mts",
+    "vault:check": "node scripts/check-vault.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

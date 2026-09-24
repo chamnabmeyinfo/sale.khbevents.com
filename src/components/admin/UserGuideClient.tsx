@@ -428,7 +428,7 @@ export default function UserGuideClient() {
                 <ol className="list-decimal list-inside space-y-1 text-[11px]">
                   <li>{t('guide.roundrobin.step1')}</li>
                   <li><strong>{t('guide.roundrobin.step2Label')}</strong> {t('guide.roundrobin.step2Before')}<code>https://t.me/&lt;staff_telegram&gt;</code>{t('guide.roundrobin.step2After')}</li>
-                  <li><strong>{t('guide.roundrobin.step3Label')}</strong> <code>@khb_sale_admin_bot</code>{t('guide.roundrobin.step3Mid')}<code>5746705393</code>{t('guide.roundrobin.step3After')}</li>
+                  <li><strong>{t('guide.roundrobin.step3Label')}</strong> <code>@khb_sale_admin_bot</code>{t('guide.roundrobin.step3Mid')}{t('guide.roundrobin.step3After')}</li>
                 </ol>
               </div>
 
@@ -493,8 +493,8 @@ export default function UserGuideClient() {
                 </h4>
                 <div className="space-y-2 text-[11px]">
                   <p><strong>{t('guide.settings.botUsername')}</strong> <code className="bg-slate-200 dark:bg-black px-2 py-0.5 rounded text-amber-600 dark:text-amber-400">@khb_sale_admin_bot</code></p>
-                  <p><strong>{t('guide.settings.managerChatId')}</strong> <code className={CODE_CLASS}>5746705393</code></p>
-                  <p><strong>{t('guide.settings.botToken')}</strong> <code className={`${CODE_CLASS} text-[10px]`}>8808252369:AAH-avDR3sXatJoHx6qOFfsN2p9lpNyXqkw</code></p>
+                  <p><strong>{t('guide.settings.managerChatId')}</strong> <span>{t('guide.settings.chatIdWhere')}</span></p>
+                  <p><strong>{t('guide.settings.botToken')}</strong> <span>{t('guide.settings.secretWhere')}</span></p>
                   <p className="text-slate-500 dark:text-gray-400 pt-1">
                     {t('guide.settings.botHelpBefore')}<code>@khb_sale_admin_bot</code>{t('guide.settings.botHelpMid')}<strong>{t('guide.settings.botStart')}</strong>{t('guide.common.period')}
                   </p>

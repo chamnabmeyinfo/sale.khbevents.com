@@ -1,0 +1,175 @@
+---
+type: feature
+tags: [system, feature, round-robin, telegram, sales-team]
+updated: 2026-09-24
+admin_path: /admin/round-robin
+admin_menu: Staff Round Robin
+source:
+  - src/lib/round-robin.ts
+  - src/lib/staff-cookie.ts
+  - src/lib/after-response.ts
+  - src/lib/storage.ts
+  - src/lib/types.ts
+  - src/app/api/round-robin/route.ts
+  - src/app/api/round-robin/settings/route.ts
+  - src/app/api/round-robin/simulate/route.ts
+  - src/app/api/leads/route.ts
+  - src/app/admin/round-robin/page.tsx
+  - src/components/admin/RoundRobinManagerClient.tsx
+  - src/lib/i18n/dict/round-robin.ts
+---
+
+# Round Robin
+
+## What it does for sales
+
+Round Robin shares new customers fairly among the sales team. It works for both ways a customer reaches us:
+
+- **Telegram click.** A visitor taps "Chat on Telegram" on a landing page (the floating button, a page button or a popup). They land straight in one salesperson's own Telegram chat, with a first message already typed.
+- **Form lead.** A visitor sends the registration form. One salesperson gets the lead card from the company bot on Telegram, with links to open the lead in the CRM and to message the customer on WhatsApp.
+
+A returning visitor or customer goes back to the same salesperson, so a customer never talks to two people. The manager can get a copy of every assignment. How the team then handles the lead: [[Sales Playbook]].
+
+## Where it is in the admin
+
+**Admin → Staff Round Robin** (`/admin/round-robin`). The staff list itself (names, usernames, shares) is managed only there. Do not copy it into this vault.
+
+| Area on the screen | What it is |
+|---|---|
+| **Readiness check** (top) | Plain-language list of anything that would make a visitor or lead land nowhere |
+| **System Enabled** switch | Turns routing on or off (ACTIVE / PAUSED) |
+| Tab **Staff Accounts & Percentage Allocation** | The team, each person's share, and the advanced rules |
+| Tab **📝 Custom Alert Template (Telegram & WhatsApp)** | The wording of the lead card and of the WhatsApp greeting |
+| Tab **Real-Time Routing Audit Log** | Every assignment, with filters |
+| Tab **Simulation Studio** | Test a lead, a click, or a batch of 10, 20 or 50 |
+| **Save All Settings** | Saves everything on the screen |
+
+## How to use it
+
+To add a person, follow [[Add a Sales Staff Member]]. In short:
+
+- [ ] Click **+ Add Staff Account**.
+- [ ] Fill **Staff Full Name**, **Role / Title**, **Telegram @Username** (without the @) and **Telegram Chat ID**.
+- [ ] Ask the person to open the company bot in Telegram and press **Start** first. A bot cannot message someone who never pressed Start.
+- [ ] Press **⚡ Test Ping** on their card and check they received it.
+- [ ] Set the **Routing Percentage Share**. Use **⚖️ Auto-Balance to 100%** to split evenly.
+- [ ] Press **Save All Settings**.
+- [ ] Read the **Readiness check**. It should say **Ready**.
+
+When someone is on leave, switch their card to **Off** (shown as Paused (0%)). They get no new assignments and the active people share the leads. Switch them back to **Active** when they return.
+
+## The three ways to choose a person
+
+Setting: **Distribution Algorithm** under Advanced Routing Engine Rules & Fallbacks. Default: **Fair Weighted Share**.
+
+| Admin label | Code name | How it chooses |
+|---|---|---|
+| Fair Weighted Share (Recommended) | `weighted_percentage` | Each person is owed their share of all assignments so far. The one furthest below their share gets the next one. Ties go to whoever waited longest. Nobody gets several in a row while a colleague waits. |
+| Strict Round Robin (Sequential 1-by-1) | `strict_round_robin` | One after another in list order. Shares are ignored. |
+| Random Weighted Lottery | `random_weighted` | A draw weighted by the shares. Fair on average, not in the short run. |
+
+Details that apply to all three (`selectNextStaff` in `src/lib/round-robin.ts`):
+
+- Only active people count. With one active person, they get everything.
+- If every share is 0, it falls back to plain one-after-another.
+- Clicks and form leads both count as assignments for the fair share.
+
+## Who can receive what (eligibility)
+
+| Contact type | The person needs | If nobody qualifies |
+|---|---|---|
+| Telegram click | A **Telegram username** (the visitor is sent to `t.me/<username>`) | The visitor goes to the fallback destination (below) |
+| Form lead (bot token set) | A **Telegram Chat ID** (the bot alert goes there) | The lead is still saved and assigned to an active person, but no alert can be sent; the lead shows the Telegram status as failed. Check the CRM |
+| Form lead (no bot token) | Only to be active | No Telegram alert is sent; the lead is saved in [[Leads CRM]] |
+
+## Readiness check
+
+The check at the top of the screen (`roundRobinHealth` in `src/lib/round-robin.ts`) warns about:
+
+| Level | Message | What to do |
+|---|---|---|
+| Error | Sample accounts still in the team | Remove them. They are demo entries from earlier builds and reach nobody |
+| Warning | Round Robin is paused | Clicks go to the fallback, form leads only reach the group chat |
+| Error | No active staff | Add at least one person with a username |
+| Error | Active member without a Telegram username | They are skipped for clicks |
+| Warning | Bot token missing | Clicks still work, but nobody gets alerts |
+| Warning | Active member without a Chat ID | They get no alerts and are skipped for form leads |
+| Warning | Direct contact routing is off | "Chat on Telegram" skips the team |
+| Warning | No manager copy | Set a Manager or Fallback Chat ID |
+| OK | Ready | Every active person is reachable and alerts are on |
+
+## Redirect first, alerts after
+
+For a Telegram click, speed matters: the visitor should be in the chat before they lose interest.
+
+1. The server only chooses the person, then sends the redirect at once (`recordDirectContactRoute` in `src/lib/storage.ts`).
+2. Counters, the log entry, the alert to the salesperson and the manager copy are written **after** the response (`runAfterResponse` in `src/lib/after-response.ts`, which uses Next.js `after()` so Vercel does not cut the work off).
+
+For a form lead, the alert to the salesperson is sent before the thank-you reply, so its delivery status can be saved on the lead. The manager copy goes after the reply.
+
+## Staying with the same salesperson
+
+Setting: **Remember a visitor for**. Choices: **Off**, **1 month**, **2 months**, **3 months**, **6 months**. Default: **1 month**. A month counts as 30 days.
+
+| How we recognise them | Applies to | Log label |
+|---|---|---|
+| **Sticky cookie** `khb_rr_staff` in the visitor's browser, set after a click or a form | Clicks and forms from the same browser | Returning visitor |
+| **Same phone number or email** as an earlier lead inside the period | Form leads, even from another device | Returning customer |
+
+- Phones are compared by their last 8 digits, so `+855 12 ...` and `012 ...` match. Emails are compared without case.
+- A returning visitor who clicks again is sent to the same person without a second alert and without counting again.
+- The remembered person must still be able to take the assignment (active, with a username for a click, or a Chat ID for a form lead). If not, the rotation picks someone new.
+- With **Off**, the cookie is cleared and every contact re-enters the rotation.
+- The lead card tells the salesperson when the customer is returning.
+
+## Fallback destination
+
+When nobody can take a click (routing paused, direct contact routing off, nobody with a username, or too many new clicks from one address), the visitor still reaches us (`resolveFallbackTelegramUrl`):
+
+1. The page's own Telegram contact from its Dedicated Settings, if set; otherwise
+2. The company Telegram username from **Admin → Settings & Security**; otherwise
+3. The company bot, with a start link that tells the bot which page the visitor came from.
+
+For form leads, **Fallback Manager Telegram Chat ID** receives the lead when the alert to the salesperson fails. **Carbon-Copy (CC) Lead Dispatch Alerts to Manager Group** sends a copy of every assignment to the manager chat.
+
+## Prefilled first message
+
+A Telegram link may carry `&text=...`. The router passes it on as Telegram's `?text=` so the visitor's first message is already typed (at most 500 characters). Bot start links keep their own payload and get no text. The Smart City page uses this for its concierge button.
+
+## Key rules and defaults
+
+Defaults from `defaultRoundRobinSettings` in `src/lib/round-robin.ts`:
+
+| Setting | Default |
+|---|---|
+| Round Robin enabled | On |
+| Distribution Algorithm | Fair Weighted Share |
+| Staff list | Empty. No staff ship with the code; the admin adds the real team |
+| Enable Direct Visitor Contact Routing | On |
+| CC alerts to manager | On |
+| Manager and fallback Chat ID | Empty |
+| Remember a visitor for | 1 month |
+| Alert template | Khmer. Each person can choose Khmer, English or Compact under **🌐 Alert Language** |
+
+Rate limit: one address can trigger at most **10 new click assignments per 10 minutes**. Repeat clicks by a remembered visitor still reach their salesperson. Over the limit, new clicks go to the fallback destination (`src/app/api/round-robin/route.ts`).
+
+## How it works
+
+- Click route: `GET /api/round-robin?page=<slug>` redirects; `&format=json` returns the decision instead.
+- Form route: `POST /api/leads` calls `createLead` in `src/lib/storage.ts`.
+- Settings are saved by `PUT /api/round-robin/settings`, into the `round_robin` row of `system_settings`. The bot token field on this screen saves to the company settings.
+- The log keeps the latest 500 entries locally and the latest 200 in Supabase. The admin screen shows up to 150.
+- Rules and algorithms: `src/lib/round-robin.ts`, with tests in `src/lib/__tests__/round-robin.test.ts`.
+
+## Limits and gotchas
+
+- **Simulation Studio** is live, not a sandbox. **Live Lead Dispatch** creates a real lead tagged `[SIMULATION TEST]` and sends a real alert. **Visitor Direct Click** makes a real assignment. **Batch % Benchmark** only calculates and does not change the counters.
+- The rate limit lives in server memory, so on Vercel it is approximate.
+- A counter update that happens after the redirect can be lost if the server stops at that moment; the visitor still reached the salesperson.
+
+## Related
+
+- Runbooks: [[Add a Sales Staff Member]], [[Rotate the Telegram Bot Token]]
+- Features: [[Leads CRM]], [[Ads and Popups]], [[Admin and Security]]
+- Sales: [[Sales Playbook]], [[Telegram Reply Templates]]
+- Map: [[System Map]]

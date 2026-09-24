@@ -238,15 +238,9 @@ Update your global contact info:
 To receive real-time phone alerts whenever a buyer submits an inquiry:
 1. Open the **Telegram Alerts** tab in Settings.
 2. Toggle **Enable Telegram Alerts** to **ON**.
-3. **Telegram Bot Token:**
-   ```text
-   8808252369:AAH-avDR3sXatJoHx6qOFfsN2p9lpNyXqkw
-   ```
+3. **Telegram Bot Token:** paste the token from @BotFather into the field. It is stored with the settings and is never written in documentation or code.
    *(Managed by `@khb_sale_admin_bot`)*
-4. **Manager / Director Chat ID:**
-   ```text
-   5746705393
-   ```
+4. **Manager / Director Chat ID:** the numeric ID of the manager or sales group chat.
    *(Or any group chat ID where the team wants lead copies)*
 5. Click **"Save Settings"**.
 

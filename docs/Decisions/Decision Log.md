@@ -1,0 +1,152 @@
+---
+type: decision-log
+tags: [decision, log]
+updated: 2026-09-24
+source:
+  - git log (commits befb78b to 6d1e831)
+  - vercel.json
+  - scripts/vercel-ignore-build.sh
+  - src/lib/round-robin.ts
+  - src/lib/popup-ads.ts
+  - src/lib/i18n/index.ts
+  - src/lib/supabase-store.ts
+  - src/lib/content-pack.ts
+  - src/app/api/round-robin/route.ts
+  - content/pages/smart-city-tea-cafe.json
+  - README.md
+---
+
+# Decision Log
+
+What we decided, when, and why. Newest first. One entry per decision.
+
+**How to add one:** copy the Decision template from the Templates folder, or add a short entry at the top of this list. Keep the same fields. Link the feature note it affects.
+
+**Who decides:** "Owner" means the business owner decided it. "Claude with owner approval" means Claude proposed it during a working session and the owner accepted the result.
+
+---
+
+## 2026-09-24 — No secrets in the vault
+
+- **Decision:** The vault never holds passwords, bot tokens, chat IDs, database keys, environment variable values or customer contact data. Notes say where a secret lives instead, for example "Vercel → Project → Settings → Environment Variables" or "Admin → Settings & Security → Instant Telegram Alerts".
+- **Why:** The vault is stored in git, and git keeps deleted text forever. The Telegram bot token already leaked this way once (it was committed in `data/db.json`).
+- **How it is checked:** `npm run vault:check` (`scripts/check-vault.mjs`) looks for broken links and secret-looking text.
+- **Decided by:** Claude with owner approval, when the vault was set up.
+- **Affects:** [[How to Use This Vault]], [[Admin and Security]], [[Rotate the Telegram Bot Token]].
+
+## 2026-09-24 — The vault lives in `docs/` inside the repo, and note-only pushes skip the build
+
+- **Decision:** The Obsidian vault is the `docs` folder of the website repository. A push that changes only `docs/` or `CLAUDE.md` does not rebuild the live site.
+- **Why:** The team and Claude share one source of memory, synced with git. Saving a note should never redeploy the website.
+- **How it works:** `vercel.json` runs `scripts/vercel-ignore-build.sh` before each Vercel build. It skips the build only when every changed file is a note. When in doubt, it builds.
+- **Decided by:** Claude with owner approval.
+- **Affects:** [[How to Use This Vault]], [[Deploy to Production]].
+
+## 2026-09-24 — One language option for the whole portal, with English as the fallback
+
+- **Decision:** The EN / ខ្មែរ toggle switches the whole admin and both sign-in pages, not only the landing pages. Any Khmer text that is missing shows in English.
+- **Why:** Sales staff who read Khmer more easily can use every admin screen. A missing Khmer string never shows a blank or a code key.
+- **Details:** Names, numbers, slugs, URLs, message templates and page content are data and are not translated. The choice is stored per browser. Commit `6d1e831`; the fallback is in `src/lib/i18n/index.ts`.
+- **Follow-up:** A native Khmer speaker should review the admin wording. See [[Open Tasks]].
+- **Decided by:** Claude with owner approval.
+- **Affects:** [[Languages]].
+
+## 2026-09-24 — Popups: at most one per page view, a cooldown, and hidden after a lead
+
+- **Decision:** A public page shows at most one popup per view. A global cooldown stops a second popup from following the first. A popup set to "hide after lead" is skipped for visitors who already sent the form.
+- **Why:** Popups should help sell, not annoy. A visitor who already registered does not need another offer.
+- **Details:** In the repo at the time of writing, the default global cooldown is 12 hours and "hide after lead" is on by default (`src/lib/popup-ads.ts`). The admin setting is the source of truth. Starter templates contain only truthful copy. Commit `f203da0`.
+- **Decided by:** Claude with owner approval.
+- **Affects:** [[Ads and Popups]], [[Create a Popup]].
+
+## 2026-09-24 — New settings are stored as JSON rows in `system_settings` (no SQL migration)
+
+- **Decision:** New kinds of saved data are stored as JSON rows in the existing `system_settings` table in Supabase, not in new tables.
+- **Why:** No database migration is needed, so a feature ships with a normal push. It follows the pattern already used for round robin settings and logs (commit `849413f`).
+- **Used for:** deleted-page markers (`befb78b`), content pack markers and backups (`5a69976`), and popup ads with their counters (`f203da0`). See `src/lib/supabase-store.ts`.
+- **Decided by:** Claude with owner approval.
+- **Affects:** [[Ads and Popups]], [[Round Robin]], [[Content Packs]], [[System Map]].
+
+## 2026-09-23 — Remember returning visitors for a set time (sticky salesperson)
+
+- **Decision:** A visitor stays with the salesperson they were first sent to. A cookie keeps the same browser with the same person. A new lead whose phone number or email matches an earlier lead goes to that lead's salesperson, from any device.
+- **Why:** A customer should not be passed between salespeople or get two replies. The owner can set how long the system remembers a visitor.
+- **Details:** Setting "Remember a visitor for" in Admin → Staff Round Robin: Off, 1, 2, 3 or 6 months. In the repo at the time of writing the default is 1 month (`src/lib/round-robin.ts`). Each lead records why it went where it did: rotation, returning visitor or returning customer. Commits `6994887`, `bd8a2dd`.
+- **Decided by:** Claude with owner approval.
+- **Affects:** [[Round Robin]], [[Leads CRM]].
+
+## 2026-09-23 — "Fair Weighted Share" is the default routing algorithm
+
+- **Decision:** Each new lead goes to the active salesperson who is furthest below their percentage share. The old random lottery stays available as "Random Weighted Lottery". "Strict Round Robin" is also still available.
+- **Why:** Shares are met exactly, and nobody gets several leads in a row while a colleague waits.
+- **Also decided:** Routing only picks staff who can take the lead: a Telegram username for clicks, a Chat ID for form leads. The default staff list is empty, because sample accounts are not real people. A readiness check in Admin → Staff Round Robin shows what is missing. Commit `6994887`.
+- **Decided by:** Claude with owner approval.
+- **Affects:** [[Round Robin]], [[Add a Sales Staff Member]].
+
+## 2026-09-23 — The visitor goes straight to a salesperson; the Telegram bot is mainly for alerts
+
+- **Decision:** A "Chat on Telegram" click opens a chat with the chosen salesperson directly. The company bot sends alerts to staff and managers. It is not a middle step for the visitor.
+- **Why:** The visitor reaches a real person at once. Alerts now run after the visitor is redirected (Next.js `after()`), so a slow alert never delays the visitor and is not lost when the server function stops.
+- **Details:** The direct redirect started in `ce00583` (2026-09-22). If no salesperson can take a click, the visitor goes to the configured contact account, or to the bot as a last resort (`src/app/api/round-robin/route.ts`). Commit `6994887` made alerts run after the response. Commit `ca64264` fixed the concierge link that showed raw JSON and now prefills the first message in Telegram.
+- **Decided by:** Claude with owner approval.
+- **Affects:** [[Round Robin]], [[Telegram Reply Templates]].
+
+## 2026-09-23 — Page copy lives in git as content packs, applied by the production build
+
+- **Decision:** Landing page copy is kept in `content/pages/<slug>.json`. After a successful production build on Vercel, each pack is applied to the CMS once per file version. The page is backed up first. The Import JSON button in Admin → Landing Pages CMS applies a pack on demand.
+- **Why:** Production reads its pages from Supabase, so copy written in code would never reach the live page. A pack makes copy reviewable in git and ships with a normal push.
+- **Rules:** A pack holds only the fields it owns. Everything it leaves out, such as deadlines, seat counts and phone numbers, stays as the admin set it. Preview builds never write. The step never fails the build. Commits `e99ef90`, `5a69976`.
+- **Alternatives:** Asking the owner to type copy into the admin by hand.
+- **Decided by:** Claude with owner approval.
+- **Affects:** [[Content Packs]], [[Landing Pages CMS]], [[Copy Rules]].
+
+## 2026-09-23 — Registration and early-bird deadlines are set by the owner only
+
+- **Decision:** The owner sets registration and early-bird deadlines in the admin personally. Code and content packs never overwrite them.
+- **Why:** Time pressure only works when it is true. A wrong or passed deadline on the page damages every other claim.
+- **Decided by:** Owner.
+- **Affects:** [[Smart City Tea and Cafe Vietnam 2026]], [[Content Packs]], [[Landing Pages CMS]].
+
+## 2026-09-23 — Hide placeholder testimonials until real ones exist
+
+- **Decision:** The testimonials on the Smart City page were placeholders, so they are hidden. No invented testimonials are ever added. The redesign also stopped showing Speakers, Artists and Booths sections built from invented defaults; they show only when the CMS holds real entries.
+- **Why:** Fake proof destroys trust when a buyer notices it. The owner will provide real testimonials and outcome photos later.
+- **Details:** Commits `e99ef90`, `7291cbd`.
+- **Decided by:** Owner.
+- **Affects:** [[Smart City Tea and Cafe Vietnam 2026]], [[Copy Rules]], [[Open Tasks]].
+
+## 2026-09-23 — The Smart City seat sells for $550
+
+- **Decision:** The selling price of a seat on Smart City, Tea & Cafe Vietnam 2026 is $550. On the page, the price on the published package card always wins.
+- **Why:** This is the real price, confirmed by the owner. The admin is the source of truth if it changes.
+- **Details:** Commit `e99ef90`.
+- **Decided by:** Owner.
+- **Affects:** [[Smart City Tea and Cafe Vietnam 2026]], [[Landing Pages CMS]].
+
+## 2026-09-23 — Code changes go straight to `main`, verified locally first
+
+- **Decision:** Code changes are pushed directly to the `main` branch, without pull requests. A push to `main` deploys to production on Vercel automatically. Every change is checked locally first (typecheck, lint, tests, build, browser check), and the live site is checked after.
+- **Why:** Owner process rule. It keeps releases fast, with safety coming from the local checks.
+- **Evidence:** The first four changes of the session were merged as pull requests #1 to #4. From commit `7291cbd` on, commits land directly on `main`.
+- **Decided by:** Owner.
+- **Affects:** [[Deploy to Production]], [[Verify Changes Locally]].
+
+## 2026-09-23 — Server functions run in Singapore (`sin1`)
+
+- **Decision:** Vercel runs the site's server functions in the Singapore region, set in `vercel.json`. Public pages cache their Supabase reads for 60 seconds, and admin saves clear the cache.
+- **Why:** Public pages made 3 to 4 database round trips per page from Vercel's US East region. Singapore is next to the Supabase project and to Cambodian visitors.
+- **Details:** Commit `93d0062`.
+- **Decided by:** Claude with owner approval.
+- **Affects:** [[System Map]], [[Deploy to Production]].
+
+## 2026-09-23 — Uploaded images go to Supabase Storage
+
+- **Decision:** Photos uploaded in the admin are stored in a public Supabase Storage bucket named `page-images`. The browser shrinks photos before upload.
+- **Why:** Hero images stay light and under Vercel's request size limit. In local development without Supabase, uploads are saved in `public/uploads`.
+- **Details:** Commits `b0cdd5a`, `1a24644`.
+- **Decided by:** Claude with owner approval.
+- **Affects:** [[Image Uploads]].
+
+## To confirm
+
+- The exact day the owner stated the "push straight to main" rule. The date above comes from the first commit pushed without a pull request.

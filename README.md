@@ -128,3 +128,10 @@ Promotional popups on the public landing pages are managed in **Admin → Ads & 
 - State is stored as a JSON row (`popup_ads`) in `system_settings`, counters in `popup_ad_stats`; no migration needed. Public pages read it through the 60 s cache.
 - `?popup_preview=<id>` shows one popup at once, ignoring its rules and without counting; `?nopopup=1` hides all popups.
 - Views, clicks and closes flow through `/api/track` as `popup_view`, `popup_click` and `popup_close`.
+
+## Project vault (Obsidian)
+
+`docs/` is an Obsidian vault with the business facts, sales playbook, feature notes, runbooks, open tasks and decision log. Open the `docs` folder as a vault in Obsidian; start at `docs/00 Start Here.md`, and see `docs/How to Use This Vault.md` for setup and syncing. Claude reads and updates it as described in `CLAUDE.md`.
+
+- `npm run vault:check` checks that every `[[link]]` resolves and that no secret-looking text is in the notes.
+- Pushes that change only `docs/` or `CLAUDE.md` skip the Vercel production build (`scripts/vercel-ignore-build.sh`, wired in `vercel.json`).
