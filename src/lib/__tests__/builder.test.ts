@@ -15,7 +15,7 @@ import {
   pick,
   stockTakenPercent,
 } from '../builder';
-import type { HeroBlock, OfferBlock } from '../builder';
+import type { BenefitsBlock, FormBlock, HeroBlock, IncludedBlock, OfferBlock, StepsBlock } from '../builder';
 
 describe('registry and defaults', () => {
   it('every block type creates a valid block that survives normalization', () => {
@@ -28,8 +28,8 @@ describe('registry and defaults', () => {
     }
   });
 
-  it('a new page starts with hero, offer and FAQ', () => {
-    expect(defaultBuilderDoc().blocks.map((b) => b.type)).toEqual(['hero', 'offer', 'faq']);
+  it('a new page starts as a complete sales page', () => {
+    expect(defaultBuilderDoc().blocks.map((b) => b.type)).toEqual(['hero', 'benefits', 'steps', 'offer', 'faq', 'finalCta']);
   });
 });
 
@@ -127,5 +127,43 @@ describe('blockHints', () => {
     expect(hints).toEqual(expect.arrayContaining(['longHeadline', 'missingCta', 'missingKhmer']));
     const faq = normalizeBuilderDoc({ blocks: [{ type: 'faq', title: { en: 'Q', kh: 'ស' }, items: [] }] }).blocks[0];
     expect(blockHints(faq)).toEqual(['noQuestions']);
+  });
+});
+
+describe('sales page components', () => {
+  it('cleans benefits, included, steps, form and closing sections', () => {
+    const doc = normalizeBuilderDoc({
+      blocks: [
+        { type: 'benefits', variant: 'rows', title: { en: 'Why' }, items: [{ icon: 'rocket', title: { en: 'Fast' } }, { icon: 'gift', title: { en: '' } }] },
+        { type: 'included', variant: 'split', title: { en: 'All in' }, items: ['One', { en: '' }, { en: 'Two', kh: 'ពីរ' }], image: 'javascript:alert(1)' },
+        { type: 'steps', variant: 'bogus', title: { en: 'How' }, items: Array.from({ length: 12 }, (_, i) => ({ title: { en: `S${i}` } })) },
+        { type: 'form', title: { en: 'Leave details' }, askEmail: 'yes', askMessage: true },
+        { type: 'finalCta', variant: 'split', headline: { en: 'Go' }, ctaLabel: { en: '' } },
+      ],
+    });
+    expect(doc.blocks.map((b) => b.type)).toEqual(['benefits', 'included', 'steps', 'form', 'finalCta']);
+    const benefits = doc.blocks[0] as BenefitsBlock;
+    expect(benefits.variant).toBe('rows');
+    expect(benefits.items).toEqual([{ icon: 'check', title: { en: 'Fast' }, text: undefined }]);
+    const included = doc.blocks[1] as IncludedBlock;
+    expect(included.items).toEqual([{ en: 'One' }, { en: 'Two', kh: 'ពីរ' }]);
+    expect(included.image).toBeUndefined();
+    const steps = doc.blocks[2] as StepsBlock;
+    expect(steps.variant).toBe('numbered');
+    expect(steps.items).toHaveLength(8);
+    const form = doc.blocks[3] as FormBlock;
+    expect(form.askEmail).toBe(false);
+    expect(form.askMessage).toBe(true);
+    expect(form.submitLabel.en).not.toBe('');
+    expect(blockHints(doc.blocks[4])).toContain('missingCta');
+  });
+
+  it('flags empty lists and the example text of new components', () => {
+    for (const type of ['benefits', 'included', 'steps', 'finalCta'] as const) {
+      expect(blockHints(createBlock(type))).toContain('placeholderText');
+    }
+    expect(blockHints(createBlock('form'))).toEqual([]);
+    const empty = normalizeBuilderDoc({ blocks: [{ type: 'included', title: { en: 'X', kh: 'ក' }, items: [] }] }).blocks[0];
+    expect(blockHints(empty)).toEqual(['noItems']);
   });
 });

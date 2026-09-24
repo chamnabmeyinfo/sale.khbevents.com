@@ -6,6 +6,7 @@ import type { Lang } from '@/lib/builder';
 import { normalizeBuilderDoc } from '@/lib/builder';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
 import PopupAdsHost from '@/components/common/PopupAds';
+import { popupStorageKeys } from '@/lib/popup-ads';
 import { useStoredChoice, useUrlParam } from '@/lib/use-browser-state';
 import { BlockView, BuilderRoot, useNow } from './BuilderBlocks';
 
@@ -51,6 +52,13 @@ export default function BuilderPageView({ page, initialLang = 'en', popupAds, po
               slug: page.slug,
               nowMs,
               onCta: (b) => trackLandingEvent(page, doc.offer.cta.action === 'telegram' ? 'telegram_click' : 'cta_click', { placement: `builder_${b.type}` }, lang),
+              onLead: (b) => {
+                // No names or phone numbers in tracking: the lead itself is in Leads.
+                trackLandingEvent(page, 'form_submit', { placement: `builder_${b.type}`, ...(doc.offer.currency === 'USD' && doc.offer.price ? { value: doc.offer.price } : {}) }, lang);
+                try {
+                  localStorage.setItem(popupStorageKeys.leadSent, '1');
+                } catch {}
+              },
             }}
           />
         ))}

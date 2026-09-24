@@ -23,8 +23,9 @@ import {
   X,
 } from 'lucide-react';
 import type { LandingPage } from '@/lib/types';
-import type { Bi, BlockType, BuilderBlock, BuilderDoc, FaqBlock, HeroBlock, Lang, OfferBlock } from '@/lib/builder';
+import type { BenefitsBlock, Bi, BlockType, BuilderBlock, BuilderDoc, FaqBlock, FinalCtaBlock, FormBlock, HeroBlock, IncludedBlock, Lang, OfferBlock, StepsBlock } from '@/lib/builder';
 import {
+  BENEFIT_ICONS,
   BLOCK_DEFINITIONS,
   BLOCK_TYPES,
   DEFAULT_ACCENT,
@@ -36,7 +37,7 @@ import {
   normalizeBuilderDoc,
   pick,
 } from '@/lib/builder';
-import { BlockView, BuilderRoot, useNow } from '@/components/builder/BuilderBlocks';
+import { BenefitIconSvg, BlockView, BuilderRoot, useNow } from '@/components/builder/BuilderBlocks';
 import ImageField from './ImageField';
 import { useLanguage } from '@/context/LanguageContext';
 import { errorMessage } from '@/lib/errors';
@@ -84,7 +85,7 @@ function BiInput({ label, value, onChange, multiline, hint }: { label: string; v
   const cls = `${INPUT}${multiline ? ' min-h-[64px] resize-y' : ''}`;
   return (
     <div>
-      <label className={LABEL}>{label}</label>
+      {label && <label className={LABEL}>{label}</label>}
       <div className="space-y-1.5">
         <div className="flex items-start gap-1.5">
           <span className="mt-2 text-[9px] font-extrabold text-slate-400 w-5 shrink-0">EN</span>
@@ -99,6 +100,30 @@ function BiInput({ label, value, onChange, multiline, hint }: { label: string; v
     </div>
   );
 }
+
+/** Move up / move down / remove for one row of a list inside a component. */
+function RowTools({ index, count, onMove, onRemove }: { index: number; count: number; onMove: (to: number) => void; onRemove: () => void }) {
+  const { t } = useLanguage();
+  return (
+    <div className="flex gap-1">
+      <button type="button" className={ICON_BTN} disabled={index === 0} aria-label={t('builder.moveUp')} onClick={() => onMove(index - 1)}><ArrowUp className="w-3 h-3" /></button>
+      <button type="button" className={ICON_BTN} disabled={index === count - 1} aria-label={t('builder.moveDown')} onClick={() => onMove(index + 1)}><ArrowDown className="w-3 h-3" /></button>
+      <button type="button" className={ICON_BTN} aria-label={t('common.remove')} onClick={onRemove}><Trash2 className="w-3 h-3 text-rose-600" /></button>
+    </div>
+  );
+}
+
+function AddRow({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button type="button" className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 cursor-pointer" onClick={onClick}>
+      <Plus className="w-3.5 h-3.5" />{label}
+    </button>
+  );
+}
+
+const ROW = 'p-2.5 rounded-xl border border-slate-200 dark:border-emerald-900/60 space-y-2';
+const ROW_HEAD = 'flex items-center justify-between';
+const ROW_LABEL = 'text-[11px] font-extrabold text-slate-500';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -201,7 +226,12 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
   const updateBlock = (id: string, patch: Partial<BuilderBlock>, typing = true) =>
     setDoc((d) => ({ ...d, blocks: d.blocks.map((b) => (b.id === id ? ({ ...b, ...patch } as BuilderBlock) : b)) }), { typing });
 
-  const addBlock = (type: BlockType, index = doc.blocks.length) => {
+  /** "+" adds at the end, but above a closing call to action so the page still ends with it. */
+  const defaultInsertIndex = (type: BlockType) => {
+    const last = doc.blocks[doc.blocks.length - 1];
+    return last && last.type === 'finalCta' && type !== 'finalCta' ? doc.blocks.length - 1 : doc.blocks.length;
+  };
+  const addBlock = (type: BlockType, index = defaultInsertIndex(type)) => {
     const block = createBlock(type);
     setDoc((d) => ({ ...d, blocks: insertAt(d.blocks, index, block) }));
     setSelectedId(block.id);
@@ -398,6 +428,138 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
     </Section>
   );
 
+  const titleFields = (b: BenefitsBlock | IncludedBlock) => (
+    <>
+      <BiInput label={t('builder.sectionTitle')} value={b.title} onChange={(v) => updateBlock(b.id, { title: v })} />
+      <BiInput label={t('builder.sectionSub')} value={b.sub} onChange={(v) => updateBlock(b.id, { sub: v })} multiline />
+    </>
+  );
+
+  const benefitsContent = (b: BenefitsBlock) => {
+    const setItems = (items: BenefitsBlock['items'], typing = true) => updateBlock(b.id, { items }, typing);
+    return (
+      <Section title={t('builder.content')}>
+        {titleFields(b)}
+        <div className="space-y-3">
+          {b.items.map((it, i) => (
+            <div key={i} className={ROW}>
+              <div className={ROW_HEAD}>
+                <span className={ROW_LABEL}>{t('builder.list.item', { n: i + 1 })}</span>
+                <RowTools index={i} count={b.items.length} onMove={(to) => setItems(moveBlock(b.items, i, to), false)} onRemove={() => setItems(b.items.filter((_, j) => j !== i), false)} />
+              </div>
+              <div>
+                <label className={LABEL}>{t('builder.benefits.icon')}</label>
+                <div className="grid grid-cols-6 gap-1">
+                  {BENEFIT_ICONS.map((icon) => (
+                    <button
+                      key={icon}
+                      type="button"
+                      title={t(`builder.icon.${icon}`)}
+                      aria-label={t(`builder.icon.${icon}`)}
+                      aria-pressed={it.icon === icon}
+                      onClick={() => setItems(b.items.map((x, j) => (j === i ? { ...x, icon } : x)), false)}
+                      className={`flex items-center justify-center p-1.5 rounded-lg border cursor-pointer [&_svg]:w-4 [&_svg]:h-4 ${it.icon === icon ? 'border-amber-400 bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300' : 'border-slate-200 dark:border-emerald-900/60 text-slate-600 dark:text-gray-300 hover:border-amber-300'}`}
+                    >
+                      <BenefitIconSvg icon={icon} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <BiInput label={t('builder.benefits.title')} value={it.title} onChange={(v) => setItems(b.items.map((x, j) => (j === i ? { ...x, title: v } : x)))} />
+              <BiInput label={t('builder.benefits.text')} value={it.text} multiline onChange={(v) => setItems(b.items.map((x, j) => (j === i ? { ...x, text: v } : x)))} />
+            </div>
+          ))}
+          <AddRow label={t('builder.benefits.add')} onClick={() => setItems([...b.items, { icon: 'check', title: { en: '' } }], false)} />
+        </div>
+      </Section>
+    );
+  };
+
+  const includedContent = (b: IncludedBlock) => {
+    const setItems = (items: Bi[], typing = true) => updateBlock(b.id, { items }, typing);
+    return (
+      <Section title={t('builder.content')}>
+        {titleFields(b)}
+        <div className="space-y-2">
+          {b.items.map((it, i) => (
+            <div key={i} className={ROW}>
+              <div className={ROW_HEAD}>
+                <span className={ROW_LABEL}>{t('builder.list.item', { n: i + 1 })}</span>
+                <RowTools index={i} count={b.items.length} onMove={(to) => setItems(moveBlock(b.items, i, to), false)} onRemove={() => setItems(b.items.filter((_, j) => j !== i), false)} />
+              </div>
+              <BiInput label="" value={it} onChange={(v) => setItems(b.items.map((x, j) => (j === i ? v : x)))} />
+            </div>
+          ))}
+          <AddRow label={t('builder.list.add')} onClick={() => setItems([...b.items, { en: '' }], false)} />
+        </div>
+        {b.variant === 'split' && (
+          <ImageField label={t('builder.included.image')} value={b.image || ''} onChange={(v) => updateBlock(b.id, { image: v || undefined }, false)} maxEdge={1600} compact />
+        )}
+        <BiInput label={t('builder.included.note')} value={b.note} onChange={(v) => updateBlock(b.id, { note: v })} />
+      </Section>
+    );
+  };
+
+  const stepsContent = (b: StepsBlock) => {
+    const setItems = (items: StepsBlock['items'], typing = true) => updateBlock(b.id, { items }, typing);
+    return (
+      <Section title={t('builder.content')}>
+        <BiInput label={t('builder.sectionTitle')} value={b.title} onChange={(v) => updateBlock(b.id, { title: v })} />
+        <div className="space-y-3">
+          {b.items.map((it, i) => (
+            <div key={i} className={ROW}>
+              <div className={ROW_HEAD}>
+                <span className={ROW_LABEL}>{t('builder.steps.step', { n: i + 1 })}</span>
+                <RowTools index={i} count={b.items.length} onMove={(to) => setItems(moveBlock(b.items, i, to), false)} onRemove={() => setItems(b.items.filter((_, j) => j !== i), false)} />
+              </div>
+              <BiInput label={t('builder.steps.title')} value={it.title} onChange={(v) => setItems(b.items.map((x, j) => (j === i ? { ...x, title: v } : x)))} />
+              <BiInput label={t('builder.steps.text')} value={it.text} multiline onChange={(v) => setItems(b.items.map((x, j) => (j === i ? { ...x, text: v } : x)))} />
+            </div>
+          ))}
+          {b.items.length < 8 && <AddRow label={t('builder.steps.add')} onClick={() => setItems([...b.items, { title: { en: '' } }], false)} />}
+        </div>
+        <BiInput label={t('builder.steps.button')} value={b.ctaLabel} onChange={(v) => updateBlock(b.id, { ctaLabel: v })} hint={t('builder.steps.buttonHint')} />
+      </Section>
+    );
+  };
+
+  const formContent = (b: FormBlock) => (
+    <Section title={t('builder.content')}>
+      <div className="p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-900 text-[11px] text-sky-900 dark:text-sky-200">{t('builder.form.where')}</div>
+      <BiInput label={t('builder.sectionTitle')} value={b.title} onChange={(v) => updateBlock(b.id, { title: v })} />
+      <BiInput label={t('builder.sectionSub')} value={b.sub} onChange={(v) => updateBlock(b.id, { sub: v })} multiline />
+      <div>
+        <label className={LABEL}>{t('builder.form.fields')}</label>
+        <p className={HINT}>{t('builder.form.alwaysAsked')}</p>
+        <label className="flex items-center gap-2 mt-2 text-xs text-slate-800 dark:text-gray-200 cursor-pointer">
+          <input type="checkbox" checked={b.askEmail} onChange={(e) => updateBlock(b.id, { askEmail: e.target.checked }, false)} className="accent-amber-500" />
+          {t('builder.form.askEmail')}
+        </label>
+        <label className="flex items-center gap-2 mt-1.5 text-xs text-slate-800 dark:text-gray-200 cursor-pointer">
+          <input type="checkbox" checked={b.askMessage} onChange={(e) => updateBlock(b.id, { askMessage: e.target.checked }, false)} className="accent-amber-500" />
+          {t('builder.form.askMessage')}
+        </label>
+      </div>
+      <BiInput label={t('builder.form.submit')} value={b.submitLabel} onChange={(v) => updateBlock(b.id, { submitLabel: v })} />
+      <BiInput label={t('builder.form.successTitle')} value={b.successTitle} onChange={(v) => updateBlock(b.id, { successTitle: v })} />
+      <BiInput label={t('builder.form.successText')} value={b.successText} onChange={(v) => updateBlock(b.id, { successText: v })} multiline />
+      <BiInput label={t('builder.form.privacy')} value={b.privacyNote} onChange={(v) => updateBlock(b.id, { privacyNote: v })} />
+    </Section>
+  );
+
+  const finalContent = (b: FinalCtaBlock) => (
+    <Section title={t('builder.content')}>
+      <div className="p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-900 text-[11px] text-sky-900 dark:text-sky-200">
+        {t('builder.offer.fromPage')}{' '}
+        <button type="button" onClick={() => setSelectedId(null)} className="font-bold underline cursor-pointer">{t('builder.offer.openSettings')}</button>
+      </div>
+      <BiInput label={t('builder.final.headline')} value={b.headline} onChange={(v) => updateBlock(b.id, { headline: v })} multiline />
+      <BiInput label={t('builder.final.sub')} value={b.sub} onChange={(v) => updateBlock(b.id, { sub: v })} multiline />
+      <BiInput label={t('builder.buttonText')} value={b.ctaLabel} onChange={(v) => updateBlock(b.id, { ctaLabel: v })} hint={t('builder.buttonHint')} />
+      <BiInput label={t('builder.final.risk')} value={b.riskNote} onChange={(v) => updateBlock(b.id, { riskNote: v })} />
+    </Section>
+  );
+
   const pagePanel = () => {
     const o = doc.offer;
     const setOffer = (patch: Partial<BuilderDoc['offer']>, typing = true) => setDoc((d) => ({ ...d, offer: { ...d.offer, ...patch } }), { typing });
@@ -543,7 +705,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
 
       <div className="grid gap-4 lg:grid-cols-[230px_minmax(0,1fr)_320px] items-start">
         {/* Library */}
-        <aside className={`${PANEL} p-3 space-y-2 lg:sticky lg:top-20`}>
+        <aside className={`${PANEL} p-3 space-y-2 lg:sticky lg:top-20 lg:max-h-[calc(100vh-110px)] lg:overflow-y-auto`}>
           <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-emerald-500/80 px-1">{t('builder.library')}</h3>
           <p className="text-[10px] text-slate-500 dark:text-gray-400 px-1">{t('builder.libraryHint')}</p>
           {BLOCK_TYPES.map((type) => {
@@ -658,6 +820,11 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
               {selected.type === 'hero' && heroContent(selected)}
               {selected.type === 'offer' && offerContent(selected)}
               {selected.type === 'faq' && faqContent(selected)}
+              {selected.type === 'benefits' && benefitsContent(selected)}
+              {selected.type === 'included' && includedContent(selected)}
+              {selected.type === 'steps' && stepsContent(selected)}
+              {selected.type === 'form' && formContent(selected)}
+              {selected.type === 'finalCta' && finalContent(selected)}
             </>
           ) : (
             <>

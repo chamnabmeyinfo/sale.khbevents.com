@@ -224,6 +224,102 @@
   .kb-faq-cols { grid-template-columns: 1fr 1fr; gap: 36px 56px; }
 }
 
+/* ── Shared: section intro line ────────────────────────────────────────── */
+.kb-section-sub { margin: -16px 0 28px; color: var(--kb-muted); font-size: 1.05rem; max-width: 42rem; }
+.kb-align-center .kb-section-sub { margin-left: auto; margin-right: auto; }
+
+/* ── Benefits ──────────────────────────────────────────────────────────── */
+.kb-benefit-cards { display: grid; gap: 16px; }
+.kb-benefit-cards .kb-benefit { padding: 24px; border-radius: var(--kb-radius-card); background: var(--kb-surface); border: 1px solid var(--kb-border); text-align: left; }
+.kb-align-center .kb-benefit-cards .kb-benefit { text-align: center; }
+.kb-benefit__icon { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 14px; background: color-mix(in srgb, var(--kb-accent) 18%, transparent); color: var(--kb-accent-dark); flex: none; }
+.kb-theme-dark .kb-benefit__icon, .kb-theme-brand .kb-benefit__icon { color: var(--kb-accent); background: rgba(255, 255, 255, 0.1); }
+.kb-theme-brand .kb-benefit__icon { color: #FFFFFF; }
+.kb-benefit__title { margin: 14px 0 6px; font-size: 1.12rem; font-weight: 800; line-height: 1.3; }
+.kb-benefit__text { margin: 0; color: var(--kb-muted); font-size: 0.97rem; }
+.kb-benefit-rows { display: grid; gap: 22px; max-width: 760px; text-align: left; }
+.kb-align-center .kb-benefit-rows { margin: 0 auto; }
+.kb-benefit-rows .kb-benefit { display: flex; gap: 16px; align-items: flex-start; }
+.kb-benefit-rows .kb-benefit__title { margin-top: 2px; }
+
+/* ── What's included ───────────────────────────────────────────────────── */
+.kb-checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; text-align: left; }
+.kb-checklist li { display: flex; gap: 12px; align-items: flex-start; font-weight: 600; }
+.kb-checklist svg { flex: none; margin-top: 3px; padding: 3px; width: 24px; height: 24px; border-radius: 9999px; background: #1E8E5A; color: #FFFFFF; }
+.kb-included-card { padding: 28px 24px; border-radius: var(--kb-radius-card); background: var(--kb-surface); border: 1px solid var(--kb-border); max-width: 920px; }
+.kb-align-center .kb-included-card { margin: 0 auto; }
+.kb-included-split { display: grid; gap: 32px; align-items: center; }
+.kb-included-split__media { border-radius: var(--kb-radius-card); overflow: hidden; aspect-ratio: 4 / 3; background: var(--kb-chip); }
+.kb-included-split__media img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ── How it works ──────────────────────────────────────────────────────── */
+.kb-stepcards, .kb-timeline { list-style: none; margin: 0; padding: 0; display: grid; text-align: left; }
+.kb-stepcards { gap: 16px; }
+.kb-stepcards .kb-step { position: relative; padding: 24px; border-radius: var(--kb-radius-card); background: var(--kb-surface); border: 1px solid var(--kb-border); }
+.kb-step__num { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 9999px; background: linear-gradient(135deg, var(--kb-accent), var(--kb-accent-dark)); color: var(--kb-on-accent); font-weight: 800; flex: none; }
+.kb-theme-brand .kb-step__num { background: #FFFFFF; color: #0B1712; }
+.kb-step__title { margin: 14px 0 6px; font-size: 1.1rem; font-weight: 800; line-height: 1.3; }
+.kb-step__text { margin: 0; color: var(--kb-muted); font-size: 0.97rem; }
+.kb-timeline { gap: 0; max-width: 720px; }
+.kb-align-center .kb-timeline { margin: 0 auto; }
+.kb-timeline .kb-step { display: flex; gap: 18px; position: relative; padding-bottom: 28px; }
+.kb-timeline .kb-step:last-child { padding-bottom: 0; }
+.kb-timeline .kb-step::before { content: ''; position: absolute; left: 19px; top: 44px; bottom: 4px; width: 2px; background: var(--kb-border); }
+.kb-timeline .kb-step:last-child::before { display: none; }
+.kb-timeline .kb-step__title { margin-top: 7px; }
+.kb-steps__cta { margin-top: 32px; }
+.kb-align-center .kb-steps__cta { display: flex; justify-content: center; }
+
+/* ── Lead form ─────────────────────────────────────────────────────────── */
+.kb-leadform { display: grid; gap: 14px; padding: 24px; border-radius: var(--kb-radius-card); background: #FFFFFF; color: #0D1912; border: 1px solid #E7E2D6; box-shadow: 0 40px 80px -48px rgba(0, 0, 0, 0.55); text-align: left; }
+.kb-field { display: grid; gap: 6px; }
+.kb-field span { font-size: 0.88rem; font-weight: 700; color: #33443A; }
+.kb-field input, .kb-field textarea { width: 100%; min-height: 50px; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #D9D3C4; background: #FBF9F5; color: #0D1912; font: 500 1rem/1.4 var(--kb-font); }
+.kb-field textarea { resize: vertical; }
+.kb-field input:focus, .kb-field textarea:focus { outline: none; border-color: var(--kb-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--kb-accent) 30%, transparent); }
+.kb-leadform .kb-btn { border: 0; margin-top: 4px; font-family: var(--kb-font); }
+.kb-leadform .kb-btn:disabled { opacity: 0.7; cursor: progress; transform: none; }
+.kb-theme-brand .kb-leadform .kb-btn { background: linear-gradient(135deg, var(--kb-accent), var(--kb-accent-dark)); color: var(--kb-on-accent); }
+.kb-leadform__error { margin: 0; padding: 10px 12px; border-radius: 10px; background: #FDECEC; color: #9B1C1C; font-size: 0.9rem; font-weight: 600; }
+.kb-leadform__privacy { margin: 0; font-size: 0.82rem; color: #5B6B61; text-align: center; }
+.kb-leadform--done { text-align: center; justify-items: center; }
+.kb-leadform__done-icon { display: inline-flex; width: 56px; height: 56px; align-items: center; justify-content: center; border-radius: 9999px; background: #1E8E5A; color: #FFFFFF; }
+.kb-leadform__done-title { margin: 4px 0 0; font-size: 1.3rem; font-weight: 800; }
+.kb-leadform__done-text { margin: 0; color: #52645A; }
+.kb-form-card { max-width: 560px; margin: 0 auto; }
+.kb-form-split { display: grid; gap: 32px; align-items: center; }
+.kb-form-split .kb-price { justify-content: flex-start; }
+.kb-align-center .kb-form-split .kb-price { justify-content: center; }
+
+/* ── Final call to action ──────────────────────────────────────────────── */
+.kb-final { display: flex; flex-direction: column; }
+.kb-align-center .kb-final { align-items: center; }
+.kb-final__title { margin: 0 0 16px; font-size: 2rem; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em; }
+.kb-lang-kh .kb-final__title { line-height: 1.5; }
+.kb-final .kb-section-sub { margin: 0 0 20px; }
+.kb-final .kb-countdown { margin-top: 12px; }
+.kb-final__cta { margin-top: 26px; }
+.kb-final-split { display: grid; gap: 28px; align-items: center; }
+.kb-final-box { padding: 26px 22px; border-radius: var(--kb-radius-card); background: var(--kb-surface); border: 1px solid var(--kb-border); text-align: center; }
+.kb-final-box .kb-price { justify-content: center; }
+.kb-final-box .kb-countdown__boxes { justify-content: center; }
+.kb-final-box__cta { margin-top: 20px; }
+.kb-final-box .kb-risk { justify-content: center; }
+
+@container kb (min-width: 760px) {
+  .kb-benefit-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+  .kb-included-card { padding: 40px 44px; }
+  .kb-included-card .kb-checklist { grid-template-columns: 1fr 1fr; gap: 18px 40px; }
+  .kb-included-split { grid-template-columns: 0.95fr 1.05fr; gap: 56px; }
+  .kb-stepcards { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 22px; }
+  .kb-leadform { padding: 32px; }
+  .kb-form-split { grid-template-columns: 1fr minmax(0, 480px); gap: 56px; }
+  .kb-final__title { font-size: 2.8rem; }
+  .kb-final-split { grid-template-columns: 1.2fr minmax(0, 420px); gap: 56px; }
+  .kb-final-split .kb-final__title { text-align: left; }
+  .kb-align-center .kb-final-split > div:first-child { text-align: left; }
+}
+
 /* ── Public page language switch ───────────────────────────────────────── */
 .kb-langbar { position: fixed; top: 14px; right: 14px; z-index: 50; display: flex; gap: 4px; padding: 4px; border-radius: 9999px; background: rgba(11, 23, 18, 0.72); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 .kb-langbar button { border: 0; padding: 6px 12px; border-radius: 9999px; background: transparent; color: #E6EDE8; font: 700 0.8rem/1 var(--kb-font); cursor: pointer; }

@@ -21,25 +21,30 @@ source:
 
 Builds a sales page for anything (a product, a service, a trip) by dragging ready-made sections onto a page. Each section has one job, its "core value", shown in the editor. The editor shows the page exactly as a visitor sees it, in English or Khmer, on a phone or a desktop.
 
-This is the pilot of Phase 2 in [[Landing Page Builder Roadmap]]. The Smart City page still uses the classic editor in [[Landing Pages CMS]].
+This started as the pilot of Phase 2 in [[Landing Page Builder Roadmap]]. The Smart City page still uses the classic editor in [[Landing Pages CMS]].
 
 ## How to use it
 
-1. Admin → Landing Pages CMS → **New drag & drop page**. The page starts as a **draft** with a Hero, an Offer card and an FAQ.
+1. Admin → Landing Pages CMS → **New drag & drop page**. The page starts as a **draft** with a full sales page: Hero, Benefits, How it works, Offer card, FAQ and Final call to action. Replace the example text (a red number marks it).
 2. Right panel, with no section selected: page name, web address, and the **Offer**: what is sold, price, previous price, currency ($ or ៛), offer end date, stock, and the button action (Telegram round robin or a link). Every section reads these facts, so they are typed once.
-3. Drag a component from the left onto the page, or press **+**. Drag sections to reorder them. Hover a section for move up/down, duplicate and delete.
+3. Drag a component from the left onto the page, or press **+** (it lands at the end, above the Final call to action). Drag sections to reorder them. Hover a section for move up/down, duplicate and delete.
 4. Click a section to edit it: design (2 per component), colour theme, alignment, spacing, background photo, and the text in EN and KH. A red number shows tips (missing Khmer, sample text left, headline too long).
 5. **Save** keeps it as it is. **Publish** makes it live at `/<web address>`. **Unpublish** hides it again (visitors get "not found").
 
 Undo and redo cover the last 60 changes. The browser warns before leaving with unsaved changes.
 
-## Components in the pilot
+## Components
 
 | Component | Core value | Designs |
 |---|---|---|
 | Hero | Promise the result in one glance, with the main button on the first screen | Split with photo, Full photo |
 | Offer card | Price, saving, stock bar and countdown, so the deadline is hard to miss | Card, Price banner |
 | FAQ | Remove the doubts that stop people buying | Accordion, Two columns |
+| Benefits | Answer "why should I care?" with the results the buyer gets; 12 icons to choose | Icon cards, Icon list |
+| What's included | List exactly what the buyer gets | Checklist, Photo and list |
+| How it works | Show buying is easy, in up to 8 steps; optional button | Numbered cards, Timeline |
+| Lead form | Catch buyers who will not chat first | Form card, Offer and form |
+| Final call to action | Close the page with the offer, countdown and button again | Centered, Split box |
 
 The saving (for example "Save 25%") shows only when the previous price is higher than the price. The countdown hides itself when the date passes. Only use a real previous price and real stock: see [[Copy Rules]].
 
@@ -49,14 +54,20 @@ The saving (for example "Save 25%") shows only when the previous price is higher
 - EN / ខ្មែរ switch at the top; missing Khmer falls back to English. See [[Languages]].
 - Tracking (page views, button clicks with placement `builder_<component>`) and popups work as on other pages. See [[Tracking and Analytics]], [[Ads and Popups]].
 
+## Lead form
+
+- Asks name and phone (always), and optionally email and a message. The visitor's page language is saved with the lead.
+- Sends to the same place as other page forms: the lead appears in Leads & CRM Pipeline and goes to the next salesperson in [[Round Robin]] (a returning visitor stays with the same salesperson).
+- After sending: a thank-you message and, when the page button is Telegram, a "Continue on Telegram" button. Popups set to hide after a lead stop showing.
+- Tracking records `form_submit` with the placement only, never the name or phone. See [[Leads CRM]].
+
 ## How it is stored
 
 A builder page is a normal landing page with `template: builder` and a `builder` document (offer, brand colour, list of sections). In Supabase it sits in the page's `form_config._extra`, so no database migration was needed. Input is cleaned on save (`normalizeBuilderDoc`): unsafe links are dropped and at most 40 sections are kept.
 
 ## Limits of the pilot
 
-- Only three components. Benefits, gallery, how it works, guarantee and a lead form are next.
-- No form section yet; the page sells through the button action.
+- No gallery, packages, guarantee or about-us components yet.
 - The classic Smart City page cannot be opened in the builder.
 
 Related: [[Landing Pages CMS]], [[Landing Page Builder Roadmap]].

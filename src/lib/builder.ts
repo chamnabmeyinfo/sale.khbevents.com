@@ -70,7 +70,73 @@ export interface FaqBlock extends BlockBase {
   items: FaqItem[];
 }
 
-export type BuilderBlock = HeroBlock | OfferBlock | FaqBlock;
+/** Icons a benefit can show; drawn by the renderer. */
+export const BENEFIT_ICONS = ['sparkles', 'check', 'star', 'shield', 'clock', 'gift', 'heart', 'truck', 'chat', 'users', 'leaf', 'award'] as const;
+export type BenefitIcon = (typeof BENEFIT_ICONS)[number];
+
+export interface BenefitItem {
+  icon: BenefitIcon;
+  title: Bi;
+  text?: Bi;
+}
+
+export interface BenefitsBlock extends BlockBase {
+  type: 'benefits';
+  variant: 'cards' | 'rows';
+  title: Bi;
+  sub?: Bi;
+  items: BenefitItem[];
+}
+
+export interface IncludedBlock extends BlockBase {
+  type: 'included';
+  variant: 'checklist' | 'split';
+  title: Bi;
+  sub?: Bi;
+  items: Bi[];
+  /** Photo beside the list in the split design. */
+  image?: string;
+  note?: Bi;
+}
+
+export interface StepItem {
+  title: Bi;
+  text?: Bi;
+}
+
+export interface StepsBlock extends BlockBase {
+  type: 'steps';
+  variant: 'numbered' | 'timeline';
+  title: Bi;
+  items: StepItem[];
+  /** Optional button under the steps. */
+  ctaLabel?: Bi;
+}
+
+export interface FormBlock extends BlockBase {
+  type: 'form';
+  variant: 'card' | 'split';
+  title: Bi;
+  sub?: Bi;
+  /** Name and phone are always asked; these add optional fields. */
+  askEmail: boolean;
+  askMessage: boolean;
+  submitLabel: Bi;
+  successTitle: Bi;
+  successText?: Bi;
+  privacyNote?: Bi;
+}
+
+export interface FinalCtaBlock extends BlockBase {
+  type: 'finalCta';
+  variant: 'centered' | 'split';
+  headline: Bi;
+  sub?: Bi;
+  ctaLabel: Bi;
+  riskNote?: Bi;
+}
+
+export type BuilderBlock = HeroBlock | OfferBlock | FaqBlock | BenefitsBlock | IncludedBlock | StepsBlock | FormBlock | FinalCtaBlock;
 export type BlockType = BuilderBlock['type'];
 
 export interface BuilderOffer {
@@ -133,6 +199,9 @@ function optBi(v: unknown, max: number): Bi | undefined {
   const b = bi(v, max);
   return b.en.trim() || b.kh?.trim() ? b : undefined;
 }
+
+const obj = (v: unknown): Record<string, unknown> => (v && typeof v === 'object' ? (v as Record<string, unknown>) : {});
+const hasText = (b: Bi): boolean => Boolean(b.en.trim() || b.kh?.trim());
 
 const oneOf = <T extends string>(v: unknown, allowed: readonly T[], fallback: T): T =>
   typeof v === 'string' && (allowed as readonly string[]).includes(v) ? (v as T) : fallback;
@@ -227,6 +296,111 @@ export const BLOCK_DEFINITIONS: Record<BlockType, BlockDefinition> = {
       ],
     }),
   },
+  benefits: {
+    type: 'benefits',
+    name: { en: 'Benefits', kh: 'អត្ថប្រយោជន៍' },
+    coreValue: { en: 'Answer "why should I care?" with the results the buyer gets.', kh: 'ឆ្លើយសំណួរ "ហេតុអ្វីខ្ញុំគួរចាប់អារម្មណ៍?" ដោយលទ្ធផលដែលអ្នកទិញទទួលបាន។' },
+    variants: [
+      { id: 'cards', name: { en: 'Icon cards', kh: 'កាតរូបតំណាង' }, detail: { en: 'A grid of cards, one benefit each.', kh: 'កាតជាក្រឡា មួយកាតមួយអត្ថប្រយោជន៍។' } },
+      { id: 'rows', name: { en: 'Icon list', kh: 'បញ្ជីរូបតំណាង' }, detail: { en: 'A calm list with an icon beside each benefit.', kh: 'បញ្ជីស្អាត មានរូបតំណាងក្បែរអត្ថប្រយោជន៍នីមួយៗ។' } },
+    ],
+    create: () => ({
+      id: newBlockId(),
+      type: 'benefits',
+      variant: 'cards',
+      style: baseStyle('light', 'center'),
+      title: { en: 'Why people choose this', kh: 'ហេតុអ្វីមនុស្សជ្រើសរើសមួយនេះ' },
+      items: [
+        { icon: 'sparkles', title: { en: 'First benefit', kh: 'អត្ថប្រយោជន៍ទីមួយ' }, text: { en: 'Replace this with the result the buyer gets.', kh: 'ជំនួសអត្ថបទនេះដោយលទ្ធផលដែលអ្នកទិញទទួលបាន។' } },
+        { icon: 'shield', title: { en: 'Second benefit', kh: 'អត្ថប្រយោជន៍ទីពីរ' }, text: { en: 'Replace this with the result the buyer gets.', kh: 'ជំនួសអត្ថបទនេះដោយលទ្ធផលដែលអ្នកទិញទទួលបាន។' } },
+        { icon: 'clock', title: { en: 'Third benefit', kh: 'អត្ថប្រយោជន៍ទីបី' }, text: { en: 'Replace this with the result the buyer gets.', kh: 'ជំនួសអត្ថបទនេះដោយលទ្ធផលដែលអ្នកទិញទទួលបាន។' } },
+      ],
+    }),
+  },
+  included: {
+    type: 'included',
+    name: { en: "What's included", kh: 'អ្វីដែលរួមបញ្ចូល' },
+    coreValue: { en: 'List exactly what the buyer gets, so there are no surprises.', kh: 'រាយឱ្យច្បាស់នូវអ្វីដែលអ្នកទិញទទួលបាន ដើម្បីកុំឱ្យមានការភ្ញាក់ផ្អើល។' },
+    variants: [
+      { id: 'checklist', name: { en: 'Checklist', kh: 'បញ្ជីធីក' }, detail: { en: 'A card with a two-column checklist.', kh: 'កាតមានបញ្ជីធីកពីរជួរ។' } },
+      { id: 'split', name: { en: 'Photo and list', kh: 'រូបភាព និងបញ្ជី' }, detail: { en: 'A photo of the product beside the list.', kh: 'រូបភាពផលិតផលនៅក្បែរបញ្ជី។' } },
+    ],
+    create: () => ({
+      id: newBlockId(),
+      type: 'included',
+      variant: 'checklist',
+      style: baseStyle('light', 'left'),
+      title: { en: 'Everything included', kh: 'អ្វីៗទាំងអស់ដែលរួមបញ្ចូល' },
+      items: [
+        { en: 'Replace this with the first item', kh: 'ជំនួសដោយធាតុទីមួយ' },
+        { en: 'Replace this with the second item', kh: 'ជំនួសដោយធាតុទីពីរ' },
+        { en: 'Replace this with the third item', kh: 'ជំនួសដោយធាតុទីបី' },
+        { en: 'Replace this with the fourth item', kh: 'ជំនួសដោយធាតុទីបួន' },
+      ],
+    }),
+  },
+  steps: {
+    type: 'steps',
+    name: { en: 'How it works', kh: 'របៀបដំណើរការ' },
+    coreValue: { en: 'Show that buying is easy: a few clear steps from "message us" to "you have it".', kh: 'បង្ហាញថាការទិញងាយស្រួល៖ ជំហានច្បាស់ៗពី "ផ្ញើសារមកយើង" ដល់ "អ្នកទទួលបាន"។' },
+    variants: [
+      { id: 'numbered', name: { en: 'Numbered cards', kh: 'កាតមានលេខ' }, detail: { en: 'Steps side by side on a computer, stacked on a phone.', kh: 'ជំហានតម្រៀបគ្នានៅលើកុំព្យូទ័រ និងពីលើចុះក្រោមនៅលើទូរស័ព្ទ។' } },
+      { id: 'timeline', name: { en: 'Timeline', kh: 'ខ្សែពេលវេលា' }, detail: { en: 'A vertical line that joins the steps.', kh: 'ខ្សែបញ្ឈរភ្ជាប់ជំហាននីមួយៗ។' } },
+    ],
+    create: () => ({
+      id: newBlockId(),
+      type: 'steps',
+      variant: 'numbered',
+      style: baseStyle('light', 'center'),
+      title: { en: 'How it works', kh: 'របៀបដំណើរការ' },
+      items: [
+        { title: { en: 'Message us', kh: 'ផ្ញើសារមកយើង' }, text: { en: 'Tap the button and ask your questions on Telegram.', kh: 'ចុចប៊ូតុង ហើយសួរសំណួររបស់អ្នកតាម Telegram។' } },
+        { title: { en: 'Confirm your order', kh: 'បញ្ជាក់ការកម្មង់' }, text: { en: 'We confirm the details and the price with you.', kh: 'យើងបញ្ជាក់ព័ត៌មានលម្អិត និងតម្លៃជាមួយអ្នក។' } },
+        { title: { en: 'Receive it', kh: 'ទទួលបាន' }, text: { en: 'Replace this with how and when the buyer receives it.', kh: 'ជំនួសអត្ថបទនេះដោយរបៀប និងពេលដែលអ្នកទិញទទួលបាន។' } },
+      ],
+    }),
+  },
+  form: {
+    type: 'form',
+    name: { en: 'Lead form', kh: 'ទម្រង់ចុះឈ្មោះ' },
+    coreValue: { en: 'Catch buyers who will not chat first. Every form goes to Leads and to the next salesperson.', kh: 'ទទួលអ្នកទិញដែលមិនចង់ជជែកមុន។ ទម្រង់នីមួយៗចូលទៅ Leads និងអ្នកលក់បន្ទាប់។' },
+    variants: [
+      { id: 'card', name: { en: 'Form card', kh: 'កាតទម្រង់' }, detail: { en: 'A focused card in the middle of the page.', kh: 'កាតផ្តោតនៅកណ្តាលទំព័រ។' } },
+      { id: 'split', name: { en: 'Offer and form', kh: 'ការផ្តល់ជូន និងទម្រង់' }, detail: { en: 'Price and countdown on one side, the form on the other.', kh: 'តម្លៃ និងពេលរាប់ថយក្រោយម្ខាង ទម្រង់ម្ខាង។' } },
+    ],
+    create: () => ({
+      id: newBlockId(),
+      type: 'form',
+      variant: 'card',
+      style: baseStyle('dark', 'center'),
+      title: { en: 'Leave your details', kh: 'ទុកព័ត៌មានរបស់អ្នក' },
+      sub: { en: 'We will contact you on Telegram or by phone.', kh: 'យើងនឹងទាក់ទងអ្នកតាម Telegram ឬទូរស័ព្ទ។' },
+      askEmail: false,
+      askMessage: true,
+      submitLabel: { en: 'Send my details', kh: 'ផ្ញើព័ត៌មានរបស់ខ្ញុំ' },
+      successTitle: { en: 'Thank you! We received your details.', kh: 'អរគុណ! យើងបានទទួលព័ត៌មានរបស់អ្នកហើយ។' },
+      successText: { en: 'A member of our team will contact you soon.', kh: 'សមាជិកក្រុមរបស់យើងនឹងទាក់ទងអ្នកឆាប់ៗនេះ។' },
+      privacyNote: { en: 'We only use your details to reply to you.', kh: 'យើងប្រើព័ត៌មានរបស់អ្នកសម្រាប់តែឆ្លើយតបអ្នកប៉ុណ្ណោះ។' },
+    }),
+  },
+  finalCta: {
+    type: 'finalCta',
+    name: { en: 'Final call to action', kh: 'ការអំពាវនាវចុងក្រោយ' },
+    coreValue: { en: 'Close the page: repeat the offer, the deadline and the button for people who read to the end.', kh: 'បិទទំព័រ៖ រំលឹកការផ្តល់ជូន ថ្ងៃផុតកំណត់ និងប៊ូតុង សម្រាប់អ្នកដែលអានដល់ចប់។' },
+    variants: [
+      { id: 'centered', name: { en: 'Centered', kh: 'នៅកណ្តាល' }, detail: { en: 'Headline, countdown and button in the middle.', kh: 'ចំណងជើង ពេលរាប់ថយក្រោយ និងប៊ូតុងនៅកណ្តាល។' } },
+      { id: 'split', name: { en: 'Split box', kh: 'ប្រអប់ពីរផ្នែក' }, detail: { en: 'Words on one side, price and button in a box on the other.', kh: 'ពាក្យម្ខាង តម្លៃ និងប៊ូតុងក្នុងប្រអប់ម្ខាង។' } },
+    ],
+    create: () => ({
+      id: newBlockId(),
+      type: 'finalCta',
+      variant: 'centered',
+      style: baseStyle('brand', 'center'),
+      headline: { en: 'Ready to get yours?', kh: 'ត្រៀមខ្លួនទទួលយកហើយឬនៅ?' },
+      sub: { en: 'Replace this with one line that reminds them what they get.', kh: 'ជំនួសអត្ថបទនេះដោយប្រយោគមួយដែលរំលឹកពីអ្វីដែលពួកគេទទួលបាន។' },
+      ctaLabel: { en: 'Chat with us on Telegram', kh: 'ជជែកតាម Telegram' },
+    }),
+  },
 };
 
 export const BLOCK_TYPES = Object.keys(BLOCK_DEFINITIONS) as BlockType[];
@@ -248,13 +422,13 @@ export function defaultOffer(): BuilderOffer {
   };
 }
 
-/** A new page starts with the three pilot components in a sensible order. */
+/** A new page starts as a complete sales page: promise, why, how, price, doubts, close. */
 export function defaultBuilderDoc(): BuilderDoc {
   return {
     version: 1,
     offer: defaultOffer(),
     brand: { accent: DEFAULT_ACCENT, radius: 'soft' },
-    blocks: [createBlock('hero'), createBlock('offer'), createBlock('faq')],
+    blocks: [createBlock('hero'), createBlock('benefits'), createBlock('steps'), createBlock('offer'), createBlock('faq'), createBlock('finalCta')],
   };
 }
 
@@ -304,18 +478,88 @@ function normalizeBlock(v: unknown): BuilderBlock | null {
       note: optBi(o.note, 200),
     };
   }
-  const b = blank as FaqBlock;
-  const items = Array.isArray(o.items)
-    ? o.items.slice(0, 20).map((it) => {
-        const r = (it && typeof it === 'object' ? it : {}) as Record<string, unknown>;
-        return { q: bi(r.q, 200), a: bi(r.a, 1200) };
-      }).filter((it) => it.q.en.trim() || it.q.kh?.trim())
-    : [];
+  if (type === 'faq') {
+    const b = blank as FaqBlock;
+    const items = Array.isArray(o.items)
+      ? o.items.slice(0, 20).map((it) => {
+          const r = obj(it);
+          return { q: bi(r.q, 200), a: bi(r.a, 1200) };
+        }).filter((it) => hasText(it.q))
+      : [];
+    return {
+      id, style, type,
+      variant: oneOf(o.variant, ['accordion', 'columns'] as const, b.variant),
+      title: bi(o.title, 120, { en: '' }),
+      items,
+    };
+  }
+  if (type === 'benefits') {
+    const b = blank as BenefitsBlock;
+    const items = Array.isArray(o.items)
+      ? o.items.slice(0, 12).map((it) => {
+          const r = obj(it);
+          return { icon: oneOf(r.icon, BENEFIT_ICONS, 'check'), title: bi(r.title, 120), text: optBi(r.text, 400) };
+        }).filter((it) => hasText(it.title))
+      : [];
+    return {
+      id, style, type,
+      variant: oneOf(o.variant, ['cards', 'rows'] as const, b.variant),
+      title: bi(o.title, 120, { en: '' }),
+      sub: optBi(o.sub, 300),
+      items,
+    };
+  }
+  if (type === 'included') {
+    const b = blank as IncludedBlock;
+    return {
+      id, style, type,
+      variant: oneOf(o.variant, ['checklist', 'split'] as const, b.variant),
+      title: bi(o.title, 120, { en: '' }),
+      sub: optBi(o.sub, 300),
+      items: Array.isArray(o.items) ? o.items.slice(0, 30).map((f) => bi(f, 200)).filter(hasText) : [],
+      image: url(o.image),
+      note: optBi(o.note, 200),
+    };
+  }
+  if (type === 'steps') {
+    const b = blank as StepsBlock;
+    const items = Array.isArray(o.items)
+      ? o.items.slice(0, 8).map((it) => {
+          const r = obj(it);
+          return { title: bi(r.title, 120), text: optBi(r.text, 400) };
+        }).filter((it) => hasText(it.title))
+      : [];
+    return {
+      id, style, type,
+      variant: oneOf(o.variant, ['numbered', 'timeline'] as const, b.variant),
+      title: bi(o.title, 120, { en: '' }),
+      items,
+      ctaLabel: optBi(o.ctaLabel, 60),
+    };
+  }
+  if (type === 'form') {
+    const b = blank as FormBlock;
+    return {
+      id, style, type,
+      variant: oneOf(o.variant, ['card', 'split'] as const, b.variant),
+      title: bi(o.title, 120, { en: '' }),
+      sub: optBi(o.sub, 300),
+      askEmail: o.askEmail === true,
+      askMessage: o.askMessage === true,
+      submitLabel: bi(o.submitLabel, 60, b.submitLabel),
+      successTitle: bi(o.successTitle, 120, b.successTitle),
+      successText: optBi(o.successText, 300),
+      privacyNote: optBi(o.privacyNote, 200),
+    };
+  }
+  const b = blank as FinalCtaBlock;
   return {
-    id, style, type: 'faq',
-    variant: oneOf(o.variant, ['accordion', 'columns'] as const, b.variant),
-    title: bi(o.title, 120, { en: '' }),
-    items,
+    id, style, type: 'finalCta',
+    variant: oneOf(o.variant, ['centered', 'split'] as const, b.variant),
+    headline: bi(o.headline, 160, { en: '' }),
+    sub: optBi(o.sub, 400),
+    ctaLabel: bi(o.ctaLabel, 60, b.ctaLabel),
+    riskNote: optBi(o.riskNote, 120),
   };
 }
 
@@ -441,7 +685,7 @@ export function offerCtaHref(offer: BuilderOffer, slug: string): string {
 
 // ─── Health hints (editor) ─────────────────────────────────────────────────
 
-export type HintKey = 'missingHeadline' | 'longHeadline' | 'missingKhmer' | 'missingCta' | 'noFeatures' | 'noQuestions' | 'placeholderText';
+export type HintKey = 'missingHeadline' | 'longHeadline' | 'missingKhmer' | 'missingCta' | 'noFeatures' | 'noQuestions' | 'noItems' | 'placeholderText';
 
 /** Problems worth fixing before publishing a block; the editor translates the keys. */
 export function blockHints(block: BuilderBlock): HintKey[] {
@@ -457,11 +701,27 @@ export function blockHints(block: BuilderBlock): HintKey[] {
     if (!block.features.length) hints.push('noFeatures');
     if (!block.ctaLabel.en.trim()) hints.push('missingCta');
     texts.push(block.title, block.ctaLabel, ...block.features);
-  } else {
+  } else if (block.type === 'faq') {
     if (!block.items.length) hints.push('noQuestions');
     texts.push(block.title, ...block.items.flatMap((i) => [i.q, i.a]));
+  } else if (block.type === 'benefits') {
+    if (!block.items.length) hints.push('noItems');
+    texts.push(block.title, ...block.items.flatMap((i) => (i.text ? [i.title, i.text] : [i.title])));
+  } else if (block.type === 'included') {
+    if (!block.items.length) hints.push('noItems');
+    texts.push(block.title, ...block.items);
+  } else if (block.type === 'steps') {
+    if (!block.items.length) hints.push('noItems');
+    texts.push(block.title, ...block.items.flatMap((i) => (i.text ? [i.title, i.text] : [i.title])));
+  } else if (block.type === 'form') {
+    texts.push(block.title, block.submitLabel, block.successTitle);
+  } else {
+    if (!block.headline.en.trim()) hints.push('missingHeadline');
+    if (!block.ctaLabel.en.trim()) hints.push('missingCta');
+    texts.push(block.headline, block.ctaLabel);
+    if (block.sub) texts.push(block.sub);
   }
   if (texts.some((t) => t.en.trim() && !t.kh?.trim())) hints.push('missingKhmer');
-  if (texts.some((t) => /write your real answer|say the result your buyer wants|thing included/i.test(t.en))) hints.push('placeholderText');
+  if (texts.some((t) => /write your real answer|say the result your buyer wants|thing included|^replace this|(first|second|third) benefit/i.test(t.en))) hints.push('placeholderText');
   return hints;
 }
