@@ -508,7 +508,10 @@ export type TrackingEventType =
   | 'telegram_click'
   | 'seat_select'
   | 'form_submit'
-  | 'lang_toggle';
+  | 'lang_toggle'
+  | 'popup_view'
+  | 'popup_click'
+  | 'popup_close';
 
 export interface TrackingEvent {
   id: string;
@@ -795,7 +798,100 @@ export interface DatabaseSchema {
   telegramWebhookSecuredFor?: string;
   // Leads whose Supabase insert failed; shown in the CRM and retried until they sync.
   unsyncedLeadIds?: string[];
+  // Promotional popups shown on the public landing pages (admin → Ads & Popups).
+  popupAds?: PopupAdsState;
+  // Per-ad counters (views / clicks / closes), keyed by ad id.
+  popupAdStats?: PopupAdStatsMap;
 }
+
+// ─── Popup ads ─────────────────────────────────────────────────────────────
+
+/** Copy in both site languages; Khmer falls back to English when missing. */
+export interface BilingualText {
+  en: string;
+  kh?: string;
+}
+
+export type PopupAdTemplate = 'card' | 'bottom-sheet' | 'banner' | 'image';
+export type PopupAdTheme = 'dark' | 'light';
+export type PopupAdTriggerType = 'immediate' | 'delay' | 'scroll' | 'exit_intent';
+/** How often one visitor may see the same popup ('always' = every page view). */
+export type PopupAdFrequency = 'always' | 'session' | 'day' | 'week' | 'month' | 'forever';
+export type PopupAdCtaAction = 'url' | 'telegram' | 'register' | 'close';
+export type PopupAdDeviceRule = 'all' | 'mobile' | 'desktop';
+export type PopupAdLanguageRule = 'all' | 'en' | 'kh';
+export type PopupAdStatus = 'active' | 'scheduled' | 'expired' | 'paused';
+
+export interface PopupAdTrigger {
+  type: PopupAdTriggerType;
+  /** Seconds after load, for 'delay'. */
+  seconds?: number;
+  /** Scroll depth 0–100, for 'scroll'. */
+  percent?: number;
+}
+
+export interface PopupAdCta {
+  label: BilingualText;
+  action: PopupAdCtaAction;
+  /** Destination for action 'url' (http(s) or a site path). */
+  url?: string;
+  newTab?: boolean;
+}
+
+export interface PopupAd {
+  id: string;
+  /** Internal label shown in the admin only. */
+  name: string;
+  enabled: boolean;
+  badge?: BilingualText;
+  title: BilingualText;
+  body?: BilingualText;
+  imageUrl?: string;
+  cta: PopupAdCta;
+  dismissLabel?: BilingualText;
+  template: PopupAdTemplate;
+  theme: PopupAdTheme;
+  /** Accent hex colour; defaults to the brand gold. */
+  accent?: string;
+  /** 'all' or landing page slugs; the home page is 'main-sales'. */
+  pages: 'all' | string[];
+  devices: PopupAdDeviceRule;
+  languages: PopupAdLanguageRule;
+  trigger: PopupAdTrigger;
+  frequency: PopupAdFrequency;
+  /** ISO timestamps; open-ended when missing. */
+  startAt?: string;
+  endAt?: string;
+  /** Higher wins when several popups are eligible on one page. */
+  priority: number;
+  /** Never show to a visitor who already sent the registration form. */
+  hideAfterLead: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PopupAdsSettings {
+  /** Master switch for every popup. */
+  enabled: boolean;
+  /** After any popup was shown, no other popup for this many hours (0 = none). */
+  globalCooldownHours: number;
+}
+
+export interface PopupAdsState {
+  settings: PopupAdsSettings;
+  ads: PopupAd[];
+  updatedAt?: string;
+}
+
+export interface PopupAdStats {
+  views: number;
+  clicks: number;
+  closes: number;
+  lastViewAt?: string;
+  lastClickAt?: string;
+}
+
+export type PopupAdStatsMap = Record<string, PopupAdStats>;
 
 export interface RoundRobinStaff {
   id: string;

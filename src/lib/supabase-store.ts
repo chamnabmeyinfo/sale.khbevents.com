@@ -1,5 +1,8 @@
 import { getSupabase } from './supabase';
-import { LandingPage, Lead, LeadStatus, SystemSettings, RoundRobinSettings, RoundRobinLog } from './types';
+import { LandingPage, Lead, LeadStatus, SystemSettings, RoundRobinSettings, RoundRobinLog,
+  PopupAdsState,
+  PopupAdStatsMap
+} from './types';
 
 // Map database row (snake_case) to LandingPage (camelCase)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -530,6 +533,56 @@ export async function supabaseSaveDeletedPages(list: string[]): Promise<boolean>
     });
   if (error) console.error('Supabase saveDeletedPages error:', error);
   return !error;
+}
+
+// Popup ads (admin → Ads & Popups) and their counters, stored as JSON rows in system_settings.
+async function readJsonRow<T>(id: string): Promise<T | null | undefined> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('system_settings')
+    .select('brand_tagline')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) return null;
+  // undefined = row missing (valid empty state); null = client missing or error.
+  if (!data?.brand_tagline) return undefined;
+  try {
+    return JSON.parse(data.brand_tagline) as T;
+  } catch {
+    return undefined;
+  }
+}
+
+async function writeJsonRow(id: string, value: unknown): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  const { error } = await supabase
+    .from('system_settings')
+    .upsert({ id, brand_tagline: JSON.stringify(value), updated_at: new Date().toISOString() });
+  if (error) console.error(`Supabase write ${id} error:`, error);
+  return !error;
+}
+
+/** Popup ads state, or undefined when no row exists yet, or null when Supabase is unavailable. */
+export async function supabaseGetPopupAds(): Promise<PopupAdsState | null | undefined> {
+  const value = await readJsonRow<PopupAdsState>('popup_ads');
+  if (value === null || value === undefined) return value;
+  return value && typeof value === 'object' && Array.isArray(value.ads) ? value : undefined;
+}
+
+export async function supabaseSavePopupAds(state: PopupAdsState): Promise<boolean> {
+  return writeJsonRow('popup_ads', state);
+}
+
+export async function supabaseGetPopupAdStats(): Promise<PopupAdStatsMap | null | undefined> {
+  const value = await readJsonRow<PopupAdStatsMap>('popup_ad_stats');
+  if (value === null || value === undefined) return value;
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : undefined;
+}
+
+export async function supabaseSavePopupAdStats(stats: PopupAdStatsMap): Promise<boolean> {
+  return writeJsonRow('popup_ad_stats', stats);
 }
 
 // Small key/value markers, stored as rows in system_settings like the data above.

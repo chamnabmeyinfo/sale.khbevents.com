@@ -1,7 +1,7 @@
 import SmartCityOptinView from '@/components/landing/SmartCityOptinView';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import { getPublicSettings } from '@/lib/storage';
+import { getActivePopupAds, getPublicSettings } from '@/lib/storage';
 import { loadPublicPage } from '@/lib/page-access';
 import PageLockScreen from '@/components/common/PageLockScreen';
 
@@ -36,7 +36,9 @@ export default async function SlugOptinPage({ params, searchParams }: PageProps)
   if (result.kind === 'locked') return <PageLockScreen page={result.stub} />;
   const page = result.page;
   const settings = await getPublicSettings();
+  const popupPreviewId = typeof sp.popup_preview === 'string' ? sp.popup_preview : undefined;
+  const popupAds = await getActivePopupAds(cleanSlug, popupPreviewId);
 
-  return <SmartCityOptinView page={page || undefined} settings={settings} initialLang={initialLang} />;
+  return <SmartCityOptinView page={page || undefined} settings={settings} initialLang={initialLang} popupAds={popupAds} popupPreviewId={popupPreviewId} />;
 }
 

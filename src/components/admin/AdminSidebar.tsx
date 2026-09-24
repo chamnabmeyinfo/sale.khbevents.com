@@ -27,6 +27,8 @@ import {
   Sun,
   Activity,
   Sliders,
+  BarChart3,
+  Megaphone,
   BookOpen,
   type LucideIcon
 } from 'lucide-react';
@@ -62,6 +64,7 @@ export default function AdminSidebar() {
     pages: pathname.startsWith('/admin/pages'),
     leads: pathname.startsWith('/admin/leads'),
     roundRobin: pathname.startsWith('/admin/round-robin'),
+    ads: pathname.startsWith('/admin/ads'),
     settings: pathname.startsWith('/admin/settings'),
     guide: pathname.startsWith('/admin/guide')
   });
@@ -129,6 +132,17 @@ export default function AdminSidebar() {
       subItems: [
         { label: 'Staff Allocations', href: '/admin/round-robin', icon: Users, badge: 'Routing' },
         { label: 'Real-Time Routing Log', href: '/admin/round-robin', icon: Activity },
+      ]
+    },
+    {
+      id: 'ads',
+      label: 'Ads & Popups',
+      icon: Megaphone,
+      href: '/admin/ads',
+      isActive: pathname.startsWith('/admin/ads'),
+      subItems: [
+        { label: 'All Popups', href: '/admin/ads', icon: Megaphone, badge: 'New' },
+        { label: 'Performance', href: '/admin/ads#performance', icon: BarChart3 },
       ]
     },
     {

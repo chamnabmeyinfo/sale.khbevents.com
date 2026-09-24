@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { LandingPage, SystemSettings } from '@/lib/types';
+import { LandingPage, PopupAd, SystemSettings } from '@/lib/types';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
+import PopupAdsHost from '@/components/common/PopupAds';
+import { popupStorageKeys } from '@/lib/popup-ads';
 import FlagIcon from '@/components/common/FlagIcon';
 import { safeRedirectUrl } from '@/lib/safe-url';
 import { readUtmParams } from '@/lib/utm';
@@ -294,7 +296,7 @@ const HERO_SLIDES = [
   '/images/events/photo_2026-09-16_22-01-09 (6).jpg',
 ];
 
-export default function SmartCityAppView({ page, initialLang }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh' } = {}) {
+export default function SmartCityAppView({ page, initialLang, popupAds, popupPreviewId }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh'; popupAds?: PopupAd[]; popupPreviewId?: string; } = {}) {
   const [lang, setLang] = useState<'en' | 'kh'>(initialLang || 'en');
   const [activeTab, setActiveTab] = useState<'home' | 'trip' | 'seats'>('home');
   const [heroSlide, setHeroSlide] = useState(0);
@@ -393,6 +395,7 @@ export default function SmartCityAppView({ page, initialLang }: { page?: Landing
       const data = await res.json();
       if (res.ok && data.success) {
         setSubmitted(true);
+        try { localStorage.setItem(popupStorageKeys.leadSent, '1'); } catch {}
         setLocalBookings(prev => prev + 1);
         trackLandingEvent(page, 'form_submit', { seat: selectedSeat, profile: regProfile, value: effEarlyBirdPrice }, lang);
 
@@ -470,6 +473,7 @@ export default function SmartCityAppView({ page, initialLang }: { page?: Landing
       <div className={`app-shell-root${lang === 'kh' ? ' lang-kh' : ''}`}>
         {/* ── Tracking Engine (Internal Analytics & External Pixels) ── */}
         <LandingPageTracking page={page} lang={lang} />
+        <PopupAdsHost ads={popupAds} previewId={popupPreviewId} pageSlug={page?.slug || 'smart-city-tea-cafe'} lang={lang} />
 
       {/* Fake Mobile Device Container */}
       <div className="mobile-frame">

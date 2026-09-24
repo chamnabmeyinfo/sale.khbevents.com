@@ -6,8 +6,9 @@ import Navbar from './Navbar';
 import FloatingContact from './FloatingContact';
 import Footer from './Footer';
 import LeadForm from './LeadForm';
-import { LandingPage, SystemSettings, DEFAULT_SECTION_ORDER } from '@/lib/types';
+import { LandingPage, PopupAd, SystemSettings, DEFAULT_SECTION_ORDER } from '@/lib/types';
 import LandingPageTracking from '@/components/common/LandingPageTracking';
+import PopupAdsHost from '@/components/common/PopupAds';
 import {
   Calendar,
   MapPin,
@@ -93,9 +94,10 @@ const MATCHMAKER_TRACKS = {
 interface DynamicLandingPageViewProps {
   page: LandingPage;
   settings: SystemSettings;
+  popupAds?: PopupAd[]; popupPreviewId?: string;
 }
 
-export default function DynamicLandingPageView({ page, settings }: DynamicLandingPageViewProps) {
+export default function DynamicLandingPageView({ page, settings, popupAds, popupPreviewId }: DynamicLandingPageViewProps) {
   const [selectedPackage, setSelectedPackage] = useState<string>('');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [activeDayTab, setActiveDayTab] = useState<number>(0);
@@ -1253,6 +1255,7 @@ export default function DynamicLandingPageView({ page, settings }: DynamicLandin
   return (
       <div className="min-h-screen bg-slate-50 dark:bg-[#070D0A] text-slate-900 dark:text-gray-100 flex flex-col selection:bg-amber-400 selection:text-black transition-colors">
         <LandingPageTracking page={page} />
+        <PopupAdsHost ads={popupAds} previewId={popupPreviewId} pageSlug={page.slug} />
         <Navbar phone={effPhone} whatsapp={effWhatsapp} />
 
       <main className="flex-1">

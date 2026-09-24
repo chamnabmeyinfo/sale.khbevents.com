@@ -5,7 +5,9 @@ import { rateLimitByIp } from '@/lib/rate-limit';
 
 const EVENT_TYPES: readonly TrackingEventType[] = [
   'page_view', 'scroll_depth', 'cta_click', 'telegram_click', 'seat_select', 'form_submit', 'lang_toggle',
+  'popup_view', 'popup_click', 'popup_close',
 ];
+const POPUP_EVENT_TYPES: readonly TrackingEventType[] = ['popup_view', 'popup_click', 'popup_close'];
 const DEVICE_TYPES = ['mobile', 'desktop', 'tablet'] as const;
 const LANGS = ['en', 'kh'] as const;
 
@@ -35,12 +37,27 @@ export async function POST(req: NextRequest) {
     }
 
     const slug = str(body.slug, 200);
+    const eventType = oneOf(body.eventType, EVENT_TYPES) ?? 'page_view';
+    let eventData = body.eventData && typeof body.eventData === 'object' ? (body.eventData as Record<string, unknown>) : undefined;
+    if (POPUP_EVENT_TYPES.includes(eventType)) {
+      // Popup beacons carry only a few known strings; anything else is dropped so the
+      // event store cannot be filled with arbitrary payloads.
+      const adId = str(eventData?.adId, 80);
+      if (!adId) return NextResponse.json({ success: false }, { status: 200 });
+      eventData = {
+        adId,
+        adName: str(eventData?.adName, 80),
+        template: str(eventData?.template, 20),
+        trigger: str(eventData?.trigger, 20),
+        action: str(eventData?.action, 20),
+      };
+    }
     if (slug) {
       const payload: RecordTrackingPayload = {
         slug,
-        eventType: oneOf(body.eventType, EVENT_TYPES) ?? 'page_view',
+        eventType,
         sessionId: str(body.sessionId, 100),
-        eventData: body.eventData && typeof body.eventData === 'object' ? (body.eventData as Record<string, unknown>) : undefined,
+        eventData,
         referrer: str(body.referrer, 1000),
         utmSource: str(body.utmSource),
         utmMedium: str(body.utmMedium),

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getPublicSettings } from '@/lib/storage';
+import { getPublicSettings, getActivePopupAds } from '@/lib/storage';
 import { loadPublicPage } from '@/lib/page-access';
 import PageLockScreen from '@/components/common/PageLockScreen';
 import DynamicLandingPageView from '@/components/landing/DynamicLandingPageView';
@@ -80,24 +80,27 @@ export default async function CampaignPage({ params, searchParams }: PageProps) 
   if (result.kind === 'locked') return <PageLockScreen page={result.stub} />;
   const page = result.page;
   const settings = await getPublicSettings();
+  const popupPreviewId = typeof sp.popup_preview === 'string' ? sp.popup_preview : undefined;
+  const popupAds = await getActivePopupAds(cleanSlug, popupPreviewId);
+  const popupProps = { popupAds, popupPreviewId };
 
   if (cleanSlug === 'smart-city-tea-cafe') {
     if (view === 'app') {
-      return <SmartCityAppView page={page || undefined} settings={settings} initialLang={initialLang} />;
+      return <SmartCityAppView page={page || undefined} settings={settings} initialLang={initialLang} {...popupProps} />;
     }
     if (view === 'optin') {
-      return <SmartCityOptinView page={page || undefined} settings={settings} initialLang={initialLang} />;
+      return <SmartCityOptinView page={page || undefined} settings={settings} initialLang={initialLang} {...popupProps} />;
     }
     // If the template was customized to something other than b2b-delegation, render with template engine
     if (page?.template && page.template !== 'b2b-delegation') {
-      return <DynamicLandingPageView page={page} settings={settings} />;
+      return <DynamicLandingPageView page={page} settings={settings} {...popupProps} />;
     }
-    return <SmartCityLandingPageView page={page || undefined} settings={settings} initialLang={initialLang} />;
+    return <SmartCityLandingPageView page={page || undefined} settings={settings} initialLang={initialLang} {...popupProps} />;
   }
 
   if (!page) {
     notFound();
   }
 
-  return <DynamicLandingPageView page={page} settings={settings} />;
+  return <DynamicLandingPageView page={page} settings={settings} {...popupProps} />;
 }

@@ -1,0 +1,290 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   POPUP ADS — promotional popups managed in Admin → Ads & Popups.
+   Own class names and tokens: the popup sits above every piece of landing page
+   chrome (site header 990, urgency bar 1000, mobile drawer 1100) and must look
+   the same on the bespoke smart-city page, the Tailwind pages and the home page.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.khb-popup {
+  --khb-accent: #E5A93C;
+  --khb-accent-dark: #C68720;
+  --khb-surface: #0E1B15;
+  --khb-surface-2: #14261E;
+  --khb-border: rgba(255, 255, 255, 0.12);
+  --khb-text: #F8FAFC;
+  --khb-text-muted: #B7C4BC;
+  --khb-on-accent: #091E14;
+  --khb-radius: 22px;
+  --khb-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.55);
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  pointer-events: none;
+}
+.khb-popup.lang-kh {
+  font-family: 'Hanuman', 'Kantumruy Pro', 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.8;
+}
+.khb-popup--light {
+  --khb-surface: #FFFFFF;
+  --khb-surface-2: #F4F0E8;
+  --khb-border: #E7E2D6;
+  --khb-text: #0D1912;
+  --khb-text-muted: #5E7166;
+  --khb-shadow: 0 30px 70px -20px rgba(13, 25, 18, 0.35);
+}
+
+.khb-popup__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 14, 10, 0.62);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.khb-popup.is-open .khb-popup__backdrop { opacity: 1; }
+
+.khb-popup__panel {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 440px);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: var(--khb-surface);
+  color: var(--khb-text);
+  border: 1px solid var(--khb-border);
+  border-radius: var(--khb-radius);
+  box-shadow: var(--khb-shadow);
+  pointer-events: auto;
+  outline: none;
+  opacity: 0;
+  transform: translateY(14px) scale(0.98);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.khb-popup.is-open .khb-popup__panel { opacity: 1; transform: none; }
+
+.khb-popup__close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.khb-popup--light .khb-popup__close:not(.has-image .khb-popup__close) { background: rgba(13, 25, 18, 0.08); color: #0D1912; }
+.khb-popup--light.has-image .khb-popup__close { background: rgba(0, 0, 0, 0.45); color: #FFFFFF; }
+.khb-popup__close:hover { background: rgba(0, 0, 0, 0.55); color: #FFFFFF; }
+.khb-popup__close:focus-visible { outline: 3px solid var(--khb-accent); outline-offset: 2px; }
+
+.khb-popup__media {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: var(--khb-surface-2);
+}
+.khb-popup__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.khb-popup__content {
+  padding: 26px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.khb-popup__badge {
+  align-self: flex-start;
+  display: inline-block;
+  padding: 4px 11px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--khb-accent) 18%, transparent);
+  color: var(--khb-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.khb-popup.lang-kh .khb-popup__badge { text-transform: none; letter-spacing: 0; font-size: 0.82rem; }
+.khb-popup__title {
+  margin: 0;
+  font-size: 1.45rem;
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.khb-popup.lang-kh .khb-popup__title { line-height: 1.5; font-size: 1.3rem; }
+.khb-popup__body {
+  margin: 0;
+  font-size: 0.98rem;
+  color: var(--khb-text-muted);
+}
+.khb-popup__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.khb-popup__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  padding: 14px 28px;
+  border: 0;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, var(--khb-accent), var(--khb-accent-dark));
+  color: var(--khb-on-accent);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 18px 38px -12px color-mix(in srgb, var(--khb-accent) 70%, transparent);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.khb-popup__cta:hover { transform: translateY(-2px); box-shadow: 0 22px 44px -12px color-mix(in srgb, var(--khb-accent) 80%, transparent); }
+.khb-popup__cta:focus-visible { outline: 3px solid var(--khb-text); outline-offset: 3px; }
+.khb-popup__dismiss {
+  align-self: center;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--khb-text-muted);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.khb-popup__dismiss:hover { color: var(--khb-text); }
+
+/* ── Bottom sheet: sheet on phones, corner card on desktop ─────────────── */
+.khb-popup--bottom-sheet { align-items: flex-end; justify-content: flex-end; padding: 0 20px 20px; }
+.khb-popup--bottom-sheet .khb-popup__panel { width: min(92vw, 400px); }
+.khb-popup--bottom-sheet .khb-popup__backdrop { background: rgba(7, 14, 10, 0.35); }
+
+/* ── Banner: slim bar along the bottom, no backdrop, page stays usable ───── */
+.khb-popup--banner { align-items: flex-end; justify-content: center; padding: 0; }
+.khb-popup--banner .khb-popup__panel {
+  width: 100%;
+  max-width: none;
+  border-radius: 0;
+  border-width: 1px 0 0 0;
+  box-shadow: 0 -12px 40px -12px rgba(0, 0, 0, 0.45);
+  transform: translateY(100%);
+}
+.khb-popup--banner.is-open .khb-popup__panel { transform: none; }
+.khb-popup--banner .khb-popup__content {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 14px 64px 14px 20px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'badge cta' 'title cta' 'body cta';
+  column-gap: 20px;
+  row-gap: 2px;
+  align-items: center;
+}
+.khb-popup--banner .khb-popup__badge { grid-area: badge; }
+.khb-popup--banner .khb-popup__title { grid-area: title; font-size: 1.05rem; }
+.khb-popup--banner .khb-popup__body { grid-area: body; font-size: 0.9rem; }
+.khb-popup--banner .khb-popup__actions { grid-area: cta; flex-direction: row; align-items: center; margin: 0; }
+.khb-popup--banner .khb-popup__cta { min-height: 44px; padding: 11px 22px; font-size: 0.95rem; white-space: nowrap; }
+.khb-popup--banner .khb-popup__close { top: 50%; transform: translateY(-50%); }
+
+/* ── Image template: photo on top, text under it ──────────────────────── */
+.khb-popup--image .khb-popup__panel { width: min(92vw, 480px); }
+.khb-popup--image .khb-popup__media { aspect-ratio: 16 / 10; }
+
+/* ── Inline (admin live preview): normal flow, no overlay ─────────────── */
+.khb-popup--inline {
+  position: static;
+  inset: auto;
+  z-index: auto;
+  padding: 0;
+  pointer-events: auto;
+  display: block;
+}
+.khb-popup--inline .khb-popup__panel {
+  width: 100%;
+  max-height: none;
+  opacity: 1;
+  transform: none;
+}
+.khb-popup--inline.khb-popup--banner .khb-popup__panel { border-radius: 14px; border-width: 1px; }
+.khb-popup--inline .khb-popup__cta:hover { transform: none; }
+
+/* ── Phones ───────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .khb-popup { padding: 12px; }
+  .khb-popup__panel { width: min(94vw, 440px); }
+  .khb-popup__content { padding: 22px 20px 20px; }
+  .khb-popup__title { font-size: 1.3rem; }
+  .khb-popup--bottom-sheet { padding: 0; }
+  .khb-popup--bottom-sheet .khb-popup__panel {
+    width: 100%;
+    border-radius: 22px 22px 0 0;
+    border-bottom: 0;
+    transform: translateY(100%);
+    /* Sit above the landing page's sticky bottom bar (66px) and the phone's home indicator. */
+    margin-bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 4px;
+  }
+  .khb-popup--bottom-sheet.is-open .khb-popup__panel { transform: none; }
+  .khb-popup--banner .khb-popup__panel { margin-bottom: calc(66px + env(safe-area-inset-bottom, 0px)); }
+  .khb-popup--banner .khb-popup__content {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'badge' 'title' 'body' 'cta';
+    padding: 14px 56px 14px 16px;
+  }
+  .khb-popup--banner .khb-popup__actions { margin-top: 6px; }
+  .khb-popup--banner .khb-popup__cta { width: 100%; white-space: normal; }
+  .khb-popup--banner .khb-popup__close { top: 8px; transform: none; }
+  .khb-popup--inline .khb-popup__panel { margin-bottom: 0; }
+}
+
+/* ── Motion off ───────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .khb-popup__backdrop,
+  .khb-popup__panel,
+  .khb-popup__cta,
+  .khb-popup__close {
+    transition: none !important;
+  }
+  .khb-popup__cta:hover { transform: none; }
+}
+
+/* Inline preview sits in a phone-sized frame whatever the viewport: use the phone layout for the banner. */
+.khb-popup--inline.khb-popup--banner .khb-popup__content {
+  grid-template-columns: 1fr;
+  grid-template-areas: 'badge' 'title' 'body' 'cta';
+  padding: 14px 56px 14px 16px;
+}
+.khb-popup--inline.khb-popup--banner .khb-popup__actions { margin-top: 6px; }
+.khb-popup--inline.khb-popup--banner .khb-popup__cta { width: 100%; white-space: normal; }
+.khb-popup--inline.khb-popup--banner .khb-popup__close { top: 8px; transform: none; }
+.khb-popup--inline.khb-popup--banner .khb-popup__actions { flex-direction: column; align-items: stretch; }
+.khb-popup--inline.khb-popup--banner .khb-popup__dismiss { align-self: center; }

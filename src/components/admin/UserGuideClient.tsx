@@ -21,10 +21,11 @@ import {
   PlusCircle,
   Clock,
   Layers,
+  Megaphone,
   type LucideIcon
 } from 'lucide-react';
 
-type GuideTab = 'all' | 'quickstart' | 'pages' | 'leads' | 'roundrobin' | 'settings' | 'faqs';
+type GuideTab = 'all' | 'quickstart' | 'pages' | 'leads' | 'roundrobin' | 'settings' | 'ads' | 'faqs';
 
 export default function UserGuideClient() {
   const [activeTab, setActiveTab] = useState<GuideTab>('all');
@@ -36,7 +37,8 @@ export default function UserGuideClient() {
     { id: 'leads', label: '3. Leads CRM Pipeline', icon: Users, badge: 'Sales' },
     { id: 'roundrobin', label: '4. Round-Robin & Bot', icon: Sliders },
     { id: 'settings', label: '5. Settings & Alerts', icon: Settings },
-    { id: 'faqs', label: '6. Operator FAQs', icon: HelpCircle },
+    { id: 'ads', label: '6. Ads & Popups', icon: Megaphone },
+    { id: 'faqs', label: '7. Operator FAQs', icon: HelpCircle },
   ];
 
   const matchesSearch = (text: string) => {
@@ -493,7 +495,51 @@ export default function UserGuideClient() {
           </section>
         )}
 
-        {/* SECTION 6: FAQS & TROUBLESHOOTING */}
+        {/* SECTION 6: ADS & POPUPS */}
+        {(activeTab === 'all' || activeTab === 'ads') && matchesSearch('ads popups popup promotion banner offer schedule frequency cooldown preview telegram') && (
+          <section id="ads" className="rounded-3xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/40 p-6 sm:p-8 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-emerald-900/40">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-amber-400/20 text-amber-500 dark:text-amber-400"><Megaphone className="w-6 h-6" /></div>
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white">6. Ads &amp; Popups</h2>
+                  <p className="text-xs text-slate-500 dark:text-gray-400">Promotional popups on the landing pages, managed without touching code.</p>
+                </div>
+              </div>
+              <Link href="/admin/ads" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs shadow-md"><span>Open Ads &amp; Popups</span></Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-700 dark:text-gray-300">
+              <div className="space-y-3">
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Create a popup in five steps</h3>
+                <ol className="list-decimal pl-5 space-y-1.5">
+                  <li><strong>New popup</strong> or pick a ready-made template (Ask us on Telegram, Reserve a seat, Before you go).</li>
+                  <li><strong>Content:</strong> title under 12 words, one to three short sentences, a button that says what happens next. Khmer fields are optional and fall back to English.</li>
+                  <li><strong>Design:</strong> centered card, bottom sheet, bottom banner or image first. Dark green matches the page; gold is the site button colour.</li>
+                  <li><strong>Rules:</strong> which pages, phones or desktop, when it appears (after seconds, after scrolling, when leaving), how often per visitor, start and end dates, priority.</li>
+                  <li>Press <strong>Done</strong>, then <strong>Save all</strong>. Use the eye icon to preview on the real page, even while paused.</li>
+                </ol>
+              </div>
+              <div className="space-y-3">
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">How the rules protect conversion</h3>
+                <ul className="list-disc pl-5 space-y-1.5">
+                  <li>Only <strong>one popup per page view</strong>. If two qualify, the higher priority wins.</li>
+                  <li>Each popup has its own frequency (once a day, once a week…). The global <strong>cooldown</strong> stops a second popup from following the first for a number of hours.</li>
+                  <li>A visitor who already sent the form never sees a popup marked &quot;hide after lead&quot;.</li>
+                  <li>Views, clicks and the click rate come from the visitor&apos;s browser and are close estimates.</li>
+                  <li>The Telegram button goes through the same Round Robin routing as every other Telegram button.</li>
+                </ul>
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white pt-2">Three tips</h3>
+                <ul className="list-disc pl-5 space-y-1.5">
+                  <li>One message per popup. A question or an offer, not both.</li>
+                  <li>Khmer copy shorter than English: readers scan slower on phones.</li>
+                  <li>Never a fake deadline. A passed deadline still on screen destroys every other claim on the page.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* SECTION 7: FAQS & TROUBLESHOOTING */}
         {(activeTab === 'all' || activeTab === 'faqs') && matchesSearch('faq troubleshooting sold out early bird duplicate export') && (
           <section id="faqs" className="rounded-3xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/40 p-6 sm:p-8 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-emerald-950 pb-4">

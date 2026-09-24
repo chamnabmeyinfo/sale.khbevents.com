@@ -1,0 +1,339 @@
+import type {
+  BilingualText,
+  PopupAd,
+  PopupAdCtaAction,
+  PopupAdFrequency,
+  PopupAdStatus,
+  PopupAdTemplate,
+  PopupAdTheme,
+  PopupAdTrigger,
+  PopupAdTriggerType,
+  PopupAdsSettings,
+  PopupAdsState,
+} from './types';
+import { safeRedirectUrl } from './safe-url';
+
+/**
+ * Pure rules for popup ads: validation, schedule, targeting, which popup a
+ * visitor sees and how often. No Next.js or Node imports: this module is shared
+ * by the public popup (client), the admin editor (client) and storage (server).
+ * Time always comes in as a parameter so the rules are testable.
+ */
+
+export const HOME_SLUG = 'main-sales';
+
+/** Server clock for pages that pass "now" to client components (keeps clock calls out of render). */
+export const serverNowMs = (): number => Date.now();
+export const DEFAULT_ACCENT = '#E5A93C';
+export const MAX_POPUP_ADS = 50;
+
+export const POPUP_TEMPLATES: PopupAdTemplate[] = ['card', 'bottom-sheet', 'banner', 'image'];
+export const POPUP_THEMES: PopupAdTheme[] = ['dark', 'light'];
+export const POPUP_TRIGGERS: PopupAdTriggerType[] = ['immediate', 'delay', 'scroll', 'exit_intent'];
+export const POPUP_FREQUENCIES: PopupAdFrequency[] = ['always', 'session', 'day', 'week', 'month', 'forever'];
+export const POPUP_CTA_ACTIONS: PopupAdCtaAction[] = ['telegram', 'register', 'url', 'close'];
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** How long a frequency rule blocks a repeat show. 'session' and 'always' are handled separately. */
+export const FREQUENCY_WINDOW_MS: Record<PopupAdFrequency, number> = {
+  always: 0,
+  session: 0,
+  day: DAY_MS,
+  week: 7 * DAY_MS,
+  month: 30 * DAY_MS,
+  forever: Number.POSITIVE_INFINITY,
+};
+
+export const defaultPopupAdsSettings: PopupAdsSettings = { enabled: true, globalCooldownHours: 12 };
+export const defaultPopupAdsState: PopupAdsState = { settings: { ...defaultPopupAdsSettings }, ads: [] };
+
+/** Browser storage keys used by the public popup for frequency capping. */
+export const popupStorageKeys = {
+  shown: (adId: string) => `khb_popup_${adId}`,
+  sessionShown: (adId: string) => `khb_popup_s_${adId}`,
+  lastAny: 'khb_popup_last',
+  leadSent: 'khb_lead_sent',
+};
+
+// ─── Text helpers ──────────────────────────────────────────────────────────
+
+/** The text for the current language, falling back to English. */
+export function pickText(text: BilingualText | undefined, lang: 'en' | 'kh'): string {
+  if (!text) return '';
+  return (lang === 'kh' && text.kh?.trim()) || text.en || '';
+}
+
+const clampStr = (value: unknown, max: number): string =>
+  typeof value === 'string' ? value.trim().slice(0, max) : '';
+
+function normalizeBilingual(value: unknown, max: number): BilingualText | undefined {
+  if (typeof value === 'string') {
+    const en = clampStr(value, max);
+    return en ? { en } : undefined;
+  }
+  if (!value || typeof value !== 'object') return undefined;
+  const v = value as Record<string, unknown>;
+  const en = clampStr(v.en, max);
+  const kh = clampStr(v.kh, max);
+  if (!en && !kh) return undefined;
+  return { en: en || kh, kh: kh || undefined };
+}
+
+const oneOf = <T extends string>(value: unknown, allowed: readonly T[], fallback: T): T =>
+  typeof value === 'string' && (allowed as readonly string[]).includes(value) ? (value as T) : fallback;
+
+const clampNum = (value: unknown, min: number, max: number, fallback: number): number => {
+  const n = typeof value === 'number' ? value : typeof value === 'string' && value.trim() ? Number(value) : NaN;
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, Math.round(n)));
+};
+
+const isoOrUndefined = (value: unknown): string | undefined => {
+  if (typeof value !== 'string' || !value.trim()) return undefined;
+  const t = new Date(value).getTime();
+  return Number.isFinite(t) ? new Date(t).toISOString() : undefined;
+};
+
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+
+/** A fresh popup with sensible defaults; the admin fills in the copy. */
+export function newPopupAd(nowIso: string, overrides: Partial<PopupAd> = {}): PopupAd {
+  const rand = Math.random().toString(36).slice(2, 7);
+  return {
+    id: `ad-${new Date(nowIso).getTime().toString(36)}-${rand}`,
+    name: 'New popup',
+    enabled: false,
+    title: { en: '' },
+    cta: { label: { en: 'Chat on Telegram', kh: 'ជជែកតាម Telegram' }, action: 'telegram' },
+    dismissLabel: { en: 'Not now', kh: 'មិនមែនឥឡូវ' },
+    template: 'card',
+    theme: 'dark',
+    accent: DEFAULT_ACCENT,
+    pages: 'all',
+    devices: 'all',
+    languages: 'all',
+    trigger: { type: 'delay', seconds: 8 },
+    frequency: 'day',
+    priority: 10,
+    hideAfterLead: true,
+    createdAt: nowIso,
+    updatedAt: nowIso,
+    ...overrides,
+  };
+}
+
+/**
+ * Cleans an ad coming from the admin form or an import. Unknown fields are
+ * dropped, numbers clamped, URLs checked. Returns null when the ad has no
+ * title or no button label in any language.
+ */
+export function normalizePopupAd(input: unknown, nowIso: string, existing?: PopupAd): PopupAd | null {
+  if (!input || typeof input !== 'object') return null;
+  const v = input as Record<string, unknown>;
+  const title = normalizeBilingual(v.title, 120);
+  const ctaRaw = (v.cta && typeof v.cta === 'object' ? v.cta : {}) as Record<string, unknown>;
+  const ctaLabel = normalizeBilingual(ctaRaw.label, 60);
+  if (!title || !ctaLabel) return null;
+
+  const id = clampStr(v.id, 80).replace(/[^A-Za-z0-9_-]/g, '') || newPopupAd(nowIso).id;
+  const action = oneOf(ctaRaw.action, POPUP_CTA_ACTIONS, 'telegram');
+  const url = action === 'url' ? safeRedirectUrl(clampStr(ctaRaw.url, 2000)) || undefined : undefined;
+  const triggerRaw = (v.trigger && typeof v.trigger === 'object' ? v.trigger : {}) as Record<string, unknown>;
+  const triggerType = oneOf(triggerRaw.type, POPUP_TRIGGERS, 'delay');
+  const trigger: PopupAdTrigger = { type: triggerType };
+  if (triggerType === 'delay') trigger.seconds = clampNum(triggerRaw.seconds, 0, 600, 8);
+  if (triggerType === 'scroll') trigger.percent = clampNum(triggerRaw.percent, 1, 100, 40);
+
+  let pages: 'all' | string[] = 'all';
+  if (Array.isArray(v.pages)) {
+    const list = v.pages
+      .map((s) => clampStr(s, 120).toLowerCase())
+      .filter((s) => /^[a-z0-9_-]+$/.test(s));
+    pages = list.length ? Array.from(new Set(list)) : 'all';
+  }
+
+  const startAt = isoOrUndefined(v.startAt);
+  const endAt = isoOrUndefined(v.endAt);
+  const accent = clampStr(v.accent, 7);
+  const imageUrl = safeRedirectUrl(clampStr(v.imageUrl, 2000)) || undefined;
+
+  return {
+    id,
+    name: clampStr(v.name, 80) || title.en.slice(0, 80) || 'Popup',
+    enabled: Boolean(v.enabled),
+    badge: normalizeBilingual(v.badge, 40),
+    title,
+    body: normalizeBilingual(v.body, 400),
+    imageUrl,
+    cta: { label: ctaLabel, action, url, newTab: action === 'url' ? Boolean(ctaRaw.newTab) : undefined },
+    dismissLabel: normalizeBilingual(v.dismissLabel, 40),
+    template: oneOf(v.template, POPUP_TEMPLATES, 'card'),
+    theme: oneOf(v.theme, POPUP_THEMES, 'dark'),
+    accent: HEX_COLOR.test(accent) ? accent : DEFAULT_ACCENT,
+    pages,
+    devices: oneOf(v.devices, ['all', 'mobile', 'desktop'] as const, 'all'),
+    languages: oneOf(v.languages, ['all', 'en', 'kh'] as const, 'all'),
+    trigger,
+    frequency: oneOf(v.frequency, POPUP_FREQUENCIES, 'day'),
+    startAt,
+    endAt: endAt && startAt && endAt < startAt ? undefined : endAt,
+    priority: clampNum(v.priority, 0, 1000, 10),
+    hideAfterLead: v.hideAfterLead === undefined ? true : Boolean(v.hideAfterLead),
+    createdAt: existing?.createdAt || isoOrUndefined(v.createdAt) || nowIso,
+    updatedAt: nowIso,
+  };
+}
+
+/** Cleans a whole settings object; invalid ads are dropped, duplicate ids keep the first. */
+export function normalizePopupAdsState(input: unknown, nowIso: string, existing?: PopupAdsState): PopupAdsState {
+  const v = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
+  const settingsRaw = (v.settings && typeof v.settings === 'object' ? v.settings : {}) as Record<string, unknown>;
+  const previous = new Map((existing?.ads || []).map((a) => [a.id, a]));
+  const seen = new Set<string>();
+  const ads: PopupAd[] = [];
+  for (const raw of Array.isArray(v.ads) ? v.ads : []) {
+    const rawId = raw && typeof raw === 'object' ? clampStr((raw as Record<string, unknown>).id, 80) : '';
+    const ad = normalizePopupAd(raw, nowIso, previous.get(rawId));
+    if (!ad || seen.has(ad.id)) continue;
+    // Keep the stored updatedAt when nothing changed, so "last edited" stays truthful.
+    const before = previous.get(ad.id);
+    if (before && JSON.stringify({ ...before, updatedAt: '' }) === JSON.stringify({ ...ad, updatedAt: '' })) {
+      ad.updatedAt = before.updatedAt;
+    }
+    seen.add(ad.id);
+    ads.push(ad);
+    if (ads.length >= MAX_POPUP_ADS) break;
+  }
+  return {
+    settings: {
+      enabled: settingsRaw.enabled === undefined ? true : Boolean(settingsRaw.enabled),
+      globalCooldownHours: clampNum(settingsRaw.globalCooldownHours, 0, 24 * 30, defaultPopupAdsSettings.globalCooldownHours),
+    },
+    ads,
+    updatedAt: nowIso,
+  };
+}
+
+// ─── Schedule, targeting, selection ────────────────────────────────────────
+
+export function isWithinSchedule(ad: Pick<PopupAd, 'startAt' | 'endAt'>, nowMs: number): boolean {
+  if (ad.startAt && new Date(ad.startAt).getTime() > nowMs) return false;
+  if (ad.endAt && new Date(ad.endAt).getTime() <= nowMs) return false;
+  return true;
+}
+
+export function popupAdStatus(ad: PopupAd, nowMs: number): PopupAdStatus {
+  if (!ad.enabled) return 'paused';
+  if (ad.startAt && new Date(ad.startAt).getTime() > nowMs) return 'scheduled';
+  if (ad.endAt && new Date(ad.endAt).getTime() <= nowMs) return 'expired';
+  return 'active';
+}
+
+export function adTargetsPage(ad: Pick<PopupAd, 'pages'>, slug: string): boolean {
+  if (ad.pages === 'all') return true;
+  const clean = slug.toLowerCase().trim();
+  return ad.pages.includes(clean);
+}
+
+/** Highest priority first, then most recently edited. */
+export function sortByPriority(ads: PopupAd[]): PopupAd[] {
+  return ads.slice().sort((a, b) => (b.priority - a.priority) || b.updatedAt.localeCompare(a.updatedAt));
+}
+
+/**
+ * The popups a page may show, decided on the server: master switch, enabled,
+ * inside the schedule, targets this page. A preview id is always included (first),
+ * whatever its state, so the admin can look at a draft.
+ */
+export function selectPublicPopupAds(
+  state: PopupAdsState,
+  slug: string,
+  nowMs: number,
+  options: { previewId?: string } = {}
+): PopupAd[] {
+  const preview = options.previewId ? state.ads.find((a) => a.id === options.previewId) : undefined;
+  if (!state.settings.enabled && !preview) return [];
+  const live = state.settings.enabled
+    ? sortByPriority(state.ads.filter((a) => a.enabled && isWithinSchedule(a, nowMs) && adTargetsPage(a, slug)))
+    : [];
+  return preview ? [preview, ...live.filter((a) => a.id !== preview.id)] : live;
+}
+
+export interface PopupVisitorContext {
+  nowMs: number;
+  device: 'mobile' | 'desktop';
+  lang: 'en' | 'kh';
+  /** Visitor already sent the registration form. */
+  leadSent: boolean;
+  /** When any popup was last shown to this visitor (ms), for the global cooldown. */
+  lastAnyShownAt?: number;
+  /** When this ad was last shown to this visitor (ms). */
+  shownAt: (adId: string) => number | undefined;
+  /** This ad was already shown in the current browser session. */
+  shownThisSession: (adId: string) => boolean;
+}
+
+export function frequencyAllows(
+  frequency: PopupAdFrequency,
+  lastShownAtMs: number | undefined,
+  shownThisSession: boolean,
+  nowMs: number
+): boolean {
+  if (frequency === 'always') return true;
+  if (frequency === 'session') return !shownThisSession;
+  if (lastShownAtMs === undefined) return true;
+  if (frequency === 'forever') return false;
+  return nowMs - lastShownAtMs >= FREQUENCY_WINDOW_MS[frequency];
+}
+
+/**
+ * The single popup this visitor sees on this page view, or null. Runs in the
+ * browser after mount, with the visitor's device, language and storage.
+ */
+export function pickPopupToShow(ads: PopupAd[], settings: PopupAdsSettings, ctx: PopupVisitorContext): PopupAd | null {
+  const cooldownMs = Math.max(0, settings.globalCooldownHours) * 60 * 60 * 1000;
+  for (const ad of sortByPriority(ads)) {
+    if (ad.devices !== 'all' && ad.devices !== ctx.device) continue;
+    if (ad.languages !== 'all' && ad.languages !== ctx.lang) continue;
+    if (ad.hideAfterLead && ctx.leadSent) continue;
+    if (!frequencyAllows(ad.frequency, ctx.shownAt(ad.id), ctx.shownThisSession(ad.id), ctx.nowMs)) continue;
+    if (
+      ad.frequency !== 'always' &&
+      cooldownMs > 0 &&
+      ctx.lastAnyShownAt !== undefined &&
+      ctx.nowMs - ctx.lastAnyShownAt < cooldownMs &&
+      ctx.shownAt(ad.id) === undefined
+    ) {
+      // Another popup was shown recently: do not stack a second one on the visitor.
+      continue;
+    }
+    return ad;
+  }
+  return null;
+}
+
+/** Where the button sends the visitor. Null means "just close". */
+export function resolveCtaHref(ad: PopupAd, slug: string): string | null {
+  switch (ad.cta.action) {
+    case 'telegram':
+      return `/api/round-robin?page=${encodeURIComponent(slug)}&redirect=true`;
+    case 'register':
+      return '#register';
+    case 'url':
+      return safeRedirectUrl(ad.cta.url);
+    default:
+      return null;
+  }
+}
+
+/** Page for the preview link: first targeted page, else the home page. */
+export function previewSlug(ad: Pick<PopupAd, 'pages'>): string {
+  return ad.pages === 'all' || ad.pages.length === 0 ? 'smart-city-tea-cafe' : ad.pages[0];
+}
+
+export function previewPath(ad: Pick<PopupAd, 'id' | 'pages'>): string {
+  const slug = previewSlug(ad);
+  const base = slug === HOME_SLUG ? '/' : `/${slug}`;
+  return `${base}?popup_preview=${encodeURIComponent(ad.id)}`;
+}

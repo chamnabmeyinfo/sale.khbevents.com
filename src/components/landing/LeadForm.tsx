@@ -1,4 +1,5 @@
 'use client';
+import { popupStorageKeys } from '@/lib/popup-ads';
 
 import React, { useState, Suspense } from 'react';
 import { Send, CheckCircle2, ShieldCheck, Sparkles, MessageCircle, Lock } from 'lucide-react';
@@ -89,6 +90,7 @@ function LeadFormInner({
       }
 
       setSubmitted(true);
+      try { localStorage.setItem(popupStorageKeys.leadSent, '1'); } catch {}
       trackClientEvent(landingPageSlug, 'form_submit', {
         eventType: formData.eventType,
         client: formData.fullName,

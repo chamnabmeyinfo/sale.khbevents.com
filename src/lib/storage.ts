@@ -14,7 +14,10 @@ import {
   RoundRobinSettings,
   RoundRobinLog,
   RoutingDeliveryStatus,
-  AssignmentReason
+  AssignmentReason,
+  PopupAd,
+  PopupAdsState,
+  PopupAdStatsMap
 } from './types';
 import {
   defaultRoundRobinSettings,
@@ -30,6 +33,7 @@ import {
 } from './round-robin';
 import { isSupabaseConfigured } from './supabase';
 import { runAfterResponse } from './after-response';
+import { defaultPopupAdsState, normalizePopupAdsState, selectPublicPopupAds } from './popup-ads';
 import {
   supabaseGetPages,
   supabaseGetPageBySlug,
@@ -52,7 +56,11 @@ import {
   supabaseGetDeletedPages,
   supabaseSaveDeletedPages,
   supabaseGetMarker,
-  supabaseSetMarker
+  supabaseSetMarker,
+  supabaseGetPopupAds,
+  supabaseSavePopupAds,
+  supabaseGetPopupAdStats,
+  supabaseSavePopupAdStats
 } from './supabase-store';
 import bundledDbJson from '../../data/db.json';
 
@@ -73,8 +81,11 @@ const cachedSupabasePageBySlug = unstable_cache((slug: string) => supabaseGetPag
 const cachedSupabaseDeletedPages = unstable_cache(() => supabaseGetDeletedPages(), ['supabase-deleted-pages'], {
   tags: ['pages'], revalidate: CACHE_SECONDS,
 });
+const cachedSupabasePopupAds = unstable_cache(() => supabaseGetPopupAds(), ['supabase-popup-ads'], {
+  tags: ['popup-ads'], revalidate: CACHE_SECONDS,
+});
 
-function invalidateCache(tag: 'settings' | 'pages') {
+function invalidateCache(tag: 'settings' | 'pages' | 'popup-ads') {
   try {
     revalidateTag(tag, { expire: 0 });
   } catch {
@@ -318,6 +329,8 @@ export async function getDatabase(): Promise<DatabaseSchema> {
     if (!db.roundRobinLogs) {
       db.roundRobinLogs = [];
     }
+    if (!db.popupAds) db.popupAds = structuredClone(defaultPopupAdsState);
+    if (!db.popupAdStats) db.popupAdStats = {};
     dbCache.__khbMemoryDb = db;
     return db;
   } catch (err) {
@@ -1145,6 +1158,95 @@ export async function updateSettings(
   return updated || db.settings;
 }
 
+// ─── Popup ads ─────────────────────────────────────────────────────────────
+
+/**
+ * Popup ads and their global settings. Public pages read through the 60 s cache;
+ * the admin passes fresh=true so it always edits the latest saved state.
+ */
+export async function getPopupAds(fresh = false): Promise<PopupAdsState> {
+  if (isSupabaseConfigured()) {
+    try {
+      const remote = fresh ? await supabaseGetPopupAds() : await cachedSupabasePopupAds();
+      // undefined = no row yet → an empty state is the truth, not a failure.
+      if (remote) return remote;
+      if (remote === undefined) return structuredClone(defaultPopupAdsState);
+    } catch (err) {
+      console.error('Supabase getPopupAds error:', err);
+    }
+  }
+  const db = await getDatabase();
+  return db.popupAds || structuredClone(defaultPopupAdsState);
+}
+
+/** Cleans and stores the whole popup state (admin save). */
+export async function savePopupAds(input: unknown): Promise<PopupAdsState> {
+  const current = await getPopupAds(true);
+  const state = normalizePopupAdsState(input, new Date().toISOString(), current);
+  const db = await getDatabase();
+  db.popupAds = state;
+  await saveDatabase(db);
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseSavePopupAds(state);
+    } catch (err) {
+      console.error('Supabase savePopupAds error:', err);
+    }
+  }
+  invalidateCache('popup-ads');
+  return state;
+}
+
+/**
+ * The popups a public page may show right now, highest priority first. A
+ * preview id (admin "Preview" link) is included whatever its state.
+ */
+export async function getActivePopupAds(slug: string, previewId?: string): Promise<PopupAd[]> {
+  const state = await getPopupAds(Boolean(previewId));
+  return selectPublicPopupAds(state, slug.toLowerCase().trim(), Date.now(), { previewId });
+}
+
+export async function getPopupAdStats(): Promise<PopupAdStatsMap> {
+  if (isSupabaseConfigured()) {
+    try {
+      const remote = await supabaseGetPopupAdStats();
+      if (remote) return remote;
+      if (remote === undefined) return {};
+    } catch (err) {
+      console.error('Supabase getPopupAdStats error:', err);
+    }
+  }
+  const db = await getDatabase();
+  return db.popupAdStats || {};
+}
+
+/**
+ * Counts one popup event. Runs after the tracking response; the Supabase row is
+ * read-modify-write, so counts are approximate under heavy concurrency.
+ */
+export async function recordPopupAdEvent(adId: string, kind: 'view' | 'click' | 'close'): Promise<void> {
+  const now = new Date().toISOString();
+  const bump = (stats: PopupAdStatsMap) => {
+    const s = stats[adId] || { views: 0, clicks: 0, closes: 0 };
+    if (kind === 'view') { s.views += 1; s.lastViewAt = now; }
+    if (kind === 'click') { s.clicks += 1; s.lastClickAt = now; }
+    if (kind === 'close') s.closes += 1;
+    stats[adId] = s;
+    return stats;
+  };
+  const db = await getDatabase();
+  db.popupAdStats = bump(db.popupAdStats || {});
+  await saveDatabase(db);
+  if (isSupabaseConfigured()) {
+    try {
+      const remote = await supabaseGetPopupAdStats();
+      await supabaseSavePopupAdStats(bump(remote || {}));
+    } catch (err) {
+      console.error('Supabase recordPopupAdEvent error:', err);
+    }
+  }
+}
+
 const WEBHOOK_MARKER_ID = 'telegram_webhook_secured';
 
 function tokenFingerprint(botToken: string): string {
@@ -1257,6 +1359,14 @@ export async function recordTrackingEvent(payload: RecordTrackingPayload): Promi
   }
 
   await saveDatabase(db);
+
+  if (eventType === 'popup_view' || eventType === 'popup_click' || eventType === 'popup_close') {
+    const adId = typeof payload.eventData?.adId === 'string' ? payload.eventData.adId : '';
+    if (adId) {
+      const kind = eventType === 'popup_view' ? 'view' : eventType === 'popup_click' ? 'click' : 'close';
+      runAfterResponse(() => recordPopupAdEvent(adId, kind));
+    }
+  }
 }
 
 export async function recordPageView(slug: string, referrer?: string): Promise<void> {

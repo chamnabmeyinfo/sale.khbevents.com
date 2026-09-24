@@ -119,3 +119,12 @@ Landing-page copy lives in git as a content pack, `content/pages/<slug>.json`, h
 - **Admin → Pages → Import JSON**: applies a pack on demand.
 
 Regenerate the Smart City pack from the copy module with `npm run content:pack`.
+
+## Popup ads
+
+Promotional popups on the public landing pages are managed in **Admin → Ads & Popups** (`/admin/ads`): bilingual copy, an optional picture, four layouts (card, bottom sheet, banner, image first), targeting by page / device / language, a trigger (immediately, after N seconds, after scrolling, on exit intent), a per-visitor frequency, a schedule and a priority. At most one popup shows per page view; a global cooldown stops a second popup from following the first, and visitors who already sent the form are skipped.
+
+- Rules live in `src/lib/popup-ads.ts` (pure, unit-tested); the popup itself is `src/components/common/PopupAds.tsx` with styles in `src/styles/popup-ads.css`.
+- State is stored as a JSON row (`popup_ads`) in `system_settings`, counters in `popup_ad_stats`; no migration needed. Public pages read it through the 60 s cache.
+- `?popup_preview=<id>` shows one popup at once, ignoring its rules and without counting; `?nopopup=1` hides all popups.
+- Views, clicks and closes flow through `/api/track` as `popup_view`, `popup_click` and `popup_close`.

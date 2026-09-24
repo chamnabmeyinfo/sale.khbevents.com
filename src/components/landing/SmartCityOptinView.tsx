@@ -2,13 +2,15 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { LandingPage, SystemSettings } from '@/lib/types';
+import { LandingPage, PopupAd, SystemSettings } from '@/lib/types';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
+import PopupAdsHost from '@/components/common/PopupAds';
+import { popupStorageKeys } from '@/lib/popup-ads';
 import FlagIcon from '@/components/common/FlagIcon';
 import { safeRedirectUrl } from '@/lib/safe-url';
 import { readUtmParams } from '@/lib/utm';
 
-export default function SmartCityOptinView({ page, initialLang }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh' } = {}) {
+export default function SmartCityOptinView({ page, initialLang, popupAds, popupPreviewId }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh'; popupAds?: PopupAd[]; popupPreviewId?: string; } = {}) {
   const [lang, setLang] = useState<'en' | 'kh'>(initialLang || 'en');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -41,6 +43,7 @@ export default function SmartCityOptinView({ page, initialLang }: { page?: Landi
       const data = await res.json();
       if (res.ok && data.success) {
         setSubmitted(true);
+        try { localStorage.setItem(popupStorageKeys.leadSent, '1'); } catch {}
         trackLandingEvent(page, 'form_submit', { profile: 'Fast Opt-in', value: effEarlyBirdPrice }, lang);
 
         const redirectTarget = safeRedirectUrl(page?.isolatedSettings?.redirectUrl);
@@ -72,6 +75,7 @@ export default function SmartCityOptinView({ page, initialLang }: { page?: Landi
         fontFamily: isKh ? "'Hanuman', 'Kantumruy Pro', sans-serif" : "'Plus Jakarta Sans', sans-serif"
       }}>
         <LandingPageTracking page={page} lang={lang} />
+        <PopupAdsHost ads={popupAds} previewId={popupPreviewId} pageSlug={page?.slug || 'smart-city-tea-cafe'} lang={lang} />
       <div style={{ width: '100%', maxWidth: '440px' }}>
         <div style={{
           background: '#FFFFFF',

@@ -12,14 +12,16 @@ import FaqSection from './FaqSection';
 import LeadForm from './LeadForm';
 import FloatingContact from './FloatingContact';
 import Footer from './Footer';
-import { LandingPage, SystemSettings } from '@/lib/types';
+import { LandingPage, PopupAd, SystemSettings } from '@/lib/types';
+import PopupAdsHost from '@/components/common/PopupAds';
 
 interface MainSalesViewProps {
   pages: LandingPage[];
   settings: SystemSettings;
+  popupAds?: PopupAd[]; popupPreviewId?: string;
 }
 
-export default function MainSalesView({ pages, settings }: MainSalesViewProps) {
+export default function MainSalesView({ pages, settings, popupAds, popupPreviewId }: MainSalesViewProps) {
   const [formPrefill, setFormPrefill] = useState<{
     eventType?: string;
     guestCount?: string;
@@ -63,6 +65,7 @@ export default function MainSalesView({ pages, settings }: MainSalesViewProps) {
         phone={settings.phone}
         pageSlug="main-sales"
       />
+      <PopupAdsHost ads={popupAds} previewId={popupPreviewId} pageSlug="main-sales" />
 
       <Footer
         phone={settings.phone}

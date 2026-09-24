@@ -31,6 +31,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     if (pathname.startsWith('/admin/pages/')) return 'Landing Pages CMS / Edit Campaign';
     if (pathname.startsWith('/admin/leads')) return 'Leads & CRM Pipeline';
     if (pathname.startsWith('/admin/round-robin')) return 'Staff Round Robin Allocation';
+    if (pathname.startsWith('/admin/ads')) return 'Ads & Popups';
     if (pathname.startsWith('/admin/settings')) return 'Settings & Security';
     if (pathname.startsWith('/admin/guide')) return 'Operator User Guide & Blueprint';
     return 'Admin';
