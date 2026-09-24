@@ -3,6 +3,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { AuthForm } from './AuthForm';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, redirectUrl }: AuthModalProps) {
+  const { t } = useLanguage();
   if (!isOpen) return null;
 
   return (
@@ -19,7 +21,7 @@ export function AuthModal({ isOpen, onClose, redirectUrl }: AuthModalProps) {
         <button
           onClick={onClose}
           className="absolute right-4 top-4 z-10 p-2 rounded-full bg-slate-100 dark:bg-zinc-800/80 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-700 transition-all cursor-pointer shadow-sm"
-          aria-label="Close"
+          aria-label={t('auth.close')}
         >
           <X className="w-5 h-5" />
         </button>

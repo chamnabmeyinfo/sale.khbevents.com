@@ -53,6 +53,7 @@ import {
 import DragDropSectionBuilder from './DragDropSectionBuilder';
 import { useLocationHash, useUrlParam } from '@/lib/use-browser-state';
 import { errorMessage } from '@/lib/errors';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface PageEditorProps {
   initialData?: Partial<LandingPage>;
@@ -256,6 +257,7 @@ const DEFAULT_SUMMIT_SPEAKERS: SpeakerItem[] = [
 
 export default function PageEditor({ initialData, isNew = false }: PageEditorProps) {
   const router = useRouter();
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState<Partial<LandingPage>>({
     id: initialData?.id,
@@ -446,7 +448,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     setSaveSuccess(false);
 
     if (!formData.title || !formData.slug) {
-      setError('Title and Slug are required to publish the landing page.');
+      setError(t('editor.err.required'));
       setSaving(false);
       return;
     }
@@ -463,7 +465,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to save page');
+        throw new Error(data.error || t('editor.err.saveFailed'));
       }
 
       setSaveSuccess(true);
@@ -473,7 +475,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
         router.push(`/admin/pages/${data.page.id}`);
       }
     } catch (err) {
-      setError(errorMessage(err, 'Error occurred while saving'));
+      setError(errorMessage(err, t('editor.err.saveError')));
     } finally {
       setSaving(false);
     }
@@ -1055,10 +1057,10 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
   const currentTemplate = formData.template || 'b2b-delegation';
 
   const baseTabs: { id: TabType; label: string; count?: number; highlight?: boolean }[] = [
-    { id: 'general', label: 'General & Template' },
-    { id: 'layout', label: '🧩 Page Layout & Sections', count: formData.sectionOrder?.length, highlight: true },
-    { id: 'hero', label: 'Hero Section' },
-    { id: 'event', label: 'Date & Venue' }
+    { id: 'general', label: t('editor.tab.general') },
+    { id: 'layout', label: t('editor.tab.layout'), count: formData.sectionOrder?.length, highlight: true },
+    { id: 'hero', label: t('editor.tab.hero') },
+    { id: 'event', label: t('editor.tab.event') }
   ];
 
   const templateTabs: { id: TabType; label: string; count?: number; highlight?: boolean }[] = [];
@@ -1066,58 +1068,58 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
   if (currentTemplate === 'trade-expo') {
     templateTabs.push({ 
       id: 'expoBooths', 
-      label: '🎪 Exhibition Booth Tiers', 
+      label: t('editor.tab.expoBooths'), 
       count: formData.expoBooths?.length,
       highlight: true 
     });
   } else if (currentTemplate === 'concert-festival') {
     templateTabs.push({ 
       id: 'artists', 
-      label: '🎵 Artist Lineup & Stages', 
+      label: t('editor.tab.artists'), 
       count: formData.artists?.length,
       highlight: true 
     });
   } else if (currentTemplate === 'corporate-summit') {
     templateTabs.push({ 
       id: 'speakers', 
-      label: '🎤 Keynote Speakers', 
+      label: t('editor.tab.speakers'), 
       count: formData.speakers?.length,
       highlight: true 
     });
   } else if (currentTemplate === 'b2b-delegation') {
     templateTabs.push(
-      { id: 'itinerary', label: '📅 Itinerary (4D3N)', count: formData.itinerary?.length, highlight: true },
-      { id: 'valueStack', label: '💎 9-in-1 Value Stack', count: formData.valueStack?.inclusions?.length, highlight: true },
-      { id: 'values', label: 'Core Values', count: (formData.coreValues?.length || 0) + (formData.highlights?.length || 0) },
-      { id: 'problems', label: 'Problem vs Solution', count: formData.problems?.length },
-      { id: 'audiences', label: 'Target Audience', count: formData.audiences?.length }
+      { id: 'itinerary', label: t('editor.tab.itinerary'), count: formData.itinerary?.length, highlight: true },
+      { id: 'valueStack', label: t('editor.tab.valueStack'), count: formData.valueStack?.inclusions?.length, highlight: true },
+      { id: 'values', label: t('editor.tab.values'), count: (formData.coreValues?.length || 0) + (formData.highlights?.length || 0) },
+      { id: 'problems', label: t('editor.tab.problems'), count: formData.problems?.length },
+      { id: 'audiences', label: t('editor.tab.audiences'), count: formData.audiences?.length }
     );
   }
 
   // Allow editing template sections if enabled in visibility OR if they have items
   if (currentTemplate !== 'b2b-delegation' && ((formData.itinerary?.length || 0) > 0 || formData.sectionVisibility?.itinerary)) {
-    templateTabs.push({ id: 'itinerary', label: 'Itinerary / Schedule', count: formData.itinerary?.length });
+    templateTabs.push({ id: 'itinerary', label: t('editor.tab.itineraryAlt'), count: formData.itinerary?.length });
   }
   if (currentTemplate !== 'trade-expo' && ((formData.expoBooths?.length || 0) > 0 || formData.sectionVisibility?.expoBooths)) {
-    templateTabs.push({ id: 'expoBooths', label: 'Booth Tiers', count: formData.expoBooths?.length });
+    templateTabs.push({ id: 'expoBooths', label: t('editor.tab.boothsAlt'), count: formData.expoBooths?.length });
   }
   if (currentTemplate !== 'concert-festival' && ((formData.artists?.length || 0) > 0 || formData.sectionVisibility?.artists)) {
-    templateTabs.push({ id: 'artists', label: 'Artists', count: formData.artists?.length });
+    templateTabs.push({ id: 'artists', label: t('editor.tab.artistsAlt'), count: formData.artists?.length });
   }
   if (currentTemplate !== 'corporate-summit' && ((formData.speakers?.length || 0) > 0 || formData.sectionVisibility?.speakers)) {
-    templateTabs.push({ id: 'speakers', label: 'Speakers', count: formData.speakers?.length });
+    templateTabs.push({ id: 'speakers', label: t('editor.tab.speakersAlt'), count: formData.speakers?.length });
   }
 
   const commonTabs: { id: TabType; label: string; count?: number; highlight?: boolean }[] = [
-    { id: 'packages', label: 'Pricing Packages', count: formData.packages?.length },
-    { id: 'gallery', label: 'Visual Gallery', count: formData.gallery?.length },
-    { id: 'testimonials', label: 'Testimonials', count: formData.testimonials?.length },
-    { id: 'faqs', label: 'FAQs', count: formData.faqs?.length },
-    { id: 'guarantee', label: 'Guarantee', count: formData.guarantee?.points?.length },
-    { id: 'form', label: 'Lead Form', count: formData.formConfig?.fields?.length },
-    { id: 'seo', label: 'SEO & Social' },
-    { id: 'tracking', label: '📊 Tracking & Pixels', highlight: true },
-    { id: 'isolatedSettings', label: '⚙️ Dedicated Settings', highlight: true }
+    { id: 'packages', label: t('editor.tab.packages'), count: formData.packages?.length },
+    { id: 'gallery', label: t('editor.tab.gallery'), count: formData.gallery?.length },
+    { id: 'testimonials', label: t('editor.tab.testimonials'), count: formData.testimonials?.length },
+    { id: 'faqs', label: t('editor.tab.faqs'), count: formData.faqs?.length },
+    { id: 'guarantee', label: t('editor.tab.guarantee'), count: formData.guarantee?.points?.length },
+    { id: 'form', label: t('editor.tab.form'), count: formData.formConfig?.fields?.length },
+    { id: 'seo', label: t('editor.tab.seo') },
+    { id: 'tracking', label: t('editor.tab.tracking'), highlight: true },
+    { id: 'isolatedSettings', label: t('editor.tab.settings'), highlight: true }
   ];
 
   const tabs = [...baseTabs, ...templateTabs, ...commonTabs];
@@ -1130,25 +1132,25 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
           <Link
             href="/admin/pages"
             className="p-2.5 rounded-xl bg-slate-100 dark:bg-emerald-950 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-200 dark:border-emerald-800/50 transition-colors shadow-sm"
-            title="Back to Landing Pages"
+            title={t('editor.backToPages')}
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold text-slate-900 dark:text-white">
-                {isNew ? 'Create New Landing Page' : `Edit: ${formData.title || 'Untitled Campaign'}`}
+                {isNew ? t('editor.createTitle') : t('editor.editTitle', { title: formData.title || t('editor.untitled') })}
               </h1>
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
                 formData.status === 'published' 
                   ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700' 
                   : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300'
               }`}>
-                {formData.status}
+                {t(`editor.status.${formData.status || 'published'}`)}
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-gray-400 font-mono flex items-center gap-1 mt-0.5">
-              <span>Path:</span>
+              <span>{t('editor.path')}</span>
               <span className="text-amber-600 dark:text-amber-400 font-bold">/{formData.slug || 'your-slug'}</span>
             </p>
           </div>
@@ -1161,7 +1163,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               target="_blank"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-emerald-950 hover:bg-slate-200 dark:hover:bg-emerald-900 border border-slate-200 dark:border-emerald-800 text-slate-800 dark:text-emerald-300 text-xs font-semibold transition-colors shadow-sm"
             >
-              <span>Preview Live</span>
+              <span>{t('editor.previewLive')}</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           )}
@@ -1173,7 +1175,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer transition-all hover:scale-102"
           >
             <Save className="w-4 h-4 text-black" />
-            <span>{saving ? 'Saving...' : 'Save & Publish'}</span>
+            <span>{saving ? t('editor.saving') : t('editor.savePublish')}</span>
           </button>
         </div>
       </div>
@@ -1182,7 +1184,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
         <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-500/60 text-xs text-emerald-800 dark:text-emerald-200 flex items-center gap-2.5 shadow-md">
           <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <div>
-            <strong>Success!</strong> All landing page sections and changes have been saved and published live.
+            <strong>{t('editor.successTitle')}</strong> {t('editor.successBody')}
           </div>
         </div>
       )}
@@ -1199,7 +1201,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-emerald-300">
             <Globe className="w-4 h-4 text-amber-500" />
-            <span>Editing Language:</span>
+            <span>{t('editor.editingLang')}</span>
           </div>
           <div className="flex items-center gap-1.5 bg-white dark:bg-[#040C07] p-1 rounded-xl border border-slate-200 dark:border-emerald-900/60 shadow-inner">
             <button
@@ -1212,7 +1214,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               }`}
             >
               <span className="text-sm">🇬🇧</span>
-              <span>English (Default)</span>
+              <span>{t('editor.langEn')}</span>
             </button>
             <button
               type="button"
@@ -1224,9 +1226,9 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               }`}
             >
               <span className="text-sm">🇰🇭</span>
-              <span>ភាសាខ្មែរ (Khmer)</span>
+              <span>{t('editor.langKh')}</span>
               {Boolean(formData.translations?.kh?.heroHeadline || formData.translations?.kh?.title) && (
-                <span className="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-emerald-200" title="Khmer translations configured" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-emerald-200" title={t('editor.khConfigured')} />
               )}
             </button>
           </div>
@@ -1234,9 +1236,9 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
         <div className="text-[11px] text-slate-500 dark:text-gray-400">
           {langTab === 'en' ? (
-            <span>Editing primary English copy &bull; numbers (prices, dates, seats) sync across all languages.</span>
+            <span>{t('editor.langNoteEn')}</span>
           ) : (
-            <span>Editing Khmer version &bull; visitors who click <b>ខ្មែរ</b> will see this content.</span>
+            <span>{t('editor.langNoteKh1')} <b>ខ្មែរ</b> {t('editor.langNoteKh2')}</span>
           )}
         </div>
       </div>
@@ -1283,14 +1285,14 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 <div>
                   <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5 uppercase tracking-wider">
                     <Sparkles className="w-4 h-4 text-amber-500" />
-                    <span>Business Type &amp; Landing Page Template</span>
+                    <span>{t('editor.gen.templateTitle')}</span>
                   </label>
                   <p className="text-[11px] text-slate-500 dark:text-gray-400">
-                    Each business type has its own unique layout, sections, and conversion architecture.
+                    {t('editor.gen.templateHint')}
                   </p>
                 </div>
                 <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-amber-400 text-black font-extrabold self-start sm:self-auto">
-                  Active: {TEMPLATE_OPTIONS.find(t => t.id === (formData.template || 'b2b-delegation'))?.label}
+                  {t('editor.gen.active', { name: t(`editor.tmpl.${formData.template || 'b2b-delegation'}.label`) })}
                 </span>
               </div>
 
@@ -1318,15 +1320,15 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                           </span>
                           {isSelected && (
                             <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/80 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-700">
-                              Selected
+                              {t('editor.gen.selected')}
                             </span>
                           )}
                         </div>
                         <div className="font-bold text-xs text-slate-900 dark:text-white pt-1">
-                          {tmpl.label}
+                          {t(`editor.tmpl.${tmpl.id}.label`)}
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
-                          {tmpl.description}
+                          {t(`editor.tmpl.${tmpl.id}.desc`)}
                         </p>
                       </div>
                     </button>
@@ -1338,7 +1340,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Page Title <span className="text-amber-500">*</span>
+                  {t('editor.gen.title')} <span className="text-amber-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -1351,7 +1353,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  URL Slug (sale.khbevents.com/...) <span className="text-amber-500">*</span>
+                  {t('editor.gen.slug')} <span className="text-amber-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -1364,7 +1366,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Category
+                  {t('editor.gen.category')}
                 </label>
                 <input
                   type="text"
@@ -1377,7 +1379,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Badge / Top Pill Text
+                  {t('editor.gen.badge')}
                 </label>
                 <input
                   type="text"
@@ -1390,29 +1392,29 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Publishing Status
+                  {t('editor.gen.status')}
                 </label>
                 <select
                   value={formData.status || 'published'}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as LandingPage['status'] })}
                   className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
                 >
-                  <option value="published">Published (Active & Live)</option>
-                  <option value="draft">Draft (Hidden)</option>
-                  <option value="archived">Archived</option>
+                  <option value="published">{t('editor.gen.statusPublished')}</option>
+                  <option value="draft">{t('editor.gen.statusDraft')}</option>
+                  <option value="archived">{t('editor.gen.statusArchived')}</option>
                 </select>
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                Campaign Summary / Brief Overview
+                {t('editor.gen.summary')}
               </label>
               <textarea
                 rows={2}
                 value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Overview of this delegation or sales event..."
+                placeholder={t('editor.gen.summaryPh')}
                 className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs resize-none focus:outline-none focus:border-amber-400"
               />
             </div>
@@ -1423,10 +1425,10 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <Layers className="w-4 h-4 text-amber-500" />
-                    <span>Landing Page Section Display Toggles</span>
+                    <span>{t('editor.gen.togglesTitle')}</span>
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-gray-400">
-                    Easily turn individual landing page sections on or off to tailor the page flow.
+                    {t('editor.gen.togglesHint')}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1435,14 +1437,14 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                     onClick={() => setAllSections(true)}
                     className="px-3 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors"
                   >
-                    Enable All
+                    {t('editor.enableAll')}
                   </button>
                   <button
                     type="button"
                     onClick={() => setAllSections(false)}
                     className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                   >
-                    Disable All
+                    {t('editor.disableAll')}
                   </button>
                 </div>
               </div>
@@ -1471,10 +1473,10 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-emerald-950 dark:text-emerald-100">
-                    Interactive Drag-and-Drop Page Layout Builder
+                    {t('editor.layout.title')}
                   </h3>
                   <p className="text-xs text-emerald-800/80 dark:text-emerald-300/80 mt-0.5 leading-relaxed">
-                    Design the exact visitor journey for this landing page. Drag any section by its handle to position it higher or lower, add missing components from the library, or apply 1-click recommended flows.
+                    {t('editor.layout.hint')}
                   </p>
                 </div>
               </div>
@@ -1484,14 +1486,14 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   onClick={() => setAllSections(true)}
                   className="px-3 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors cursor-pointer"
                 >
-                  Enable All
+                  {t('editor.enableAll')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setAllSections(false)}
                   className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                 >
-                  Disable All
+                  {t('editor.disableAll')}
                 </button>
               </div>
             </div>
@@ -1512,7 +1514,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                Hero Headline
+                {t('editor.hero.headline')}
               </label>
               <input
                 type="text"
@@ -1525,13 +1527,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                Hero Subheadline / Value Proposition
+                {t('editor.hero.sub')}
               </label>
               <textarea
                 rows={3}
                 value={formData.heroSubheadline || ''}
                 onChange={(e) => setFormData({ ...formData, heroSubheadline: e.target.value })}
-                placeholder="Expand on why delegates must attend..."
+                placeholder={t('editor.hero.subPh')}
                 className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs resize-none focus:outline-none focus:border-amber-400"
               />
             </div>
@@ -1539,7 +1541,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Hero CTA Button Text
+                  {t('editor.hero.cta')}
                 </label>
                 <input
                   type="text"
@@ -1552,7 +1554,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Hero CTA Button Target Link / Anchor
+                  {t('editor.hero.ctaLink')}
                 </label>
                 <input
                   type="text"
@@ -1567,8 +1569,8 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             {/* Hero slideshow photos */}
             <div className="pt-2">
               <ImageManager
-                title="Hero slideshow photos"
-                hint="The first photo is the cover and opens the slideshow. Drag photos to arrange them, upload new ones, or add from the library. The same photos, in this order, make up the Gallery section."
+                title={t('editor.hero.photosTitle')}
+                hint={t('editor.hero.photosHint')}
                 images={slideshowPhotos}
                 onChange={setSlideshowPhotos}
                 library={PRESET_PHOTOS}
@@ -1583,7 +1585,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Event Start Date
+                  {t('editor.event.date')}
                 </label>
                 <input
                   type="text"
@@ -1596,7 +1598,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Duration / Time
+                  {t('editor.event.time')}
                 </label>
                 <input
                   type="text"
@@ -1609,7 +1611,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Venue Name
+                  {t('editor.event.venue')}
                 </label>
                 <input
                   type="text"
@@ -1622,7 +1624,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Venue Address / City
+                  {t('editor.event.address')}
                 </label>
                 <input
                   type="text"
@@ -1643,7 +1645,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-[#06100B] border-slate-300 dark:border-emerald-900 focus:ring-0 cursor-pointer"
               />
               <label htmlFor="countdownEnabled" className="text-xs text-slate-700 dark:text-gray-200 font-semibold cursor-pointer">
-                Enable live countdown timer banner on landing page
+                {t('editor.event.countdown')}
               </label>
             </div>
 
@@ -1652,13 +1654,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-amber-500" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
-                  Seats Quota & Early Bird Pricing Anchor
+                  {t('editor.event.urgencyTitle')}
                 </h4>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
-                  <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Total Seats</label>
+                  <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.event.totalSeats')}</label>
                   <input
                     type="number"
                     value={formData.urgency?.totalSeats ?? 30}
@@ -1671,7 +1673,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Claimed Seats</label>
+                  <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.event.claimedSeats')}</label>
                   <input
                     type="number"
                     value={formData.urgency?.claimedSeats ?? 19}
@@ -1684,7 +1686,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Early Bird Price ($)</label>
+                  <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.event.ebPrice')}</label>
                   <input
                     type="text"
                     value={formData.urgency?.earlyBirdPrice ?? 499}
@@ -1697,7 +1699,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Regular Price ($)</label>
+                  <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.event.regPrice')}</label>
                   <input
                     type="text"
                     value={formData.urgency?.regularPrice ?? 550}
@@ -1711,7 +1713,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               </div>
 
               <div>
-                <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Urgency Notice Banner Text</label>
+                <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.event.notice')}</label>
                 <input
                   type="text"
                   value={formData.urgency?.noticeText || ''}
@@ -1725,7 +1727,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               </div>
 
               <div>
-                <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Risk-Free Note</label>
+                <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.event.riskNote')}</label>
                 <input
                   type="text"
                   value={formData.urgency?.riskNote || ''}
@@ -1747,10 +1749,10 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Ticket Passes & Pricing Tiers ({formData.packages?.length || 0})
+                  {t('editor.pkg.title', { n: formData.packages?.length || 0 })}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400">
-                  Create, edit, or delete the admission and delegate passes.
+                  {t('editor.pkg.hint')}
                 </p>
               </div>
               <button
@@ -1759,7 +1761,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200 dark:hover:bg-emerald-800 text-xs font-bold cursor-pointer transition-colors shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Package Tier</span>
+                <span>{t('editor.pkg.add')}</span>
               </button>
             </div>
 
@@ -1768,7 +1770,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 <div key={pkg.id || idx} className="p-5 rounded-2xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/70 space-y-4 shadow-sm">
                   <div className="flex items-center justify-between border-b border-slate-200 dark:border-emerald-900/40 pb-3">
                     <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                      Tier #{idx + 1}: {pkg.name || 'Unnamed Tier'}
+                      {t('editor.pkg.tier', { n: idx + 1, name: pkg.name || t('editor.pkg.unnamed') })}
                     </span>
                     <button
                       type="button"
@@ -1776,13 +1778,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 text-xs flex items-center gap-1 cursor-pointer transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete Tier</span>
+                      <span>{t('editor.pkg.delete')}</span>
                     </button>
                   </div>
 
                   <div className="grid sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Package Name</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.pkg.name')}</label>
                       <input
                         type="text"
                         value={pkg.name}
@@ -1791,7 +1793,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Price</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.pkg.price')}</label>
                       <input
                         type="text"
                         value={pkg.price}
@@ -1801,7 +1803,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Period / Unit Note</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.pkg.period')}</label>
                       <input
                         type="text"
                         value={pkg.period || ''}
@@ -1821,12 +1823,12 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-[#050C08] border-slate-300 dark:border-emerald-900 focus:ring-0 cursor-pointer"
                     />
                     <label htmlFor={`pop-${idx}`} className="text-xs text-amber-700 dark:text-amber-300 font-semibold cursor-pointer">
-                      Mark as &quot;Most Popular / Recommended&quot; (Gold Highlight)
+                      {t('editor.pkg.popular')}
                     </label>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Short Description</label>
+                    <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.pkg.desc')}</label>
                     <input
                       type="text"
                       value={pkg.description || ''}
@@ -1839,7 +1841,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   {/* Features List CRUD */}
                   <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-emerald-950">
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300">
-                      Package Features & Inclusions ({pkg.features?.length || 0})
+                      {t('editor.pkg.features', { n: pkg.features?.length || 0 })}
                     </label>
                     <div className="space-y-1.5">
                       {(pkg.features || []).map((feat, fIdx) => (
@@ -1859,7 +1861,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                             type="button"
                             onClick={() => removePackageFeature(idx, fIdx)}
                             className="text-slate-400 hover:text-rose-500 cursor-pointer p-1"
-                            title="Remove feature"
+                            title={t('editor.pkg.removeFeature')}
                           >
                             &times;
                           </button>
@@ -1873,7 +1875,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                         value={newFeatureText[idx] || ''}
                         onChange={(e) => setNewFeatureText({ ...newFeatureText, [idx]: e.target.value })}
                         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addPackageFeature(idx); } }}
-                        placeholder="Add a new feature bullet point..."
+                        placeholder={t('editor.pkg.featurePh')}
                         className="flex-1 px-3 py-1.5 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
                       />
                       <button
@@ -1881,14 +1883,14 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                         onClick={() => addPackageFeature(idx)}
                         className="px-3 py-1.5 rounded-lg bg-amber-400 text-black font-bold text-xs cursor-pointer hover:bg-amber-300"
                       >
-                        + Add Feature
+                        {t('editor.pkg.addFeature')}
                       </button>
                     </div>
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-3 pt-2">
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Button CTA Text</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.pkg.cta')}</label>
                       <input
                         type="text"
                         value={pkg.ctaText || ''}
@@ -1911,10 +1913,10 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Store className="w-4 h-4 text-emerald-500" />
-                  <span>Exhibition Booth Tiers &amp; Floor Space ({formData.expoBooths?.length || 0})</span>
+                  <span>{t('editor.booth.title', { n: formData.expoBooths?.length || 0 })}</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400">
-                  Dedicated for Trade Expo landing pages. Manage booth sizes, pricing, footfall zones, inventory and inclusions.
+                  {t('editor.booth.hint')}
                 </p>
               </div>
               <button
@@ -1923,20 +1925,20 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200 dark:hover:bg-emerald-800 text-xs font-bold cursor-pointer transition-colors shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Booth Tier</span>
+                <span>{t('editor.booth.add')}</span>
               </button>
             </div>
 
             {(!formData.expoBooths || formData.expoBooths.length === 0) && (
               <div className="p-8 rounded-2xl bg-slate-50 dark:bg-[#07130D] border border-dashed border-slate-300 dark:border-emerald-900/60 text-center space-y-3">
                 <Store className="w-8 h-8 text-emerald-500 mx-auto" />
-                <p className="text-xs text-slate-600 dark:text-gray-400">No booth tiers added yet.</p>
+                <p className="text-xs text-slate-600 dark:text-gray-400">{t('editor.booth.empty')}</p>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, expoBooths: DEFAULT_EXPO_BOOTHS })}
                   className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-bold text-xs cursor-pointer shadow-md"
                 >
-                  Load 3 Turnkey Expo Booth Presets
+                  {t('editor.booth.load')}
                 </button>
               </div>
             )}
@@ -1947,11 +1949,11 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   <div className="flex items-center justify-between border-b border-slate-200 dark:border-emerald-900/40 pb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                        Booth #{idx + 1}: {booth.name}
+                        {t('editor.booth.item', { n: idx + 1, name: booth.name })}
                       </span>
                       {booth.popular && (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400 text-black">
-                          Popular
+                          {t('editor.booth.popular')}
                         </span>
                       )}
                     </div>
@@ -1961,13 +1963,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       className="text-rose-600 hover:text-rose-700 dark:text-rose-400 text-xs flex items-center gap-1 cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete Booth</span>
+                      <span>{t('editor.booth.delete')}</span>
                     </button>
                   </div>
 
                   <div className="grid sm:grid-cols-4 gap-3">
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Booth Tier Name</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.booth.name')}</label>
                       <input
                         type="text"
                         value={booth.name}
@@ -1977,7 +1979,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Dimensions &amp; Area</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.booth.size')}</label>
                       <input
                         type="text"
                         value={booth.size}
@@ -1987,7 +1989,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Booth Price</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.booth.price')}</label>
                       <input
                         type="text"
                         value={booth.price}
@@ -1997,7 +1999,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Floor Location / Hall Zone</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.booth.location')}</label>
                       <input
                         type="text"
                         value={booth.location || ''}
@@ -2010,7 +2012,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
                   <div className="grid sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Available Count</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.booth.available')}</label>
                       <input
                         type="number"
                         value={booth.availableCount ?? 5}
@@ -2019,7 +2021,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Total Count in Hall</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.booth.total')}</label>
                       <input
                         type="number"
                         value={booth.totalCount ?? 10}
@@ -2035,7 +2037,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                           onChange={(e) => updateExpoBooth(idx, 'popular', e.target.checked)}
                           className="w-4 h-4 rounded text-amber-500"
                         />
-                        <span className="font-semibold">Highlight as Prime Footfall / Popular</span>
+                        <span className="font-semibold">{t('editor.booth.highlight')}</span>
                       </label>
                     </div>
                   </div>
@@ -2043,7 +2045,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   {/* Booth features */}
                   <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-emerald-950">
                     <div className="text-[11px] font-bold text-slate-700 dark:text-gray-300">
-                      Standard Booth Inclusions &amp; Fit-Out:
+                      {t('editor.booth.inclusions')}
                     </div>
                     <div className="space-y-1.5">
                       {(booth.features || []).map((feat, fIdx) => (
@@ -2069,7 +2071,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                         value={newBoothFeatureText[idx] || ''}
                         onChange={(e) => setNewBoothFeatureText({ ...newBoothFeatureText, [idx]: e.target.value })}
                         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addBoothFeature(idx); } }}
-                        placeholder="Add included item (e.g. 2x Spotlights, 1x Counter, Fascia board)..."
+                        placeholder={t('editor.booth.inclusionPh')}
                         className="flex-1 px-3 py-1.5 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
                       />
                       <button
@@ -2077,7 +2079,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                         onClick={() => addBoothFeature(idx)}
                         className="px-3 py-1.5 rounded-lg bg-amber-400 text-black font-bold text-xs cursor-pointer hover:bg-amber-300"
                       >
-                        + Add Inclusion
+                        {t('editor.booth.addInclusion')}
                       </button>
                     </div>
                   </div>
@@ -2094,10 +2096,10 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Music className="w-4 h-4 text-purple-400" />
-                  <span>Artist &amp; Performer Lineup ({formData.artists?.length || 0})</span>
+                  <span>{t('editor.artist.title', { n: formData.artists?.length || 0 })}</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400">
-                  Dedicated for Concert &amp; Festival landing pages. Manage performers, set times, stage zones, and artist photos.
+                  {t('editor.artist.hint')}
                 </p>
               </div>
               <button
@@ -2106,20 +2108,20 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200 hover:bg-purple-200 text-xs font-bold cursor-pointer transition-colors shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Performer</span>
+                <span>{t('editor.artist.add')}</span>
               </button>
             </div>
 
             {(!formData.artists || formData.artists.length === 0) && (
               <div className="p-8 rounded-2xl bg-slate-50 dark:bg-[#07130D] border border-dashed border-slate-300 dark:border-emerald-900/60 text-center space-y-3">
                 <Music className="w-8 h-8 text-purple-400 mx-auto" />
-                <p className="text-xs text-slate-600 dark:text-gray-400">No performers added yet.</p>
+                <p className="text-xs text-slate-600 dark:text-gray-400">{t('editor.artist.empty')}</p>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, artists: DEFAULT_FESTIVAL_ARTISTS })}
                   className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-bold text-xs cursor-pointer shadow-md"
                 >
-                  Load 3 Sample Headliners &amp; DJs
+                  {t('editor.artist.load')}
                 </button>
               </div>
             )}
@@ -2129,7 +2131,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 <div key={artist.id || idx} className="p-5 rounded-2xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/70 space-y-4 shadow-sm">
                   <div className="flex items-center justify-between border-b border-slate-200 dark:border-emerald-900/40 pb-3">
                     <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
-                      Artist #{idx + 1}: {artist.name || 'Unnamed Performer'}
+                      {t('editor.artist.item', { n: idx + 1, name: artist.name || t('editor.artist.unnamed') })}
                     </span>
                     <button
                       type="button"
@@ -2137,13 +2139,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       className="text-rose-600 hover:text-rose-700 dark:text-rose-400 text-xs flex items-center gap-1 cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete Artist</span>
+                      <span>{t('editor.artist.delete')}</span>
                     </button>
                   </div>
 
                   <div className="grid sm:grid-cols-4 gap-3">
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Artist / DJ Name</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.artist.name')}</label>
                       <input
                         type="text"
                         value={artist.name}
@@ -2153,7 +2155,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Role / Billing</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.artist.role')}</label>
                       <input
                         type="text"
                         value={artist.role}
@@ -2163,7 +2165,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Stage Name</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.artist.stage')}</label>
                       <input
                         type="text"
                         value={artist.stageName || ''}
@@ -2173,7 +2175,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Performance Set Time</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.artist.time')}</label>
                       <input
                         type="text"
                         value={artist.stageTime || ''}
@@ -2186,7 +2188,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
                   <div className="grid sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Music Genre</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.artist.genre')}</label>
                       <input
                         type="text"
                         value={artist.genre || ''}
@@ -2197,21 +2199,21 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                     </div>
                     <ImageField
                       compact
-                      label="Photo"
+                      label={t('editor.artist.photo')}
                       value={artist.image || ''}
                       onChange={url => updateArtist(idx, 'image', url)}
-                      placeholder="Upload a photo or paste a URL"
+                      placeholder={t('editor.artist.photoPh')}
                       maxEdge={1200}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Short Bio</label>
+                    <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.artist.bio')}</label>
                     <textarea
                       rows={2}
                       value={artist.bio || ''}
                       onChange={(e) => updateArtist(idx, 'bio', e.target.value)}
-                      placeholder="Brief bio or performance description..."
+                      placeholder={t('editor.artist.bioPh')}
                       className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs resize-none"
                     />
                   </div>
@@ -2228,10 +2230,10 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Mic className="w-4 h-4 text-amber-500" />
-                  <span>Keynote Speakers &amp; Panelists ({formData.speakers?.length || 0})</span>
+                  <span>{t('editor.spk.title', { n: formData.speakers?.length || 0 })}</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400">
-                  Dedicated for Corporate Summit landing pages. Manage VIP speakers, keynote titles, tracks, and credentials.
+                  {t('editor.spk.hint')}
                 </p>
               </div>
               <button
@@ -2240,20 +2242,20 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 hover:bg-amber-200 text-xs font-bold cursor-pointer transition-colors shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Speaker</span>
+                <span>{t('editor.spk.add')}</span>
               </button>
             </div>
 
             {(!formData.speakers || formData.speakers.length === 0) && (
               <div className="p-8 rounded-2xl bg-slate-50 dark:bg-[#07130D] border border-dashed border-slate-300 dark:border-emerald-900/60 text-center space-y-3">
                 <Mic className="w-8 h-8 text-amber-500 mx-auto" />
-                <p className="text-xs text-slate-600 dark:text-gray-400">No keynote speakers added yet.</p>
+                <p className="text-xs text-slate-600 dark:text-gray-400">{t('editor.spk.empty')}</p>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, speakers: DEFAULT_SUMMIT_SPEAKERS })}
                   className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-bold text-xs cursor-pointer shadow-md"
                 >
-                  Load 3 Sample Keynote Speakers
+                  {t('editor.spk.load')}
                 </button>
               </div>
             )}
@@ -2263,7 +2265,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 <div key={speaker.id || idx} className="p-5 rounded-2xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/70 space-y-4 shadow-sm">
                   <div className="flex items-center justify-between border-b border-slate-200 dark:border-emerald-900/40 pb-3">
                     <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                      Speaker #{idx + 1}: {speaker.name || 'Unnamed Speaker'}
+                      {t('editor.spk.item', { n: idx + 1, name: speaker.name || t('editor.spk.unnamed') })}
                     </span>
                     <button
                       type="button"
@@ -2271,13 +2273,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       className="text-rose-600 hover:text-rose-700 dark:text-rose-400 text-xs flex items-center gap-1 cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete Speaker</span>
+                      <span>{t('editor.spk.delete')}</span>
                     </button>
                   </div>
 
                   <div className="grid sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Speaker Full Name</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.spk.name')}</label>
                       <input
                         type="text"
                         value={speaker.name}
@@ -2287,7 +2289,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Professional Title</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.spk.jobTitle')}</label>
                       <input
                         type="text"
                         value={speaker.title}
@@ -2297,7 +2299,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Organization / Company</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.spk.org')}</label>
                       <input
                         type="text"
                         value={speaker.organization}
@@ -2310,7 +2312,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
                   <div className="grid sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Conference Track</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.spk.track')}</label>
                       <input
                         type="text"
                         value={speaker.track || ''}
@@ -2320,7 +2322,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Session Presentation Time</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.spk.time')}</label>
                       <input
                         type="text"
                         value={speaker.sessionTime || ''}
@@ -2331,17 +2333,17 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                     </div>
                     <ImageField
                       compact
-                      label="Portrait"
+                      label={t('editor.spk.portrait')}
                       value={speaker.avatar || ''}
                       onChange={url => updateSpeaker(idx, 'avatar', url)}
-                      placeholder="Upload a portrait or paste a URL"
+                      placeholder={t('editor.spk.portraitPh')}
                       preview="square"
                       maxEdge={800}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Presentation / Keynote Topic</label>
+                    <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.spk.topic')}</label>
                     <input
                       type="text"
                       value={speaker.topic || ''}
@@ -2362,10 +2364,10 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Program Itinerary & Schedule ({formData.itinerary?.length || 0} Days)
+                  {t('editor.itin.title', { n: formData.itinerary?.length || 0 })}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400">
-                  Manage the daily timetable, expo visits, and matching sessions.
+                  {t('editor.itin.hint')}
                 </p>
               </div>
               <button
@@ -2374,7 +2376,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200 dark:hover:bg-emerald-800 text-xs font-bold cursor-pointer transition-colors shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Day</span>
+                <span>{t('editor.itin.add')}</span>
               </button>
             </div>
 
@@ -2387,7 +2389,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                         {day.day}
                       </span>
                       <span className="text-xs font-bold text-slate-900 dark:text-white">
-                        Day {day.day}: {day.title}
+                        {t('editor.itin.day', { n: day.day, title: day.title })}
                       </span>
                     </div>
                     <button
@@ -2396,13 +2398,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       className="text-rose-600 hover:text-rose-700 dark:text-rose-400 text-xs flex items-center gap-1 cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete Day</span>
+                      <span>{t('editor.itin.delete')}</span>
                     </button>
                   </div>
 
                   <div className="grid sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Day Number</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.itin.dayNum')}</label>
                       <input
                         type="text"
                         value={day.day}
@@ -2411,7 +2413,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Date</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('common.date')}</label>
                       <input
                         type="text"
                         value={day.date}
@@ -2421,7 +2423,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Day Title</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.itin.dayTitle')}</label>
                       <input
                         type="text"
                         value={day.title}
@@ -2436,14 +2438,14 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-emerald-950">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                        Events &amp; Timetable Slots ({day.events?.length || 0})
+                        {t('editor.itin.events', { n: day.events?.length || 0 })}
                       </span>
                       <button
                         type="button"
                         onClick={() => addEventToDay(dayIdx)}
                         className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
                       >
-                        + Add Time Slot
+                        {t('editor.itin.addSlot')}
                       </button>
                     </div>
 
@@ -2461,14 +2463,14 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                             type="text"
                             value={ev.activity}
                             onChange={(e) => updateEventInDay(dayIdx, evIdx, 'activity', e.target.value)}
-                            placeholder="Activity / Session headline"
+                            placeholder={t('editor.itin.activityPh')}
                             className="flex-1 w-full px-2 py-1 rounded bg-transparent border border-slate-200 dark:border-emerald-900/50 text-slate-900 dark:text-white"
                           />
                           <button
                             type="button"
                             onClick={() => removeEventFromDay(dayIdx, evIdx)}
                             className="text-rose-500 hover:text-rose-600 p-1 cursor-pointer self-end sm:self-center"
-                            title="Delete time slot"
+                            title={t('editor.itin.deleteSlot')}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -2490,10 +2492,10 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                    Core Value Outcomes ({formData.coreValues?.length || 0})
+                    {t('editor.val.title', { n: formData.coreValues?.length || 0 })}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-gray-400">
-                    The 4 fundamental commercial outcomes delegates take home.
+                    {t('editor.val.hint')}
                   </p>
                 </div>
                 <button
@@ -2502,7 +2504,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Add Core Value</span>
+                  <span>{t('editor.val.add')}</span>
                 </button>
               </div>
 
@@ -2510,13 +2512,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 {(formData.coreValues || []).map((cv, idx) => (
                   <div key={cv.id || idx} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold text-amber-500">Outcome #{cv.num || idx + 1}</span>
+                      <span className="text-xs font-extrabold text-amber-500">{t('editor.val.item', { n: cv.num || idx + 1 })}</span>
                       <button
                         type="button"
                         onClick={() => removeCoreValue(idx)}
                         className="text-rose-500 text-xs cursor-pointer"
                       >
-                        Delete
+                        {t('common.delete')}
                       </button>
                     </div>
                     <div className="grid grid-cols-4 gap-2">
@@ -2531,7 +2533,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                         type="text"
                         value={cv.title}
                         onChange={(e) => updateCoreValue(idx, 'title', e.target.value)}
-                        placeholder="Outcome Title"
+                        placeholder={t('editor.val.titlePh')}
                         className="col-span-3 px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white font-bold"
                       />
                     </div>
@@ -2539,7 +2541,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       rows={2}
                       value={cv.desc}
                       onChange={(e) => updateCoreValue(idx, 'desc', e.target.value)}
-                      placeholder="Outcome Description"
+                      placeholder={t('editor.val.descPh')}
                       className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white resize-none"
                     />
                   </div>
@@ -2552,10 +2554,10 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                    Program Highlights ({formData.highlights?.length || 0})
+                    {t('editor.hl.title', { n: formData.highlights?.length || 0 })}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-gray-400">
-                    Key features that make this program unrivaled.
+                    {t('editor.hl.hint')}
                   </p>
                 </div>
                 <button
@@ -2564,7 +2566,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Add Highlight</span>
+                  <span>{t('editor.hl.add')}</span>
                 </button>
               </div>
 
@@ -2572,27 +2574,27 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 {(formData.highlights || []).map((h, idx) => (
                   <div key={h.id || idx} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Highlight #{idx + 1}</span>
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{t('editor.hl.item', { n: idx + 1 })}</span>
                       <button
                         type="button"
                         onClick={() => removeHighlight(idx)}
                         className="text-rose-500 text-xs cursor-pointer"
                       >
-                        Delete
+                        {t('common.delete')}
                       </button>
                     </div>
                     <input
                       type="text"
                       value={h.title}
                       onChange={(e) => updateHighlight(idx, 'title', e.target.value)}
-                      placeholder="Title"
+                      placeholder={t('editor.ph.title')}
                       className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs font-bold text-slate-900 dark:text-white"
                     />
                     <textarea
                       rows={2}
                       value={h.description}
                       onChange={(e) => updateHighlight(idx, 'description', e.target.value)}
-                      placeholder="Description"
+                      placeholder={t('editor.ph.desc')}
                       className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white resize-none"
                     />
                   </div>
@@ -2608,10 +2610,10 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Pain Points &amp; Obstacles Solved ({formData.problems?.length || 0})
+                  {t('editor.prob.title', { n: formData.problems?.length || 0 })}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400">
-                  The frustrating problems importers face when sourcing alone.
+                  {t('editor.prob.hint')}
                 </p>
               </div>
               <button
@@ -2620,7 +2622,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Pain Point</span>
+                <span>{t('editor.prob.add')}</span>
               </button>
             </div>
 
@@ -2628,13 +2630,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               {(formData.problems || []).map((p, idx) => (
                 <div key={p.id || idx} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-rose-500">Problem #{idx + 1}</span>
+                    <span className="text-xs font-bold text-rose-500">{t('editor.prob.item', { n: idx + 1 })}</span>
                     <button
                       type="button"
                       onClick={() => removeProblem(idx)}
                       className="text-rose-500 text-xs cursor-pointer"
                     >
-                      Delete
+                      {t('common.delete')}
                     </button>
                   </div>
                   <input
@@ -2648,7 +2650,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                     rows={3}
                     value={p.desc}
                     onChange={(e) => updateProblem(idx, 'desc', e.target.value)}
-                    placeholder="Describe how this costs the importer money..."
+                    placeholder={t('editor.prob.descPh')}
                     className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white resize-none"
                   />
                 </div>
@@ -2663,10 +2665,10 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Target Audience &amp; Personas ({formData.audiences?.length || 0})
+                  {t('editor.aud.title', { n: formData.audiences?.length || 0 })}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400">
-                  The specific profiles engineered to participate in this delegation.
+                  {t('editor.aud.hint')}
                 </p>
               </div>
               <button
@@ -2675,7 +2677,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Persona</span>
+                <span>{t('editor.aud.add')}</span>
               </button>
             </div>
 
@@ -2683,13 +2685,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               {(formData.audiences || []).map((aud, idx) => (
                 <div key={aud.id || idx} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-amber-500">Persona #{idx + 1}</span>
+                    <span className="text-xs font-bold text-amber-500">{t('editor.aud.item', { n: idx + 1 })}</span>
                     <button
                       type="button"
                       onClick={() => removeAudience(idx)}
                       className="text-rose-500 text-xs cursor-pointer"
                     >
-                      Delete
+                      {t('common.delete')}
                     </button>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
@@ -2704,7 +2706,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       type="text"
                       value={aud.tag || ''}
                       onChange={(e) => updateAudience(idx, 'tag', e.target.value)}
-                      placeholder="Tag e.g. F&B"
+                      placeholder={t('editor.aud.tagPh')}
                       className="col-span-1 px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-emerald-600 dark:text-emerald-400 font-bold"
                     />
                   </div>
@@ -2712,7 +2714,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                     rows={2}
                     value={aud.desc}
                     onChange={(e) => updateAudience(idx, 'desc', e.target.value)}
-                    placeholder="Describe what opportunities await this profile..."
+                    placeholder={t('editor.aud.descPh')}
                     className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white resize-none"
                   />
                 </div>
@@ -2727,10 +2729,10 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Value Stack &amp; Inclusions ({formData.valueStack?.inclusions?.length || 0} items)
+                  {t('editor.vs.title', { n: formData.valueStack?.inclusions?.length || 0 })}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400">
-                  Build the high-converting &quot;9-in-1 Everything Handled&quot; package stack with standalone price anchors.
+                  {t('editor.vs.hint')}
                 </p>
               </div>
               <button
@@ -2739,13 +2741,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Inclusion Item</span>
+                <span>{t('editor.vs.add')}</span>
               </button>
             </div>
 
             <div className="grid sm:grid-cols-3 gap-3 p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/50">
               <div>
-                <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Stack Headline</label>
+                <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.vs.headline')}</label>
                 <input
                   type="text"
                   value={formData.valueStack?.title || ''}
@@ -2758,7 +2760,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 />
               </div>
               <div>
-                <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Total Standalone Value Anchor</label>
+                <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.vs.total')}</label>
                 <input
                   type="text"
                   value={formData.valueStack?.totalValue || ''}
@@ -2771,7 +2773,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 />
               </div>
               <div>
-                <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Pay Anchor Label</label>
+                <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.vs.payLabel')}</label>
                 <input
                   type="text"
                   value={formData.valueStack?.payLabel || ''}
@@ -2795,14 +2797,14 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                     type="text"
                     value={inc.title}
                     onChange={(e) => updateInclusion(idx, 'title', e.target.value)}
-                    placeholder="Title e.g. Roundtrip Flight Tickets"
+                    placeholder={t('editor.vs.titlePh')}
                     className="w-full sm:w-64 px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs font-bold text-slate-900 dark:text-white"
                   />
                   <input
                     type="text"
                     value={inc.desc}
                     onChange={(e) => updateInclusion(idx, 'desc', e.target.value)}
-                    placeholder="Details e.g. Phnom Penh - Hanoi roundtrip included."
+                    placeholder={t('editor.vs.descPh')}
                     className="flex-1 w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
                   />
                   <div className="flex items-center gap-1.5 self-end sm:self-center">
@@ -2817,7 +2819,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       type="button"
                       onClick={() => removeInclusion(idx)}
                       className="text-rose-500 p-1 cursor-pointer"
-                      title="Delete inclusion"
+                      title={t('editor.vs.delete')}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -2834,10 +2836,10 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Testimonials &amp; Reviews ({formData.testimonials?.length || 0})
+                  {t('editor.tm.title', { n: formData.testimonials?.length || 0 })}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400">
-                  Participant quotes, social proof, and verified delegate feedback.
+                  {t('editor.tm.hint')}
                 </p>
               </div>
               <button
@@ -2846,74 +2848,74 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Testimonial</span>
+                <span>{t('editor.tm.add')}</span>
               </button>
             </div>
 
             <div className="space-y-4">
-              {(formData.testimonials || []).map((t, idx) => (
-                <div key={t.id || idx} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-3">
+              {(formData.testimonials || []).map((tm, idx) => (
+                <div key={tm.id || idx} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-amber-500">Review #{idx + 1}</span>
+                    <span className="text-xs font-bold text-amber-500">{t('editor.tm.item', { n: idx + 1 })}</span>
                     <button
                       type="button"
                       onClick={() => removeTestimonial(idx)}
                       className="text-rose-500 text-xs cursor-pointer"
                     >
-                      Delete
+                      {t('common.delete')}
                     </button>
                   </div>
 
                   <div className="grid sm:grid-cols-4 gap-3">
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Name</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('common.name')}</label>
                       <input
                         type="text"
-                        value={t.name}
+                        value={tm.name}
                         onChange={(e) => updateTestimonial(idx, 'name', e.target.value)}
                         placeholder="Dara S."
                         className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs font-bold text-slate-900 dark:text-white"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Role</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.tm.role')}</label>
                       <input
                         type="text"
-                        value={t.role}
+                        value={tm.role}
                         onChange={(e) => updateTestimonial(idx, 'role', e.target.value)}
                         placeholder="Cafe Chain CEO"
                         className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Company</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('common.company')}</label>
                       <input
                         type="text"
-                        value={t.company}
+                        value={tm.company}
                         onChange={(e) => updateTestimonial(idx, 'company', e.target.value)}
                         placeholder="Phnom Penh Roastery"
                         className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Rating (1-5)</label>
+                      <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.tm.rating')}</label>
                       <select
-                        value={t.rating || 5}
+                        value={tm.rating || 5}
                         onChange={(e) => updateTestimonial(idx, 'rating', Number(e.target.value))}
                         className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-amber-500 font-bold"
                       >
-                        <option value={5}>★★★★★ (5 Stars)</option>
-                        <option value={4}>★★★★☆ (4 Stars)</option>
-                        <option value={3}>★★★☆☆ (3 Stars)</option>
+                        <option value={5}>{t('editor.tm.stars5')}</option>
+                        <option value={4}>{t('editor.tm.stars4')}</option>
+                        <option value={3}>{t('editor.tm.stars3')}</option>
                       </select>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">Review Quote</label>
+                    <label className="block text-[11px] text-slate-600 dark:text-gray-400 mb-1">{t('editor.tm.quote')}</label>
                     <textarea
                       rows={2}
-                      value={t.quote}
+                      value={tm.quote}
                       onChange={(e) => updateTestimonial(idx, 'quote', e.target.value)}
                       placeholder="Attending this event gave us..."
                       className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white resize-none"
@@ -2931,17 +2933,17 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Visual Gallery ({formData.gallery?.length || 0} Photos)
+                  {t('editor.gal.title', { n: formData.gallery?.length || 0 })}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400">
-                  Photos of previous editions, expo floors, VIP transfers, and scenery.
+                  {t('editor.gal.hint')}
                 </p>
               </div>
             </div>
 
             <ImageManager
-              title="Photos in order"
-              hint="Identical to the hero slideshow: the first photo is the cover. Arrange here or in the Hero tab."
+              title={t('editor.gal.photosTitle')}
+              hint={t('editor.gal.photosHint')}
               images={slideshowPhotos}
               onChange={setSlideshowPhotos}
               library={PRESET_PHOTOS}
@@ -2954,8 +2956,8 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Frequently Asked Questions ({formData.faqs?.length || 0})</h3>
-                <p className="text-xs text-slate-500 dark:text-gray-400">Directly resolve objections and doubts.</p>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">{t('editor.faq.title', { n: formData.faqs?.length || 0 })}</h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">{t('editor.faq.hint')}</p>
               </div>
               <button
                 type="button"
@@ -2963,7 +2965,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add FAQ</span>
+                <span>{t('editor.faq.add')}</span>
               </button>
             </div>
 
@@ -2971,27 +2973,27 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               {(formData.faqs || []).map((faq, idx) => (
                 <div key={faq.id || idx} className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400">FAQ #{idx + 1}</span>
+                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400">{t('editor.faq.item', { n: idx + 1 })}</span>
                     <button
                       type="button"
                       onClick={() => removeFaq(idx)}
                       className="text-rose-600 text-xs cursor-pointer"
                     >
-                      Delete
+                      {t('common.delete')}
                     </button>
                   </div>
                   <input
                     type="text"
                     value={faq.question}
                     onChange={(e) => updateFaq(idx, 'question', e.target.value)}
-                    placeholder="Question"
+                    placeholder={t('editor.faq.qPh')}
                     className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-amber-400"
                   />
                   <textarea
                     rows={2}
                     value={faq.answer}
                     onChange={(e) => updateFaq(idx, 'answer', e.target.value)}
-                    placeholder="Answer"
+                    placeholder={t('editor.faq.aPh')}
                     className="w-full px-3 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs resize-none focus:outline-none focus:border-amber-400"
                   />
                 </div>
@@ -3005,8 +3007,8 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Risk-Free Guarantee &amp; Confidence ({formData.guarantee?.points?.length || 0} Points)</h3>
-                <p className="text-xs text-slate-500 dark:text-gray-400">Reassure clients that their seat reservation has zero financial risk.</p>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">{t('editor.gu.title', { n: formData.guarantee?.points?.length || 0 })}</h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">{t('editor.gu.hint')}</p>
               </div>
               <button
                 type="button"
@@ -3014,13 +3016,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Guarantee Point</span>
+                <span>{t('editor.gu.add')}</span>
               </button>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Guarantee Section Title</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">{t('editor.gu.sectionTitle')}</label>
                 <input
                   type="text"
                   value={formData.guarantee?.title || ''}
@@ -3034,7 +3036,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Badge / Tag</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">{t('editor.gu.badge')}</label>
                 <input
                   type="text"
                   value={formData.guarantee?.badge || ''}
@@ -3049,7 +3051,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Guarantee Explanation Subtitle</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">{t('editor.gu.subtitle')}</label>
               <textarea
                 rows={2}
                 value={formData.guarantee?.subtitle || ''}
@@ -3063,7 +3065,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             </div>
 
             <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-emerald-950">
-              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">Guarantee Bullets / Safeguards:</span>
+              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">{t('editor.gu.bullets')}</span>
               <div className="space-y-2">
                 {(formData.guarantee?.points || []).map((point, idx) => (
                   <div key={idx} className="flex items-center gap-2 bg-slate-50 dark:bg-[#07130D] p-2.5 rounded-xl border border-slate-200 dark:border-emerald-900/50">
@@ -3078,7 +3080,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                       type="button"
                       onClick={() => removeGuaranteePoint(idx)}
                       className="text-rose-500 p-1 cursor-pointer"
-                      title="Delete bullet"
+                      title={t('editor.gu.deleteBullet')}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -3094,8 +3096,8 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Lead Capture Form Configuration</h3>
-                <p className="text-xs text-slate-500 dark:text-gray-400">Configure the headline, fields, and success feedback.</p>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">{t('editor.form.title')}</h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">{t('editor.form.hint')}</p>
               </div>
               <button
                 type="button"
@@ -3103,13 +3105,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold cursor-pointer hover:bg-emerald-200"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Form Field</span>
+                <span>{t('editor.form.add')}</span>
               </button>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Form Headline</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">{t('editor.form.headline')}</label>
                 <input
                   type="text"
                   value={formData.formConfig?.headline || ''}
@@ -3123,7 +3125,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Submit Button Text</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">{t('editor.form.submit')}</label>
                 <input
                   type="text"
                   value={formData.formConfig?.submitButtonText || ''}
@@ -3138,7 +3140,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Form Subheadline / Instructions</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">{t('editor.form.sub')}</label>
               <input
                 type="text"
                 value={formData.formConfig?.subheadline || ''}
@@ -3152,7 +3154,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Success Message (Shown after submit)</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">{t('editor.form.success')}</label>
               <input
                 type="text"
                 value={formData.formConfig?.successMessage || ''}
@@ -3167,35 +3169,35 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
             {/* Custom fields list */}
             <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-emerald-950">
-              <div className="text-xs font-bold text-slate-900 dark:text-white">Form Input Fields ({formData.formConfig?.fields?.length || 0}):</div>
+              <div className="text-xs font-bold text-slate-900 dark:text-white">{t('editor.form.fields', { n: formData.formConfig?.fields?.length || 0 })}</div>
               {(formData.formConfig?.fields || []).map((f, fIdx) => (
                 <div key={f.id || fIdx} className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 grid sm:grid-cols-4 gap-3 items-center">
                   <div>
-                    <label className="block text-[10px] text-slate-500 mb-1">Field Label</label>
+                    <label className="block text-[10px] text-slate-500 mb-1">{t('editor.form.fieldLabel')}</label>
                     <input
                       type="text"
                       value={f.label}
                       onChange={(e) => updateFormField(fIdx, 'label', e.target.value)}
-                      placeholder="Label"
+                      placeholder={t('editor.form.labelPh')}
                       className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs font-bold"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-slate-500 mb-1">Type</label>
+                    <label className="block text-[10px] text-slate-500 mb-1">{t('editor.form.type')}</label>
                     <select
                       value={f.type}
                       onChange={(e) => updateFormField(fIdx, 'type', e.target.value as FormField['type'])}
                       className="w-full px-2.5 py-1.5 rounded bg-white dark:bg-[#050C08] border border-slate-200 dark:border-emerald-900/60 text-xs"
                     >
-                      <option value="text">Text</option>
-                      <option value="tel">Phone / Tel</option>
-                      <option value="email">Email</option>
-                      <option value="textarea">Textarea</option>
-                      <option value="select">Dropdown Select</option>
+                      <option value="text">{t('editor.form.typeText')}</option>
+                      <option value="tel">{t('editor.form.typeTel')}</option>
+                      <option value="email">{t('editor.form.typeEmail')}</option>
+                      <option value="textarea">{t('editor.form.typeTextarea')}</option>
+                      <option value="select">{t('editor.form.typeSelect')}</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] text-slate-500 mb-1">Placeholder</label>
+                    <label className="block text-[10px] text-slate-500 mb-1">{t('editor.form.placeholder')}</label>
                     <input
                       type="text"
                       value={f.placeholder || ''}
@@ -3212,13 +3214,13 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
                         onChange={(e) => updateFormField(fIdx, 'required', e.target.checked)}
                         className="w-3.5 h-3.5 rounded text-amber-500"
                       />
-                      <span>Required</span>
+                      <span>{t('editor.form.required')}</span>
                     </label>
                     <button
                       type="button"
                       onClick={() => removeFormField(fIdx)}
                       className="text-rose-500 p-1 cursor-pointer"
-                      title="Delete field"
+                      title={t('editor.form.deleteField')}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -3234,7 +3236,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                Meta Title (Search engines &amp; browser tab)
+                {t('editor.seo.title')}
               </label>
               <input
                 type="text"
@@ -3247,24 +3249,24 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                Meta Description (Search snippet &amp; social previews)
+                {t('editor.seo.desc')}
               </label>
               <textarea
                 rows={3}
                 value={formData.metaDescription || ''}
                 onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-                placeholder="Brief summary shown on Google and Telegram link previews..."
+                placeholder={t('editor.seo.descPh')}
                 className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs resize-none focus:outline-none focus:border-amber-400"
               />
             </div>
 
             <div>
               <ImageField
-                label="Social share image (Facebook, Telegram link preview)"
+                label={t('editor.seo.ogLabel')}
                 value={formData.ogImage || ''}
                 onChange={url => setFormData({ ...formData, ogImage: url })}
-                placeholder="Upload a 1200×630 image or paste a URL"
-                hint="Shown when the page link is shared. Leave empty to use the hero cover."
+                placeholder={t('editor.seo.ogPh')}
+                hint={t('editor.seo.ogHint')}
               />
             </div>
           </div>
@@ -3283,7 +3285,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
         {/* Bottom Save bar */}
         <div className="pt-6 border-t border-slate-200 dark:border-emerald-950 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-xs text-slate-500 dark:text-gray-400">
-            {isNew ? 'Ready to create page' : `Editing ${formData.title || 'Landing Page'}`} &bull; All changes save to real-time storage.
+            {isNew ? t('editor.readyCreate') : t('editor.editing', { title: formData.title || t('editor.landingPage') })} &bull; {t('editor.autosaveNote')}
           </div>
           <button
             type="button"
@@ -3292,7 +3294,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer transition-all hover:scale-102"
           >
             <Save className="w-4 h-4 text-black" />
-            <span>{saving ? 'Saving...' : 'Save & Publish Landing Page'}</span>
+            <span>{saving ? t('editor.saving') : t('editor.savePublishPage')}</span>
           </button>
         </div>
       </div>
@@ -3304,7 +3306,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
           {/* Bottom Save bar */}
           <div className="pt-6 border-t border-slate-200 dark:border-emerald-950 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-xs text-slate-500 dark:text-gray-400">
-              Editing Khmer translations for <strong>{formData.title || 'Landing Page'}</strong> &bull; All changes save to real-time storage.
+              {t('editor.editingKh')} <strong>{formData.title || t('editor.landingPage')}</strong> &bull; {t('editor.autosaveNote')}
             </div>
             <button
               type="button"
@@ -3313,7 +3315,7 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer transition-all hover:scale-102"
             >
               <Save className="w-4 h-4 text-black" />
-              <span>{saving ? 'Saving...' : 'Save & Publish All Changes'}</span>
+              <span>{saving ? t('editor.saving') : t('editor.savePublishAll')}</span>
             </button>
           </div>
         </div>

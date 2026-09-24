@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { LandingPage } from '@/lib/types';
 import { isContentPack, mergeContentPack } from '@/lib/content-pack';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface PagesManagerClientProps {
   initialPages: LandingPage[];
@@ -27,6 +28,7 @@ interface PagesManagerClientProps {
 
 
 export default function PagesManagerClient({ initialPages }: PagesManagerClientProps) {
+  const { t } = useLanguage();
   const [pages, setPages] = useState<LandingPage[]>(initialPages);
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -64,7 +66,7 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
   };
 
   const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete the landing page "${title}"?`)) return;
+    if (!confirm(t('pages.confirmDelete', { title }))) return;
 
     setDeletingId(id);
     try {
@@ -72,17 +74,17 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
       if (res.ok) {
         setPages(pages.filter((p) => p.id !== id));
       } else {
-        alert('Failed to delete page');
+        alert(t('pages.deleteFailed'));
       }
     } catch {
-      alert('Error occurred while deleting');
+      alert(t('pages.deleteError'));
     } finally {
       setDeletingId(null);
     }
   };
 
   const handleDuplicate = async (sourcePage: LandingPage) => {
-    const newTitle = `${sourcePage.title} (Copy)`;
+    const newTitle = `${sourcePage.title} ${t('pages.copySuffix')}`;
     const baseSlug = sourcePage.slug.replace(/(-copy-[a-z0-9]+)+$/, '');
     const newSlug = `${baseSlug}-copy-${Date.now().toString(36)}`;
 
@@ -104,12 +106,12 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
       const data = await res.json();
       if (res.ok && data.page) {
         setPages([data.page, ...pages]);
-        alert(`Page duplicated as "${newTitle}"!`);
+        alert(t('pages.duplicated', { title: newTitle }));
       } else {
-        alert(data.error || 'Failed to duplicate page');
+        alert(data.error || t('pages.duplicateFailed'));
       }
     } catch {
-      alert('Error duplicating page');
+      alert(t('pages.duplicateError'));
     }
   };
 
@@ -126,18 +128,18 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
       try {
         parsed = JSON.parse(text);
       } catch {
-        alert('That file is not valid JSON.');
+        alert(t('pages.import.invalidJson'));
         return;
       }
       if (!isContentPack(parsed)) {
-        alert('The file needs at least a "slug" field.');
+        alert(t('pages.import.needsSlug'));
         return;
       }
       const fields = parsed;
 
       const existing = pages.find(p => p.slug === fields.slug);
       if (existing) {
-        if (!confirm(`Update "${existing.title}" (/${existing.slug}) with the content in ${file.name}?\nFields not in the file are kept.`)) return;
+        if (!confirm(t('pages.import.confirmUpdate', { title: existing.title, slug: existing.slug, file: file.name }))) return;
         const current = await fetch(`/api/pages/${existing.id}`).then(r => r.json()).catch(() => null);
         const base: LandingPage = current?.page || existing;
         const merged = mergeContentPack(base, fields);
@@ -147,23 +149,23 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
           body: JSON.stringify({ ...merged, id: existing.id, slug: existing.slug, title: fields.title || base.title }),
         });
         const data = await res.json();
-        if (!res.ok || !data.page) { alert(data.error || 'Import failed'); return; }
+        if (!res.ok || !data.page) { alert(data.error || t('pages.import.failed')); return; }
         setPages(pages.map(p => (p.id === existing.id ? data.page : p)));
-        alert(`"${data.page.title}" updated from ${file.name}. The live page refreshes within a minute.`);
+        alert(t('pages.import.updated', { title: data.page.title, file: file.name }));
       } else {
-        if (!fields.title) { alert('A new page needs a "title" field.'); return; }
+        if (!fields.title) { alert(t('pages.import.needsTitle')); return; }
         const res = await fetch('/api/pages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...fields, id: undefined, viewsCount: 0, leadsCount: 0, createdAt: undefined, updatedAt: undefined, status: 'draft' }),
         });
         const data = await res.json();
-        if (!res.ok || !data.page) { alert(data.error || 'Import failed'); return; }
+        if (!res.ok || !data.page) { alert(data.error || t('pages.import.failed')); return; }
         setPages([data.page, ...pages]);
-        alert(`Created draft "${data.page.title}" from ${file.name}.`);
+        alert(t('pages.import.createdDraft', { title: data.page.title, file: file.name }));
       }
     } catch {
-      alert('Error importing file');
+      alert(t('pages.import.error'));
     } finally {
       setImporting(false);
       if (importInputRef.current) importInputRef.current.value = '';
@@ -177,10 +179,10 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
             <FileText className="w-6 h-6 text-amber-500 dark:text-amber-400" />
-            <span>Landing Pages CMS</span>
+            <span>{t('pages.title')}</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-            Build, publish, and track campaign pages at sale.khbevents.com/[slug]
+            {t('pages.subtitle')}
           </p>
         </div>
 
@@ -196,18 +198,18 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
             type="button"
             onClick={() => importInputRef.current?.click()}
             disabled={importing}
-            title="Import a page content pack (JSON) — updates the page with the same slug"
+            title={t('pages.importTitle')}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 dark:border-emerald-800 bg-white dark:bg-[#0A1610] text-slate-700 dark:text-gray-200 font-bold text-xs uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-emerald-950/40 transition-all cursor-pointer disabled:opacity-60"
           >
             <Upload className="w-4 h-4" />
-            <span>{importing ? 'Importing…' : 'Import JSON'}</span>
+            <span>{importing ? t('pages.importing') : t('pages.importJson')}</span>
           </button>
           <Link
           href="/admin/pages/new"
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4 text-black stroke-[3]" />
-          <span>+ Create New Landing Page</span>
+          <span>{t('pages.createNew')}</span>
           </Link>
         </div>
       </div>
@@ -216,11 +218,11 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-emerald-900/40 pb-3">
         <div className="flex flex-wrap items-center gap-2">
           {[
-            { id: 'ALL', label: 'All Campaigns', count: pages.length },
-            { id: 'published', label: 'Published (Live)', count: publishedCount, badge: 'bg-emerald-500 text-black' },
-            { id: 'draft', label: 'Drafts', count: draftCount, badge: 'bg-slate-200 dark:bg-zinc-800 text-slate-800 dark:text-zinc-300' },
-            { id: 'corporate', label: 'Corporate Events', count: corporateCount },
-            { id: 'delegations', label: 'Trade & Delegations', count: delegationCount }
+            { id: 'ALL', label: t('pages.tab.all'), count: pages.length },
+            { id: 'published', label: t('pages.tab.published'), count: publishedCount, badge: 'bg-emerald-500 text-black' },
+            { id: 'draft', label: t('pages.tab.drafts'), count: draftCount, badge: 'bg-slate-200 dark:bg-zinc-800 text-slate-800 dark:text-zinc-300' },
+            { id: 'corporate', label: t('pages.tab.corporate'), count: corporateCount },
+            { id: 'delegations', label: t('pages.tab.delegations'), count: delegationCount }
           ].map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -249,7 +251,7 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
           <Search className="w-3.5 h-3.5 text-slate-400 dark:text-gray-500 absolute left-3 top-3" />
           <input
             type="text"
-            placeholder="Search pages by title, slug..."
+            placeholder={t('pages.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-white dark:bg-[#08150E] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 text-xs focus:outline-none focus:border-amber-400 transition-colors"
@@ -283,7 +285,7 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
                         ? 'bg-emerald-500 text-black'
                         : 'bg-amber-400 text-black'
                     }`}>
-                      {page.status}
+                      {page.status === 'published' ? t('pages.status.published') : page.status === 'draft' ? t('pages.status.draft') : page.status}
                     </span>
                     <span className="text-[10px] font-medium bg-black/70 backdrop-blur-sm text-gray-200 px-2 py-0.5 rounded-md">
                       {page.category}
@@ -307,11 +309,11 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
                   <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-emerald-950/40 border border-slate-200 dark:border-emerald-900/40 text-xs">
                     <div className="flex items-center gap-1.5 text-slate-700 dark:text-gray-300">
                       <Users className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-                      <span><strong>{page.leadsCount}</strong> Leads</span>
+                      <span><strong>{page.leadsCount}</strong> {t('pages.card.leads')}</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-slate-700 dark:text-gray-300">
                       <Eye className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
-                      <span><strong>{page.viewsCount}</strong> Views ({conv}%)</span>
+                      <span><strong>{page.viewsCount}</strong> {t('pages.card.views', { conv })}</span>
                     </div>
                   </div>
                 </div>
@@ -323,17 +325,17 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
                     type="button"
                     onClick={() => handleCopyLink(page.slug, page.id)}
                     className="p-2 rounded-lg bg-slate-100 dark:bg-emerald-950 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-200 dark:border-emerald-800/60 text-xs flex items-center gap-1 cursor-pointer transition-colors"
-                    title="Copy Public URL"
+                    title={t('pages.copyUrl')}
                   >
                     {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span className="text-[11px]">{isCopied ? 'Copied!' : 'Copy'}</span>
+                    <span className="text-[11px]">{isCopied ? t('pages.copied') : t('common.copy')}</span>
                   </button>
 
                   <Link
                     href={`/${page.slug}`}
                     target="_blank"
                     className="p-2 rounded-lg bg-slate-100 dark:bg-emerald-950 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-200 dark:border-emerald-800/60 transition-colors"
-                    title="Preview Live"
+                    title={t('pages.previewLive')}
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                   </Link>
@@ -342,7 +344,7 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
                     type="button"
                     onClick={() => handleDuplicate(page)}
                     className="p-2 rounded-lg bg-slate-100 dark:bg-emerald-950 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-200 dark:border-emerald-800/60 cursor-pointer transition-colors"
-                    title="Duplicate this page"
+                    title={t('pages.duplicateTitle')}
                   >
                     <CopyCheck className="w-3.5 h-3.5" />
                   </button>
@@ -352,7 +354,7 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
                   <Link
                     href={`/admin/pages/${page.id}?tab=tracking`}
                     className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold flex items-center transition-colors"
-                    title="View Tracking & Pixels"
+                    title={t('pages.trackingTitle')}
                   >
                     <Activity className="w-3.5 h-3.5" />
                   </Link>
@@ -360,7 +362,7 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
                   <Link
                     href={`/admin/pages/${page.id}?tab=isolatedSettings`}
                     className="p-1.5 rounded-lg bg-slate-100 dark:bg-emerald-950/60 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-slate-200 dark:hover:bg-emerald-900 border border-slate-200 dark:border-emerald-800 text-xs font-semibold flex items-center transition-colors"
-                    title="Dedicated Page Settings"
+                    title={t('pages.settingsTitle')}
                   >
                     <Sliders className="w-3.5 h-3.5" />
                   </Link>
@@ -370,7 +372,7 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
                     className="px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/30 border border-amber-300 dark:border-amber-500/40 text-xs font-semibold flex items-center gap-1 transition-colors"
                   >
                     <Edit className="w-3 h-3" />
-                    <span>Edit</span>
+                    <span>{t('common.edit')}</span>
                   </Link>
 
                   <button
@@ -378,7 +380,7 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
                     disabled={deletingId === page.id}
                     onClick={() => handleDelete(page.id, page.title)}
                     className="p-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 border border-transparent hover:border-rose-200 dark:hover:border-rose-900/60 disabled:opacity-50 cursor-pointer transition-colors"
-                    title="Delete Page"
+                    title={t('pages.deleteTitle')}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

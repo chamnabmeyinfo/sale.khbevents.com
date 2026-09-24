@@ -18,6 +18,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { LandingPage, PageAnalyticsSummary, ExternalTrackingConfig } from '@/lib/types';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface TrackingAndPixelsEditorProps {
   formData: Partial<LandingPage>;
@@ -25,6 +26,7 @@ interface TrackingAndPixelsEditorProps {
 }
 
 export default function TrackingAndPixelsEditor({ formData, setFormData }: TrackingAndPixelsEditorProps) {
+  const { t } = useLanguage();
   const tracking = formData.tracking || {};
 
   // UTM Builder state
@@ -104,18 +106,18 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
                 <Activity className="w-5 h-5" />
               </span>
               <h2 className="text-lg font-black text-slate-900 dark:text-white">
-                Independent Tracking & Marketing Pixels
+                {t('tracking.title')}
               </h2>
             </div>
             <p className="text-xs text-slate-600 dark:text-gray-300">
-              Each landing page maintains its own isolated ad pixels and first-party internal tracking.
+              {t('tracking.desc')}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              1st-Party Engine: Active
+              {t('tracking.engineActive')}
             </span>
             {tracking.facebookPixelId && tracking.facebookPixelEnabled !== false && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 border border-blue-300 dark:border-blue-800 text-blue-800 dark:text-blue-300">
@@ -145,7 +147,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
       <div className="space-y-4">
         <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-emerald-400 flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-amber-500" />
-          <span>Third-Party Pixels (Meta, Google & TikTok)</span>
+          <span>{t('tracking.pixels.title')}</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -157,8 +159,8 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
                   f
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">Meta (Facebook) Pixel</h4>
-                  <p className="text-[11px] text-slate-500 dark:text-gray-400">Tracks PageView, ViewContent, InitiateCheckout & Lead</p>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">{t('tracking.meta.title')}</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-gray-400">{t('tracking.meta.desc')}</p>
                 </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -174,7 +176,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
 
             <div>
               <label className="block text-[11px] font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                Pixel ID
+                {t('tracking.meta.pixelId')}
               </label>
               <input
                 type="text"
@@ -185,7 +187,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
               />
             </div>
             <div className="text-[10px] text-slate-400 dark:text-gray-400 flex items-center gap-1">
-              <span>⚡ Auto fires <code>fbq(&apos;track&apos;, &apos;Lead&apos;)</code> when a reservation is confirmed.</span>
+              <span>{t('tracking.meta.hintBefore')} <code>fbq(&apos;track&apos;, &apos;Lead&apos;)</code> {t('tracking.meta.hintAfter')}</span>
             </div>
           </div>
 
@@ -197,8 +199,8 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
                   G
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">Google Analytics 4 (GA4)</h4>
-                  <p className="text-[11px] text-slate-500 dark:text-gray-400">Measurement ID with generate_lead conversion tracking</p>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">{t('tracking.ga4.title')}</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-gray-400">{t('tracking.ga4.desc')}</p>
                 </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -214,7 +216,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
 
             <div>
               <label className="block text-[11px] font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                Measurement ID
+                {t('tracking.ga4.measurementId')}
               </label>
               <input
                 type="text"
@@ -225,7 +227,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
               />
             </div>
             <div className="text-[10px] text-slate-400 dark:text-gray-400 flex items-center gap-1">
-              <span>⚡ Auto fires <code>generate_lead</code> on booking inquiry.</span>
+              <span>{t('tracking.ga4.hintBefore')} <code>generate_lead</code> {t('tracking.ga4.hintAfter')}</span>
             </div>
           </div>
 
@@ -237,8 +239,8 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
                   T
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">Google Tag Manager</h4>
-                  <p className="text-[11px] text-slate-500 dark:text-gray-400">Head and noscript container with custom dataLayer</p>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">{t('tracking.gtm.title')}</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-gray-400">{t('tracking.gtm.desc')}</p>
                 </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -254,7 +256,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
 
             <div>
               <label className="block text-[11px] font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                GTM Container ID
+                {t('tracking.gtm.containerId')}
               </label>
               <input
                 type="text"
@@ -265,7 +267,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
               />
             </div>
             <div className="text-[10px] text-slate-400 dark:text-gray-400 flex items-center gap-1">
-              <span>⚡ Pushes events directly to <code>window.dataLayer</code>.</span>
+              <span>{t('tracking.gtm.hintBefore')} <code>window.dataLayer</code>{t('tracking.gtm.hintAfter')}</span>
             </div>
           </div>
 
@@ -277,8 +279,8 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
                   TT
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">TikTok Pixel</h4>
-                  <p className="text-[11px] text-slate-500 dark:text-gray-400">Tracks ViewContent, ClickButton & SubmitForm</p>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">{t('tracking.tiktok.title')}</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-gray-400">{t('tracking.tiktok.desc')}</p>
                 </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -294,7 +296,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
 
             <div>
               <label className="block text-[11px] font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                TikTok Pixel ID
+                {t('tracking.tiktok.pixelId')}
               </label>
               <input
                 type="text"
@@ -305,7 +307,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
               />
             </div>
             <div className="text-[10px] text-slate-400 dark:text-gray-400 flex items-center gap-1">
-              <span>⚡ Auto fires <code>ttq.track(&apos;SubmitForm&apos;)</code> on lead registration.</span>
+              <span>{t('tracking.tiktok.hintBefore')} <code>ttq.track(&apos;SubmitForm&apos;)</code> {t('tracking.tiktok.hintAfter')}</span>
             </div>
           </div>
         </div>
@@ -315,23 +317,23 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
       <div className="space-y-4">
         <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-emerald-400 flex items-center gap-2">
           <Code className="w-4 h-4 text-emerald-500" />
-          <span>Custom Code Injection (Hotjar, Microsoft Clarity, Chat Widgets)</span>
+          <span>{t('tracking.code.title')}</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Custom Head */}
           <div className="p-5 rounded-2xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 space-y-2 shadow-sm">
             <label className="block text-xs font-bold text-slate-900 dark:text-white">
-              Custom &lt;head&gt; Scripts / Tracking Snippet
+              {t('tracking.head.label')}
             </label>
             <p className="text-[11px] text-slate-500 dark:text-gray-400">
-              Injected into document head. Paste JavaScript or tracking tags without <code>&lt;script&gt;</code> wrappers.
+              {t('tracking.head.descBefore')} <code>&lt;script&gt;</code> {t('tracking.head.descAfter')}
             </p>
             <textarea
               rows={5}
               value={tracking.customHeadScript || ''}
               onChange={(e) => updateTracking('customHeadScript', e.target.value)}
-              placeholder="// e.g. Microsoft Clarity, Hotjar, or custom analytics code..."
+              placeholder={t('tracking.head.placeholder')}
               className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#0A1A12] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-emerald-300 text-xs font-mono resize-none focus:outline-none focus:border-emerald-400"
             />
           </div>
@@ -339,16 +341,16 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
           {/* Custom Body */}
           <div className="p-5 rounded-2xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 space-y-2 shadow-sm">
             <label className="block text-xs font-bold text-slate-900 dark:text-white">
-              Custom &lt;body&gt; HTML / Widgets
+              {t('tracking.body.label')}
             </label>
             <p className="text-[11px] text-slate-500 dark:text-gray-400">
-              Rendered inside page body. Ideal for Live Chat embeds (Crisp, Tawk.to) or noscript tags.
+              {t('tracking.body.desc')}
             </p>
             <textarea
               rows={5}
               value={tracking.customBodyScript || ''}
               onChange={(e) => updateTracking('customBodyScript', e.target.value)}
-              placeholder="<!-- Live chat iframe, verification badge, or noscript fallback -->"
+              placeholder={t('tracking.body.placeholder')}
               className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#0A1A12] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-emerald-300 text-xs font-mono resize-none focus:outline-none focus:border-emerald-400"
             />
           </div>
@@ -361,10 +363,10 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
           <div className="space-y-1">
             <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
               <Globe className="w-4 h-4 text-amber-500" />
-              <span>UTM Campaign Link Builder</span>
+              <span>{t('tracking.utm.title')}</span>
             </h3>
             <p className="text-xs text-slate-500 dark:text-gray-400">
-              Generate tracked URLs for Facebook Ads, Telegram Broadcasts, TikTok Videos, and Email Blasts.
+              {t('tracking.utm.desc')}
             </p>
           </div>
         </div>
@@ -372,7 +374,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
             <label className="block text-[11px] font-semibold text-slate-700 dark:text-gray-300 mb-1">
-              Source (utm_source)
+              {t('tracking.utm.source')}
             </label>
             <input
               type="text"
@@ -401,7 +403,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
 
           <div>
             <label className="block text-[11px] font-semibold text-slate-700 dark:text-gray-300 mb-1">
-              Medium (utm_medium)
+              {t('tracking.utm.medium')}
             </label>
             <input
               type="text"
@@ -430,7 +432,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
 
           <div>
             <label className="block text-[11px] font-semibold text-slate-700 dark:text-gray-300 mb-1">
-              Campaign (utm_campaign)
+              {t('tracking.utm.campaign')}
             </label>
             <input
               type="text"
@@ -443,7 +445,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
 
           <div>
             <label className="block text-[11px] font-semibold text-slate-700 dark:text-gray-300 mb-1">
-              Content / Ad Variant (utm_content)
+              {t('tracking.utm.content')}
             </label>
             <input
               type="text"
@@ -467,14 +469,14 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-sm"
             >
               {copied ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : <Copy className="w-3.5 h-3.5 stroke-[2.5]" />}
-              <span>{copied ? 'Copied!' : 'Copy Link'}</span>
+              <span>{copied ? t('tracking.utm.copied') : t('tracking.utm.copy')}</span>
             </button>
             <a
               href={fullCampaignUrl}
               target="_blank"
               rel="noreferrer"
               className="p-2 rounded-xl bg-white dark:bg-emerald-950 border border-slate-200 dark:border-emerald-800 text-slate-700 dark:text-emerald-300 hover:text-amber-500 transition-colors"
-              title="Test Tracked Link in New Tab"
+              title={t('tracking.utm.test')}
             >
               <ExternalLink className="w-4 h-4" />
             </a>
@@ -488,10 +490,10 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
           <div className="space-y-1">
             <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-emerald-500" />
-              <span>Internal Performance Snapshot</span>
+              <span>{t('tracking.snapshot.title')}</span>
             </h3>
             <p className="text-xs text-slate-500 dark:text-gray-400">
-              Live first-party analytics captured directly on your domain.
+              {t('tracking.snapshot.desc')}
             </p>
           </div>
           <button
@@ -501,7 +503,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-emerald-900 text-[11px] font-bold text-slate-700 dark:text-emerald-400 hover:bg-slate-50 dark:hover:bg-emerald-950 cursor-pointer transition-all"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loadingAnalytics ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
+            <span>{t('common.refresh')}</span>
           </button>
         </div>
 
@@ -510,28 +512,28 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
             {/* Top KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0A1A12] border border-slate-200 dark:border-emerald-900/60">
-                <div className="text-[11px] font-semibold text-slate-500 dark:text-gray-400">Total Page Views</div>
+                <div className="text-[11px] font-semibold text-slate-500 dark:text-gray-400">{t('tracking.kpi.views')}</div>
                 <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                   {analytics.totalViews.toLocaleString()}
                 </div>
               </div>
 
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0A1A12] border border-slate-200 dark:border-emerald-900/60">
-                <div className="text-[11px] font-semibold text-slate-500 dark:text-gray-400">Unique Visitors</div>
+                <div className="text-[11px] font-semibold text-slate-500 dark:text-gray-400">{t('tracking.kpi.unique')}</div>
                 <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
                   {analytics.uniqueVisitors.toLocaleString()}
                 </div>
               </div>
 
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0A1A12] border border-slate-200 dark:border-emerald-900/60">
-                <div className="text-[11px] font-semibold text-slate-500 dark:text-gray-400">Leads Captured</div>
+                <div className="text-[11px] font-semibold text-slate-500 dark:text-gray-400">{t('tracking.kpi.leads')}</div>
                 <div className="text-2xl font-black text-amber-500 mt-1">
                   {analytics.totalLeads.toLocaleString()}
                 </div>
               </div>
 
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0A1A12] border border-slate-200 dark:border-emerald-900/60">
-                <div className="text-[11px] font-semibold text-slate-500 dark:text-gray-400">Conversion Rate</div>
+                <div className="text-[11px] font-semibold text-slate-500 dark:text-gray-400">{t('tracking.kpi.conversion')}</div>
                 <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                   {analytics.conversionRate}%
                 </div>
@@ -544,12 +546,12 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0A1A12] border border-slate-200 dark:border-emerald-900/60 space-y-3">
                 <h4 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>Conversion Funnel Drop-off</span>
+                  <span>{t('tracking.funnel.title')}</span>
                 </h4>
                 <div className="space-y-2 text-xs">
                   <div>
                     <div className="flex justify-between text-[11px] text-slate-600 dark:text-gray-400 mb-1">
-                      <span>1. Page Views</span>
+                      <span>{t('tracking.funnel.views')}</span>
                       <span className="font-bold text-slate-900 dark:text-white">{analytics.funnel.views}</span>
                     </div>
                     <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-emerald-950 overflow-hidden">
@@ -559,7 +561,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
 
                   <div>
                     <div className="flex justify-between text-[11px] text-slate-600 dark:text-gray-400 mb-1">
-                      <span>2. Scrolled &gt; 50%</span>
+                      <span>{t('tracking.funnel.scrolled')}</span>
                       <span className="font-bold text-slate-900 dark:text-white">{analytics.funnel.scrolled50}</span>
                     </div>
                     <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-emerald-950 overflow-hidden">
@@ -572,7 +574,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
 
                   <div>
                     <div className="flex justify-between text-[11px] text-slate-600 dark:text-gray-400 mb-1">
-                      <span>3. Clicked CTA / Seat Picker</span>
+                      <span>{t('tracking.funnel.cta')}</span>
                       <span className="font-bold text-slate-900 dark:text-white">{analytics.funnel.clickedCta}</span>
                     </div>
                     <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-emerald-950 overflow-hidden">
@@ -585,7 +587,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
 
                   <div>
                     <div className="flex justify-between text-[11px] text-slate-600 dark:text-gray-400 mb-1">
-                      <span>4. Lead Form Submitted</span>
+                      <span>{t('tracking.funnel.submitted')}</span>
                       <span className="font-bold text-slate-900 dark:text-white">{analytics.funnel.leadsSubmitted}</span>
                     </div>
                     <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-emerald-950 overflow-hidden">
@@ -602,7 +604,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0A1A12] border border-slate-200 dark:border-emerald-900/60 space-y-3">
                 <h4 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   <Users className="w-3.5 h-3.5 text-blue-500" />
-                  <span>Top Acquisition Channels</span>
+                  <span>{t('tracking.sources.title')}</span>
                 </h4>
                 <div className="space-y-2">
                   {analytics.topSources.slice(0, 5).map((src, i) => (
@@ -611,7 +613,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
                         {src.source}
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-slate-400 dark:text-gray-500">{src.count} visits</span>
+                        <span className="text-[11px] text-slate-400 dark:text-gray-500">{t('tracking.sources.visits', { n: src.count })}</span>
                         <span className="font-bold text-emerald-600 dark:text-emerald-400">{src.percentage}%</span>
                       </div>
                     </div>
@@ -621,14 +623,14 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
                 <div className="pt-2 border-t border-slate-200 dark:border-emerald-950 flex items-center justify-between text-[11px] text-slate-500 dark:text-gray-400">
                   <div className="flex items-center gap-1.5">
                     <Smartphone className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Mobile: {analytics.deviceBreakdown.mobile}</span>
+                    <span>{t('tracking.device.mobile', { n: analytics.deviceBreakdown.mobile })}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Monitor className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Desktop: {analytics.deviceBreakdown.desktop}</span>
+                    <span>{t('tracking.device.desktop', { n: analytics.deviceBreakdown.desktop })}</span>
                   </div>
                   <div>
-                    <span>ខ្មែរ: {analytics.languageBreakdown.kh} | EN: {analytics.languageBreakdown.en}</span>
+                    <span>{t('tracking.device.lang', { kh: analytics.languageBreakdown.kh, en: analytics.languageBreakdown.en })}</span>
                   </div>
                 </div>
               </div>
@@ -636,7 +638,7 @@ export default function TrackingAndPixelsEditor({ formData, setFormData }: Track
           </div>
         ) : (
           <div className="py-8 text-center text-xs text-slate-500 dark:text-gray-400">
-            {loadingAnalytics ? 'Loading analytics snapshot...' : 'No visitor interactions recorded yet for this page.'}
+            {loadingAnalytics ? t('tracking.snapshot.loading') : t('tracking.snapshot.empty')}
           </div>
         )}
       </div>

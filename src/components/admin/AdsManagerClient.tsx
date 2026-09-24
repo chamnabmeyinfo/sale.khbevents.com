@@ -40,6 +40,7 @@ import {
 import { PopupAdCard } from '@/components/common/PopupAds';
 import ImageField from './ImageField';
 import { errorMessage } from '@/lib/errors';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface AdsManagerClientProps {
   initialState: PopupAdsState;
@@ -58,34 +59,42 @@ const CARD = 'rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dar
 const BTN_PRIMARY = 'inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs transition-all shadow-md cursor-pointer disabled:opacity-50';
 const BTN_SECONDARY = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-emerald-950 hover:bg-slate-200 dark:hover:bg-emerald-900 border border-slate-200 dark:border-emerald-800 text-[11px] font-bold text-slate-800 dark:text-emerald-300 cursor-pointer';
 
+/** Translation keys for the option maps; the labels come from t(). */
 const TEMPLATE_INFO: Record<PopupAdTemplate, { label: string; detail: string }> = {
-  card: { label: 'Centered card', detail: 'Classic popup in the middle of the screen with a dimmed page behind it.' },
-  'bottom-sheet': { label: 'Bottom sheet', detail: 'Slides up from the bottom on phones, sits in the corner on desktop. Least intrusive.' },
-  banner: { label: 'Bottom banner', detail: 'Slim bar along the bottom. The page stays usable, no dimming.' },
-  image: { label: 'Image first', detail: 'Big photo on top, text under it. Best with a strong picture.' },
+  card: { label: 'ads.template.card', detail: 'ads.template.cardDetail' },
+  'bottom-sheet': { label: 'ads.template.bottomSheet', detail: 'ads.template.bottomSheetDetail' },
+  banner: { label: 'ads.template.banner', detail: 'ads.template.bannerDetail' },
+  image: { label: 'ads.template.image', detail: 'ads.template.imageDetail' },
 };
 
 const TRIGGER_LABEL: Record<PopupAdTriggerType, string> = {
-  immediate: 'As soon as the page loads',
-  delay: 'After a few seconds',
-  scroll: 'After scrolling down',
-  exit_intent: 'When the visitor is about to leave',
+  immediate: 'ads.trigger.immediate',
+  delay: 'ads.trigger.delay',
+  scroll: 'ads.trigger.scroll',
+  exit_intent: 'ads.trigger.exitIntent',
 };
 
 const FREQUENCY_LABEL: Record<PopupAdFrequency, string> = {
-  always: 'Every page view',
-  session: 'Once per visit',
-  day: 'Once a day',
-  week: 'Once a week',
-  month: 'Once a month',
-  forever: 'Only once, ever',
+  always: 'ads.freq.always',
+  session: 'ads.freq.session',
+  day: 'ads.freq.day',
+  week: 'ads.freq.week',
+  month: 'ads.freq.month',
+  forever: 'ads.freq.forever',
 };
 
 const CTA_LABEL: Record<PopupAdCtaAction, string> = {
-  telegram: 'Chat on Telegram (round-robin routed)',
-  register: 'Go to the registration form',
-  url: 'Open a link',
-  close: 'Just close the popup',
+  telegram: 'ads.cta.telegram',
+  register: 'ads.cta.register',
+  url: 'ads.cta.url',
+  close: 'ads.cta.close',
+};
+
+const STATUS_LABEL: Record<ReturnType<typeof popupAdStatus>, string> = {
+  active: 'ads.status.active',
+  scheduled: 'ads.status.scheduled',
+  expired: 'ads.status.expired',
+  paused: 'ads.status.paused',
 };
 
 const STATUS_PILL: Record<ReturnType<typeof popupAdStatus>, string> = {
@@ -99,8 +108,8 @@ const STATUS_PILL: Record<ReturnType<typeof popupAdStatus>, string> = {
 const STARTERS: Array<{ key: string; label: string; detail: string; build: (now: string) => PopupAd }> = [
   {
     key: 'telegram',
-    label: 'Ask us on Telegram',
-    detail: 'A friendly question card after 10 seconds. Sends the visitor to the next salesperson.',
+    label: 'ads.starter.telegram',
+    detail: 'ads.starter.telegramDetail',
     build: (now) => newPopupAd(now, {
       name: 'Ask us on Telegram',
       badge: { en: 'Questions?', kh: 'មានសំណួរ?' },
@@ -115,8 +124,8 @@ const STARTERS: Array<{ key: string; label: string; detail: string; build: (now:
   },
   {
     key: 'reserve',
-    label: 'Reserve a seat',
-    detail: 'Bottom sheet after the visitor scrolled half the page. Sends them to the form.',
+    label: 'ads.starter.reserve',
+    detail: 'ads.starter.reserveDetail',
     build: (now) => newPopupAd(now, {
       name: 'Reserve a seat',
       badge: { en: 'Seats are limited', kh: 'កៅអីមានកំណត់' },
@@ -131,8 +140,8 @@ const STARTERS: Array<{ key: string; label: string; detail: string; build: (now:
   },
   {
     key: 'exit',
-    label: 'Before you go',
-    detail: 'Light card when the pointer leaves the page (on phones: after 15 seconds). Once a week.',
+    label: 'ads.starter.exit',
+    detail: 'ads.starter.exitDetail',
     build: (now) => newPopupAd(now, {
       name: 'Before you go',
       title: { en: 'Leaving already?', kh: 'ចាកចេញហើយឬ?' },
@@ -172,6 +181,7 @@ function BiField({ label, value, onChange, required, multiline, placeholderEn, p
   placeholderKh?: string;
   max?: number;
 }) {
+  const { t } = useLanguage();
   const en = value?.en || '';
   const kh = value?.kh || '';
   const set = (nextEn: string, nextKh: string) => {
@@ -185,11 +195,11 @@ function BiField({ label, value, onChange, required, multiline, placeholderEn, p
       <label className={LABEL}>{label}{required && <span className="text-rose-500"> *</span>}</label>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div>
-          <Tag className={common} value={en} maxLength={max} placeholder={placeholderEn || 'English'} onChange={(e) => set(e.target.value, kh)} />
+          <Tag className={common} value={en} maxLength={max} placeholder={placeholderEn || t('ads.bi.en')} onChange={(e) => set(e.target.value, kh)} />
           <span className={HINT}>EN</span>
         </div>
         <div>
-          <Tag className={common} value={kh} maxLength={max} placeholder={placeholderKh || 'ភាសាខ្មែរ (optional, falls back to English)'} onChange={(e) => set(en, e.target.value)} lang="km" />
+          <Tag className={common} value={kh} maxLength={max} placeholder={placeholderKh || t('ads.bi.kh')} onChange={(e) => set(en, e.target.value)} lang="km" />
           <span className={HINT}>KH</span>
         </div>
       </div>
@@ -198,6 +208,7 @@ function BiField({ label, value, onChange, required, multiline, placeholderEn, p
 }
 
 export default function AdsManagerClient({ initialState, initialStats, pages, nowMs }: AdsManagerClientProps) {
+  const { t } = useLanguage();
   const [state, setState] = useState<PopupAdsState>(initialState);
   const [savedJson, setSavedJson] = useState(() => JSON.stringify(initialState));
   const [stats, setStats] = useState<PopupAdStatsMap>(initialStats);
@@ -234,11 +245,11 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
   };
   const duplicate = (ad: PopupAd) => {
     const now = new Date().toISOString();
-    const copy = newPopupAd(now, { ...ad, id: undefined, name: `${ad.name} copy`, enabled: false, createdAt: now, updatedAt: now });
+    const copy = newPopupAd(now, { ...ad, id: undefined, name: t('ads.copySuffix', { name: ad.name }), enabled: false, createdAt: now, updatedAt: now });
     setState((prev) => ({ ...prev, ads: [...prev.ads, copy] }));
   };
   const remove = (ad: PopupAd) => {
-    if (!confirm(`Delete the popup "${ad.name}"? This cannot be undone after you save.`)) return;
+    if (!confirm(t('ads.confirmDelete', { name: ad.name }))) return;
     setState((prev) => ({ ...prev, ads: prev.ads.filter((a) => a.id !== ad.id) }));
   };
   const applyDraft = () => {
@@ -262,14 +273,14 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
         body: JSON.stringify({ state }),
       });
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to save popups');
+      if (!res.ok || !data.success) throw new Error(data.error || t('ads.saveFailed'));
       const dropped = state.ads.length - data.state.ads.length;
       setState(data.state);
       setSavedJson(JSON.stringify(data.state));
-      setSuccess(dropped > 0 ? `Saved. ${dropped} popup${dropped > 1 ? 's were' : ' was'} dropped because it had no title or button text.` : 'Popups saved. Live pages update within a minute.');
+      setSuccess(dropped > 0 ? t(dropped > 1 ? 'ads.savedDroppedMany' : 'ads.savedDroppedOne', { n: dropped }) : t('ads.savedLive'));
       setTimeout(() => setSuccess(''), 5000);
     } catch (err) {
-      setError(errorMessage(err, 'Error saving popups'));
+      setError(errorMessage(err, t('ads.saveError')));
     } finally {
       setSaving(false);
     }
@@ -289,7 +300,7 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
   };
 
   const draftValid = Boolean(editing?.title.en.trim() && editing?.cta.label.en.trim());
-  const draftReason = !editing ? '' : !editing.title.en.trim() ? 'Add an English title.' : !editing.cta.label.en.trim() ? 'Add English button text.' : '';
+  const draftReason = !editing ? '' : !editing.title.en.trim() ? t('ads.needTitle') : !editing.cta.label.en.trim() ? t('ads.needButton') : '';
   const previewSlugFor = (ad: PopupAd) => (ad.pages === 'all' || ad.pages.length === 0 ? 'smart-city-tea-cafe' : ad.pages[0]);
 
   return (
@@ -302,29 +313,29 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
           </div>
           <div>
             <h1 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <span>Ads &amp; Popups</span>
+              <span>{t('ads.title')}</span>
               <span className="text-xs px-2.5 py-0.5 rounded-full font-extrabold bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
-                {activeCount} live
+                {t('ads.live', { n: activeCount })}
               </span>
             </h1>
             <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
-              Promotional popups on the landing pages. One popup per visit at most, easy to close, and it never shows again to someone who already sent the form.
+              {t('ads.subtitle')}
             </p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/60 cursor-pointer shadow-xs">
-            <span className="text-xs font-bold text-slate-700 dark:text-gray-300">Popups enabled:</span>
+            <span className="text-xs font-bold text-slate-700 dark:text-gray-300">{t('ads.popupsEnabled')}</span>
             <input type="checkbox" checked={state.settings.enabled} onChange={(e) => updateSettings({ enabled: e.target.checked })} className="w-4 h-4 accent-amber-400 cursor-pointer" />
-            <span className={`text-xs font-black ${state.settings.enabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>{state.settings.enabled ? 'ON' : 'OFF'}</span>
+            <span className={`text-xs font-black ${state.settings.enabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>{state.settings.enabled ? t('common.on') : t('common.off')}</span>
           </label>
           <button type="button" onClick={() => openNew()} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer shadow-md">
-            <Plus className="w-4 h-4" /><span>New popup</span>
+            <Plus className="w-4 h-4" /><span>{t('ads.newPopup')}</span>
           </button>
           <button type="button" onClick={saveAll} disabled={saving} className={BTN_PRIMARY}>
             {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            <span>{saving ? 'Saving…' : 'Save all'}</span>
-            {dirty && !saving && <span className="w-2 h-2 rounded-full bg-rose-500" title="Unsaved changes" />}
+            <span>{saving ? t('common.saving') : t('common.saveAll')}</span>
+            {dirty && !saving && <span className="w-2 h-2 rounded-full bg-rose-500" title={t('common.unsavedChanges')} />}
           </button>
         </div>
       </div>
@@ -342,10 +353,10 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
       {/* KPI cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
         {[
-          { label: 'Popup views', value: totals.views, note: 'Times a popup was shown' },
-          { label: 'Button clicks', value: totals.clicks, note: 'Visitors who tapped the button' },
-          { label: 'Click rate', value: `${totals.ctr}%`, note: 'Clicks ÷ views' },
-          { label: 'Live now', value: `${activeCount} / ${state.ads.length}`, note: 'Enabled and inside their dates' },
+          { label: t('ads.kpi.views'), value: totals.views, note: t('ads.kpi.viewsNote') },
+          { label: t('ads.kpi.clicks'), value: totals.clicks, note: t('ads.kpi.clicksNote') },
+          { label: t('ads.kpi.rate'), value: `${totals.ctr}%`, note: t('ads.kpi.rateNote') },
+          { label: t('ads.kpi.liveNow'), value: `${activeCount} / ${state.ads.length}`, note: t('ads.kpi.liveNowNote') },
         ].map((kpi) => (
           <div key={kpi.label} className={`p-4 ${CARD}`}>
             <div className="text-xs text-slate-500 dark:text-gray-400 font-semibold">{kpi.label}</div>
@@ -358,12 +369,12 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
       {/* Global rules */}
       <div className={`p-5 ${CARD} flex flex-col sm:flex-row sm:items-end gap-4`}>
         <div className="flex-1">
-          <label className={LABEL}>Cooldown between popups (hours)</label>
+          <label className={LABEL}>{t('ads.cooldown')}</label>
           <input type="number" min={0} max={720} value={state.settings.globalCooldownHours} onChange={(e) => updateSettings({ globalCooldownHours: Math.max(0, Math.min(720, Number(e.target.value) || 0)) })} className={`${INPUT} max-w-[160px]`} />
-          <span className={HINT}>After a visitor saw any popup, no other popup for this long. 0 turns it off.</span>
+          <span className={HINT}>{t('ads.cooldownHint')}</span>
         </div>
         <p className="text-[11px] text-slate-500 dark:text-gray-400 max-w-xl">
-          Each popup also has its own frequency (once a day, once a week…). Views and clicks are counted from the visitor&apos;s browser, so treat them as close estimates, not exact figures.
+          {t('ads.globalNote')}
         </p>
       </div>
 
@@ -371,21 +382,21 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
       <div id="performance" className={`${CARD} overflow-hidden`}>
         <div className="flex flex-wrap items-center justify-between gap-3 p-5 border-b border-slate-200 dark:border-emerald-950">
           <h2 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-amber-500" /><span>Popups &amp; performance</span>
+            <BarChart3 className="w-4 h-4 text-amber-500" /><span>{t('ads.listTitle')}</span>
           </h2>
           <button type="button" onClick={refreshStats} disabled={refreshing} className={BTN_SECONDARY}>
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} /><span>Refresh stats</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} /><span>{t('ads.refreshStats')}</span>
           </button>
         </div>
 
         {state.ads.length === 0 ? (
           <div className="p-6 space-y-4">
-            <p className="text-xs text-slate-600 dark:text-gray-300">No popups yet. Start from a ready-made one, then change the words, picture and rules:</p>
+            <p className="text-xs text-slate-600 dark:text-gray-300">{t('ads.empty')}</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {STARTERS.map((s) => (
                 <button key={s.key} type="button" onClick={() => openNew(s.build)} className="text-left p-4 rounded-2xl border border-dashed border-slate-300 dark:border-emerald-800 hover:border-amber-400 hover:bg-amber-50/40 dark:hover:bg-amber-400/5 cursor-pointer transition-colors">
-                  <div className="font-bold text-sm text-slate-900 dark:text-white">{s.label}</div>
-                  <div className="text-[11px] text-slate-500 dark:text-gray-400 mt-1">{s.detail}</div>
+                  <div className="font-bold text-sm text-slate-900 dark:text-white">{t(s.label)}</div>
+                  <div className="text-[11px] text-slate-500 dark:text-gray-400 mt-1">{t(s.detail)}</div>
                 </button>
               ))}
             </div>
@@ -395,13 +406,13 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
             <table className="w-full text-xs">
               <thead className="bg-slate-50 dark:bg-[#06100B] text-slate-600 dark:text-gray-400 uppercase tracking-wider text-[10px] border-b border-slate-200 dark:border-emerald-950">
                 <tr>
-                  <th className="text-left py-2.5 px-3">Popup</th>
-                  <th className="text-left py-2.5 px-3">Status</th>
-                  <th className="text-left py-2.5 px-3">Where &amp; when</th>
-                  <th className="text-right py-2.5 px-3">Views</th>
-                  <th className="text-right py-2.5 px-3">Clicks</th>
-                  <th className="text-right py-2.5 px-3">Rate</th>
-                  <th className="text-right py-2.5 px-3">Actions</th>
+                  <th className="text-left py-2.5 px-3">{t('ads.th.popup')}</th>
+                  <th className="text-left py-2.5 px-3">{t('common.status')}</th>
+                  <th className="text-left py-2.5 px-3">{t('ads.th.where')}</th>
+                  <th className="text-right py-2.5 px-3">{t('ads.th.views')}</th>
+                  <th className="text-right py-2.5 px-3">{t('ads.th.clicks')}</th>
+                  <th className="text-right py-2.5 px-3">{t('ads.th.rate')}</th>
+                  <th className="text-right py-2.5 px-3">{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-emerald-950/60">
@@ -414,16 +425,16 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                       <td className="py-2.5 px-3">
                         <div className="font-bold text-slate-900 dark:text-white">{ad.name}</div>
                         <div className="text-[11px] text-slate-500 dark:text-gray-400 truncate max-w-[260px]">{ad.title.en}</div>
-                        <div className="text-[10px] text-slate-400 mt-0.5">{TEMPLATE_INFO[ad.template].label} · {ad.theme}</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">{t(TEMPLATE_INFO[ad.template].label)} · {ad.theme}</div>
                       </td>
                       <td className="py-2.5 px-3">
-                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${STATUS_PILL[status]}`}>{status}</span>
+                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${STATUS_PILL[status]}`}>{t(STATUS_LABEL[status])}</span>
                       </td>
                       <td className="py-2.5 px-3 text-slate-600 dark:text-gray-300">
-                        <div>{ad.pages === 'all' ? 'All pages' : `${ad.pages.length} page${ad.pages.length > 1 ? 's' : ''}`} · {ad.devices === 'all' ? 'all devices' : ad.devices}</div>
-                        <div className="text-[11px]">{TRIGGER_LABEL[ad.trigger.type]}{ad.trigger.type === 'delay' ? ` (${ad.trigger.seconds ?? 8}s)` : ad.trigger.type === 'scroll' ? ` (${ad.trigger.percent ?? 40}%)` : ''} · {FREQUENCY_LABEL[ad.frequency]}</div>
+                        <div>{ad.pages === 'all' ? t('ads.allPages') : t(ad.pages.length > 1 ? 'ads.pagesCount' : 'ads.pageCount', { n: ad.pages.length })} · {ad.devices === 'all' ? t('ads.allDevices') : t(`ads.device.${ad.devices}`)}</div>
+                        <div className="text-[11px]">{t(TRIGGER_LABEL[ad.trigger.type])}{ad.trigger.type === 'delay' ? ` (${ad.trigger.seconds ?? 8}s)` : ad.trigger.type === 'scroll' ? ` (${ad.trigger.percent ?? 40}%)` : ''} · {t(FREQUENCY_LABEL[ad.frequency])}</div>
                         {(ad.startAt || ad.endAt) && (
-                          <div className="text-[10px] text-slate-400">{ad.startAt ? `from ${fmtPhnomPenh(ad.startAt)}` : ''}{ad.startAt && ad.endAt ? ' ' : ''}{ad.endAt ? `until ${fmtPhnomPenh(ad.endAt)}` : ''} (Phnom Penh)</div>
+                          <div className="text-[10px] text-slate-400">{ad.startAt ? t('ads.from', { date: fmtPhnomPenh(ad.startAt) }) : ''}{ad.startAt && ad.endAt ? ' ' : ''}{ad.endAt ? t('ads.until', { date: fmtPhnomPenh(ad.endAt) }) : ''} {t('ads.phnomPenh')}</div>
                         )}
                       </td>
                       <td className="py-2.5 px-3 text-right font-mono">{s.views}</td>
@@ -431,11 +442,11 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                       <td className="py-2.5 px-3 text-right font-mono">{rate}%</td>
                       <td className="py-2.5 px-3">
                         <div className="flex items-center justify-end gap-1">
-                          <button type="button" onClick={() => { setEditing(ad); setEditorTab('content'); }} className={BTN_SECONDARY}>Edit</button>
-                          <a href={previewPath(ad)} target="_blank" rel="noreferrer" title="Preview on the live page (works even when paused)" className={BTN_SECONDARY}><Eye className="w-3.5 h-3.5" /></a>
-                          <button type="button" onClick={() => updateAd(ad.id, { enabled: !ad.enabled })} title={ad.enabled ? 'Pause' : 'Enable'} className={BTN_SECONDARY}>{ad.enabled ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}</button>
-                          <button type="button" onClick={() => duplicate(ad)} title="Duplicate" className={BTN_SECONDARY}><Copy className="w-3.5 h-3.5" /></button>
-                          <button type="button" onClick={() => remove(ad)} title="Delete" className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
+                          <button type="button" onClick={() => { setEditing(ad); setEditorTab('content'); }} className={BTN_SECONDARY}>{t('common.edit')}</button>
+                          <a href={previewPath(ad)} target="_blank" rel="noreferrer" title={t('ads.previewTitle')} className={BTN_SECONDARY}><Eye className="w-3.5 h-3.5" /></a>
+                          <button type="button" onClick={() => updateAd(ad.id, { enabled: !ad.enabled })} title={ad.enabled ? t('ads.pause') : t('ads.enable')} className={BTN_SECONDARY}>{ad.enabled ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}</button>
+                          <button type="button" onClick={() => duplicate(ad)} title={t('common.duplicate')} className={BTN_SECONDARY}><Copy className="w-3.5 h-3.5" /></button>
+                          <button type="button" onClick={() => remove(ad)} title={t('common.delete')} className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
                       </td>
                     </tr>
@@ -449,9 +460,9 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
 
       {state.ads.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500 dark:text-gray-400">
-          <span>Start from a template:</span>
+          <span>{t('ads.startFromTemplate')}</span>
           {STARTERS.map((s) => (
-            <button key={s.key} type="button" onClick={() => openNew(s.build)} className={BTN_SECONDARY}>{s.label}</button>
+            <button key={s.key} type="button" onClick={() => openNew(s.build)} className={BTN_SECONDARY}>{t(s.label)}</button>
           ))}
         </div>
       )}
@@ -462,19 +473,19 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
           <div className="bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-800/70 rounded-3xl w-full max-w-6xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]">
             <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-slate-200 dark:border-emerald-950">
               <div>
-                <h3 className="text-sm font-black text-slate-900 dark:text-white">{state.ads.some((a) => a.id === editing.id) ? 'Edit popup' : 'New popup'}</h3>
-                <p className="text-[11px] text-slate-500 dark:text-gray-400">Changes go live after you press Done and then Save all.</p>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white">{state.ads.some((a) => a.id === editing.id) ? t('ads.editPopup') : t('ads.newPopup')}</h3>
+                <p className="text-[11px] text-slate-500 dark:text-gray-400">{t('ads.editorNote')}</p>
               </div>
-              <button type="button" onClick={() => setEditing(null)} className="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer" aria-label="Close editor"><X className="w-5 h-5" /></button>
+              <button type="button" onClick={() => setEditing(null)} className="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer" aria-label={t('ads.closeEditor')}><X className="w-5 h-5" /></button>
             </div>
 
             <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-[1fr_420px]">
               {/* Form */}
               <div className="p-5 space-y-5">
                 <div className="flex items-center gap-2">
-                  {([['content', 'Content', Type], ['design', 'Design', Palette], ['rules', 'Rules', Sliders]] as const).map(([id, label, Icon]) => (
+                  {([['content', 'ads.tab.content', Type], ['design', 'ads.tab.design', Palette], ['rules', 'ads.tab.rules', Sliders]] as const).map(([id, label, Icon]) => (
                     <button key={id} type="button" onClick={() => setEditorTab(id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer ${editorTab === id ? 'bg-amber-400 text-black shadow-md shadow-amber-500/10' : 'bg-white dark:bg-[#0A1610] text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-emerald-950/60 border border-slate-200 dark:border-emerald-900/40'}`}>
-                      <Icon className="w-4 h-4" /><span>{label}</span>
+                      <Icon className="w-4 h-4" /><span>{t(label)}</span>
                     </button>
                   ))}
                 </div>
@@ -482,66 +493,66 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                 {editorTab === 'content' && (
                   <div className="space-y-4">
                     <div>
-                      <label className={LABEL}>Internal name</label>
+                      <label className={LABEL}>{t('ads.internalName')}</label>
                       <input className={INPUT} value={editing.name} maxLength={80} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
-                      <span className={HINT}>Only you see this.</span>
+                      <span className={HINT}>{t('ads.internalNameHint')}</span>
                     </div>
-                    <BiField label="Small badge" value={editing.badge} max={40} placeholderEn="e.g. Seats are limited" onChange={(v) => setEditing({ ...editing, badge: v })} />
-                    <BiField label="Title" required value={editing.title} max={120} placeholderEn="Under 12 words" onChange={(v) => setEditing({ ...editing, title: v || { en: '' } })} />
-                    <BiField label="Text" multiline value={editing.body} max={400} placeholderEn="One to three short sentences" onChange={(v) => setEditing({ ...editing, body: v })} />
-                    <ImageField label="Picture (optional)" value={editing.imageUrl || ''} onChange={(url) => setEditing({ ...editing, imageUrl: url || undefined })} maxEdge={1600} preview="wide" hint="1200×800 works best. Keep words out of the picture; the title carries the message." />
-                    <BiField label="Button text" required value={editing.cta.label} max={60} placeholderEn="Say what happens next" onChange={(v) => setEditing({ ...editing, cta: { ...editing.cta, label: v || { en: '' } } })} />
+                    <BiField label={t('ads.badge')} value={editing.badge} max={40} placeholderEn={t('ads.badgePh')} onChange={(v) => setEditing({ ...editing, badge: v })} />
+                    <BiField label={t('ads.popupTitle')} required value={editing.title} max={120} placeholderEn={t('ads.popupTitlePh')} onChange={(v) => setEditing({ ...editing, title: v || { en: '' } })} />
+                    <BiField label={t('ads.text')} multiline value={editing.body} max={400} placeholderEn={t('ads.textPh')} onChange={(v) => setEditing({ ...editing, body: v })} />
+                    <ImageField label={t('ads.picture')} value={editing.imageUrl || ''} onChange={(url) => setEditing({ ...editing, imageUrl: url || undefined })} maxEdge={1600} preview="wide" hint={t('ads.pictureHint')} />
+                    <BiField label={t('ads.buttonText')} required value={editing.cta.label} max={60} placeholderEn={t('ads.buttonTextPh')} onChange={(v) => setEditing({ ...editing, cta: { ...editing.cta, label: v || { en: '' } } })} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className={LABEL}>Button does</label>
+                        <label className={LABEL}>{t('ads.buttonDoes')}</label>
                         <select className={INPUT} value={editing.cta.action} onChange={(e) => setEditing({ ...editing, cta: { ...editing.cta, action: e.target.value as PopupAdCtaAction } })}>
-                          {(Object.keys(CTA_LABEL) as PopupAdCtaAction[]).map((a) => <option key={a} value={a}>{CTA_LABEL[a]}</option>)}
+                          {(Object.keys(CTA_LABEL) as PopupAdCtaAction[]).map((a) => <option key={a} value={a}>{t(CTA_LABEL[a])}</option>)}
                         </select>
                       </div>
                       {editing.cta.action === 'url' && (
                         <div>
-                          <label className={LABEL}>Link</label>
-                          <input className={INPUT} value={editing.cta.url || ''} placeholder="https://… or /page" onChange={(e) => setEditing({ ...editing, cta: { ...editing.cta, url: e.target.value } })} />
+                          <label className={LABEL}>{t('ads.link')}</label>
+                          <input className={INPUT} value={editing.cta.url || ''} placeholder={t('ads.linkPh')} onChange={(e) => setEditing({ ...editing, cta: { ...editing.cta, url: e.target.value } })} />
                           <label className="flex items-center gap-2 mt-2 text-[11px] text-slate-600 dark:text-gray-300 cursor-pointer">
                             <input type="checkbox" checked={Boolean(editing.cta.newTab)} onChange={(e) => setEditing({ ...editing, cta: { ...editing.cta, newTab: e.target.checked } })} className="w-4 h-4 accent-amber-400" />
-                            Open in a new tab
+                            {t('ads.openNewTab')}
                           </label>
                         </div>
                       )}
                     </div>
-                    <BiField label="Dismiss link" value={editing.dismissLabel} max={40} placeholderEn="e.g. Not now" onChange={(v) => setEditing({ ...editing, dismissLabel: v })} />
+                    <BiField label={t('ads.dismissLink')} value={editing.dismissLabel} max={40} placeholderEn={t('ads.dismissPh')} onChange={(v) => setEditing({ ...editing, dismissLabel: v })} />
                   </div>
                 )}
 
                 {editorTab === 'design' && (
                   <div className="space-y-5">
                     <div>
-                      <label className={LABEL}>Layout</label>
+                      <label className={LABEL}>{t('ads.layout')}</label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {POPUP_TEMPLATES.map((t) => (
-                          <button key={t} type="button" onClick={() => setEditing({ ...editing, template: t })} className={`text-left p-3 rounded-xl border cursor-pointer transition-colors ${editing.template === t ? 'border-amber-400 bg-amber-50/60 dark:bg-amber-400/10' : 'border-slate-200 dark:border-emerald-900/60 hover:border-amber-300'}`}>
-                            <div className="text-xs font-bold text-slate-900 dark:text-white">{TEMPLATE_INFO[t].label}</div>
-                            <div className="text-[10px] text-slate-500 dark:text-gray-400 mt-0.5">{TEMPLATE_INFO[t].detail}</div>
+                        {POPUP_TEMPLATES.map((tpl) => (
+                          <button key={tpl} type="button" onClick={() => setEditing({ ...editing, template: tpl })} className={`text-left p-3 rounded-xl border cursor-pointer transition-colors ${editing.template === tpl ? 'border-amber-400 bg-amber-50/60 dark:bg-amber-400/10' : 'border-slate-200 dark:border-emerald-900/60 hover:border-amber-300'}`}>
+                            <div className="text-xs font-bold text-slate-900 dark:text-white">{t(TEMPLATE_INFO[tpl].label)}</div>
+                            <div className="text-[10px] text-slate-500 dark:text-gray-400 mt-0.5">{t(TEMPLATE_INFO[tpl].detail)}</div>
                           </button>
                         ))}
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className={LABEL}>Colours</label>
+                        <label className={LABEL}>{t('ads.colours')}</label>
                         <select className={INPUT} value={editing.theme} onChange={(e) => setEditing({ ...editing, theme: e.target.value === 'light' ? 'light' : 'dark' })}>
-                          <option value="dark">Dark green (matches the page)</option>
-                          <option value="light">Light</option>
+                          <option value="dark">{t('ads.theme.dark')}</option>
+                          <option value="light">{t('ads.theme.light')}</option>
                         </select>
                       </div>
                       <div>
-                        <label className={LABEL}>Button colour</label>
+                        <label className={LABEL}>{t('ads.buttonColour')}</label>
                         <div className="flex items-center gap-2">
-                          <input type="color" value={editing.accent || DEFAULT_ACCENT} onChange={(e) => setEditing({ ...editing, accent: e.target.value })} className="w-10 h-10 rounded-lg border border-slate-200 dark:border-emerald-900/60 bg-transparent cursor-pointer" aria-label="Button colour" />
+                          <input type="color" value={editing.accent || DEFAULT_ACCENT} onChange={(e) => setEditing({ ...editing, accent: e.target.value })} className="w-10 h-10 rounded-lg border border-slate-200 dark:border-emerald-900/60 bg-transparent cursor-pointer" aria-label={t('ads.buttonColour')} />
                           <input className={`${INPUT} font-mono`} value={editing.accent || DEFAULT_ACCENT} maxLength={7} onChange={(e) => setEditing({ ...editing, accent: e.target.value })} />
-                          <button type="button" onClick={() => setEditing({ ...editing, accent: DEFAULT_ACCENT })} className={BTN_SECONDARY}>Gold</button>
+                          <button type="button" onClick={() => setEditing({ ...editing, accent: DEFAULT_ACCENT })} className={BTN_SECONDARY}>{t('ads.gold')}</button>
                         </div>
-                        <span className={HINT}>Gold is the site&apos;s primary button colour. Keep it unless the offer needs its own colour.</span>
+                        <span className={HINT}>{t('ads.goldHint')}</span>
                       </div>
                     </div>
                   </div>
@@ -550,10 +561,10 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                 {editorTab === 'rules' && (
                   <div className="space-y-5">
                     <div>
-                      <label className={LABEL}>Show on</label>
+                      <label className={LABEL}>{t('ads.showOn')}</label>
                       <label className="flex items-center gap-2 text-xs text-slate-800 dark:text-gray-200 cursor-pointer mb-2">
                         <input type="checkbox" checked={editing.pages === 'all'} onChange={(e) => setEditing({ ...editing, pages: e.target.checked ? 'all' : [] })} className="w-4 h-4 accent-amber-400" />
-                        All pages
+                        {t('ads.allPages')}
                       </label>
                       {editing.pages !== 'all' && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pl-1">
@@ -567,70 +578,70 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                               </label>
                             );
                           })}
-                          {(editing.pages as string[]).length === 0 && <span className="text-[10px] text-rose-500">Pick at least one page, or the popup shows everywhere.</span>}
+                          {(editing.pages as string[]).length === 0 && <span className="text-[10px] text-rose-500">{t('ads.pickPage')}</span>}
                         </div>
                       )}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className={LABEL}>Devices</label>
+                        <label className={LABEL}>{t('ads.devices')}</label>
                         <select className={INPUT} value={editing.devices} onChange={(e) => setEditing({ ...editing, devices: e.target.value as PopupAd['devices'] })}>
-                          <option value="all">Phones and desktop</option><option value="mobile">Phones only</option><option value="desktop">Desktop only</option>
+                          <option value="all">{t('ads.devices.all')}</option><option value="mobile">{t('ads.devices.mobile')}</option><option value="desktop">{t('ads.devices.desktop')}</option>
                         </select>
                       </div>
                       <div>
-                        <label className={LABEL}>Language</label>
+                        <label className={LABEL}>{t('ads.language')}</label>
                         <select className={INPUT} value={editing.languages} onChange={(e) => setEditing({ ...editing, languages: e.target.value as PopupAd['languages'] })}>
-                          <option value="all">Both languages</option><option value="en">English readers only</option><option value="kh">Khmer readers only</option>
+                          <option value="all">{t('ads.lang.all')}</option><option value="en">{t('ads.lang.en')}</option><option value="kh">{t('ads.lang.kh')}</option>
                         </select>
                       </div>
                       <div>
-                        <label className={LABEL}>Show it</label>
+                        <label className={LABEL}>{t('ads.showIt')}</label>
                         <select className={INPUT} value={editing.trigger.type} onChange={(e) => setEditing({ ...editing, trigger: { type: e.target.value as PopupAdTriggerType, seconds: editing.trigger.seconds ?? 8, percent: editing.trigger.percent ?? 40 } })}>
-                          {POPUP_TRIGGERS.map((t) => <option key={t} value={t}>{TRIGGER_LABEL[t]}</option>)}
+                          {POPUP_TRIGGERS.map((tr) => <option key={tr} value={tr}>{t(TRIGGER_LABEL[tr])}</option>)}
                         </select>
                         {editing.trigger.type === 'delay' && (
                           <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-600 dark:text-gray-300">
-                            <input type="number" min={0} max={600} className={`${INPUT} max-w-[100px]`} value={editing.trigger.seconds ?? 8} onChange={(e) => setEditing({ ...editing, trigger: { ...editing.trigger, seconds: Number(e.target.value) || 0 } })} /> seconds after the page loads
+                            <input type="number" min={0} max={600} className={`${INPUT} max-w-[100px]`} value={editing.trigger.seconds ?? 8} onChange={(e) => setEditing({ ...editing, trigger: { ...editing.trigger, seconds: Number(e.target.value) || 0 } })} /> {t('ads.secondsAfterLoad')}
                           </div>
                         )}
                         {editing.trigger.type === 'scroll' && (
                           <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-600 dark:text-gray-300">
-                            <input type="number" min={1} max={100} className={`${INPUT} max-w-[100px]`} value={editing.trigger.percent ?? 40} onChange={(e) => setEditing({ ...editing, trigger: { ...editing.trigger, percent: Number(e.target.value) || 40 } })} /> % of the page scrolled
+                            <input type="number" min={1} max={100} className={`${INPUT} max-w-[100px]`} value={editing.trigger.percent ?? 40} onChange={(e) => setEditing({ ...editing, trigger: { ...editing.trigger, percent: Number(e.target.value) || 40 } })} /> {t('ads.percentScrolled')}
                           </div>
                         )}
-                        {editing.trigger.type === 'exit_intent' && <span className={HINT}>On phones there is no pointer to leave, so it shows after 15 seconds or 60% scrolled.</span>}
+                        {editing.trigger.type === 'exit_intent' && <span className={HINT}>{t('ads.exitHint')}</span>}
                       </div>
                       <div>
-                        <label className={LABEL}>How often per visitor</label>
+                        <label className={LABEL}>{t('ads.howOften')}</label>
                         <select className={INPUT} value={editing.frequency} onChange={(e) => setEditing({ ...editing, frequency: e.target.value as PopupAdFrequency })}>
-                          {POPUP_FREQUENCIES.map((f) => <option key={f} value={f}>{FREQUENCY_LABEL[f]}</option>)}
+                          {POPUP_FREQUENCIES.map((f) => <option key={f} value={f}>{t(FREQUENCY_LABEL[f])}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className={LABEL}>Start (your local time)</label>
+                        <label className={LABEL}>{t('ads.start')}</label>
                         <input type="datetime-local" className={INPUT} value={toLocalInput(editing.startAt)} onChange={(e) => setEditing({ ...editing, startAt: fromLocalInput(e.target.value) })} />
-                        <span className={HINT}>Leave empty to start right away.</span>
+                        <span className={HINT}>{t('ads.startHint')}</span>
                       </div>
                       <div>
-                        <label className={LABEL}>End</label>
+                        <label className={LABEL}>{t('ads.end')}</label>
                         <input type="datetime-local" className={INPUT} value={toLocalInput(editing.endAt)} onChange={(e) => setEditing({ ...editing, endAt: fromLocalInput(e.target.value) })} />
-                        <span className={HINT}>Leave empty to run until you pause it.</span>
+                        <span className={HINT}>{t('ads.endHint')}</span>
                       </div>
                       <div>
-                        <label className={LABEL}>Priority</label>
+                        <label className={LABEL}>{t('ads.priority')}</label>
                         <input type="number" min={0} max={1000} className={INPUT} value={editing.priority} onChange={(e) => setEditing({ ...editing, priority: Number(e.target.value) || 0 })} />
-                        <span className={HINT}>When two popups could show, the higher number wins.</span>
+                        <span className={HINT}>{t('ads.priorityHint')}</span>
                       </div>
                     </div>
                     <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-emerald-950/60">
                       <label className="flex items-center gap-2 text-xs text-slate-800 dark:text-gray-200 cursor-pointer">
                         <input type="checkbox" checked={editing.hideAfterLead} onChange={(e) => setEditing({ ...editing, hideAfterLead: e.target.checked })} className="w-4 h-4 accent-amber-400" />
-                        Hide from visitors who already sent the form
+                        {t('ads.hideAfterLead')}
                       </label>
                       <label className="flex items-center gap-2 text-xs text-slate-800 dark:text-gray-200 cursor-pointer">
                         <input type="checkbox" checked={editing.enabled} onChange={(e) => setEditing({ ...editing, enabled: e.target.checked })} className="w-4 h-4 accent-amber-400" />
-                        Enabled <span className="text-[10px] text-slate-500 dark:text-gray-400">(a paused popup can still be previewed)</span>
+                        {t('common.enabled')} <span className="text-[10px] text-slate-500 dark:text-gray-400">{t('ads.enabledNote')}</span>
                       </label>
                     </div>
                   </div>
@@ -640,7 +651,7 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
               {/* Live preview */}
               <div className="p-5 bg-slate-100 dark:bg-[#06100B] border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-emerald-950 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-gray-300">Live preview</div>
+                  <div className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-gray-300">{t('ads.livePreview')}</div>
                   <div className="flex items-center gap-1">
                     {(['en', 'kh'] as const).map((l) => (
                       <button key={l} type="button" onClick={() => setPreviewLang(l)} className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer ${previewLang === l ? 'bg-amber-400 text-black' : 'bg-white dark:bg-[#0A1610] text-slate-600 dark:text-gray-300 border border-slate-200 dark:border-emerald-900/60'}`}>{l.toUpperCase()}</button>
@@ -652,15 +663,15 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
                     <PopupAdCard ad={editing} lang={previewLang} pageSlug={previewSlugFor(editing)} inline onClose={() => {}} onCta={() => {}} />
                   </div>
                 </div>
-                <p className="text-[10px] text-slate-500 dark:text-gray-400">Shows the card only. Timing, frequency and the dimmed background apply on the live page. Use Preview on the list for the real thing.</p>
+                <p className="text-[10px] text-slate-500 dark:text-gray-400">{t('ads.previewNote')}</p>
               </div>
             </div>
 
             <div className="flex items-center justify-between gap-3 px-5 py-4 border-t border-slate-200 dark:border-emerald-950">
               <span className="text-[11px] text-rose-600 dark:text-rose-400">{draftReason}</span>
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => setEditing(null)} className={BTN_SECONDARY}>Cancel</button>
-                <button type="button" onClick={applyDraft} disabled={!draftValid} className={BTN_PRIMARY}><CheckCircle2 className="w-4 h-4" /><span>Done</span></button>
+                <button type="button" onClick={() => setEditing(null)} className={BTN_SECONDARY}>{t('common.cancel')}</button>
+                <button type="button" onClick={applyDraft} disabled={!draftValid} className={BTN_PRIMARY}><CheckCircle2 className="w-4 h-4" /><span>{t('common.done')}</span></button>
               </div>
             </div>
           </div>

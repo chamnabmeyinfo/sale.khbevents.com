@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sun, Moon, Laptop, Check, type LucideIcon } from 'lucide-react';
 import { useTheme, ThemeMode } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface ThemeSwitcherProps {
   compact?: boolean;
@@ -11,6 +12,7 @@ interface ThemeSwitcherProps {
 
 export default function ThemeSwitcher({ compact = false, className = '' }: ThemeSwitcherProps) {
   const { theme, setTheme } = useTheme();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -25,9 +27,9 @@ export default function ThemeSwitcher({ compact = false, className = '' }: Theme
   }, []);
 
   const options: { id: ThemeMode; label: string; icon: LucideIcon }[] = [
-    { id: 'light', label: 'Light', icon: Sun },
-    { id: 'dark', label: 'Dark', icon: Moon },
-    { id: 'system', label: 'System (Auto)', icon: Laptop }
+    { id: 'light', label: t('settings.theme.light'), icon: Sun },
+    { id: 'dark', label: t('settings.theme.dark'), icon: Moon },
+    { id: 'system', label: t('settings.theme.systemAuto'), icon: Laptop }
   ];
 
   // Compact segmented control version
@@ -42,7 +44,7 @@ export default function ThemeSwitcher({ compact = false, className = '' }: Theme
               key={opt.id}
               type="button"
               onClick={() => setTheme(opt.id)}
-              title={`Theme: ${opt.label}`}
+              title={t('settings.theme.title', { label: opt.label })}
               className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                 isSelected
                   ? 'bg-amber-400 text-black shadow-sm font-bold scale-105'
@@ -66,16 +68,16 @@ export default function ThemeSwitcher({ compact = false, className = '' }: Theme
         type="button"
         onClick={() => setOpen(!open)}
         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 border border-slate-200 dark:border-emerald-800/50 text-slate-800 dark:text-emerald-200 text-xs font-semibold transition-all shadow-sm cursor-pointer"
-        title="Toggle Light / Dark / System Mode"
+        title={t('settings.theme.toggleTitle')}
       >
         <CurrentIcon className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-        <span className="capitalize">{theme === 'system' ? 'Auto (System)' : theme}</span>
+        <span className="capitalize">{theme === 'system' ? t('settings.theme.autoSystem') : theme === 'light' ? t('settings.theme.light') : t('settings.theme.dark')}</span>
       </button>
 
       {open && (
         <div className="absolute right-0 mt-2 w-44 rounded-2xl bg-white dark:bg-[#08150E] border border-slate-200 dark:border-emerald-900/70 shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
           <div className="px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-emerald-600 border-b border-slate-100 dark:border-emerald-950 mb-1">
-            Appearance
+            {t('settings.theme.appearance')}
           </div>
           {options.map((opt) => {
             const Icon = opt.icon;

@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, GripVertical, ImagePlus, Link2, Loader2, Star, Trash2, Upload } from 'lucide-react';
 import { uploadImage } from '@/lib/image-upload-client';
+import { useLanguage } from '@/context/LanguageContext';
 
 /**
  * Ordered photo list with upload, drag-to-arrange, arrow buttons, "make cover",
@@ -33,7 +34,8 @@ function move<T>(list: T[], from: number, to: number): T[] {
 
 const fileLabel = (url: string) => decodeURIComponent(url.split('/').pop() || url).replace(/^[a-z0-9]+-[a-f0-9]{8}-/, '');
 
-export default function ImageManager({ images, onChange, library = [], title = 'Photos', hint }: ImageManagerProps) {
+export default function ImageManager({ images, onChange, library = [], title, hint }: ImageManagerProps) {
+  const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploaded, setUploaded] = useState<UploadedFile[]>([]);
   const [pending, setPending] = useState(0);
@@ -69,7 +71,7 @@ export default function ImageManager({ images, onChange, library = [], title = '
         added.push(data.url);
         setUploaded(prev => [{ url: data.url, name: data.name }, ...prev]);
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Upload failed');
+        setError(e instanceof Error ? e.message : t('image.uploadFailed'));
       } finally {
         setPending(p => p - 1);
       }
@@ -83,7 +85,7 @@ export default function ImageManager({ images, onChange, library = [], title = '
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="text-sm font-bold text-slate-900 dark:text-white">{title} ({images.length})</div>
+          <div className="text-sm font-bold text-slate-900 dark:text-white">{title ?? t('image.photos')} ({images.length})</div>
           {hint && <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5 max-w-xl">{hint}</p>}
         </div>
         <div className="flex items-center gap-2">
@@ -102,7 +104,7 @@ export default function ImageManager({ images, onChange, library = [], title = '
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider shadow cursor-pointer disabled:opacity-60"
           >
             {pending > 0 ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-            <span>{pending > 0 ? `Uploading ${pending}…` : 'Upload images'}</span>
+            <span>{pending > 0 ? t('image.uploadingN', { n: pending }) : t('image.uploadImages')}</span>
           </button>
         </div>
       </div>
@@ -123,7 +125,7 @@ export default function ImageManager({ images, onChange, library = [], title = '
         {images.length === 0 ? (
           <div className="py-10 text-center text-xs text-slate-500 dark:text-gray-400">
             <ImagePlus className="w-6 h-6 mx-auto mb-2 opacity-60" />
-            No photos yet. Upload, drop files here, or pick from the library below.
+            {t('image.empty')}
           </div>
         ) : (
           <ol className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -139,22 +141,22 @@ export default function ImageManager({ images, onChange, library = [], title = '
                   dragOver === idx && dragFrom !== idx ? 'border-amber-400 ring-2 ring-amber-300 scale-[1.02]' : idx === 0 ? 'border-amber-400' : 'border-slate-200 dark:border-emerald-900/50'
                 } ${dragFrom === idx ? 'opacity-50' : ''}`}
               >
-                <img src={img} alt={`Photo ${idx + 1}`} className="w-full aspect-[4/3] object-cover pointer-events-none" draggable={false} />
+                <img src={img} alt={t('image.photoAlt', { n: idx + 1 })} className="w-full aspect-[4/3] object-cover pointer-events-none" draggable={false} />
                 <div className="absolute top-2 left-2 flex items-center gap-1">
                   <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold shadow ${idx === 0 ? 'bg-amber-400 text-black' : 'bg-black/60 text-white'}`}>
-                    {idx === 0 ? '★ Cover' : `#${idx + 1}`}
+                    {idx === 0 ? t('image.cover') : `#${idx + 1}`}
                   </span>
                 </div>
                 <span className="absolute top-2 right-2 p-1 rounded-md bg-black/50 text-white opacity-70" aria-hidden="true"><GripVertical className="w-3.5 h-3.5" /></span>
                 <div className="flex items-center justify-between gap-1 px-1.5 py-1.5 bg-white dark:bg-[#07130D]">
                   <div className="flex items-center gap-0.5">
-                    <button type="button" onClick={() => onChange(move(images, idx, idx - 1))} disabled={idx === 0} aria-label="Move earlier" title="Move earlier" className="p-1 rounded-md text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-emerald-950 disabled:opacity-30 cursor-pointer"><ChevronLeft className="w-4 h-4" /></button>
-                    <button type="button" onClick={() => onChange(move(images, idx, idx + 1))} disabled={idx === images.length - 1} aria-label="Move later" title="Move later" className="p-1 rounded-md text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-emerald-950 disabled:opacity-30 cursor-pointer"><ChevronRight className="w-4 h-4" /></button>
+                    <button type="button" onClick={() => onChange(move(images, idx, idx - 1))} disabled={idx === 0} aria-label={t('image.moveEarlier')} title={t('image.moveEarlier')} className="p-1 rounded-md text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-emerald-950 disabled:opacity-30 cursor-pointer"><ChevronLeft className="w-4 h-4" /></button>
+                    <button type="button" onClick={() => onChange(move(images, idx, idx + 1))} disabled={idx === images.length - 1} aria-label={t('image.moveLater')} title={t('image.moveLater')} className="p-1 rounded-md text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-emerald-950 disabled:opacity-30 cursor-pointer"><ChevronRight className="w-4 h-4" /></button>
                     {idx !== 0 && (
-                      <button type="button" onClick={() => onChange(move(images, idx, 0))} aria-label="Make cover" title="Make this the cover photo" className="p-1 rounded-md text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-400/10 cursor-pointer"><Star className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => onChange(move(images, idx, 0))} aria-label={t('image.makeCover')} title={t('image.makeCoverTitle')} className="p-1 rounded-md text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-400/10 cursor-pointer"><Star className="w-4 h-4" /></button>
                     )}
                   </div>
-                  <button type="button" onClick={() => onChange(images.filter((_, i) => i !== idx))} aria-label="Remove photo" title="Remove from this page (the file stays in the library)" className="p-1 rounded-md text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
+                  <button type="button" onClick={() => onChange(images.filter((_, i) => i !== idx))} aria-label={t('image.removePhoto')} title={t('image.removeTitle')} className="p-1 rounded-md text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
                 </div>
                 <div className="px-2 pb-1.5 text-[10px] text-slate-500 dark:text-gray-400 truncate bg-white dark:bg-[#07130D]" title={img}>{fileLabel(img)}</div>
               </li>
@@ -172,19 +174,19 @@ export default function ImageManager({ images, onChange, library = [], title = '
             value={urlDraft}
             onChange={e => setUrlDraft(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add(urlDraft); setUrlDraft(''); } }}
-            placeholder="Or paste an image URL or path (/images/events/…)"
+            placeholder={t('image.urlPh')}
             className="w-full pl-9 pr-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-400"
           />
         </div>
         <button type="button" onClick={() => { add(urlDraft); setUrlDraft(''); }} className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-emerald-800 text-white font-bold text-xs cursor-pointer hover:opacity-90">
-          Add
+          {t('common.add')}
         </button>
       </div>
 
       {/* Library: uploaded first, then presets; one click adds */}
       {libraryItems.length > 0 && (
         <div className="space-y-1.5">
-          <div className="text-[11px] font-semibold text-slate-500 dark:text-gray-400">Library. Click a photo to add it:</div>
+          <div className="text-[11px] font-semibold text-slate-500 dark:text-gray-400">{t('image.library')}</div>
           <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
             {libraryItems.map(photo => (
               <button
@@ -195,7 +197,7 @@ export default function ImageManager({ images, onChange, library = [], title = '
                 className="rounded-xl overflow-hidden aspect-[4/3] border border-slate-200 dark:border-emerald-900/40 hover:border-amber-400 hover:scale-105 transition-all cursor-pointer group relative"
               >
                 <img src={photo} alt="" className="w-full h-full object-cover" loading="lazy" />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold">+ Add</div>
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold">{t('image.addOverlay')}</div>
               </button>
             ))}
           </div>

@@ -18,6 +18,8 @@ import {
 import { SystemSettings } from '@/lib/types';
 import { useTheme } from '@/context/ThemeContext';
 import { errorMessage } from '@/lib/errors';
+import { useLanguage } from '@/context/LanguageContext';
+import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 
 interface SettingsClientProps {
   initialSettings: SystemSettings;
@@ -28,6 +30,7 @@ type SettingsTab = 'profile' | 'social' | 'telegram' | 'appearance' | 'security'
 export default function SettingsClient({ initialSettings }: SettingsClientProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
   const { theme, setTheme } = useTheme();
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState({
     companyName: initialSettings.companyName || 'KHB EVENTS',
@@ -62,12 +65,12 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
         body: JSON.stringify({ baseUrl: window.location.origin }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.success) throw new Error(data.error || 'Registration failed');
+      if (!res.ok || !data.success) throw new Error(data.error || t('settings.telegram.registerFailed'));
       setWebhookStatus('done');
-      setWebhookMessage(`Connected: ${data.webhookUrl}`);
+      setWebhookMessage(t('settings.telegram.connected', { url: String(data.webhookUrl) }));
     } catch (err) {
       setWebhookStatus('error');
-      setWebhookMessage(errorMessage(err, 'Registration failed'));
+      setWebhookMessage(errorMessage(err, t('settings.telegram.registerFailed')));
     }
   };
 
@@ -96,7 +99,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
     setSuccess(false);
 
     if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
-      setError('New passwords do not match');
+      setError(t('settings.err.passwordMismatch'));
       setSaving(false);
       return;
     }
@@ -109,13 +112,13 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update settings');
+      if (!res.ok) throw new Error(data.error || t('settings.err.updateFailed'));
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
       setFormData((prev) => ({ ...prev, newPassword: '', confirmPassword: '' }));
     } catch (err) {
-      setError(errorMessage(err, 'Error saving settings'));
+      setError(errorMessage(err, t('settings.err.saving')));
     } finally {
       setSaving(false);
     }
@@ -128,10 +131,10 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
             <Settings className="w-6 h-6 text-amber-500 dark:text-amber-400" />
-            <span>Brand & System Settings</span>
+            <span>{t('settings.title')}</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-            Configure KHB Events contact points, instant lead notifications, and security credentials.
+            {t('settings.subtitle')}
           </p>
         </div>
 
@@ -142,18 +145,18 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
           className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer"
         >
           <Save className="w-4 h-4 text-black stroke-[3]" />
-          <span>{saving ? 'Saving...' : 'Save Settings'}</span>
+          <span>{saving ? t('settings.saving') : t('settings.saveSettings')}</span>
         </button>
       </div>
 
       {/* 2. Sub Menu Tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-emerald-900/40 pb-3">
         {[
-          { id: 'profile', label: '🏢 Company Profile & Contact', icon: Building },
-          { id: 'social', label: '📢 Social & Media Channels', icon: Share2 },
-          { id: 'telegram', label: '🤖 Instant Telegram Alerts', icon: Bell },
-          { id: 'appearance', label: '🎨 Theme & Display', icon: Sun },
-          { id: 'security', label: '🛡️ Roles & Security', icon: ShieldCheck }
+          { id: 'profile', label: `🏢 ${t('settings.tab.profile')}`, icon: Building },
+          { id: 'social', label: `📢 ${t('settings.tab.social')}`, icon: Share2 },
+          { id: 'telegram', label: `🤖 ${t('settings.tab.telegram')}`, icon: Bell },
+          { id: 'appearance', label: `🎨 ${t('settings.tab.appearance')}`, icon: Sun },
+          { id: 'security', label: `🛡️ ${t('settings.tab.security')}`, icon: ShieldCheck }
         ].map((tab) => {
           const TabIcon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -178,7 +181,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
       {success && (
         <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-500/60 text-xs text-emerald-800 dark:text-emerald-200 flex items-center gap-2 shadow-sm dark:shadow-lg">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <span>Settings successfully saved and synchronized across the portal!</span>
+          <span>{t('settings.savedBanner')}</span>
         </div>
       )}
 
@@ -194,13 +197,13 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
           <div className="rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 p-6 sm:p-8 space-y-5 shadow-sm dark:shadow-xl transition-colors">
             <div className="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-emerald-950">
               <Building className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">Company & Public Contact Information</h2>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">{t('settings.profile.heading')}</h2>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Company Name
+                  {t('settings.profile.companyName')}
                 </label>
                 <input
                   type="text"
@@ -212,7 +215,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Brand Tagline
+                  {t('settings.profile.tagline')}
                 </label>
                 <input
                   type="text"
@@ -224,7 +227,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Hotline Phone Number (Display)
+                  {t('settings.profile.phone')}
                 </label>
                 <input
                   type="text"
@@ -237,7 +240,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  WhatsApp Number (Digits only, e.g. 85512888999)
+                  {t('settings.profile.whatsapp')}
                 </label>
                 <input
                   type="text"
@@ -250,7 +253,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Official Inquiries Email
+                  {t('settings.profile.email')}
                 </label>
                 <input
                   type="email"
@@ -263,7 +266,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  HQ Office & Staging Warehouse Address
+                  {t('settings.profile.address')}
                 </label>
                 <input
                   type="text"
@@ -281,13 +284,13 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
           <div className="rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 p-6 sm:p-8 space-y-5 shadow-sm dark:shadow-xl transition-colors">
             <div className="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-emerald-950">
               <Share2 className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">Social & Public Channels</h2>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">{t('settings.social.heading')}</h2>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Facebook Page URL
+                  {t('settings.social.facebook')}
                 </label>
                 <input
                   type="url"
@@ -300,7 +303,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  TikTok Profile URL
+                  {t('settings.social.tiktok')}
                 </label>
                 <input
                   type="url"
@@ -313,7 +316,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
 
               <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Telegram Public Channel / Username
+                  {t('settings.social.telegramUsername')}
                 </label>
                 <input
                   type="text"
@@ -323,7 +326,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                   className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
                 />
                 <span className="text-[10px] text-slate-500 dark:text-zinc-500 mt-1 block">
-                  Used for public Telegram buttons on campaign pages (e.g. t.me/khbevents).
+                  {t('settings.social.telegramHint')}
                 </span>
               </div>
             </div>
@@ -336,15 +339,15 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-emerald-950">
               <div className="flex items-center gap-2">
                 <Bell className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                <h2 className="text-base font-bold text-slate-900 dark:text-white">Instant Telegram Lead Notifications</h2>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">{t('settings.telegram.heading')}</h2>
               </div>
               <span className="text-[10px] text-emerald-800 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950 px-2.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800 font-bold">
-                Real-time Push
+                {t('settings.telegram.badge')}
               </span>
             </div>
 
             <p className="text-xs text-slate-600 dark:text-gray-400">
-              Receive an instant Telegram notification on your phone or sales group chat whenever a client submits an inquiry or delegate registration.
+              {t('settings.telegram.intro')}
             </p>
 
             <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-emerald-950/30 border border-slate-200 dark:border-emerald-900/40">
@@ -356,14 +359,14 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                 className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-[#06100B] border-slate-300 dark:border-emerald-900 focus:ring-0 cursor-pointer"
               />
               <label htmlFor="enableTelegram" className="text-xs text-emerald-800 dark:text-emerald-200 font-bold cursor-pointer">
-                Enable Telegram Bot Notification Alerts for New Inquiries
+                {t('settings.telegram.enable')}
               </label>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4 pt-1">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Telegram Bot Token
+                  {t('settings.telegram.botToken')}
                 </label>
                 <input
                   type="text"
@@ -373,30 +376,30 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                   className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white font-mono text-xs focus:outline-none focus:border-amber-400 transition-colors"
                 />
                 <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-1 block">
-                  Created via @BotFather on Telegram.
+                  {t('settings.telegram.botTokenHint')}
                 </span>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                  Target Chat ID / Sales Group ID
+                  {t('settings.telegram.chatId')}
                 </label>
                 <input
                   type="text"
                   value={formData.telegramChatId}
                   onChange={(e) => setFormData({ ...formData, telegramChatId: e.target.value })}
-                  placeholder="e.g. -100123456789 or 987654321"
+                  placeholder={t('settings.telegram.chatIdPlaceholder')}
                   className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white font-mono text-xs focus:outline-none focus:border-amber-400 transition-colors"
                 />
                 <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-1 block">
-                  Your personal ID or team sales group ID.
+                  {t('settings.telegram.chatIdHint')}
                 </span>
               </div>
             </div>
 
             <div className="pt-3 border-t border-slate-200 dark:border-emerald-900/40 space-y-2">
               <p className="text-xs text-slate-600 dark:text-gray-400">
-                Connect the bot to this website so it can answer visitors. Do this once, and again after changing the bot token (save the new token first).
+                {t('settings.telegram.webhookIntro')}
               </p>
               <button
                 type="button"
@@ -404,7 +407,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                 disabled={webhookStatus === 'working'}
                 className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-60 transition-colors"
               >
-                {webhookStatus === 'working' ? 'Registering…' : 'Register / secure bot webhook'}
+                {webhookStatus === 'working' ? t('settings.telegram.registering') : t('settings.telegram.registerButton')}
               </button>
               {webhookMessage && (
                 <p className={`text-xs ${webhookStatus === 'error' ? 'text-rose-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
@@ -421,37 +424,37 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-emerald-950">
               <div className="flex items-center gap-2">
                 <Sun className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-                <h2 className="text-base font-bold text-slate-900 dark:text-white">Portal Display & Theme Preferences</h2>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">{t('settings.appearance.heading')}</h2>
               </div>
               <span className="text-[10px] text-amber-800 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/70 px-2.5 py-0.5 rounded-full border border-amber-300 dark:border-amber-800 font-bold uppercase">
-                Active: {theme}
+                {t('settings.appearance.active', { theme })}
               </span>
             </div>
 
             <p className="text-xs text-slate-600 dark:text-gray-400">
-              Customize your portal viewing experience. Choose between crisp daylight white, executive obsidian dark, or let the portal automatically match your device OS settings.
+              {t('settings.appearance.intro')}
             </p>
 
             <div className="grid sm:grid-cols-3 gap-4">
               {[
                 {
                   id: 'light' as const,
-                  title: 'Light Mode',
-                  desc: 'Crisp ivory white theme with clean contrast and emerald accents, perfect for daytime sales operations.',
+                  title: t('settings.appearance.light'),
+                  desc: t('settings.appearance.lightDesc'),
                   icon: Sun,
                   iconBg: 'bg-amber-100 text-amber-700'
                 },
                 {
                   id: 'dark' as const,
-                  title: 'Dark Mode',
-                  desc: 'Signature KHB obsidian & emerald luxury theme, designed for eye comfort and focused evening workflow.',
+                  title: t('settings.appearance.dark'),
+                  desc: t('settings.appearance.darkDesc'),
                   icon: Moon,
                   iconBg: 'bg-emerald-950 text-emerald-300'
                 },
                 {
                   id: 'system' as const,
-                  title: 'Automatic Follow System',
-                  desc: 'Automatically switches between Light and Dark mode based on your device system settings in real time.',
+                  title: t('settings.appearance.system'),
+                  desc: t('settings.appearance.systemDesc'),
                   icon: Laptop,
                   iconBg: 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
                 }
@@ -476,7 +479,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                         </div>
                         {isSelected && (
                           <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-400 text-black">
-                            Selected
+                            {t('settings.appearance.selected')}
                           </span>
                         )}
                       </div>
@@ -489,6 +492,13 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                 );
               })}
             </div>
+
+            {/* Portal language */}
+            <div className="pt-5 border-t border-slate-200 dark:border-emerald-900/40 space-y-3">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">{t('settings.appearance.languageHeading')}</h3>
+              <p className="text-xs text-slate-600 dark:text-gray-400">{t('settings.appearance.languageIntro')}</p>
+              <LanguageSwitcher />
+            </div>
           </div>
         )}
 
@@ -499,7 +509,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
             <div className="rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 p-6 sm:p-8 space-y-4 shadow-sm dark:shadow-xl transition-colors">
               <div className="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-emerald-950">
                 <ShieldCheck className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-                <h2 className="text-base font-bold text-slate-900 dark:text-white">System Access & Roles Architecture</h2>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">{t('settings.security.heading')}</h2>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
@@ -508,14 +518,14 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-md bg-amber-400 text-black flex items-center gap-1">
                       <Crown className="w-3 h-3" />
-                      <span>OWNER</span>
+                      <span>{t('settings.security.owner')}</span>
                     </span>
-                    <span className="text-[10px] text-amber-700 dark:text-amber-300 font-mono font-semibold">Root Authority</span>
+                    <span className="text-[10px] text-amber-700 dark:text-amber-300 font-mono font-semibold">{t('settings.security.ownerTag')}</span>
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white">Chamnam Mey</h3>
                   <p className="text-xs text-amber-800 dark:text-amber-200/80 font-mono">chamnabmey.info@gmail.com</p>
                   <p className="text-[11px] text-slate-600 dark:text-zinc-400">
-                    Full ownership permissions: complete CMS governance, financial pipeline access, settings & security control.
+                    {t('settings.security.ownerDesc')}
                   </p>
                 </div>
 
@@ -524,14 +534,14 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-md bg-blue-500 text-white flex items-center gap-1">
                       <ShieldCheck className="w-3 h-3" />
-                      <span>SUPER ADMIN</span>
+                      <span>{t('settings.security.superAdmin')}</span>
                     </span>
-                    <span className="text-[10px] text-blue-700 dark:text-blue-300 font-mono font-semibold">Full Operation</span>
+                    <span className="text-[10px] text-blue-700 dark:text-blue-300 font-mono font-semibold">{t('settings.security.superAdminTag')}</span>
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white">Admin KHB</h3>
                   <p className="text-xs text-blue-800 dark:text-blue-200/80 font-mono">admin@khbevents.com</p>
                   <p className="text-[11px] text-slate-600 dark:text-zinc-400">
-                    Lead CRM oversight, campaign management, landing page creation, sales team coordination.
+                    {t('settings.security.superAdminDesc')}
                   </p>
                 </div>
               </div>
@@ -541,32 +551,32 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
             <div className="rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 p-6 sm:p-8 space-y-5 shadow-sm dark:shadow-xl transition-colors">
               <div className="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-emerald-950">
                 <Key className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                <h2 className="text-base font-bold text-slate-900 dark:text-white">Update Portal Admin Password</h2>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">{t('settings.security.passwordHeading')}</h2>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                    New Password
+                    {t('settings.security.newPassword')}
                   </label>
                   <input
                     type="password"
                     value={formData.newPassword}
                     onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                    placeholder="Enter new password (optional)"
+                    placeholder={t('settings.security.newPasswordPlaceholder')}
                     className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                    Confirm New Password
+                    {t('settings.security.confirmPassword')}
                   </label>
                   <input
                     type="password"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    placeholder="Confirm new password"
+                    placeholder={t('settings.security.confirmPasswordPlaceholder')}
                     className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400 transition-colors"
                   />
                 </div>
@@ -582,7 +592,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
             className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer"
           >
             <Save className="w-4 h-4 text-black stroke-[3]" />
-            <span>{saving ? 'Saving...' : 'Save All Settings'}</span>
+            <span>{saving ? t('settings.saving') : t('settings.saveAllSettings')}</span>
           </button>
         </div>
       </form>

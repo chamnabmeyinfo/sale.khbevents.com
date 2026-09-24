@@ -54,6 +54,7 @@ import {
   DEFAULT_REMEMBER_VISITOR_MONTHS
 } from '@/lib/round-robin';
 import { errorMessage } from '@/lib/errors';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface RoundRobinManagerClientProps {
   initialSettings: RoundRobinSettings;
@@ -110,6 +111,14 @@ const samplePresets = [
   }
 ];
 
+/** Splits a translated sentence on {placeholders} and swaps in JSX nodes. */
+function renderRich(text: string, nodes: Record<string, React.ReactNode>): React.ReactNode[] {
+  return text.split(/(\{\w+\})/g).map((part, i) => {
+    const m = /^\{(\w+)\}$/.exec(part);
+    return m && m[1] in nodes ? <React.Fragment key={i}>{nodes[m[1]]}</React.Fragment> : part;
+  });
+}
+
 /** Response shape of POST /api/round-robin/simulate (fields vary by mode). */
 interface SimulationResult {
   success: boolean;
@@ -130,6 +139,7 @@ export default function RoundRobinManagerClient({
   initialLogs,
   systemSettings
 }: RoundRobinManagerClientProps) {
+  const { t, lang } = useLanguage();
   const [settings, setSettings] = useState<RoundRobinSettings>(initialSettings);
   const [logs, setLogs] = useState<RoundRobinLog[]>(initialLogs);
   const [botToken, setBotToken] = useState<string>(systemSettings.telegramBotToken || '');
@@ -194,12 +204,12 @@ export default function RoundRobinManagerClient({
     () => roundRobinHealth(settings, {
       telegramConfigured: Boolean(botToken || systemSettings.telegramBotToken),
       contactUsername: systemSettings.telegramUsername
-    }),
-    [settings, botToken, systemSettings.telegramBotToken, systemSettings.telegramUsername]
+    }, lang),
+    [settings, botToken, systemSettings.telegramBotToken, systemSettings.telegramUsername, lang]
   );
   const placeholderCount = settings.staffList.filter(isPlaceholderStaff).length;
   const handleRemovePlaceholders = () => {
-    if (!confirm('Remove the sample accounts from the team? Your real staff stay as they are.')) return;
+    if (!confirm(t('rr.removeSamplesConfirm'))) return;
     setSettings((prev) => ({ ...prev, staffList: prev.staffList.filter((s) => !isPlaceholderStaff(s)) }));
   };
 
@@ -302,12 +312,12 @@ export default function RoundRobinManagerClient({
   // Delete a staff member
   const handleDeleteStaff = (staffId: string, staffName: string) => {
     if (settings.staffList.length <= 1) {
-      alert('ប្រព័ន្ធត្រូវមានយ៉ាងហោចណាស់គណនីបុគ្គលិក ១ នាក់ (You must maintain at least 1 staff account).');
+      alert(t('rr.staff.deleteMin'));
       return;
     }
 
     const confirmDelete = window.confirm(
-      `តើអ្នកពិតជាចង់លុបគណនីបុគ្គលិក "${staffName || 'Staff Member'}" នេះចេញពីប្រព័ន្ធមែនទេ?\n\nAre you sure you want to delete "${staffName || 'Staff Member'}"?`
+      t('rr.staff.deleteConfirm', { name: staffName || t('rr.staff.staffMember') })
     );
     if (!confirmDelete) return;
 
@@ -375,7 +385,7 @@ export default function RoundRobinManagerClient({
         [staff.id]: {
           testing: false,
           success: false,
-          error: errorMessage(err, 'Failed to ping Telegram')
+          error: errorMessage(err, t('rr.staff.pingError'))
         }
       }));
     }
@@ -412,10 +422,10 @@ export default function RoundRobinManagerClient({
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 4000);
       } else {
-        alert(data.error || 'Failed to save settings');
+        alert(data.error || t('rr.saveFailed'));
       }
     } catch {
-      alert('Error saving Round Robin settings');
+      alert(t('rr.saveError'));
     } finally {
       setIsSaving(false);
     }
@@ -538,7 +548,7 @@ export default function RoundRobinManagerClient({
   // Test send custom alert directly to Telegram
   const handleTestSendCustomTemplate = async () => {
     if (!currentTestStaff || !currentTestStaff.telegramChatId) {
-      alert('សូមជ្រើសរើសបុគ្គលិកដែលមាន Telegram Chat ID (Please select a staff with a configured Telegram Chat ID).');
+      alert(t('rr.tpl.testNeedsStaff'));
       return;
     }
 
@@ -564,8 +574,8 @@ export default function RoundRobinManagerClient({
     } catch (err) {
       setCustomTemplateTestResult({
         success: false,
-        error: errorMessage(err, 'Failed to send test alert to Telegram'),
-        diagnostic: 'Network error communicating with Telegram Bot API.'
+        error: errorMessage(err, t('rr.tpl.sendError')),
+        diagnostic: t('rr.tpl.networkError')
       });
     } finally {
       setIsTestingCustomTemplate(false);
@@ -639,7 +649,7 @@ export default function RoundRobinManagerClient({
     } catch (err) {
       setSimulationResult({
         success: false,
-        error: errorMessage(err, 'Simulation execution failed')
+        error: errorMessage(err, t('rr.sim.execFailed'))
       });
     } finally {
       setIsSimulating(false);
@@ -678,13 +688,13 @@ export default function RoundRobinManagerClient({
             </div>
             <div>
               <h1 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <span>Round Robin Lead Distribution</span>
+                <span>{t('rr.title')}</span>
                 <span className="text-xs px-2.5 py-0.5 rounded-full font-extrabold bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
-                  {settings.staffList.length} Staff Telegram Accounts
+                  {t('rr.staffAccountsBadge', { n: settings.staffList.length })}
                 </span>
               </h1>
               <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
-                Automatically distribute incoming visitor inquiries and Telegram contacts with weighted percentage sharing
+                {t('rr.subtitle')}
               </p>
             </div>
           </div>
@@ -692,7 +702,7 @@ export default function RoundRobinManagerClient({
 
         <div className="flex items-center gap-3">
           <label className="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/60 cursor-pointer shadow-xs">
-            <span className="text-xs font-bold text-slate-700 dark:text-gray-300">System Enabled:</span>
+            <span className="text-xs font-bold text-slate-700 dark:text-gray-300">{t('rr.systemEnabled')}</span>
             <input
               type="checkbox"
               checked={settings.enabled}
@@ -700,7 +710,7 @@ export default function RoundRobinManagerClient({
               className="w-4 h-4 accent-amber-400 cursor-pointer"
             />
             <span className={`text-xs font-black ${settings.enabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-              {settings.enabled ? 'ACTIVE' : 'PAUSED'}
+              {settings.enabled ? t('rr.stateActive') : t('rr.statePaused')}
             </span>
           </label>
 
@@ -711,10 +721,10 @@ export default function RoundRobinManagerClient({
               setSimulationResult(null);
             }}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs transition-all shadow-md hover:shadow-emerald-500/20 cursor-pointer"
-            title="Launch Round Robin lead distribution simulation flight"
+            title={t('rr.runSimulationTitle')}
           >
             <Rocket className="w-4 h-4 text-amber-300" />
-            <span>🚀 Run Simulation</span>
+            <span>{t('rr.runSimulation')}</span>
           </button>
 
           <button
@@ -724,7 +734,7 @@ export default function RoundRobinManagerClient({
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs transition-all shadow-md cursor-pointer disabled:opacity-50"
           >
             {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-            <span>{isSaving ? 'Saving Configuration...' : 'Save All Settings'}</span>
+            <span>{isSaving ? t('rr.savingConfig') : t('rr.saveAll')}</span>
           </button>
         </div>
       </div>
@@ -733,7 +743,7 @@ export default function RoundRobinManagerClient({
         <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center justify-between animate-fadeIn">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4" />
-            <span>Round Robin configuration successfully saved and synchronized across all landing pages!</span>
+            <span>{t('rr.savedBanner')}</span>
           </div>
           <button onClick={() => setSaveSuccess(false)} className="cursor-pointer text-slate-400 hover:text-white">
             <X className="w-4 h-4" />
@@ -745,48 +755,48 @@ export default function RoundRobinManagerClient({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
         <div className="p-4 rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 shadow-xs">
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-gray-400 font-semibold">
-            <span>Total Leads Routed</span>
+            <span>{t('rr.kpi.leadsRouted')}</span>
             <TrendingUp className="w-4 h-4 text-amber-500" />
           </div>
           <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
             {totalLeadsRouted}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Form submissions distributed</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">{t('rr.kpi.leadsRoutedHint')}</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 shadow-xs">
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-gray-400 font-semibold">
-            <span>Direct Telegram Clicks</span>
+            <span>{t('rr.kpi.directClicks')}</span>
             <MessageCircle className="w-4 h-4 text-emerald-500" />
           </div>
           <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
             {totalClicksRouted}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Visitor direct contacts</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">{t('rr.kpi.directClicksHint')}</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 shadow-xs">
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-gray-400 font-semibold">
-            <span>Delivery Success Rate</span>
+            <span>{t('rr.kpi.deliveryRate')}</span>
             <CheckCircle2 className="w-4 h-4 text-blue-500" />
           </div>
           <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
             {deliveryRate}%
           </div>
           <div className="text-[10px] text-slate-400 mt-0.5">
-            {totalDeliveries} delivered / {totalFailures} failed
+            {t('rr.kpi.deliveryRateHint', { delivered: totalDeliveries, failed: totalFailures })}
           </div>
         </div>
 
         <div className="p-4 rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 shadow-xs">
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-gray-400 font-semibold">
-            <span>Active Staff Reps</span>
+            <span>{t('rr.kpi.activeStaff')}</span>
             <Users className="w-4 h-4 text-purple-500" />
           </div>
           <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
             {settings.staffList.filter((s) => s.isActive).length} / {settings.staffList.length}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Receiving leads currently</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">{t('rr.kpi.activeStaffHint')}</div>
         </div>
       </div>
 
@@ -802,7 +812,7 @@ export default function RoundRobinManagerClient({
           }`}
         >
           <Sliders className="w-3.5 h-3.5" />
-          <span>Staff Accounts & Percentage Allocation</span>
+          <span>{t('rr.tab.config')}</span>
         </button>
 
         <button
@@ -815,7 +825,7 @@ export default function RoundRobinManagerClient({
           }`}
         >
           <FileText className="w-3.5 h-3.5" />
-          <span>📝 Custom Alert Template (Telegram & WhatsApp)</span>
+          <span>{t('rr.tab.template')}</span>
         </button>
 
         <button
@@ -831,7 +841,7 @@ export default function RoundRobinManagerClient({
           }`}
         >
           <Activity className="w-3.5 h-3.5" />
-          <span>Real-Time Routing Audit Log ({logs.length})</span>
+          <span>{t('rr.tab.logs', { n: logs.length })}</span>
         </button>
 
         <button
@@ -843,7 +853,7 @@ export default function RoundRobinManagerClient({
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer bg-gradient-to-r from-emerald-600/15 to-amber-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 ml-auto"
         >
           <Rocket className="w-3.5 h-3.5 text-amber-400" />
-          <span>Simulation Studio</span>
+          <span>{t('rr.tab.studio')}</span>
         </button>
       </div>
 
@@ -860,10 +870,10 @@ export default function RoundRobinManagerClient({
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
                 <Activity className="w-4 h-4" />
-                <span>Readiness check</span>
+                <span>{t('rr.readiness')}</span>
               </h3>
               <p className="text-[11px] text-slate-600 dark:text-gray-400">
-                How a click works: visitor → your server picks the next person → straight into that person&apos;s Telegram chat. The bot only sends the alerts.
+                {t('rr.readinessHow')}
               </p>
             </div>
             <ul className="space-y-2">
@@ -888,7 +898,7 @@ export default function RoundRobinManagerClient({
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
-                <span>Remove {placeholderCount} sample account{placeholderCount > 1 ? 's' : ''}, then Save</span>
+                <span>{t('rr.removeSamples', { n: placeholderCount, s: placeholderCount > 1 ? 's' : '' })}</span>
               </button>
             )}
           </div>
@@ -901,13 +911,13 @@ export default function RoundRobinManagerClient({
               </div>
               <div>
                 <h3 className="font-black text-sm text-white flex items-center gap-2">
-                  <span>Round Robin Simulation &amp; Test Flight</span>
+                  <span>{t('rr.banner.title')}</span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-black">
-                    1-Click Test
+                    {t('rr.banner.badge')}
                   </span>
                 </h3>
                 <p className="text-xs text-gray-300 mt-0.5 max-w-2xl">
-                  Test the entire lead cycle: generate a VIP prospect, let the engine select an active staff member by percentage, deliver an authentic lead card to their Telegram, and inspect the real-time audit log.
+                  {t('rr.banner.desc')}
                 </p>
               </div>
             </div>
@@ -923,7 +933,7 @@ export default function RoundRobinManagerClient({
                 className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs transition-all shadow-md cursor-pointer"
               >
                 <Rocket className="w-4 h-4" />
-                <span>Simulate Lead Dispatch</span>
+                <span>{t('rr.banner.simulateLead')}</span>
               </button>
 
               <button
@@ -934,10 +944,10 @@ export default function RoundRobinManagerClient({
                   setSimulationResult(null);
                 }}
                 className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold text-xs transition-all cursor-pointer"
-                title="Test 10-50 lead distributions"
+                title={t('rr.banner.batchTestTitle')}
               >
                 <BarChart3 className="w-4 h-4 text-amber-300" />
-                <span>Batch % Test</span>
+                <span>{t('rr.banner.batchTest')}</span>
               </button>
             </div>
           </div>
@@ -948,10 +958,10 @@ export default function RoundRobinManagerClient({
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
                   <Percent className="w-4 h-4 text-amber-500" />
-                  <span>Lead Routing Weight Allocation</span>
+                  <span>{t('rr.weight.title')}</span>
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5">
-                  Higher percentages receive a larger share of prospective clients.
+                  {t('rr.weight.desc')}
                 </p>
               </div>
 
@@ -963,7 +973,7 @@ export default function RoundRobinManagerClient({
                       : 'bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/40'
                   }`}
                 >
-                  Total: {totalPercentage}% {totalPercentage === 100 ? '✓ Balanced' : `(Diff: ${100 - totalPercentage}%)`}
+                  {t('rr.weight.total', { total: totalPercentage })} {totalPercentage === 100 ? t('rr.weight.balanced') : t('rr.weight.diff', { diff: 100 - totalPercentage })}
                 </span>
 
                 <button
@@ -971,7 +981,7 @@ export default function RoundRobinManagerClient({
                   onClick={handleAutoBalance}
                   className="px-3 py-1 rounded-lg bg-slate-100 dark:bg-emerald-950 hover:bg-slate-200 dark:hover:bg-emerald-900 border border-slate-200 dark:border-emerald-800 text-[11px] font-bold text-slate-800 dark:text-emerald-300 cursor-pointer transition-colors"
                 >
-                  ⚖️ Auto-Balance to 100%
+                  {t('rr.weight.autoBalance')}
                 </button>
               </div>
             </div>
@@ -1003,7 +1013,7 @@ export default function RoundRobinManagerClient({
                   <span className={`font-semibold ${staff.isActive ? 'text-slate-800 dark:text-gray-200' : 'text-slate-400 line-through'}`}>
                     {staff.name}
                   </span>
-                  <span className="font-mono text-slate-500 dark:text-gray-400">({staff.isActive ? `${staff.percentage}%` : 'Off'})</span>
+                  <span className="font-mono text-slate-500 dark:text-gray-400">({staff.isActive ? `${staff.percentage}%` : t('rr.weight.off')})</span>
                 </div>
               ))}
             </div>
@@ -1014,13 +1024,13 @@ export default function RoundRobinManagerClient({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                  <span>Staff Telegram Accounts</span>
+                  <span>{t('rr.staff.title')}</span>
                   <span className="text-xs px-2.5 py-0.5 rounded-full font-black bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
-                    {settings.staffList.length} Reps
+                    {t('rr.staff.reps', { n: settings.staffList.length })}
                   </span>
                 </h2>
                 <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5">
-                  បន្ថែម ឬលុបគណនីបុគ្គលិក កំណត់ភាគរយចែក Lead និងតេស្ត Telegram Ping ជាក់ស្តែង
+                  {t('rr.staff.desc')}
                 </p>
               </div>
 
@@ -1031,7 +1041,7 @@ export default function RoundRobinManagerClient({
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs transition-all shadow-md cursor-pointer hover:shadow-emerald-500/20 active:scale-95"
                 >
                   <UserPlus className="w-4 h-4 text-amber-300" />
-                  <span>+ Add Staff Account (បន្ថែមបុគ្គលិក)</span>
+                  <span>{t('rr.staff.add')}</span>
                 </button>
               </div>
             </div>
@@ -1058,7 +1068,7 @@ export default function RoundRobinManagerClient({
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-slate-900 dark:text-white text-sm">{staff.name || `Staff #${idx + 1}`}</h3>
+                            <h3 className="font-bold text-slate-900 dark:text-white text-sm">{staff.name || t('rr.staff.defaultName', { n: idx + 1 })}</h3>
                             {cleanUser && (
                               <a
                                 href={`https://t.me/${cleanUser}`}
@@ -1071,7 +1081,7 @@ export default function RoundRobinManagerClient({
                               </a>
                             )}
                           </div>
-                          <p className="text-[11px] text-slate-500 dark:text-gray-400">{staff.title || 'Sales Representative'}</p>
+                          <p className="text-[11px] text-slate-500 dark:text-gray-400">{staff.title || t('rr.staff.defaultTitle')}</p>
                         </div>
                       </div>
 
@@ -1082,14 +1092,14 @@ export default function RoundRobinManagerClient({
                           onClick={() => handleTestConnection(staff)}
                           disabled={testResult?.testing || !staff.telegramChatId}
                           className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-emerald-950 hover:bg-slate-200 dark:hover:bg-emerald-900 border border-slate-200 dark:border-emerald-800 text-slate-800 dark:text-emerald-300 text-xs font-bold cursor-pointer transition-colors flex items-center gap-1.5 disabled:opacity-40"
-                          title="Sends a test ping to this staff Telegram chat ID"
+                          title={t('rr.staff.testPingTitle')}
                         >
                           {testResult?.testing ? (
                             <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-500" />
                           ) : (
                             <Send className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                           )}
-                          <span>{testResult?.testing ? 'Pinging...' : '⚡ Test Ping'}</span>
+                          <span>{testResult?.testing ? t('rr.staff.pinging') : t('rr.staff.testPing')}</span>
                         </button>
 
                         <label className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-emerald-900/40 cursor-pointer">
@@ -1100,7 +1110,7 @@ export default function RoundRobinManagerClient({
                             className="w-4 h-4 accent-amber-400 cursor-pointer"
                           />
                           <span className={`text-xs font-bold ${staff.isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-400'}`}>
-                            {staff.isActive ? 'Active' : 'Off'}
+                            {staff.isActive ? t('rr.staff.active') : t('rr.staff.off')}
                           </span>
                         </label>
 
@@ -1108,7 +1118,7 @@ export default function RoundRobinManagerClient({
                           type="button"
                           onClick={() => handleDeleteStaff(staff.id, staff.name)}
                           className="p-2 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-900 transition-all cursor-pointer"
-                          title={`Delete ${staff.name} (លុបគណនីបុគ្គលិកនេះចេញ)`}
+                          title={t('rr.staff.deleteTitle', { name: staff.name })}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -1132,8 +1142,8 @@ export default function RoundRobinManagerClient({
                         <div className="flex-1 space-y-0.5">
                           <div className="font-bold">
                             {testResult.success
-                              ? `Connection Verified! Telegram Message #${testResult.messageId} delivered to ${staff.name}.`
-                              : `Failed to Ping ${staff.name}: ${testResult.error}`}
+                              ? t('rr.staff.pingOk', { id: testResult.messageId ?? '', name: staff.name })
+                              : t('rr.staff.pingFail', { name: staff.name, error: testResult.error ?? '' })}
                           </div>
                           {testResult.diagnostic && (
                             <div className="text-[11px] opacity-90">{testResult.diagnostic}</div>
@@ -1146,7 +1156,7 @@ export default function RoundRobinManagerClient({
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mt-4 text-xs">
                       <div>
                         <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-gray-400 mb-1">
-                          Staff Full Name
+                          {t('rr.staff.fullName')}
                         </label>
                         <input
                           type="text"
@@ -1158,7 +1168,7 @@ export default function RoundRobinManagerClient({
 
                       <div>
                         <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-gray-400 mb-1">
-                          Role / Title
+                          {t('rr.staff.role')}
                         </label>
                         <input
                           type="text"
@@ -1170,12 +1180,12 @@ export default function RoundRobinManagerClient({
 
                       <div>
                         <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-gray-400 mb-1">
-                          Telegram @Username
+                          {t('rr.staff.username')}
                         </label>
                         <input
                           type="text"
                           value={staff.telegramUsername}
-                          placeholder="e.g. your_telegram_name"
+                          placeholder={t('rr.staff.usernamePh')}
                           onChange={(e) => handleStaffChange(staff.id, { telegramUsername: e.target.value })}
                           className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white font-mono focus:border-amber-400 focus:outline-none"
                         />
@@ -1184,14 +1194,14 @@ export default function RoundRobinManagerClient({
                       <div>
                         <div className="flex items-center justify-between mb-1">
                           <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-gray-400">
-                            Telegram Chat ID
+                            {t('rr.staff.chatId')}
                           </label>
-                          <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium">via @userinfobot</span>
+                          <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium">{t('rr.staff.chatIdVia')}</span>
                         </div>
                         <input
                           type="text"
                           value={staff.telegramChatId}
-                          placeholder="e.g. 589218293"
+                          placeholder={t('rr.staff.chatIdPh')}
                           onChange={(e) => handleStaffChange(staff.id, { telegramChatId: e.target.value })}
                           className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white font-mono focus:border-amber-400 focus:outline-none"
                         />
@@ -1199,17 +1209,17 @@ export default function RoundRobinManagerClient({
 
                       <div>
                         <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-gray-400 mb-1">
-                          🌐 Alert Language
+                          {t('rr.staff.alertLang')}
                         </label>
                         <select
                           value={staff.preferredLanguage || ''}
                           onChange={(e) => handleStaffChange(staff.id, { preferredLanguage: (e.target.value || undefined) as RoundRobinStaff['preferredLanguage'] })}
                           className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white font-medium focus:border-amber-400 focus:outline-none cursor-pointer"
                         >
-                          <option value="">📋 Use Global Template</option>
-                          <option value="km">🇰🇭 ខ្មែរ (Khmer)</option>
-                          <option value="en">🇬🇧 English</option>
-                          <option value="compact">⚡ Compact / Quick</option>
+                          <option value="">{t('rr.staff.langGlobal')}</option>
+                          <option value="km">{t('rr.staff.langKm')}</option>
+                          <option value="en">{t('rr.staff.langEn')}</option>
+                          <option value="compact">{t('rr.staff.langCompact')}</option>
                         </select>
                       </div>
                     </div>
@@ -1219,13 +1229,13 @@ export default function RoundRobinManagerClient({
                       <div className="lg:col-span-6 space-y-1.5">
                         <div className="flex items-center justify-between text-xs">
                           <span className="font-bold text-slate-700 dark:text-gray-300 flex items-center gap-1">
-                            <span>Routing Percentage Share:</span>
+                            <span>{t('rr.staff.share')}</span>
                             <strong className="text-amber-600 dark:text-amber-400 text-sm font-black font-mono">
                               {staff.percentage}%
                             </strong>
                           </span>
                           <span className="text-[10px] text-slate-400">
-                            {staff.isActive ? 'Active weight' : 'Paused (0%)'}
+                            {staff.isActive ? t('rr.staff.activeWeight') : t('rr.staff.pausedWeight')}
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
@@ -1254,17 +1264,17 @@ export default function RoundRobinManagerClient({
                       {/* Cumulative stats for this staff */}
                       <div className="lg:col-span-6 flex flex-wrap items-center justify-end gap-3 text-[11px] text-slate-600 dark:text-gray-400">
                         <div className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#06100B] border border-slate-200 dark:border-emerald-950">
-                          Form Leads: <strong className="text-slate-900 dark:text-white">{staff.totalLeadsRouted || 0}</strong>
+                          {t('rr.staff.formLeads')} <strong className="text-slate-900 dark:text-white">{staff.totalLeadsRouted || 0}</strong>
                         </div>
                         <div className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#06100B] border border-slate-200 dark:border-emerald-950">
-                          Direct Clicks: <strong className="text-slate-900 dark:text-white">{staff.totalDirectClicks || 0}</strong>
+                          {t('rr.staff.directClicks')} <strong className="text-slate-900 dark:text-white">{staff.totalDirectClicks || 0}</strong>
                         </div>
                         <div className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#06100B] border border-slate-200 dark:border-emerald-950">
-                          Delivered: <strong className="text-emerald-600 dark:text-emerald-400">{staff.successfulDeliveries || 0}</strong>
+                          {t('rr.staff.delivered')} <strong className="text-emerald-600 dark:text-emerald-400">{staff.successfulDeliveries || 0}</strong>
                         </div>
                         {staff.failedDeliveries ? (
                           <div className="px-2.5 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300">
-                            Failed: <strong>{staff.failedDeliveries}</strong>
+                            {t('rr.staff.failed')} <strong>{staff.failedDeliveries}</strong>
                           </div>
                         ) : null}
                       </div>
@@ -1281,7 +1291,7 @@ export default function RoundRobinManagerClient({
               className="w-full py-4 px-4 rounded-2xl border-2 border-dashed border-slate-300 dark:border-emerald-900/60 hover:border-amber-400 dark:hover:border-amber-400 text-slate-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer bg-slate-50/50 dark:bg-black/20 hover:bg-amber-500/5 active:scale-[0.99]"
             >
               <UserPlus className="w-4 h-4 text-amber-500" />
-              <span>+ Add Another Staff Member (បន្ថែមគណនីបុគ្គលិកថ្មី)</span>
+              <span>{t('rr.staff.addAnother')}</span>
             </button>
           </div>
 
@@ -1289,31 +1299,31 @@ export default function RoundRobinManagerClient({
           <div className="p-6 rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 shadow-xs space-y-4">
             <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
               <Shield className="w-4 h-4 text-emerald-500" />
-              <span>Advanced Routing Engine Rules & Fallbacks</span>
+              <span>{t('rr.adv.title')}</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">
-                  Distribution Algorithm
+                  {t('rr.adv.algorithm')}
                 </label>
                 <select
                   value={settings.algorithm}
                   onChange={(e) => setSettings({ ...settings, algorithm: e.target.value as RoundRobinAlgorithm })}
                   className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-semibold focus:border-amber-400 focus:outline-none"
                 >
-                  <option value="weighted_percentage">Fair Weighted Share (Recommended)</option>
-                  <option value="strict_round_robin">Strict Round Robin (Sequential 1-by-1)</option>
-                  <option value="random_weighted">Random Weighted Lottery</option>
+                  <option value="weighted_percentage">{t('rr.adv.algoWeighted')}</option>
+                  <option value="strict_round_robin">{t('rr.adv.algoStrict')}</option>
+                  <option value="random_weighted">{t('rr.adv.algoRandom')}</option>
                 </select>
                 <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">
-                  Fair share sends each lead to whoever is furthest below their %. Nobody gets several in a row while a colleague waits.
+                  {t('rr.adv.algoHint')}
                 </p>
               </div>
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">
-                  Remember a visitor for
+                  {t('rr.adv.remember')}
                 </label>
                 <select
                   value={settings.rememberVisitorMonths ?? DEFAULT_REMEMBER_VISITOR_MONTHS}
@@ -1321,43 +1331,43 @@ export default function RoundRobinManagerClient({
                   className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-semibold focus:border-amber-400 focus:outline-none"
                 >
                   {REMEMBER_VISITOR_OPTIONS.map((m) => (
-                    <option key={m} value={m}>{m === 0 ? 'Off (every contact re-enters the rotation)' : `${m} month${m > 1 ? 's' : ''}`}</option>
+                    <option key={m} value={m}>{m === 0 ? t('rr.adv.rememberOff') : t(m > 1 ? 'rr.adv.months' : 'rr.adv.month', { n: m })}</option>
                   ))}
                 </select>
                 <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">
-                  Same browser (cookie) or same phone number / email → same salesperson, with no second alert. After this period they re-enter the rotation.
+                  {t('rr.adv.rememberHint')}
                 </p>
               </div>
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">
-                  Fallback Manager Telegram Chat ID
+                  {t('rr.adv.fallback')}
                 </label>
                 <input
                   type="text"
                   value={settings.fallbackChatId || ''}
-                  placeholder="e.g. -1001234567890 (Group ID)"
+                  placeholder={t('rr.adv.fallbackPh')}
                   onChange={(e) => setSettings({ ...settings, fallbackChatId: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-mono focus:border-amber-400 focus:outline-none"
                 />
                 <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">
-                  If delivery to staff fails, the lead is immediately forwarded here.
+                  {t('rr.adv.fallbackHint')}
                 </p>
               </div>
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">
-                  Telegram Bot Token
+                  {t('rr.adv.botToken')}
                 </label>
                 <input
                   type="password"
                   value={botToken}
-                  placeholder="Bot token from @BotFather"
+                  placeholder={t('rr.adv.botTokenPh')}
                   onChange={(e) => setBotToken(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-mono focus:border-amber-400 focus:outline-none"
                 />
                 <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">
-                  Shared Telegram bot used to dispatch direct lead alerts.
+                  {t('rr.adv.botTokenHint')}
                 </p>
               </div>
             </div>
@@ -1371,7 +1381,7 @@ export default function RoundRobinManagerClient({
                   className="w-4 h-4 accent-amber-400 cursor-pointer"
                 />
                 <span className="text-xs font-bold text-slate-800 dark:text-gray-200">
-                  Enable Direct Visitor Contact Routing (Chat on Telegram clicks)
+                  {t('rr.adv.directRouting')}
                 </span>
               </label>
 
@@ -1383,7 +1393,7 @@ export default function RoundRobinManagerClient({
                   className="w-4 h-4 accent-amber-400 cursor-pointer"
                 />
                 <span className="text-xs font-bold text-slate-800 dark:text-gray-200">
-                  Carbon-Copy (CC) Lead Dispatch Alerts to Manager Group
+                  {t('rr.adv.ccManager')}
                 </span>
               </label>
             </div>
@@ -1405,47 +1415,47 @@ export default function RoundRobinManagerClient({
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-lg font-black text-white">
-                    Telegram &amp; WhatsApp Custom Alert Message Builder
+                    {t('rr.tpl.title')}
                   </h2>
                   <span className="text-[10px] px-2.5 py-0.5 rounded-full font-black bg-amber-400 text-black uppercase tracking-wider">
-                    HTML Enabled
+                    {t('rr.tpl.htmlEnabled')}
                   </span>
                   <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    Live Preview
+                    {t('rr.tpl.livePreview')}
                   </span>
                 </div>
                 <p className="text-xs text-gray-300 max-w-2xl leading-relaxed">
-                  រៀបចំទម្រង់សារជូនដំណឹងពេលមានអតិថិជនថ្មីចូលមកតាមពាក្យពេចន៍របស់អ្នក (ភាសាខ្មែរ រូបសញ្ញា Emojis និងទិន្នន័យអតិថិជនស្វ័យប្រវត្តិ)។ រាល់ការកែប្រែនឹងបង្ហាញក្នុងប្រអប់ Telegram Mockup ភ្លាមៗ។
+                  {t('rr.tpl.desc')}
                 </p>
               </div>
             </div>
 
             {/* Quick Template Presets */}
             <div className="flex flex-wrap items-center gap-2 shrink-0 w-full md:w-auto bg-black/40 p-2 rounded-2xl border border-emerald-500/20">
-              <span className="text-[11px] font-bold text-gray-400 px-2">គំរូសាររហ័ស (Presets):</span>
+              <span className="text-[11px] font-bold text-gray-400 px-2">{t('rr.tpl.presets')}</span>
               <button
                 type="button"
                 onClick={() => handleApplyPreset('khmer')}
                 className="px-3 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-300 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
-                title="ប្រើប្រាស់គំរូភាសាខ្មែរពេញលេញ (Full Khmer standard)"
+                title={t('rr.tpl.presetKhmerTitle')}
               >
-                <span>🇰🇭 គំរូខ្មែរ (Default)</span>
+                <span>{t('rr.tpl.presetKhmer')}</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleApplyPreset('english')}
                 className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
-                title="Switch to English standard template"
+                title={t('rr.tpl.presetEnglishTitle')}
               >
-                <span>🇬🇧 English</span>
+                <span>{t('rr.tpl.presetEnglish')}</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleApplyPreset('compact')}
                 className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
-                title="ប្រើប្រាស់គំរូខ្លីរហ័ស (Compact format)"
+                title={t('rr.tpl.presetCompactTitle')}
               >
-                <span>⚡ ខ្លីរហ័ស (Compact)</span>
+                <span>{t('rr.tpl.presetCompact')}</span>
               </button>
             </div>
           </div>
@@ -1460,19 +1470,19 @@ export default function RoundRobinManagerClient({
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-amber-500" />
                     <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                      Dynamic Variable Tags (ចុចដើម្បីបញ្ចូល Tag ដោយស្វ័យប្រវត្តិ)
+                      {t('rr.tpl.tagsTitle')}
                     </h3>
                   </div>
                   {copiedTag && (
                     <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/30 animate-fadeIn flex items-center gap-1">
                       <Check className="w-3 h-3" />
-                      <span>បញ្ចូល {copiedTag} រួចរាល់!</span>
+                      <span>{t('rr.tpl.tagInserted', { tag: copiedTag })}</span>
                     </span>
                   )}
                 </div>
 
                 <p className="text-[11px] text-slate-500 dark:text-gray-400">
-                  ចុចលើ Tag ណាមួយខាងក្រោមដើម្បីបញ្ចូលទៅកាន់ទីតាំងទស្សន៍ទ្រនិច (Cursor) ក្នុងប្រអប់អត្ថបទ៖
+                  {t('rr.tpl.tagsHint')}
                 </p>
 
                 <div className="flex flex-wrap gap-1.5 pt-1">
@@ -1482,12 +1492,12 @@ export default function RoundRobinManagerClient({
                       type="button"
                       onClick={() => handleInsertTag(p.tag)}
                       className="group inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-emerald-950/60 hover:bg-amber-400/20 dark:hover:bg-amber-400/20 border border-slate-200 dark:border-emerald-900/60 hover:border-amber-400/50 text-slate-800 dark:text-gray-200 hover:text-amber-600 dark:hover:text-amber-300 text-xs font-mono font-medium transition-all cursor-pointer shadow-2xs active:scale-95"
-                      title={`${p.khmer} (${p.label}) - ចុចដើម្បីបញ្ចូល`}
+                      title={t('rr.tpl.tagTitle', { label: lang === 'kh' ? p.khmer : p.label })}
                     >
                       <span className="text-[11px]">{p.icon}</span>
                       <strong className="text-[11px]">{p.tag}</strong>
                       <span className="text-[10px] text-slate-400 dark:text-gray-400 font-sans group-hover:text-amber-700 dark:group-hover:text-amber-300">
-                        {p.khmer}
+                        {lang === 'kh' ? p.khmer : p.label}
                       </span>
                     </button>
                   ))}
@@ -1500,16 +1510,16 @@ export default function RoundRobinManagerClient({
                   <div>
                     <label className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
                       <Smartphone className="w-4 h-4 text-sky-500" />
-                      <span>Telegram Alert Message Template (HTML Mode)</span>
+                      <span>{t('rr.tpl.telegramTitle')}</span>
                     </label>
                     <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5">
-                      សារនេះនឹងត្រូវ Bot ផ្ញើជូនបុគ្គលិកភ្លាមៗនៅពេលមាន Lead ថ្មី។
+                      {t('rr.tpl.telegramDesc')}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-1 text-[10px] font-mono text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-[#06100B] px-2.5 py-1 rounded-lg border border-slate-200 dark:border-emerald-950">
                     <Code className="w-3 h-3 text-amber-500" />
-                    <span>Supports: &lt;b&gt;, &lt;i&gt;, &lt;code&gt;, &lt;a href&gt;</span>
+                    <span>{t('rr.tpl.supports')}</span>
                   </div>
                 </div>
 
@@ -1520,14 +1530,14 @@ export default function RoundRobinManagerClient({
                     onChange={(e) => setCustomTemplate(e.target.value)}
                     rows={16}
                     className="w-full p-4 rounded-2xl bg-slate-900 dark:bg-[#06100B] text-slate-100 font-mono text-xs leading-relaxed border border-slate-700 dark:border-emerald-900/80 focus:border-amber-400 focus:outline-none shadow-inner resize-y"
-                    placeholder="បញ្ចូលទម្រង់សារ HTML សម្រាប់ Telegram..."
+                    placeholder={t('rr.tpl.telegramPh')}
                     spellCheck={false}
                   />
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] text-slate-500 dark:text-gray-400">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">HTML Tags ដែលអាចប្រើបាន៖</span>
+                    <span className="font-semibold">{t('rr.tpl.htmlTags')}</span>
                     <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-emerald-950 font-mono text-[10px] text-slate-800 dark:text-gray-200">&lt;b&gt;bold&lt;/b&gt;</code>
                     <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-emerald-950 font-mono text-[10px] text-slate-800 dark:text-gray-200">&lt;i&gt;italic&lt;/i&gt;</code>
                     <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-emerald-950 font-mono text-[10px] text-slate-800 dark:text-gray-200">&lt;code&gt;text&lt;/code&gt;</code>
@@ -1538,7 +1548,7 @@ export default function RoundRobinManagerClient({
                     className="text-amber-600 dark:text-amber-400 hover:underline font-bold cursor-pointer inline-flex items-center gap-1"
                   >
                     <RotateCcw className="w-3 h-3" />
-                    <span>ស្តារគំរូដើម (Reset to Default)</span>
+                    <span>{t('rr.tpl.reset')}</span>
                   </button>
                 </div>
               </div>
@@ -1548,10 +1558,10 @@ export default function RoundRobinManagerClient({
                 <div>
                   <label className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
                     <MessageCircle className="w-4 h-4 text-emerald-500" />
-                    <span>WhatsApp Pre-filled Greeting Template (សារស្វាគមន៍ WhatsApp ជាមុន)</span>
+                    <span>{t('rr.tpl.whatsappTitle')}</span>
                   </label>
                   <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5">
-                    អត្ថបទដែលបំពេញទុកជាមុននៅពេលបុគ្គលិកចុចប៊ូតុង &quot;ផ្ញើសារ WhatsApp&quot; ដើម្បីទាក់ទងទៅអតិថិជន។
+                    {t('rr.tpl.whatsappDesc')}
                   </p>
                 </div>
 
@@ -1564,7 +1574,7 @@ export default function RoundRobinManagerClient({
                 />
 
                 <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                  <span>Tags ដែលគាំទ្រ៖</span>
+                  <span>{t('rr.tpl.supportedTags')}</span>
                   <code className="font-mono text-emerald-600 dark:text-emerald-400">{'{clientName}'}</code>
                   <code className="font-mono text-emerald-600 dark:text-emerald-400">{'{staffName}'}</code>
                   <code className="font-mono text-emerald-600 dark:text-emerald-400">{'{pageTitle}'}</code>
@@ -1579,10 +1589,10 @@ export default function RoundRobinManagerClient({
                   <div>
                     <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
                       <Zap className="w-4 h-4 text-amber-500" />
-                      <span>សាកល្បងផ្ញើ &amp; រក្សាទុក (Test &amp; Save Template)</span>
+                      <span>{t('rr.tpl.testSaveTitle')}</span>
                     </h3>
                     <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5">
-                      ផ្ញើសារសាកល្បងជាមួយគំរូថ្មីនេះផ្ទាល់ទៅកាន់ Telegram បុគ្គលិក ដើម្បីពិនិត្យមើលរូបរាងពិតប្រាកដ។
+                      {t('rr.tpl.testSaveDesc')}
                     </p>
                   </div>
 
@@ -1593,14 +1603,14 @@ export default function RoundRobinManagerClient({
                     className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs transition-all shadow-md cursor-pointer disabled:opacity-50"
                   >
                     {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                    <span>{isSaving ? 'កំពុងរក្សាទុក...' : '💾 Save Custom Template'}</span>
+                    <span>{isSaving ? t('common.saving') : t('rr.tpl.saveTemplate')}</span>
                   </button>
                 </div>
 
                 <div className="pt-3 border-t border-slate-100 dark:border-emerald-950/60 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <div className="flex-1">
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">
-                      ជ្រើសរើសបុគ្គលិកទទួលសារសាកល្បង៖
+                      {t('rr.tpl.selectStaff')}
                     </label>
                     <select
                       value={selectedTestStaffId}
@@ -1609,7 +1619,7 @@ export default function RoundRobinManagerClient({
                     >
                       {settings.staffList.map((s) => (
                         <option key={s.id} value={s.id}>
-                          {s.name} {s.telegramUsername ? `(@${s.telegramUsername})` : ''} {s.telegramChatId ? `[Chat ID: ${s.telegramChatId}]` : '[No Chat ID]'}
+                          {s.name} {s.telegramUsername ? `(@${s.telegramUsername})` : ''} {s.telegramChatId ? t('rr.tpl.chatIdOpt', { id: s.telegramChatId }) : t('rr.tpl.noChatId')}
                         </option>
                       ))}
                     </select>
@@ -1627,7 +1637,7 @@ export default function RoundRobinManagerClient({
                       ) : (
                         <Send className="w-4 h-4" />
                       )}
-                      <span>⚡ Test Send to Telegram</span>
+                      <span>{t('rr.tpl.testSend')}</span>
                     </button>
                   </div>
                 </div>
@@ -1650,23 +1660,23 @@ export default function RoundRobinManagerClient({
                         )}
                         <span>
                           {customTemplateTestResult.success
-                            ? 'ការផ្ញើសារសាកល្បងទទួលបានជោគជ័យ ១០០%!'
-                            : 'ការផ្ញើសារសាកល្បងមិនបានជោគជ័យ'}
+                            ? t('rr.tpl.testOk')
+                            : t('rr.tpl.testFail')}
                         </span>
                       </div>
                       {customTemplateTestResult.messageId && (
                         <span className="font-mono text-[10px] opacity-75">
-                          Telegram Msg ID: #{customTemplateTestResult.messageId}
+                          {t('rr.tpl.msgId', { id: customTemplateTestResult.messageId })}
                         </span>
                       )}
                     </div>
                     {customTemplateTestResult.success ? (
                       <p className="mt-1 text-[11px] opacity-90">
-                        សារសាកល្បងត្រូវបានបញ្ជូនទៅកាន់គណនី Telegram របស់ <strong>{currentTestStaff.name}</strong> រួចរាល់ហើយ។ សូមបើកមើល Telegram app របស់អ្នក!
+                        {t('rr.tpl.testOkDesc', { name: currentTestStaff.name })}
                       </p>
                     ) : (
                       <p className="mt-1 text-[11px] opacity-90">
-                        កំហុស៖ {customTemplateTestResult.error || 'Unknown error'}.{' '}
+                        {t('rr.tpl.errorPrefix')} {customTemplateTestResult.error || t('rr.tpl.unknownError')}.{' '}
                         {customTemplateTestResult.diagnostic || ''}
                       </p>
                     )}
@@ -1686,8 +1696,8 @@ export default function RoundRobinManagerClient({
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-xs text-white">KHB Events Lead Bot</span>
-                        <span className="w-3.5 h-3.5 rounded-full bg-sky-400 text-black text-[9px] flex items-center justify-center font-black" title="Verified Bot">
+                        <span className="font-bold text-xs text-white">{t('rr.tpl.botName')}</span>
+                        <span className="w-3.5 h-3.5 rounded-full bg-sky-400 text-black text-[9px] flex items-center justify-center font-black" title={t('rr.tpl.verifiedBot')}>
                           ✓
                         </span>
                       </div>
@@ -1697,9 +1707,9 @@ export default function RoundRobinManagerClient({
 
                   <div className="text-right">
                     <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                      LIVE PREVIEW
+                      {t('rr.tpl.livePreviewBadge')}
                     </span>
-                    <div className="text-[9px] text-gray-400 mt-0.5">Recv: {currentTestStaff.name}</div>
+                    <div className="text-[9px] text-gray-400 mt-0.5">{t('rr.tpl.recv', { name: currentTestStaff.name })}</div>
                   </div>
                 </div>
 
@@ -1708,7 +1718,7 @@ export default function RoundRobinManagerClient({
                   {/* Telegram Date Chip */}
                   <div className="self-center">
                     <span className="px-3 py-1 rounded-full bg-black/40 text-gray-300 text-[10px] font-semibold backdrop-blur-xs border border-white/5">
-                      ថ្ងៃនេះ • ពេលវេលាជាក់ស្តែង
+                      {t('rr.tpl.dateChip')}
                     </span>
                   </div>
 
@@ -1730,7 +1740,7 @@ export default function RoundRobinManagerClient({
                 {/* Telegram Input Simulation Footer */}
                 <div className="p-3 bg-[#17212b] border-t border-slate-800/80 flex items-center gap-2 text-xs text-gray-400">
                   <div className="flex-1 px-3.5 py-2 rounded-xl bg-[#0e1621] text-gray-500 text-[11px] border border-slate-800">
-                    សារស្វ័យប្រវត្តិនឹងផ្ញើជូនបុគ្គលិកនៅទីនេះ...
+                    {t('rr.tpl.inputPh')}
                   </div>
                   <div className="w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center">
                     <Send className="w-4 h-4" />
@@ -1743,7 +1753,7 @@ export default function RoundRobinManagerClient({
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-emerald-400 flex items-center gap-1.5 text-[11px]">
                     <MessageCircle className="w-3.5 h-3.5" />
-                    <span>WhatsApp Pre-filled Message Preview</span>
+                    <span>{t('rr.tpl.whatsappPreview')}</span>
                   </span>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono">
                     wa.me
@@ -1766,7 +1776,7 @@ export default function RoundRobinManagerClient({
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
               <input
                 type="text"
-                placeholder="Search routing records by prospect name, phone, campaign, or error reason..."
+                placeholder={t('rr.log.searchPh')}
                 value={logSearch}
                 onChange={(e) => setLogSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs focus:border-amber-400 focus:outline-none"
@@ -1779,7 +1789,7 @@ export default function RoundRobinManagerClient({
                 onChange={(e) => setLogStaffFilter(e.target.value)}
                 className="px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-medium focus:outline-none"
               >
-                <option value="ALL">All Staff</option>
+                <option value="ALL">{t('rr.log.allStaff')}</option>
                 {settings.staffList.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
@@ -1792,9 +1802,9 @@ export default function RoundRobinManagerClient({
                 onChange={(e) => setLogTypeFilter(e.target.value)}
                 className="px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-medium focus:outline-none"
               >
-                <option value="ALL">All Touchpoints</option>
-                <option value="FORM_SUBMISSION">Form Submissions</option>
-                <option value="DIRECT_CONTACT_CLICK">Telegram Clicks</option>
+                <option value="ALL">{t('rr.log.allTouchpoints')}</option>
+                <option value="FORM_SUBMISSION">{t('rr.log.formSubmissions')}</option>
+                <option value="DIRECT_CONTACT_CLICK">{t('rr.log.telegramClicks')}</option>
               </select>
 
               <select
@@ -1802,17 +1812,17 @@ export default function RoundRobinManagerClient({
                 onChange={(e) => setLogStatusFilter(e.target.value)}
                 className="px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-medium focus:outline-none"
               >
-                <option value="ALL">All Statuses</option>
-                <option value="DELIVERED">Delivered</option>
-                <option value="FALLBACK">Fallback</option>
-                <option value="FAILED">Failed</option>
+                <option value="ALL">{t('rr.log.allStatuses')}</option>
+                <option value="DELIVERED">{t('rr.log.delivered')}</option>
+                <option value="FALLBACK">{t('rr.log.fallback')}</option>
+                <option value="FAILED">{t('rr.log.failed')}</option>
               </select>
 
               <button
                 type="button"
                 onClick={handleRefreshLogs}
                 className="p-2 rounded-xl bg-slate-100 dark:bg-emerald-950 hover:bg-slate-200 dark:hover:bg-emerald-900 border border-slate-200 dark:border-emerald-800 text-slate-700 dark:text-emerald-300 cursor-pointer transition-colors"
-                title="Refresh Logs"
+                title={t('rr.log.refresh')}
               >
                 <RefreshCw className="w-4 h-4" />
               </button>
@@ -1825,20 +1835,20 @@ export default function RoundRobinManagerClient({
               <table className="w-full text-left text-xs text-slate-700 dark:text-gray-300">
                 <thead className="bg-slate-50 dark:bg-[#06100B] text-slate-600 dark:text-gray-400 uppercase tracking-wider text-[10px] border-b border-slate-200 dark:border-emerald-950">
                   <tr>
-                    <th className="p-4">Time & Touchpoint</th>
-                    <th className="p-4">Prospect / Visitor</th>
-                    <th className="p-4">Campaign</th>
-                    <th className="p-4">Assigned Staff</th>
-                    <th className="p-4">Share %</th>
-                    <th className="p-4">Telegram Delivery</th>
-                    <th className="p-4 text-right">Details</th>
+                    <th className="p-4">{t('rr.log.th.time')}</th>
+                    <th className="p-4">{t('rr.log.th.prospect')}</th>
+                    <th className="p-4">{t('rr.log.th.campaign')}</th>
+                    <th className="p-4">{t('rr.log.th.staff')}</th>
+                    <th className="p-4">{t('rr.log.th.share')}</th>
+                    <th className="p-4">{t('rr.log.th.delivery')}</th>
+                    <th className="p-4 text-right">{t('rr.log.th.details')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-emerald-950/80">
                   {filteredLogs.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="p-8 text-center text-slate-400 text-xs">
-                        No routing records matching your filter criteria.
+                        {t('rr.log.empty')}
                       </td>
                     </tr>
                   ) : (
@@ -1855,11 +1865,11 @@ export default function RoundRobinManagerClient({
                               <Clock className="w-3 h-3" />
                               <span>{new Date(log.timestamp).toLocaleTimeString()}</span>
                               <span className="font-bold text-amber-600 dark:text-amber-400 ml-1">
-                                [{log.routeType === 'FORM_SUBMISSION' ? 'FORM' : 'CLICK'}]
+                                [{log.routeType === 'FORM_SUBMISSION' ? t('rr.log.form') : t('rr.log.click')}]
                               </span>
                               {log.assignmentReason && log.assignmentReason !== 'rotation' && (
-                                <span className="font-bold text-sky-700 dark:text-sky-300 ml-1" title="Kept with the same salesperson">
-                                  🔁 {log.assignmentReason === 'returning_customer' ? 'Returning customer' : 'Returning visitor'}
+                                <span className="font-bold text-sky-700 dark:text-sky-300 ml-1" title={t('rr.log.keptTitle')}>
+                                  🔁 {log.assignmentReason === 'returning_customer' ? t('rr.log.returningCustomer') : t('rr.log.returningVisitor')}
                                 </span>
                               )}
                             </div>
@@ -1879,8 +1889,8 @@ export default function RoundRobinManagerClient({
                               </div>
                             ) : (
                               <div>
-                                <span className="text-[11px] text-slate-600 dark:text-gray-300 font-medium">Visitor Click</span>
-                                <div className="text-[10px] font-mono text-slate-400">IP: {log.visitorIp || 'Anonymous'}</div>
+                                <span className="text-[11px] text-slate-600 dark:text-gray-300 font-medium">{t('rr.log.visitorClick')}</span>
+                                <div className="text-[10px] font-mono text-slate-400">{t('rr.log.ip', { ip: log.visitorIp || t('rr.log.anonymous') })}</div>
                               </div>
                             )}
                           </td>
@@ -1907,7 +1917,7 @@ export default function RoundRobinManagerClient({
                               )}
                             </div>
                             {log.staffChatId && (
-                              <div className="text-[10px] text-slate-400 font-mono">ID: {log.staffChatId}</div>
+                              <div className="text-[10px] text-slate-400 font-mono">{t('rr.log.id', { id: log.staffChatId })}</div>
                             )}
                           </td>
 
@@ -1919,18 +1929,18 @@ export default function RoundRobinManagerClient({
                             {log.status === 'DELIVERED' ? (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
                                 <CheckCircle2 className="w-3 h-3" />
-                                <span>Delivered {log.telegramMessageId ? `(#${log.telegramMessageId})` : ''}</span>
+                                <span>{t('rr.log.deliveredPill', { ref: log.telegramMessageId ? `(#${log.telegramMessageId})` : '' })}</span>
                               </span>
                             ) : log.status === 'FALLBACK' ? (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30">
                                 <AlertTriangle className="w-3 h-3" />
-                                <span>Fallback Sent</span>
+                                <span>{t('rr.log.fallbackSent')}</span>
                               </span>
                             ) : (
                               <div>
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-800 dark:text-rose-300 border border-rose-500/30">
                                   <X className="w-3 h-3" />
-                                  <span>Failed</span>
+                                  <span>{t('rr.log.failed')}</span>
                                 </span>
                                 {log.deliveryError && (
                                   <div className="text-[10px] text-rose-600 dark:text-rose-400 mt-1 max-w-xs line-clamp-2">
@@ -1949,7 +1959,7 @@ export default function RoundRobinManagerClient({
                                 rel="noreferrer"
                                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-emerald-950 text-slate-700 dark:text-emerald-300 hover:text-black dark:hover:text-white border border-slate-200 dark:border-emerald-800/60 text-[10px] font-bold"
                               >
-                                <span>Link</span>
+                                <span>{t('rr.log.link')}</span>
                                 <ExternalLink className="w-3 h-3" />
                               </a>
                             ) : log.leadId ? (
@@ -1957,7 +1967,7 @@ export default function RoundRobinManagerClient({
                                 href={`/admin/leads?search=${encodeURIComponent(log.clientPhone || log.clientName || '')}`}
                                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-emerald-950 text-slate-700 dark:text-emerald-300 hover:text-black dark:hover:text-white border border-slate-200 dark:border-emerald-800/60 text-[10px] font-bold"
                               >
-                                <span>View Lead</span>
+                                <span>{t('rr.log.viewLead')}</span>
                                 <ArrowRight className="w-3 h-3" />
                               </a>
                             ) : null}
@@ -1987,13 +1997,13 @@ export default function RoundRobinManagerClient({
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>Round Robin Simulation Studio</span>
+                    <span>{t('rr.sim.title')}</span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full font-extrabold bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
-                      Test Flight
+                      {t('rr.sim.badge')}
                     </span>
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
-                    Test lead routing, verify Telegram bot delivery to your configured staff accounts, and benchmark percentage weights.
+                    {t('rr.sim.desc')}
                   </p>
                 </div>
               </div>
@@ -2005,7 +2015,7 @@ export default function RoundRobinManagerClient({
                   setSimulationResult(null);
                 }}
                 className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-emerald-950 transition-colors cursor-pointer"
-                title="Close"
+                title={t('common.close')}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2026,7 +2036,7 @@ export default function RoundRobinManagerClient({
                 }`}
               >
                 <Send className="w-3.5 h-3.5 text-amber-500" />
-                <span>Live Lead Dispatch</span>
+                <span>{t('rr.sim.tab.single')}</span>
               </button>
 
               <button
@@ -2042,7 +2052,7 @@ export default function RoundRobinManagerClient({
                 }`}
               >
                 <MessageCircle className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Visitor Direct Click</span>
+                <span>{t('rr.sim.tab.click')}</span>
               </button>
 
               <button
@@ -2058,7 +2068,7 @@ export default function RoundRobinManagerClient({
                 }`}
               >
                 <BarChart3 className="w-3.5 h-3.5 text-purple-500" />
-                <span>Batch % Benchmark</span>
+                <span>{t('rr.sim.tab.batch')}</span>
               </button>
             </div>
 
@@ -2070,10 +2080,10 @@ export default function RoundRobinManagerClient({
                   <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-300 space-y-1">
                     <div className="font-bold flex items-center gap-1.5">
                       <Sparkles className="w-4 h-4 text-amber-500" />
-                      <span>Live Telegram Delivery Flight</span>
+                      <span>{t('rr.sim.single.title')}</span>
                     </div>
                     <p className="text-[11px] opacity-90">
-                      This simulates an authentic VIP prospect inquiry. The Round Robin engine calculates staff percentage weights, selects the winning staff member, fires a live lead notification directly to their Telegram bot chat, and records an audit log.
+                      {t('rr.sim.single.desc')}
                     </p>
                   </div>
 
@@ -2081,23 +2091,23 @@ export default function RoundRobinManagerClient({
                   <div className="p-4 rounded-2xl bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-emerald-950 space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="font-black uppercase tracking-wider text-slate-700 dark:text-gray-300 text-[11px]">
-                        Simulated VIP Prospect Details
+                        {t('rr.sim.prospect')}
                       </span>
                       <button
                         type="button"
                         onClick={handleRandomizePreset}
                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-emerald-950 border border-slate-200 dark:border-emerald-800 text-slate-700 dark:text-emerald-300 hover:bg-slate-100 dark:hover:bg-emerald-900 font-bold text-[11px] cursor-pointer"
-                        title="Cycle between realistic VIP business profiles"
+                        title={t('rr.sim.randomizeTitle')}
                       >
                         <Dices className="w-3.5 h-3.5 text-amber-500" />
-                        <span>🎲 Randomize Prospect</span>
+                        <span>{t('rr.sim.randomize')}</span>
                       </button>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">
-                          Full Name
+                          {t('rr.sim.fullName')}
                         </label>
                         <input
                           type="text"
@@ -2109,7 +2119,7 @@ export default function RoundRobinManagerClient({
 
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">
-                          Company / Enterprise
+                          {t('rr.sim.company')}
                         </label>
                         <input
                           type="text"
@@ -2121,7 +2131,7 @@ export default function RoundRobinManagerClient({
 
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">
-                          Phone Number
+                          {t('rr.sim.phone')}
                         </label>
                         <input
                           type="text"
@@ -2133,7 +2143,7 @@ export default function RoundRobinManagerClient({
 
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">
-                          Budget / Package
+                          {t('rr.sim.budget')}
                         </label>
                         <input
                           type="text"
@@ -2146,7 +2156,7 @@ export default function RoundRobinManagerClient({
 
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">
-                        Inquiry Note (Tagged [SIMULATION TEST])
+                        {t('rr.sim.note')}
                       </label>
                       <input
                         type="text"
@@ -2172,8 +2182,8 @@ export default function RoundRobinManagerClient({
                       )}
                       <span>
                         {isSimulating
-                          ? 'Dispatching Real Lead to Telegram...'
-                          : '🚀 Dispatch Simulated Lead Now'}
+                          ? t('rr.sim.dispatching')
+                          : t('rr.sim.dispatch')}
                       </span>
                     </button>
                   </div>
@@ -2186,17 +2196,17 @@ export default function RoundRobinManagerClient({
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 font-black text-emerald-700 dark:text-emerald-400">
                               <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                              <span>Simulation Successful! Lead Created &amp; Distributed</span>
+                              <span>{t('rr.sim.successTitle')}</span>
                             </div>
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-bold">
-                              Live Test
+                              {t('rr.sim.liveTest')}
                             </span>
                           </div>
 
                           {simulationResult.routing && (
                             <div className="p-3.5 rounded-xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/60 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                               <div>
-                                <span className="text-[10px] text-slate-400 uppercase font-bold">Assigned Staff Member:</span>
+                                <span className="text-[10px] text-slate-400 uppercase font-bold">{t('rr.sim.assigned')}</span>
                                 <div className="font-extrabold text-sm text-slate-900 dark:text-white mt-0.5 flex items-center gap-1.5">
                                   <span>{simulationResult.routing.staffName}</span>
                                   {simulationResult.routing.staffTelegram && (
@@ -2212,28 +2222,28 @@ export default function RoundRobinManagerClient({
                                   )}
                                 </div>
                                 <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                                  Telegram Chat ID: {simulationResult.routing.staffChatId}
+                                  {t('rr.sim.chatId', { id: simulationResult.routing.staffChatId ?? '' })}
                                 </div>
                               </div>
 
                               <div>
-                                <span className="text-[10px] text-slate-400 uppercase font-bold">Telegram Alert Status:</span>
+                                <span className="text-[10px] text-slate-400 uppercase font-bold">{t('rr.sim.alertStatus')}</span>
                                 <div className="mt-1">
                                   {simulationResult.routing.status === 'DELIVERED' ? (
                                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
                                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                      <span>Delivered (Msg #{simulationResult.routing.telegramMessageId})</span>
+                                      <span>{t('rr.sim.deliveredMsg', { id: simulationResult.routing.telegramMessageId ?? '' })}</span>
                                     </span>
                                   ) : simulationResult.routing.status === 'FALLBACK' ? (
                                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30">
                                       <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-                                      <span>Fallback Transmitted</span>
+                                      <span>{t('rr.sim.fallbackSent')}</span>
                                     </span>
                                   ) : (
                                     <div className="space-y-1.5">
                                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black bg-rose-500/20 text-rose-800 dark:text-rose-300 border border-rose-500/30">
                                         <X className="w-3.5 h-3.5 text-rose-500" />
-                                        <span>Delivery Failed</span>
+                                        <span>{t('rr.sim.deliveryFailed')}</span>
                                       </span>
                                       {simulationResult.routing.deliveryError && (
                                         <div className="text-[11px] font-bold text-rose-600 dark:text-rose-400">
@@ -2242,22 +2252,22 @@ export default function RoundRobinManagerClient({
                                       )}
                                       {simulationResult.routing.deliveryError?.includes('Bot Token') ? (
                                         <div className="text-[11px] text-amber-800 dark:text-amber-300 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/30">
-                                          <strong>Action Required:</strong> Enter your Telegram Bot Token (from <code>@BotFather</code>) in the <strong>&quot;Telegram Bot Token&quot;</strong> field below (under Advanced Rules) and click <em>Save All Settings</em>.
+                                          <strong>{t('rr.sim.actionRequired')}</strong> {renderRich(t('rr.sim.needToken', { botfather: '{botfather}', field: '{field}', save: '{save}' }), { botfather: <code>@BotFather</code>, field: <strong>{t('rr.sim.needTokenField')}</strong>, save: <em>{t('rr.saveAll')}</em> })}
                                         </div>
                                       ) : simulationResult.routing.deliveryError?.includes('Chat ID') ? (
                                         <div className="text-[11px] text-amber-800 dark:text-amber-300 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/30">
-                                          <strong>Action Required:</strong> Enter the numeric Telegram Chat ID for this staff member (obtained via <code>@userinfobot</code>) and click <em>Save All Settings</em>.
+                                          <strong>{t('rr.sim.actionRequired')}</strong> {renderRich(t('rr.sim.needChatId', { userinfobot: '{userinfobot}', save: '{save}' }), { userinfobot: <code>@userinfobot</code>, save: <em>{t('rr.saveAll')}</em> })}
                                         </div>
                                       ) : (
                                         <div className="text-[10px] text-slate-500 dark:text-gray-400 pt-1">
-                                          💡 Tip: The staff member must open the Telegram bot and click <strong>START</strong> (/start) first before Telegram allows incoming alerts.
+                                          {renderRich(t('rr.sim.startTip', { start: '{start}' }), { start: <strong>START</strong> })}
                                         </div>
                                       )}
                                     </div>
                                   )}
                                 </div>
                                 <div className="text-[10px] text-amber-700 dark:text-amber-400 font-mono mt-1">
-                                  Weight Share: {simulationResult.routing.percentageWeight}%
+                                  {t('rr.sim.weightShare', { n: simulationResult.routing.percentageWeight ?? 0 })}
                                 </div>
                               </div>
                             </div>
@@ -2265,7 +2275,7 @@ export default function RoundRobinManagerClient({
 
                           <div className="flex items-center justify-between pt-1">
                             <span className="text-[11px] text-slate-500 dark:text-gray-400">
-                              Lead recorded with ID: <span className="font-mono text-slate-700 dark:text-gray-300">{simulationResult.lead?.id}</span>
+                              {t('rr.sim.leadRecorded')} <span className="font-mono text-slate-700 dark:text-gray-300">{simulationResult.lead?.id}</span>
                             </span>
                             <div className="flex items-center gap-2">
                               <button
@@ -2277,7 +2287,7 @@ export default function RoundRobinManagerClient({
                                 }}
                                 className="px-3 py-1 rounded-lg bg-white dark:bg-emerald-950 border border-slate-200 dark:border-emerald-800 text-slate-800 dark:text-emerald-300 font-bold text-[11px] hover:underline cursor-pointer"
                               >
-                                View in Audit Log →
+                                {t('rr.sim.viewLog')}
                               </button>
                               <a
                                 href={`/admin/leads?search=${encodeURIComponent(simForm.phone)}`}
@@ -2285,7 +2295,7 @@ export default function RoundRobinManagerClient({
                                 rel="noreferrer"
                                 className="px-3 py-1 rounded-lg bg-amber-400 text-black font-extrabold text-[11px] hover:bg-amber-300 inline-flex items-center gap-1 cursor-pointer"
                               >
-                                <span>Open in CRM</span>
+                                <span>{t('rr.sim.openCrm')}</span>
                                 <ExternalLink className="w-3 h-3" />
                               </a>
                             </div>
@@ -2295,7 +2305,7 @@ export default function RoundRobinManagerClient({
                         <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 flex items-start gap-2.5">
                           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
                           <div className="space-y-0.5">
-                            <div className="font-bold">Simulation Failed</div>
+                            <div className="font-bold">{t('rr.sim.failed')}</div>
                             <div className="text-[11px]">{simulationResult.error}</div>
                           </div>
                         </div>
@@ -2311,10 +2321,10 @@ export default function RoundRobinManagerClient({
                   <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 dark:text-emerald-300 space-y-1">
                     <div className="font-bold flex items-center gap-1.5">
                       <MessageCircle className="w-4 h-4 text-emerald-500" />
-                      <span>Visitor &quot;Chat on Telegram&quot; Click Router</span>
+                      <span>{t('rr.sim.click.title')}</span>
                     </div>
                     <p className="text-[11px] opacity-90">
-                      When a prospect visits any landing page (e.g. <code>/smart-city-tea-cafe</code>) and clicks the Telegram contact button, the router calculates the next staff member based on your percentages and redirects them to that staff member&apos;s direct Telegram handle.
+                      {renderRich(t('rr.sim.click.desc', { slug: '{slug}' }), { slug: <code>/smart-city-tea-cafe</code> })}
                     </p>
                   </div>
 
@@ -2332,8 +2342,8 @@ export default function RoundRobinManagerClient({
                       )}
                       <span>
                         {isSimulating
-                          ? 'Calculating Target Telegram Route...'
-                          : '💬 Simulate Visitor Telegram Click'}
+                          ? t('rr.sim.click.calculating')
+                          : t('rr.sim.click.run')}
                       </span>
                     </button>
                   </div>
@@ -2345,23 +2355,23 @@ export default function RoundRobinManagerClient({
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 font-black text-emerald-700 dark:text-emerald-400">
                               <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                              <span>Routing Calculated Successfully!</span>
+                              <span>{t('rr.sim.click.success')}</span>
                             </div>
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-bold">
-                              Direct Contact
+                              {t('rr.sim.click.badge')}
                             </span>
                           </div>
 
                           <div className="p-3.5 rounded-xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/60 space-y-2 text-xs">
                             <div className="flex items-center justify-between">
                               <div>
-                                <span className="text-[10px] text-slate-400 uppercase font-bold">Selected Staff Rep:</span>
+                                <span className="text-[10px] text-slate-400 uppercase font-bold">{t('rr.sim.click.selected')}</span>
                                 <div className="font-extrabold text-sm text-slate-900 dark:text-white">
                                   {simulationResult.staff?.name} ({simulationResult.staff?.role})
                                 </div>
                               </div>
                               <div className="text-right">
-                                <span className="text-[10px] text-slate-400 uppercase font-bold">Telegram Handle:</span>
+                                <span className="text-[10px] text-slate-400 uppercase font-bold">{t('rr.sim.click.handle')}</span>
                                 <div className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">
                                   @{simulationResult.staff?.username?.replace(/^@/, '')}
                                 </div>
@@ -2370,7 +2380,7 @@ export default function RoundRobinManagerClient({
 
                             <div className="pt-2 border-t border-slate-100 dark:border-emerald-950/60">
                               <span className="text-[10px] text-slate-400 uppercase font-bold block mb-1">
-                                Generated Redirect Link:
+                                {t('rr.sim.click.redirect')}
                               </span>
                               <div className="flex items-center gap-2">
                                 <input
@@ -2385,7 +2395,7 @@ export default function RoundRobinManagerClient({
                                   rel="noreferrer"
                                   className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] whitespace-nowrap inline-flex items-center gap-1"
                                 >
-                                  <span>Test Open</span>
+                                  <span>{t('rr.sim.click.testOpen')}</span>
                                   <ExternalLink className="w-3 h-3" />
                                 </a>
                               </div>
@@ -2396,7 +2406,7 @@ export default function RoundRobinManagerClient({
                         <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 flex items-start gap-2.5">
                           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
                           <div className="space-y-0.5">
-                            <div className="font-bold">Routing Failed</div>
+                            <div className="font-bold">{t('rr.sim.click.failed')}</div>
                             <div className="text-[11px]">{simulationResult.error}</div>
                           </div>
                         </div>
@@ -2412,20 +2422,20 @@ export default function RoundRobinManagerClient({
                   <div className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-900 dark:text-purple-300 space-y-1">
                     <div className="font-bold flex items-center gap-1.5">
                       <BarChart3 className="w-4 h-4 text-purple-500" />
-                      <span>Batch Percentage Distribution Benchmark</span>
+                      <span>{t('rr.sim.batch.title')}</span>
                     </div>
                     <p className="text-[11px] opacity-90">
-                      Simulates multiple leads in rapid sequence without sending real Telegram alerts. Benchmark and verify that your configured percentages accurately apportion leads across your active staff members.
+                      {t('rr.sim.batch.desc')}
                     </p>
                   </div>
 
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-emerald-950">
                     <div>
                       <span className="font-bold text-slate-800 dark:text-gray-200 block">
-                        Select Simulation Batch Size:
+                        {t('rr.sim.batch.size')}
                       </span>
                       <span className="text-[11px] text-slate-400">
-                        How many consecutive leads to simulate
+                        {t('rr.sim.batch.sizeHint')}
                       </span>
                     </div>
 
@@ -2441,7 +2451,7 @@ export default function RoundRobinManagerClient({
                               : 'bg-white dark:bg-[#0A1610] text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-emerald-900/60 hover:bg-slate-100 dark:hover:bg-emerald-950'
                           }`}
                         >
-                          {num} Leads
+                          {t('rr.sim.batch.leads', { n: num })}
                         </button>
                       ))}
                     </div>
@@ -2461,8 +2471,8 @@ export default function RoundRobinManagerClient({
                       )}
                       <span>
                         {isSimulating
-                          ? `Simulating ${batchCount} Leads...`
-                          : `⚡ Run Batch Benchmark (${batchCount} Leads)`}
+                          ? t('rr.sim.batch.running', { n: batchCount })
+                          : t('rr.sim.batch.run', { n: batchCount })}
                       </span>
                     </button>
                   </div>
@@ -2474,10 +2484,10 @@ export default function RoundRobinManagerClient({
                           <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-900 dark:text-purple-300 flex items-center justify-between">
                             <div className="flex items-center gap-2 font-black">
                               <CheckCircle2 className="w-5 h-5 text-purple-500" />
-                              <span>Benchmark Complete: {simulationResult.totalSimulated} Leads Distributed</span>
+                              <span>{t('rr.sim.batch.complete', { n: simulationResult.totalSimulated ?? 0 })}</span>
                             </div>
                             <span className="text-[10px] font-mono font-extrabold px-2.5 py-0.5 rounded-full bg-purple-500/20">
-                              Target vs Actual
+                              {t('rr.sim.batch.targetVsActual')}
                             </span>
                           </div>
 
@@ -2486,11 +2496,11 @@ export default function RoundRobinManagerClient({
                             <table className="w-full text-left text-xs">
                               <thead className="bg-slate-100 dark:bg-black/60 text-slate-600 dark:text-gray-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-emerald-950">
                                 <tr>
-                                  <th className="p-3">Staff Member</th>
-                                  <th className="p-3">Configured %</th>
-                                  <th className="p-3">Assigned Count</th>
-                                  <th className="p-3">Actual %</th>
-                                  <th className="p-3">Balance Visual</th>
+                                  <th className="p-3">{t('rr.sim.batch.th.staff')}</th>
+                                  <th className="p-3">{t('rr.sim.batch.th.configured')}</th>
+                                  <th className="p-3">{t('rr.sim.batch.th.assigned')}</th>
+                                  <th className="p-3">{t('rr.sim.batch.th.actual')}</th>
+                                  <th className="p-3">{t('rr.sim.batch.th.visual')}</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-100 dark:divide-emerald-950/60 bg-white dark:bg-[#0A1610]">
@@ -2529,7 +2539,7 @@ export default function RoundRobinManagerClient({
                           {/* Trace Sequence */}
                           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-emerald-950">
                             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-                              Sequential Routing Order (First 15 Leads):
+                              {t('rr.sim.batch.order')}
                             </span>
                             <div className="flex flex-wrap gap-1.5">
                               {simulationResult.history?.slice(0, 15).map((h) => (
@@ -2542,7 +2552,7 @@ export default function RoundRobinManagerClient({
                               ))}
                               {(simulationResult.history?.length ?? 0) > 15 && (
                                 <span className="px-2 py-0.5 text-[10px] text-slate-400 font-bold">
-                                  +{(simulationResult.history?.length ?? 0) - 15} more leads...
+                                  {t('rr.sim.batch.more', { n: (simulationResult.history?.length ?? 0) - 15 })}
                                 </span>
                               )}
                             </div>
@@ -2552,7 +2562,7 @@ export default function RoundRobinManagerClient({
                         <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 flex items-start gap-2.5">
                           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
                           <div className="space-y-0.5">
-                            <div className="font-bold">Benchmark Failed</div>
+                            <div className="font-bold">{t('rr.sim.batch.failed')}</div>
                             <div className="text-[11px]">{simulationResult.error}</div>
                           </div>
                         </div>

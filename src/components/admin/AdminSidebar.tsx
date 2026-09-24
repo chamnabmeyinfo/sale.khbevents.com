@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface SubItem {
   label: string;
@@ -56,6 +57,7 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   // Expanded sub-menus state (default: all expanded or auto-expanded based on pathname)
@@ -87,89 +89,89 @@ export default function AdminSidebar() {
   const navGroups: NavGroup[] = [
     {
       id: 'dashboard',
-      label: 'Dashboard',
+      label: t('nav.dashboard'),
       icon: LayoutDashboard,
       href: '/admin',
       isActive: pathname === '/admin',
       subItems: [
-        { label: 'Key Performance Stats', href: '/admin', icon: LayoutDashboard },
-        { label: 'Traffic & Page Views', href: '/admin#traffic', icon: Layers },
-        { label: 'Recent Inquiries', href: '/admin#recent-leads', icon: Clock },
+        { label: t('nav.dashboard.stats'), href: '/admin', icon: LayoutDashboard },
+        { label: t('nav.dashboard.traffic'), href: '/admin#traffic', icon: Layers },
+        { label: t('nav.dashboard.recent'), href: '/admin#recent-leads', icon: Clock },
       ]
     },
     {
       id: 'pages',
-      label: 'Landing Pages CMS',
+      label: t('nav.pages'),
       icon: FileText,
       href: '/admin/pages',
       isActive: pathname.startsWith('/admin/pages'),
       subItems: [
-        { label: 'All Campaign Pages', href: '/admin/pages', icon: Layers },
-        { label: '+ Create New Page', href: '/admin/pages/new', icon: PlusCircle, isHighlight: true },
-        { label: 'Smart City B2B Delegation', href: '/admin/pages/page-smart-city', icon: Sparkles },
-        { label: '📊 Page Tracking & Analytics', href: '/admin/pages/page-smart-city/analytics', icon: Activity },
+        { label: t('nav.pages.all'), href: '/admin/pages', icon: Layers },
+        { label: t('nav.pages.new'), href: '/admin/pages/new', icon: PlusCircle, isHighlight: true },
+        { label: t('nav.pages.smartCity'), href: '/admin/pages/page-smart-city', icon: Sparkles },
+        { label: t('nav.pages.analytics'), href: '/admin/pages/page-smart-city/analytics', icon: Activity },
       ]
     },
     {
       id: 'leads',
-      label: 'Leads & CRM Pipeline',
+      label: t('nav.leads'),
       icon: Users,
       href: '/admin/leads',
       isActive: pathname.startsWith('/admin/leads'),
       subItems: [
-        { label: 'All Inquiries Pipeline', href: '/admin/leads', icon: Users },
-        { label: 'New Client Requests', href: '/admin/leads?status=NEW', icon: Clock, badge: 'NEW' },
-        { label: 'In Negotiation', href: '/admin/leads?status=NEGOTIATING', icon: UserCheck },
-        { label: 'Won Event Contracts', href: '/admin/leads?status=WON', icon: CheckCircle2 },
+        { label: t('nav.leads.all'), href: '/admin/leads', icon: Users },
+        { label: t('nav.leads.new'), href: '/admin/leads?status=NEW', icon: Clock, badge: 'NEW' },
+        { label: t('nav.leads.negotiating'), href: '/admin/leads?status=NEGOTIATING', icon: UserCheck },
+        { label: t('nav.leads.won'), href: '/admin/leads?status=WON', icon: CheckCircle2 },
       ]
     },
     {
       id: 'roundRobin',
-      label: 'Staff Round Robin',
+      label: t('nav.roundRobin'),
       icon: Sliders,
       href: '/admin/round-robin',
       isActive: pathname.startsWith('/admin/round-robin'),
       subItems: [
-        { label: 'Staff Allocations', href: '/admin/round-robin', icon: Users, badge: 'Routing' },
-        { label: 'Real-Time Routing Log', href: '/admin/round-robin', icon: Activity },
+        { label: t('nav.roundRobin.staff'), href: '/admin/round-robin', icon: Users, badge: 'Routing' },
+        { label: t('nav.roundRobin.log'), href: '/admin/round-robin', icon: Activity },
       ]
     },
     {
       id: 'ads',
-      label: 'Ads & Popups',
+      label: t('nav.ads'),
       icon: Megaphone,
       href: '/admin/ads',
       isActive: pathname.startsWith('/admin/ads'),
       subItems: [
-        { label: 'All Popups', href: '/admin/ads', icon: Megaphone, badge: 'New' },
-        { label: 'Performance', href: '/admin/ads#performance', icon: BarChart3 },
+        { label: t('nav.ads.all'), href: '/admin/ads', icon: Megaphone, badge: 'New' },
+        { label: t('nav.ads.performance'), href: '/admin/ads#performance', icon: BarChart3 },
       ]
     },
     {
       id: 'settings',
-      label: 'Settings & Security',
+      label: t('nav.settings'),
       icon: Settings,
       href: '/admin/settings',
       isActive: pathname.startsWith('/admin/settings'),
       subItems: [
-        { label: 'Company Profile & Contact', href: '/admin/settings#profile', icon: Building },
-        { label: 'Theme & Appearance', href: '/admin/settings#appearance', icon: Sun },
-        { label: 'Telegram Alert Bot', href: '/admin/settings#telegram', icon: Bell },
-        { label: 'Owner & Super Admin', href: '/admin/settings#security', icon: ShieldCheck },
+        { label: t('nav.settings.profile'), href: '/admin/settings#profile', icon: Building },
+        { label: t('nav.settings.appearance'), href: '/admin/settings#appearance', icon: Sun },
+        { label: t('nav.settings.telegram'), href: '/admin/settings#telegram', icon: Bell },
+        { label: t('nav.settings.security'), href: '/admin/settings#security', icon: ShieldCheck },
       ]
     },
     {
       id: 'guide',
-      label: 'User Guide & Blueprint',
+      label: t('nav.guide'),
       icon: BookOpen,
       href: '/admin/guide',
       isActive: pathname.startsWith('/admin/guide'),
       subItems: [
-        { label: '📖 Complete User Guide', href: '/admin/guide', icon: BookOpen, isHighlight: true, badge: 'Guide' },
-        { label: 'Creating Landing Pages', href: '/admin/guide#landing-pages', icon: FileText },
-        { label: 'Managing Leads CRM', href: '/admin/guide#leads-crm', icon: Users },
-        { label: 'Round-Robin Setup', href: '/admin/guide#round-robin', icon: Sliders },
-        { label: 'Operator FAQs', href: '/admin/guide#faqs', icon: Sparkles },
+        { label: t('nav.guide.complete'), href: '/admin/guide', icon: BookOpen, isHighlight: true, badge: 'Guide' },
+        { label: t('nav.guide.pages'), href: '/admin/guide#landing-pages', icon: FileText },
+        { label: t('nav.guide.leads'), href: '/admin/guide#leads-crm', icon: Users },
+        { label: t('nav.guide.roundRobin'), href: '/admin/guide#round-robin', icon: Sliders },
+        { label: t('nav.guide.faqs'), href: '/admin/guide#faqs', icon: Sparkles },
       ]
     }
   ];
@@ -177,7 +179,7 @@ export default function AdminSidebar() {
   const cleanEmail = (user?.email || '').toLowerCase().trim();
   const isSuperAdmin = cleanEmail === 'admin@khbevents.com';
   const isOwner = cleanEmail === 'chamnabmey.info@gmail.com' || (!isSuperAdmin);
-  const roleName = isSuperAdmin ? 'SUPER ADMIN' : 'OWNER';
+  const roleName = isSuperAdmin ? t('nav.role.superAdmin') : t('nav.role.owner');
   const roleBadge = isSuperAdmin ? '🛡️' : '👑';
   const displayName = isSuperAdmin
     ? 'Admin KHB'
@@ -224,14 +226,14 @@ export default function AdminSidebar() {
             <span>{roleBadge}</span>
             <span>{roleName}</span>
           </div>
-          <span className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400">Full Access</span>
+          <span className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400">{t('nav.fullAccess')}</span>
         </div>
       </div>
 
       {/* 2. Main Aside Feature Menu + Sub Aside Menus */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1.5 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-emerald-950">
         <div className="px-3 pb-2 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-emerald-600/70">
-          Main Features
+          {t('nav.mainFeatures')}
         </div>
 
         {navGroups.map((group) => {
@@ -266,7 +268,7 @@ export default function AdminSidebar() {
                     toggleExpand(group.id);
                   }}
                   className="p-1 text-slate-400 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-white rounded-md transition-colors"
-                  aria-label="Toggle Sub Menu"
+                  aria-label={t('nav.toggleSubMenu')}
                 >
                   {isGroupExpanded ? (
                     <ChevronDown className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400/80" />
@@ -317,7 +319,7 @@ export default function AdminSidebar() {
         {/* Quick External Actions */}
         <div className="pt-4 mt-4 border-t border-slate-200 dark:border-emerald-950/80 px-1 space-y-1">
           <div className="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-emerald-600/70">
-            Quick Links
+            {t('nav.quickLinks')}
           </div>
           <Link
             href="/"
@@ -326,7 +328,7 @@ export default function AdminSidebar() {
           >
             <div className="flex items-center gap-2">
               <ExternalLink className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-              <span>Live Public Site</span>
+              <span>{t('nav.liveSite')}</span>
             </div>
             <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono">↗</span>
           </Link>
@@ -344,7 +346,7 @@ export default function AdminSidebar() {
       {/* 3. Aside Footer: Appearance, Profile & Logout */}
       <div className="p-4 border-t border-slate-200 dark:border-emerald-950 bg-slate-50 dark:bg-[#06120B] space-y-3 transition-colors">
         <div className="flex items-center justify-between px-1">
-          <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400">Theme</span>
+          <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400">{t('nav.theme')}</span>
           <ThemeSwitcher compact={true} />
         </div>
 
@@ -361,7 +363,7 @@ export default function AdminSidebar() {
 
           <button
             onClick={handleLogout}
-            title="Sign Out"
+            title={t('nav.signOut')} aria-label={t('nav.signOut')}
             className="p-2 rounded-xl text-slate-400 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
@@ -392,7 +394,7 @@ export default function AdminSidebar() {
             KHB <span className="text-amber-500 dark:text-amber-400">PORTAL</span>
           </span>
           <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-amber-400 text-black">
-            OWNER
+            {t('nav.role.owner')}
           </span>
         </Link>
 

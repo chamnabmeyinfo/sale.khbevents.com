@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import ImageField from './ImageField';
+import { useLanguage } from '@/context/LanguageContext';
 import { 
   LandingPage, 
   IsolatedPageSettings 
@@ -34,15 +35,16 @@ interface IsolatedSettingsEditorProps {
 type PaymentMethod = NonNullable<IsolatedPageSettings['acceptedPaymentMethods']>[number];
 
 const PRESET_ACCENTS = [
-  { name: 'Emerald (Default)', value: '#10B981' },
-  { name: 'Gold / Amber', value: '#F59E0B' },
-  { name: 'Royal Indigo', value: '#6366F1' },
-  { name: 'Rose Red', value: '#F43F5E' },
-  { name: 'Ocean Cyan', value: '#06B6D4' },
-  { name: 'Midnight Purple', value: '#8B5CF6' }
+  { nameKey: 'isolated.accent.emerald', value: '#10B981' },
+  { nameKey: 'isolated.accent.gold', value: '#F59E0B' },
+  { nameKey: 'isolated.accent.indigo', value: '#6366F1' },
+  { nameKey: 'isolated.accent.rose', value: '#F43F5E' },
+  { nameKey: 'isolated.accent.cyan', value: '#06B6D4' },
+  { nameKey: 'isolated.accent.purple', value: '#8B5CF6' }
 ];
 
 export default function IsolatedSettingsEditor({ formData, setFormData }: IsolatedSettingsEditorProps) {
+  const { t } = useLanguage();
   const settings: IsolatedPageSettings = formData.isolatedSettings || {};
   const [newTagInput, setNewTagInput] = useState('');
   const [activeSection, setActiveSection] = useState<'comms' | 'routing' | 'postsubmit' | 'branding' | 'access' | 'payment'>('comms');
@@ -92,16 +94,16 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                 <Sliders className="w-5 h-5" />
               </span>
               <h2 className="text-lg font-black text-slate-900 dark:text-white">
-                Dedicated Landing Page Settings
+                {t('isolated.title')}
               </h2>
             </div>
             <p className="text-xs text-slate-600 dark:text-gray-300 max-w-2xl">
-              Configure independent communication lines, custom Telegram lead routing, post-conversion actions, VIP password protection, and campaign-specific invoicing details.
+              {t('isolated.desc')}
             </p>
           </div>
           <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-xl bg-white dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 self-start md:self-auto shadow-sm">
             <Sparkles className="w-4 h-4 text-emerald-500" />
-            <span>Isolated Page Scope</span>
+            <span>{t('isolated.scope')}</span>
           </div>
         </div>
       </div>
@@ -109,12 +111,12 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
       {/* ── Quick Tab Navigation ── */}
       <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-emerald-900/40 pb-3">
         {[
-          { id: 'comms', label: '📞 Communications', icon: Phone },
-          { id: 'routing', label: '🔔 Lead Routing & Webhooks', icon: Bell },
-          { id: 'postsubmit', label: '🚀 Post-Conversion Actions', icon: Share2 },
-          { id: 'branding', label: '🎨 Co-Branding & Accent', icon: Palette },
-          { id: 'access', label: '🔒 VIP Access & Privacy', icon: Shield },
-          { id: 'payment', label: '💳 Invoicing & KHQR', icon: CreditCard }
+          { id: 'comms', label: t('isolated.tab.comms'), icon: Phone },
+          { id: 'routing', label: t('isolated.tab.routing'), icon: Bell },
+          { id: 'postsubmit', label: t('isolated.tab.postsubmit'), icon: Share2 },
+          { id: 'branding', label: t('isolated.tab.branding'), icon: Palette },
+          { id: 'access', label: t('isolated.tab.access'), icon: Shield },
+          { id: 'payment', label: t('isolated.tab.payment'), icon: CreditCard }
         ].map(item => {
           const Icon = item.icon;
           const isActive = activeSection === item.id;
@@ -142,17 +144,17 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           <div className="border-b border-slate-100 dark:border-emerald-900/40 pb-4">
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
               <Phone className="w-4 h-4" />
-              <span>Dedicated Campaign Hotline & Social Contacts</span>
+              <span>{t('isolated.comms.title')}</span>
             </div>
             <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-              Override global support numbers so prospective attendees contact this campaign’s specific sales representative directly. Leave blank to use global defaults.
+              {t('isolated.comms.desc')}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1.5">
-                Campaign Hotline Phone
+                {t('isolated.phone.label')}
               </label>
               <input
                 type="text"
@@ -161,12 +163,12 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                 placeholder="e.g. +855 12 345 678"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
-              <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-1 block">Displayed on sticky CTA and contact sections.</span>
+              <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-1 block">{t('isolated.phone.hint')}</span>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1.5">
-                Dedicated WhatsApp Number / Link
+                {t('isolated.whatsapp.label')}
               </label>
               <input
                 type="text"
@@ -175,12 +177,12 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                 placeholder="e.g. +855 12 345 678 or https://wa.me/85512345678"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
-              <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-1 block">Direct WhatsApp chat routing for international leads.</span>
+              <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-1 block">{t('isolated.whatsapp.hint')}</span>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1.5">
-                Campaign Telegram Handle / Username
+                {t('isolated.tgHandle.label')}
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-2.5 text-xs text-slate-400">@</span>
@@ -196,7 +198,7 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1.5">
-                Direct Telegram Channel / Group Link
+                {t('isolated.tgUrl.label')}
               </label>
               <input
                 type="text"
@@ -212,11 +214,11 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-900/40 space-y-4">
             <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-gray-200">
               <Users className="w-4 h-4 text-emerald-500" />
-              <span>Dedicated Trip / Event Coordinator Profile</span>
+              <span>{t('isolated.coordinator.title')}</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">Coordinator Name</label>
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">{t('isolated.coordinator.name')}</label>
                 <input
                   type="text"
                   value={settings.coordinatorName || ''}
@@ -226,21 +228,21 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">Coordinator Title / Role</label>
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">{t('isolated.coordinator.role')}</label>
                 <input
                   type="text"
                   value={settings.coordinatorRole || ''}
                   onChange={e => updateSetting('coordinatorRole', e.target.value)}
-                  placeholder="e.g. Senior B2B Delegation Lead"
+                  placeholder={t('isolated.coordinator.rolePlaceholder')}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs"
                 />
               </div>
               <ImageField
                 compact
-                label="Coordinator photo"
+                label={t('isolated.coordinator.photo')}
                 value={settings.coordinatorAvatar || ''}
                 onChange={url => updateSetting('coordinatorAvatar', url)}
-                placeholder="Upload a portrait or paste a URL"
+                placeholder={t('isolated.coordinator.photoPlaceholder')}
                 preview="square"
                 maxEdge={512}
               />
@@ -255,10 +257,10 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           <div className="border-b border-slate-100 dark:border-emerald-900/40 pb-4">
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
               <Bell className="w-4 h-4" />
-              <span>Isolated Telegram Lead Alerts & Webhooks</span>
+              <span>{t('isolated.routing.title')}</span>
             </div>
             <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-              Route inquiries from this page to dedicated Telegram groups (e.g. B2B Trade Team vs. Concert Ticket Sales) and sync to Zapier/Make in real time.
+              {t('isolated.routing.desc')}
             </p>
           </div>
 
@@ -266,8 +268,8 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-900/40">
               <div className="space-y-0.5">
-                <span className="text-xs font-bold text-slate-800 dark:text-white">Enable Instant Telegram Alerts for this Campaign</span>
-                <p className="text-[11px] text-slate-500 dark:text-gray-400">Receive lead notifications immediately as soon as a visitor submits the form.</p>
+                <span className="text-xs font-bold text-slate-800 dark:text-white">{t('isolated.alerts.title')}</span>
+                <p className="text-[11px] text-slate-500 dark:text-gray-400">{t('isolated.alerts.desc')}</p>
               </div>
               <input
                 type="checkbox"
@@ -280,7 +282,7 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1.5">
-                  Dedicated Telegram Chat ID
+                  {t('isolated.chatId.label')}
                 </label>
                 <input
                   type="text"
@@ -290,13 +292,13 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
                 <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-1 block">
-                  Send leads directly to your campaign&apos;s dedicated Telegram group. (Leave empty to use global setting).
+                  {t('isolated.chatId.hint')}
                 </span>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1.5">
-                  Custom Telegram Bot Token (Optional)
+                  {t('isolated.botToken.label')}
                 </label>
                 <input
                   type="password"
@@ -306,7 +308,7 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
                 <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-1 block">
-                  Optional. Overrides the default system bot with a dedicated campaign bot.
+                  {t('isolated.botToken.hint')}
                 </span>
               </div>
             </div>
@@ -316,12 +318,12 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-900/40 space-y-4">
             <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-gray-200">
               <Webhook className="w-4 h-4 text-emerald-500" />
-              <span>Real-Time Outgoing Webhook (Zapier / Make / Sheets / n8n)</span>
+              <span>{t('isolated.webhook.title')}</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">
-                  Webhook Endpoint URL
+                  {t('isolated.webhook.url')}
                 </label>
                 <input
                   type="url"
@@ -331,12 +333,12 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs font-mono"
                 />
                 <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-1 block">
-                  Every lead submitted on this page will be POSTed immediately to this URL.
+                  {t('isolated.webhook.urlHint')}
                 </span>
               </div>
               <div>
                 <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">
-                  Webhook Secret (HMAC-SHA256 Signature)
+                  {t('isolated.webhook.secret')}
                 </label>
                 <input
                   type="text"
@@ -346,7 +348,7 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs font-mono"
                 />
                 <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-1 block">
-                  Sent as <code className="text-[10px] bg-slate-200 dark:bg-emerald-900/40 px-1 py-0.5 rounded">X-KHB-Signature</code> header.
+                  {t('isolated.webhook.secretHintBefore')} <code className="text-[10px] bg-slate-200 dark:bg-emerald-900/40 px-1 py-0.5 rounded">X-KHB-Signature</code> {t('isolated.webhook.secretHintAfter')}
                 </span>
               </div>
             </div>
@@ -355,10 +357,10 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           {/* CRM Tags */}
           <div className="space-y-2">
             <label className="block text-xs font-bold text-slate-700 dark:text-gray-300">
-              Automatic CRM Lead Tags
+              {t('isolated.tags.label')}
             </label>
             <p className="text-[11px] text-slate-500 dark:text-gray-400">
-              Assign automatic categorization tags to leads originating from this landing page for downstream filtering and pipeline segmentation.
+              {t('isolated.tags.desc')}
             </p>
             <div className="flex flex-wrap items-center gap-2 pt-1">
               {(settings.leadTags || []).map((tag, idx) => (
@@ -397,7 +399,7 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                   className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-500 flex items-center gap-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  Add
+                  {t('common.add')}
                 </button>
               </div>
             </div>
@@ -411,10 +413,10 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           <div className="border-b border-slate-100 dark:border-emerald-900/40 pb-4">
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
               <Share2 className="w-4 h-4" />
-              <span>Post-Conversion & Form Submission Behavior</span>
+              <span>{t('isolated.postsubmit.title')}</span>
             </div>
             <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-              Choose whether submitters see an inline thank-you screen or get automatically redirected to a private VIP Telegram group, WhatsApp group, or external checkout page.
+              {t('isolated.postsubmit.desc')}
             </p>
           </div>
 
@@ -429,13 +431,13 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-900 dark:text-white">Inline Success State</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-white">{t('isolated.inline.title')}</span>
                 {(settings.postSubmitAction || 'inline') === 'inline' && (
                   <Check className="w-4 h-4 text-emerald-600" />
                 )}
               </div>
               <p className="text-[11px] text-slate-500 dark:text-gray-400">
-                Shows confirmation and booking summary directly inside the landing page container without redirecting the user away.
+                {t('isolated.inline.desc')}
               </p>
             </div>
 
@@ -448,13 +450,13 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-900 dark:text-white">Auto-Redirect to External URL</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-white">{t('isolated.redirect.title')}</span>
                 {settings.postSubmitAction === 'redirect' && (
                   <Check className="w-4 h-4 text-emerald-600" />
                 )}
               </div>
               <p className="text-[11px] text-slate-500 dark:text-gray-400">
-                Immediately redirects the visitor to a custom URL (e.g. VIP Telegram channel invite, payment gateway, or calendar scheduling).
+                {t('isolated.redirect.desc')}
               </p>
             </div>
           </div>
@@ -462,7 +464,7 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           {settings.postSubmitAction === 'redirect' && (
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-900/40 space-y-2">
               <label className="block text-xs font-bold text-slate-700 dark:text-gray-300">
-                Redirect Destination URL
+                {t('isolated.redirectUrl.label')}
               </label>
               <input
                 type="url"
@@ -472,20 +474,20 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs font-mono"
               />
               <span className="text-[10px] text-slate-500 dark:text-gray-400 block">
-                The user will be redirected within 1.5 seconds of submitting the reservation form.
+                {t('isolated.redirectUrl.hint')}
               </span>
             </div>
           )}
 
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1.5">
-              Custom Thank You Message
+              {t('isolated.thankYou.label')}
             </label>
             <textarea
               rows={3}
               value={settings.customThankYouMessage || ''}
               onChange={e => updateSetting('customThankYouMessage', e.target.value)}
-              placeholder="Thank you for reserving your seat! Our coordinator will contact you via Telegram within 15 minutes with the official mission dossier."
+              placeholder={t('isolated.thankYou.placeholder')}
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             />
           </div>
@@ -494,8 +496,8 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 space-y-3">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <span className="text-xs font-bold text-amber-900 dark:text-amber-200">Sold Out / Registration Closed Mode</span>
-                <p className="text-[11px] text-amber-700 dark:text-amber-400">Lock the reservation form and display a sold-out or waitlist banner.</p>
+                <span className="text-xs font-bold text-amber-900 dark:text-amber-200">{t('isolated.soldOut.title')}</span>
+                <p className="text-[11px] text-amber-700 dark:text-amber-400">{t('isolated.soldOut.desc')}</p>
               </div>
               <input
                 type="checkbox"
@@ -506,12 +508,12 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
             </div>
             {settings.isSoldOut && (
               <div>
-                <label className="block text-[11px] font-semibold text-amber-900 dark:text-amber-300 mb-1">Sold Out Notice</label>
+                <label className="block text-[11px] font-semibold text-amber-900 dark:text-amber-300 mb-1">{t('isolated.soldOut.notice')}</label>
                 <input
                   type="text"
                   value={settings.soldOutMessage || ''}
                   onChange={e => updateSetting('soldOutMessage', e.target.value)}
-                  placeholder="All 30 delegation passes for this cohort have been fully claimed. Waitlist registration only."
+                  placeholder={t('isolated.soldOut.placeholder')}
                   className="w-full px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-800 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs"
                 />
               </div>
@@ -526,17 +528,17 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           <div className="border-b border-slate-100 dark:border-emerald-900/40 pb-4">
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
               <Palette className="w-4 h-4" />
-              <span>Campaign Accent Color & Partner Co-Branding</span>
+              <span>{t('isolated.branding.title')}</span>
             </div>
             <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-              Customize the visual palette for this landing page and attach co-organizer branding.
+              {t('isolated.branding.desc')}
             </p>
           </div>
 
           {/* Accent Color */}
           <div className="space-y-3">
             <label className="block text-xs font-bold text-slate-700 dark:text-gray-300">
-              Primary Accent Color
+              {t('isolated.accent.label')}
             </label>
             <div className="flex flex-wrap items-center gap-3">
               {PRESET_ACCENTS.map(preset => {
@@ -556,7 +558,7 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                       className="w-3.5 h-3.5 rounded-full border border-black/20" 
                       style={{ backgroundColor: preset.value }}
                     />
-                    <span>{preset.name}</span>
+                    <span>{t(preset.nameKey)}</span>
                   </button>
                 );
               })}
@@ -583,12 +585,12 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-900/40 space-y-4">
             <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-gray-200">
               <Building className="w-4 h-4 text-emerald-500" />
-              <span>Co-Organizer / Official Partner Branding</span>
+              <span>{t('isolated.partner.title')}</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">
-                  Partner / Co-Organizer Name
+                  {t('isolated.partner.name')}
                 </label>
                 <input
                   type="text"
@@ -601,10 +603,10 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
               <div>
                 <ImageField
                   compact
-                  label="Partner logo"
+                  label={t('isolated.partner.logo')}
                   value={settings.partnerLogo || ''}
                   onChange={url => updateSetting('partnerLogo', url)}
-                  placeholder="Upload a logo (PNG keeps transparency) or paste a URL"
+                  placeholder={t('isolated.partner.logoPlaceholder')}
                   preview="contain"
                   maxEdge={800}
                 />
@@ -614,13 +616,13 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
 
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1.5">
-              Custom Primary CTA Button Label Override
+              {t('isolated.cta.label')}
             </label>
             <input
               type="text"
               value={settings.customCtaText || ''}
               onChange={e => updateSetting('customCtaText', e.target.value)}
-              placeholder="e.g. Claim Your VIP Buyer Pass Today"
+              placeholder={t('isolated.cta.placeholder')}
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs"
             />
           </div>
@@ -633,10 +635,10 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           <div className="border-b border-slate-100 dark:border-emerald-900/40 pb-4">
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
               <Shield className="w-4 h-4" />
-              <span>Campaign Access Control & Privacy Gate</span>
+              <span>{t('isolated.access.title')}</span>
             </div>
             <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-              Gate private VIP campaigns with a passcode/PIN or hide exclusive corporate invitation pages from Google search indexing.
+              {t('isolated.access.desc')}
             </p>
           </div>
 
@@ -651,13 +653,13 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-900 dark:text-white">Public Access</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-white">{t('isolated.public.title')}</span>
                 {(settings.accessProtection || 'public') === 'public' && (
                   <Check className="w-4 h-4 text-emerald-600" />
                 )}
               </div>
               <p className="text-[11px] text-slate-500 dark:text-gray-400">
-                Accessible to any visitor who has the link or visits your website.
+                {t('isolated.public.desc')}
               </p>
             </div>
 
@@ -670,13 +672,13 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-900 dark:text-white">VIP PIN / Password Protected</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-white">{t('isolated.password.title')}</span>
                 {settings.accessProtection === 'password' && (
                   <Check className="w-4 h-4 text-emerald-600" />
                 )}
               </div>
               <p className="text-[11px] text-slate-500 dark:text-gray-400">
-                Visitors must enter an exclusive invite PIN code before they can view event pricing, itinerary, or submit leads.
+                {t('isolated.password.desc')}
               </p>
             </div>
           </div>
@@ -684,7 +686,7 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           {settings.accessProtection === 'password' && (
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-900/40 space-y-2">
               <label className="block text-xs font-bold text-slate-700 dark:text-gray-300">
-                VIP Access Passcode / PIN
+                {t('isolated.pin.label')}
               </label>
               <div className="flex items-center gap-2">
                 <Key className="w-4 h-4 text-emerald-500" />
@@ -697,7 +699,7 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                 />
               </div>
               <span className="text-[10px] text-slate-500 dark:text-gray-400 block">
-                Share this passcode only with verified delegates or private partners.
+                {t('isolated.pin.hint')}
               </span>
             </div>
           )}
@@ -706,16 +708,16 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-900/40 space-y-3">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <span className="text-xs font-bold text-slate-800 dark:text-white">Search Engine Indexing Control</span>
-                <p className="text-[11px] text-slate-500 dark:text-gray-400">Prevent Google and Bing from indexing this campaign page if it is for internal/exclusive partners.</p>
+                <span className="text-xs font-bold text-slate-800 dark:text-white">{t('isolated.indexing.title')}</span>
+                <p className="text-[11px] text-slate-500 dark:text-gray-400">{t('isolated.indexing.desc')}</p>
               </div>
               <select
                 value={settings.searchEngineIndexing === false || settings.searchEngineIndexing === 'noindex' ? 'noindex' : 'index'}
                 onChange={e => updateSetting('searchEngineIndexing', e.target.value as IsolatedPageSettings['searchEngineIndexing'])}
                 className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs font-bold"
               >
-                <option value="index">Indexable (Public SEO)</option>
-                <option value="noindex">Private (noindex, nofollow)</option>
+                <option value="index">{t('isolated.indexing.index')}</option>
+                <option value="noindex">{t('isolated.indexing.noindex')}</option>
               </select>
             </div>
           </div>
@@ -728,24 +730,24 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           <div className="border-b border-slate-100 dark:border-emerald-900/40 pb-4">
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
               <CreditCard className="w-4 h-4" />
-              <span>Campaign Payment & KHQR Invoicing Details</span>
+              <span>{t('isolated.payment.title')}</span>
             </div>
             <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-              Provide dedicated bank accounts or Bakong KHQR QR images for attendees who wish to wire deposits directly for this specific campaign.
+              {t('isolated.payment.desc')}
             </p>
           </div>
 
           {/* Payment Methods */}
           <div className="space-y-2">
             <label className="block text-xs font-bold text-slate-700 dark:text-gray-300">
-              Accepted Payment Methods
+              {t('isolated.methods.label')}
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
-                { id: 'khqr', label: 'Bakong KHQR', icon: QrCode },
-                { id: 'bank_transfer', label: 'Bank Wire Transfer', icon: Building },
-                { id: 'card', label: 'Credit / Debit Card', icon: CreditCard },
-                { id: 'cash', label: 'Cash on Arrival / Office', icon: Check }
+                { id: 'khqr', label: t('isolated.method.khqr'), icon: QrCode },
+                { id: 'bank_transfer', label: t('isolated.method.bank'), icon: Building },
+                { id: 'card', label: t('isolated.method.card'), icon: CreditCard },
+                { id: 'cash', label: t('isolated.method.cash'), icon: Check }
               ].map(method => {
                 const Icon = method.icon;
                 const isChecked = (settings.acceptedPaymentMethods || ['khqr', 'bank_transfer']).includes(method.id as PaymentMethod);
@@ -771,10 +773,10 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           <div>
             <ImageField
               compact
-              label="QR code image"
+              label={t('isolated.qr.label')}
               value={settings.khqrImageUrl || ''}
               onChange={url => updateSetting('khqrImageUrl', url)}
-              placeholder="Upload the KHQR image (PNG) or paste a URL"
+              placeholder={t('isolated.qr.placeholder')}
               preview="contain"
               maxEdge={1200}
             />
@@ -784,12 +786,12 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-900/40 space-y-4">
             <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-gray-200">
               <Building className="w-4 h-4 text-emerald-500" />
-              <span>Official Bank Account Information</span>
+              <span>{t('isolated.bank.title')}</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">
-                  Bank Name
+                  {t('isolated.bank.name')}
                 </label>
                 <input
                   type="text"
@@ -801,7 +803,7 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
               </div>
               <div>
                 <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">
-                  Account Name
+                  {t('isolated.bank.accountName')}
                 </label>
                 <input
                   type="text"
@@ -813,7 +815,7 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
               </div>
               <div>
                 <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">
-                  Account Number
+                  {t('isolated.bank.accountNumber')}
                 </label>
                 <input
                   type="text"

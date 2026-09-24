@@ -43,6 +43,7 @@ import {
   CONCERT_FESTIVAL_ORDER,
   MINIMAL_LEAD_ORDER
 } from '@/lib/types';
+import { useLanguage } from '@/context/LanguageContext';
 
 // Map icon strings to Lucide components
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -67,12 +68,12 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 // Category styling metadata
-const CATEGORY_META: Record<string, { label: string; color: string; badgeCls: string }> = {
-  hero: { label: 'Hero & Intro', color: '#6366F1', badgeCls: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/40' },
-  offer: { label: 'Core Offer & ROI', color: '#F59E0B', badgeCls: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/40' },
-  program: { label: 'Program & Logistics', color: '#3B82F6', badgeCls: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/40' },
-  proof: { label: 'Proof & Trust', color: '#10B981', badgeCls: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40' },
-  conversion: { label: 'Conversion & Form', color: '#EC4899', badgeCls: 'bg-pink-50 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800/40' },
+const CATEGORY_META: Record<string, { labelKey: string; color: string; badgeCls: string }> = {
+  hero: { labelKey: 'sections.catLabel.hero', color: '#6366F1', badgeCls: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/40' },
+  offer: { labelKey: 'sections.catLabel.offer', color: '#F59E0B', badgeCls: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/40' },
+  program: { labelKey: 'sections.catLabel.program', color: '#3B82F6', badgeCls: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/40' },
+  proof: { labelKey: 'sections.catLabel.proof', color: '#10B981', badgeCls: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40' },
+  conversion: { labelKey: 'sections.catLabel.conversion', color: '#EC4899', badgeCls: 'bg-pink-50 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800/40' },
 };
 
 interface DragDropSectionBuilderProps {
@@ -91,6 +92,18 @@ export default function DragDropSectionBuilder({
   onChangeVisibility,
   onJumpToTab,
 }: DragDropSectionBuilderProps) {
+  const { t } = useLanguage();
+  // Display label / description of a catalog item (falls back to the catalog text)
+  const itemLabel = (item: SectionCatalogItem) => {
+    const key = `sections.item.${item.key}`;
+    const text = t(key);
+    return text === key ? item.label : text;
+  };
+  const itemDescription = (item: SectionCatalogItem) => {
+    const key = `sections.itemDesc.${item.key}`;
+    const text = t(key);
+    return text === key ? item.description : text;
+  };
   // Ensure we have a working active order (respect empty array if user cleared sections)
   const activeKeys = Array.isArray(sectionOrder) ? sectionOrder : DEFAULT_SECTION_ORDER;
 
@@ -256,11 +269,11 @@ export default function DragDropSectionBuilder({
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-amber-500" />
             <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-              1-Click Recommended Layout Presets
+              {t('sections.presets.title')}
             </span>
           </div>
           <span className="text-[11px] text-slate-500 dark:text-gray-400">
-            Clicking a preset automatically arranges &amp; enables recommended sections
+            {t('sections.presets.hint')}
           </span>
         </div>
 
@@ -271,9 +284,9 @@ export default function DragDropSectionBuilder({
             className="px-3 py-2 rounded-xl text-left bg-white dark:bg-[#0B1A12] border border-slate-200 dark:border-emerald-900/40 hover:border-amber-400 dark:hover:border-amber-400/60 transition-all text-xs cursor-pointer shadow-sm group"
           >
             <div className="font-bold text-slate-900 dark:text-white group-hover:text-amber-500 transition-colors">
-              💼 B2B Delegation
+              {t('sections.preset.b2b')}
             </div>
-            <div className="text-[10px] text-slate-500 dark:text-gray-400 truncate">15-section full turnkey</div>
+            <div className="text-[10px] text-slate-500 dark:text-gray-400 truncate">{t('sections.preset.b2bDesc')}</div>
           </button>
 
           <button
@@ -282,9 +295,9 @@ export default function DragDropSectionBuilder({
             className="px-3 py-2 rounded-xl text-left bg-white dark:bg-[#0B1A12] border border-slate-200 dark:border-emerald-900/40 hover:border-amber-400 dark:hover:border-amber-400/60 transition-all text-xs cursor-pointer shadow-sm group"
           >
             <div className="font-bold text-slate-900 dark:text-white group-hover:text-amber-500 transition-colors">
-              🎪 Trade Expo
+              {t('sections.preset.expo')}
             </div>
-            <div className="text-[10px] text-slate-500 dark:text-gray-400 truncate">Booths &amp; commercial floor</div>
+            <div className="text-[10px] text-slate-500 dark:text-gray-400 truncate">{t('sections.preset.expoDesc')}</div>
           </button>
 
           <button
@@ -293,9 +306,9 @@ export default function DragDropSectionBuilder({
             className="px-3 py-2 rounded-xl text-left bg-white dark:bg-[#0B1A12] border border-slate-200 dark:border-emerald-900/40 hover:border-amber-400 dark:hover:border-amber-400/60 transition-all text-xs cursor-pointer shadow-sm group"
           >
             <div className="font-bold text-slate-900 dark:text-white group-hover:text-amber-500 transition-colors">
-              🎤 Corporate Summit
+              {t('sections.preset.summit')}
             </div>
-            <div className="text-[10px] text-slate-500 dark:text-gray-400 truncate">Keynotes &amp; panelists</div>
+            <div className="text-[10px] text-slate-500 dark:text-gray-400 truncate">{t('sections.preset.summitDesc')}</div>
           </button>
 
           <button
@@ -304,9 +317,9 @@ export default function DragDropSectionBuilder({
             className="px-3 py-2 rounded-xl text-left bg-white dark:bg-[#0B1A12] border border-slate-200 dark:border-emerald-900/40 hover:border-amber-400 dark:hover:border-amber-400/60 transition-all text-xs cursor-pointer shadow-sm group"
           >
             <div className="font-bold text-slate-900 dark:text-white group-hover:text-amber-500 transition-colors">
-              🎵 Music &amp; Festival
+              {t('sections.preset.music')}
             </div>
-            <div className="text-[10px] text-slate-500 dark:text-gray-400 truncate">Artists &amp; stage passes</div>
+            <div className="text-[10px] text-slate-500 dark:text-gray-400 truncate">{t('sections.preset.musicDesc')}</div>
           </button>
 
           <button
@@ -315,9 +328,9 @@ export default function DragDropSectionBuilder({
             className="px-3 py-2 rounded-xl text-left bg-white dark:bg-[#0B1A12] border border-slate-200 dark:border-emerald-900/40 hover:border-amber-400 dark:hover:border-amber-400/60 transition-all text-xs cursor-pointer shadow-sm group"
           >
             <div className="font-bold text-slate-900 dark:text-white group-hover:text-amber-500 transition-colors">
-              ⚡ Direct Opt-In
+              {t('sections.preset.optin')}
             </div>
-            <div className="text-[10px] text-slate-500 dark:text-gray-400 truncate">Fast 6-section funnel</div>
+            <div className="text-[10px] text-slate-500 dark:text-gray-400 truncate">{t('sections.preset.optinDesc')}</div>
           </button>
 
           <button
@@ -326,7 +339,7 @@ export default function DragDropSectionBuilder({
             className="px-3 py-2 rounded-xl text-left bg-white dark:bg-[#0B1A12] border border-slate-200 dark:border-emerald-900/40 hover:border-emerald-400 transition-all text-xs cursor-pointer shadow-sm flex items-center gap-1.5 justify-center"
           >
             <RotateCcw className="w-3.5 h-3.5 text-slate-500 dark:text-gray-400" />
-            <span className="font-bold text-slate-700 dark:text-gray-200">Reset All (19)</span>
+            <span className="font-bold text-slate-700 dark:text-gray-200">{t('sections.preset.reset')}</span>
           </button>
         </div>
       </div>
@@ -339,10 +352,10 @@ export default function DragDropSectionBuilder({
             <div>
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                 <Layers className="w-4 h-4 text-emerald-500" />
-                <span>Active Page Flow ({activeItems.length} Sections)</span>
+                <span>{t('sections.flow.title', { n: activeItems.length })}</span>
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-gray-400">
-                Drag the grip handles (⋮⋮) or use (▲/▼) to reorder sections. Order on this list is exact visitor display sequence.
+                {t('sections.flow.desc')}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -350,38 +363,38 @@ export default function DragDropSectionBuilder({
                 type="button"
                 onClick={handleEnableAll}
                 className="px-2.5 py-1 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors cursor-pointer"
-                title="Enable all sections in the flow"
+                title={t('sections.enableAllTitle')}
               >
-                Enable All
+                {t('sections.enableAll')}
               </button>
               <button
                 type="button"
                 onClick={handleDisableAll}
                 className="px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                title="Hide all sections"
+                title={t('sections.disableAllTitle')}
               >
-                Disable All
+                {t('sections.disableAll')}
               </button>
               <button
                 type="button"
                 onClick={handleClearFlow}
                 className="px-2.5 py-1 rounded-lg border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-semibold hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors cursor-pointer"
-                title="Remove all sections from the page layout"
+                title={t('sections.clearTitle')}
               >
-                Clear Flow
+                {t('sections.clear')}
               </button>
             </div>
           </div>
 
           {activeItems.length === 0 ? (
             <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-emerald-900/50 rounded-2xl">
-              <p className="text-xs text-slate-500 dark:text-gray-400 mb-3">No active sections on this page.</p>
+              <p className="text-xs text-slate-500 dark:text-gray-400 mb-3">{t('sections.flow.empty')}</p>
               <button
                 type="button"
                 onClick={() => applyPreset(DEFAULT_SECTION_ORDER)}
                 className="px-4 py-2 rounded-xl bg-emerald-500 text-white font-bold text-xs cursor-pointer"
               >
-                Load Default 19 Sections
+                {t('sections.flow.loadDefault')}
               </button>
             </div>
           ) : (
@@ -414,7 +427,7 @@ export default function DragDropSectionBuilder({
                     {/* Drag Grip Handle */}
                     <div
                       className="cursor-grab active:cursor-grabbing text-slate-400 dark:text-gray-500 hover:text-amber-500 dark:hover:text-amber-400 p-1 -ml-1 rounded-lg transition-colors"
-                      title="Drag to reorder"
+                      title={t('sections.drag')}
                     >
                       <GripVertical className="w-4 h-4" />
                     </div>
@@ -432,14 +445,14 @@ export default function DragDropSectionBuilder({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                          {item.label}
+                          {itemLabel(item)}
                         </span>
                         <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${cat.badgeCls}`}>
-                          {cat.label}
+                          {t(cat.labelKey)}
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-500 dark:text-gray-400 truncate">
-                        {item.description}
+                        {itemDescription(item)}
                       </p>
                     </div>
 
@@ -451,7 +464,7 @@ export default function DragDropSectionBuilder({
                           type="button"
                           onClick={() => onJumpToTab(item.tabId)}
                           className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-[#07130D] transition-colors"
-                          title={`Edit ${item.label} content`}
+                          title={t('sections.editContent', { label: itemLabel(item) })}
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                         </button>
@@ -463,7 +476,7 @@ export default function DragDropSectionBuilder({
                         onClick={() => moveItem(idx, 'up')}
                         disabled={idx === 0}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-gray-200 hover:bg-slate-100 dark:hover:bg-[#07130D] disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-                        title="Move Up"
+                        title={t('sections.moveUp')}
                       >
                         <ChevronUp className="w-3.5 h-3.5" />
                       </button>
@@ -474,7 +487,7 @@ export default function DragDropSectionBuilder({
                         onClick={() => moveItem(idx, 'down')}
                         disabled={idx === activeItems.length - 1}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-gray-200 hover:bg-slate-100 dark:hover:bg-[#07130D] disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-                        title="Move Down"
+                        title={t('sections.moveDown')}
                       >
                         <ChevronDown className="w-3.5 h-3.5" />
                       </button>
@@ -488,7 +501,7 @@ export default function DragDropSectionBuilder({
                             ? 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50'
                             : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-[#07130D]'
                         }`}
-                        title={isVisible ? 'Visible (Click to hide)' : 'Hidden (Click to show)'}
+                        title={isVisible ? t('sections.visible') : t('sections.hidden')}
                       >
                         {isVisible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                       </button>
@@ -498,7 +511,7 @@ export default function DragDropSectionBuilder({
                         type="button"
                         onClick={() => removeItem(item.key)}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                        title="Remove section from page layout"
+                        title={t('sections.remove')}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -516,14 +529,14 @@ export default function DragDropSectionBuilder({
             <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <Plus className="w-4 h-4 text-emerald-500" />
-                <span>Component Library</span>
+                <span>{t('sections.library.title')}</span>
               </span>
               <span className="text-xs text-slate-500 dark:text-gray-400">
-                {availableItems.length} available
+                {t('sections.library.available', { n: availableItems.length })}
               </span>
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5">
-              Sections waiting to be added to this page flow. Click (+ Add) to include.
+              {t('sections.library.desc')}
             </p>
           </div>
 
@@ -531,7 +544,7 @@ export default function DragDropSectionBuilder({
           <div className="space-y-2">
             <input
               type="text"
-              placeholder="Search components..."
+              placeholder={t('sections.library.search')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
@@ -549,7 +562,7 @@ export default function DragDropSectionBuilder({
                       : 'bg-slate-100 dark:bg-[#07130D] text-slate-600 dark:text-gray-400 hover:bg-slate-200'
                   }`}
                 >
-                  {cKey}
+                  {t(`sections.cat.${cKey}`)}
                 </button>
               ))}
             </div>
@@ -558,9 +571,9 @@ export default function DragDropSectionBuilder({
           {availableItems.length === 0 ? (
             <div className="p-6 text-center border border-slate-200 dark:border-emerald-900/40 rounded-2xl bg-slate-50 dark:bg-[#07130D]">
               <div className="text-2xl mb-1">🎉</div>
-              <p className="text-xs font-bold text-slate-700 dark:text-gray-300">All available components are in use!</p>
+              <p className="text-xs font-bold text-slate-700 dark:text-gray-300">{t('sections.library.allInUse')}</p>
               <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">
-                Every section in the catalog is currently positioned on your landing page.
+                {t('sections.library.allInUseDesc')}
               </p>
             </div>
           ) : (
@@ -581,14 +594,14 @@ export default function DragDropSectionBuilder({
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                            {item.label}
+                            {itemLabel(item)}
                           </span>
                           <span className={`text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded border ${cat.badgeCls}`}>
-                            {cat.label}
+                            {t(cat.labelKey)}
                           </span>
                         </div>
                         <p className="text-[10px] text-slate-500 dark:text-gray-400 truncate">
-                          {item.description}
+                          {itemDescription(item)}
                         </p>
                       </div>
                     </div>
@@ -597,10 +610,10 @@ export default function DragDropSectionBuilder({
                       type="button"
                       onClick={() => addItem(item.key)}
                       className="px-2.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-1 shrink-0 cursor-pointer shadow-xs transition-colors"
-                      title={`Add ${item.label} to active page flow`}
+                      title={t('sections.addTitle', { label: itemLabel(item) })}
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>Add</span>
+                      <span>{t('common.add')}</span>
                     </button>
                   </div>
                 );

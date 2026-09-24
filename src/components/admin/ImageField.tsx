@@ -3,6 +3,7 @@
 import React, { useRef, useState } from 'react';
 import { Loader2, Upload, X } from 'lucide-react';
 import { uploadImage } from '@/lib/image-upload-client';
+import { useLanguage } from '@/context/LanguageContext';
 
 /**
  * One image: a URL box with an Upload button, a thumbnail preview and a clear button.
@@ -23,6 +24,7 @@ interface ImageFieldProps {
 }
 
 export default function ImageField({ label, value, onChange, placeholder, hint, maxEdge, preview = 'wide', compact = false }: ImageFieldProps) {
+  const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +38,7 @@ export default function ImageField({ label, value, onChange, placeholder, hint, 
       const { url } = await uploadImage(file, maxEdge);
       onChange(url);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Upload failed');
+      setError(e instanceof Error ? e.message : t('image.uploadFailed'));
     } finally {
       setBusy(false);
     }
@@ -61,7 +63,7 @@ export default function ImageField({ label, value, onChange, placeholder, hint, 
           type="text"
           value={value}
           onChange={e => onChange(e.target.value)}
-          placeholder={placeholder || 'Paste an image URL or upload'}
+          placeholder={placeholder || t('image.pastePh')}
           className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-400"
         />
         <input
@@ -75,14 +77,14 @@ export default function ImageField({ label, value, onChange, placeholder, hint, 
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={busy}
-          title="Upload an image"
+          title={t('image.uploadTitle')}
           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-black font-bold text-xs cursor-pointer disabled:opacity-60 shrink-0"
         >
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-          <span>{busy ? 'Uploading…' : 'Upload'}</span>
+          <span>{busy ? t('common.uploading') : t('common.upload')}</span>
         </button>
         {value && (
-          <button type="button" onClick={() => onChange('')} title="Clear" aria-label="Clear image" className="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer shrink-0">
+          <button type="button" onClick={() => onChange('')} title={t('image.clear')} aria-label={t('image.clearImage')} className="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer shrink-0">
             <X className="w-3.5 h-3.5" />
           </button>
         )}

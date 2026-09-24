@@ -262,3 +262,14 @@ html.light ::-webkit-scrollbar-thumb {
 html.light ::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
 }
+
+/* Portal UI language: Khmer font for the admin and sign-in pages (html.lang-kh is set by LanguageProvider). */
+html.lang-kh .admin-shell,
+html.lang-kh .admin-login {
+  font-family: 'Kantumruy Pro', 'Hanuman', 'Plus Jakarta Sans', var(--font-geist-sans), sans-serif;
+  line-height: 1.7;
+}
+html.lang-kh .admin-shell .font-mono,
+html.lang-kh .admin-login .font-mono {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+}

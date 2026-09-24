@@ -7,17 +7,15 @@ import Link from 'next/link';
 import { ExternalLink } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
-import FlagIcon from '@/components/common/FlagIcon';
-import { useStoredChoice } from '@/lib/use-browser-state';
-
-const LANGS = ['en', 'kh'] as const;
+import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth();
   const isLoginPage = pathname === '/admin/login';
 
-  const [adminLang, setAdminLang] = useStoredChoice(['khb_admin_lang', 'khb_lang'], LANGS, 'en');
+  const { t } = useLanguage();
 
   if (isLoginPage) {
     return <>{children}</>;
@@ -25,27 +23,25 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   // Generate breadcrumb info based on path
   const getBreadcrumb = () => {
-    if (pathname === '/admin') return 'Dashboard Overview';
-    if (pathname === '/admin/pages') return 'Landing Pages CMS';
-    if (pathname === '/admin/pages/new') return 'Landing Pages CMS / Create New Page';
-    if (pathname.startsWith('/admin/pages/')) return 'Landing Pages CMS / Edit Campaign';
-    if (pathname.startsWith('/admin/leads')) return 'Leads & CRM Pipeline';
-    if (pathname.startsWith('/admin/round-robin')) return 'Staff Round Robin Allocation';
-    if (pathname.startsWith('/admin/ads')) return 'Ads & Popups';
-    if (pathname.startsWith('/admin/settings')) return 'Settings & Security';
-    if (pathname.startsWith('/admin/guide')) return 'Operator User Guide & Blueprint';
-    return 'Admin';
+    if (pathname === '/admin') return t('crumb.dashboard');
+    if (pathname === '/admin/pages') return t('crumb.pages');
+    if (pathname === '/admin/pages/new') return t('crumb.pagesNew');
+    if (pathname.startsWith('/admin/pages/')) return t('crumb.pagesEdit');
+    if (pathname.startsWith('/admin/leads')) return t('crumb.leads');
+    if (pathname.startsWith('/admin/round-robin')) return t('crumb.roundRobin');
+    if (pathname.startsWith('/admin/ads')) return t('crumb.ads');
+    if (pathname.startsWith('/admin/settings')) return t('crumb.settings');
+    if (pathname.startsWith('/admin/guide')) return t('crumb.guide');
+    return t('crumb.admin');
   };
-
-  const handleSwitchLang = setAdminLang;
 
   const cleanEmail = (user?.email || '').toLowerCase().trim();
   const isSuperAdmin = cleanEmail === 'admin@khbevents.com';
-  const roleName = isSuperAdmin ? '🛡️ SUPER ADMIN' : '👑 OWNER';
+  const roleName = isSuperAdmin ? `🛡️ ${t('nav.role.superAdmin')}` : `👑 ${t('nav.role.owner')}`;
   const userName = isSuperAdmin ? 'Admin KHB' : 'Chamnam Mey';
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#070E0A] text-slate-900 dark:text-gray-100 selection:bg-amber-400 selection:text-black transition-colors duration-200">
+    <div className="admin-shell min-h-screen bg-[#F8FAFC] dark:bg-[#070E0A] text-slate-900 dark:text-gray-100 selection:bg-amber-400 selection:text-black transition-colors duration-200">
       {/* Left Aside Navigation (Fixed on desktop, sliding drawer on mobile) */}
       <AdminSidebar />
 
@@ -61,36 +57,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </div>
             <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-              <span>Live DB Online</span>
+              <span>{t('shell.liveDb')}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Language Switcher */}
-            <div className="lang-switcher">
-              <button 
-                type="button"
-                className={`lang-btn${adminLang === 'en' ? ' active' : ''}`} 
-                onClick={() => handleSwitchLang('en')} 
-                title="English"
-              >
-                <span className="lang-flag" aria-hidden="true">
-                  <FlagIcon country="en" width={18} height={12} />
-                </span>
-                <span>EN</span>
-              </button>
-              <button 
-                type="button"
-                className={`lang-btn${adminLang === 'kh' ? ' active' : ''}`} 
-                onClick={() => handleSwitchLang('kh')} 
-                title="ភាសាខ្មែរ"
-              >
-                <span className="lang-flag" aria-hidden="true">
-                  <FlagIcon country="kh" width={18} height={12} />
-                </span>
-                <span>ខ្មែរ</span>
-              </button>
-            </div>
+            <LanguageSwitcher />
 
             {/* Theme Switcher: Light / Dark / Auto */}
             <ThemeSwitcher />
@@ -100,7 +72,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               target="_blank"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-emerald-950/60 hover:bg-slate-200 dark:hover:bg-emerald-900/60 border border-slate-200 dark:border-emerald-800/50 text-slate-700 dark:text-emerald-300 hover:text-black dark:hover:text-white text-xs font-semibold transition-all shadow-sm"
             >
-              <span>View Public Site</span>
+              <span>{t('shell.viewSite')}</span>
               <ExternalLink className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
             </Link>
 

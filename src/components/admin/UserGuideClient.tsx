@@ -24,27 +24,52 @@ import {
   Megaphone,
   type LucideIcon
 } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { translate } from '@/lib/i18n';
+import { guide } from '@/lib/i18n/dict/guide';
 
 type GuideTab = 'all' | 'quickstart' | 'pages' | 'leads' | 'roundrobin' | 'settings' | 'ads' | 'faqs';
 
+/**
+ * Searchable text of one guide section: every 'guide.<section>.*' string in
+ * both English and Khmer, so the search box matches whichever language the
+ * operator types in (and the legacy keyword lists, kept as '.keywords').
+ */
+const SECTION_TEXT: Record<string, string> = {};
+function sectionText(section: string): string {
+  if (!SECTION_TEXT[section]) {
+    const prefix = `guide.${section}.`;
+    SECTION_TEXT[section] = Object.keys(guide.en)
+      .filter((key) => key.startsWith(prefix))
+      .map((key) => `${translate('en', key)} ${translate('kh', key)}`)
+      .join(' ');
+  }
+  return SECTION_TEXT[section];
+}
+
+const CODE_CLASS = 'bg-slate-200 dark:bg-black px-2 py-0.5 rounded font-mono';
+
 export default function UserGuideClient() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<GuideTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const navTabs: { id: GuideTab; label: string; icon: LucideIcon; badge?: string }[] = [
-    { id: 'all', label: 'Complete Blueprint', icon: BookOpen },
-    { id: 'quickstart', label: '1. Quick Start & Login', icon: Clock },
-    { id: 'pages', label: '2. Landing Pages CMS', icon: FileText, badge: 'Core' },
-    { id: 'leads', label: '3. Leads CRM Pipeline', icon: Users, badge: 'Sales' },
-    { id: 'roundrobin', label: '4. Round-Robin & Bot', icon: Sliders },
-    { id: 'settings', label: '5. Settings & Alerts', icon: Settings },
-    { id: 'ads', label: '6. Ads & Popups', icon: Megaphone },
-    { id: 'faqs', label: '7. Operator FAQs', icon: HelpCircle },
+    { id: 'all', label: t('guide.tab.all'), icon: BookOpen },
+    { id: 'quickstart', label: t('guide.tab.quickstart'), icon: Clock },
+    { id: 'pages', label: t('guide.tab.pages'), icon: FileText, badge: t('guide.tab.badgeCore') },
+    { id: 'leads', label: t('guide.tab.leads'), icon: Users, badge: t('guide.tab.badgeSales') },
+    { id: 'roundrobin', label: t('guide.tab.roundrobin'), icon: Sliders },
+    { id: 'settings', label: t('guide.tab.settings'), icon: Settings },
+    { id: 'ads', label: t('guide.tab.ads'), icon: Megaphone },
+    { id: 'faqs', label: t('guide.tab.faqs'), icon: HelpCircle },
   ];
 
   const matchesSearch = (text: string) => {
     if (!searchQuery.trim()) return true;
     return text.toLowerCase().includes(searchQuery.toLowerCase());
   };
+
+  const showSection = (tab: GuideTab) => (activeTab === 'all' || activeTab === tab) && matchesSearch(sectionText(tab));
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
@@ -55,13 +80,13 @@ export default function UserGuideClient() {
           <div className="space-y-3 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-bold uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Official System Operator Guide • KHB EVENTS</span>
+              <span>{t('guide.header.badge')}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
-              Platform User Guide &amp; Blueprint
+              {t('guide.header.title')}
             </h1>
             <p className="text-emerald-100/80 text-sm leading-relaxed">
-              Step-by-step instructions for event directors, marketing managers, and sales representatives on launching landing pages, managing inbound buyer leads, and configuring sales team routing.
+              {t('guide.header.intro')}
             </p>
           </div>
 
@@ -71,14 +96,14 @@ export default function UserGuideClient() {
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-400 text-black font-bold text-xs uppercase tracking-wider hover:bg-amber-300 shadow-md transition"
             >
               <PlusCircle className="w-4 h-4" />
-              <span>Create New Page</span>
+              <span>{t('guide.header.createPage')}</span>
             </Link>
             <Link
               href="/admin/leads"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-900/60 border border-emerald-600/50 text-emerald-100 font-semibold text-xs hover:bg-emerald-800/60 transition"
             >
               <Users className="w-4 h-4" />
-              <span>View Leads CRM</span>
+              <span>{t('guide.header.viewLeads')}</span>
             </Link>
           </div>
         </div>
@@ -122,7 +147,7 @@ export default function UserGuideClient() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search guides or FAQs..."
+            placeholder={t('guide.search.placeholder')}
             className="w-full pl-9 pr-4 py-2 rounded-xl bg-white dark:bg-[#0B1711] border border-slate-200 dark:border-emerald-900/40 text-xs text-slate-800 dark:text-gray-200 placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-emerald-500 transition"
           />
           {searchQuery && (
@@ -130,7 +155,7 @@ export default function UserGuideClient() {
               onClick={() => setSearchQuery('')}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-300 text-xs"
             >
-              Clear
+              {t('guide.search.clear')}
             </button>
           )}
         </div>
@@ -140,7 +165,7 @@ export default function UserGuideClient() {
       <div className="space-y-8">
         
         {/* SECTION 1: QUICK START */}
-        {(activeTab === 'all' || activeTab === 'quickstart') && matchesSearch('quick start login password admin navigation') && (
+        {showSection('quickstart') && (
           <section id="quickstart" className="rounded-3xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/40 p-6 sm:p-8 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-emerald-950 pb-4">
               <div className="flex items-center gap-3">
@@ -149,15 +174,15 @@ export default function UserGuideClient() {
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">
-                    Quick Start: Logging In &amp; Navigation
+                    {t('guide.quickstart.title')}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-gray-400">
-                    Access credentials and main portal sections
+                    {t('guide.quickstart.subtitle')}
                   </p>
                 </div>
               </div>
               <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 dark:bg-emerald-950/60 font-semibold text-slate-600 dark:text-emerald-300 border border-slate-200 dark:border-emerald-900/40">
-                Setup
+                {t('guide.quickstart.badge')}
               </span>
             </div>
 
@@ -165,14 +190,14 @@ export default function UserGuideClient() {
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-3">
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  <span>Admin Login Credentials</span>
+                  <span>{t('guide.quickstart.credentials')}</span>
                 </h3>
                 <div className="text-xs space-y-2 text-slate-600 dark:text-gray-300">
-                  <p><strong>Portal URL:</strong> <code className="bg-slate-200 dark:bg-black px-2 py-0.5 rounded text-emerald-700 dark:text-emerald-300 font-mono">https://sale.khbevents.com/admin/login</code></p>
-                  <p><strong>Default Email:</strong> <code className="bg-slate-200 dark:bg-black px-2 py-0.5 rounded font-mono">admin@khbevents.com</code></p>
-                  <p><strong>Default Password:</strong> <code className="bg-slate-200 dark:bg-black px-2 py-0.5 rounded font-mono">khbevents2026</code></p>
+                  <p><strong>{t('guide.quickstart.portalUrl')}</strong> <code className={`${CODE_CLASS} text-emerald-700 dark:text-emerald-300`}>https://sale.khbevents.com/admin/login</code></p>
+                  <p><strong>{t('guide.quickstart.defaultEmail')}</strong> <code className={CODE_CLASS}>admin@khbevents.com</code></p>
+                  <p><strong>{t('guide.quickstart.defaultPassword')}</strong> <code className={CODE_CLASS}>khbevents2026</code></p>
                   <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-                    💡 You can change the password anytime in Settings &rarr; Security.
+                    {t('guide.quickstart.passwordTip')}
                   </p>
                 </div>
               </div>
@@ -180,14 +205,14 @@ export default function UserGuideClient() {
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-3">
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                   <Layers className="w-4 h-4 text-amber-500" />
-                  <span>Portal Sections Overview</span>
+                  <span>{t('guide.quickstart.sections')}</span>
                 </h3>
                 <ul className="text-xs space-y-1.5 text-slate-600 dark:text-gray-300">
-                  <li><strong>Dashboard (`/admin`):</strong> High-level stats, conversion rates, and recent client requests.</li>
-                  <li><strong>Landing Pages (`/admin/pages`):</strong> Create, duplicate, and publish campaigns.</li>
-                  <li><strong>Leads CRM (`/admin/leads`):</strong> Process buyer inquiries, 1-click WhatsApp chat, and team notes.</li>
-                  <li><strong>Round Robin (`/admin/round-robin`):</strong> Distribute leads fairly among your sales team.</li>
-                  <li><strong>Settings (`/admin/settings`):</strong> Hotline phone, Telegram bot, and manager notifications.</li>
+                  <li><strong>{t('guide.quickstart.dashboardLabel')}</strong> {t('guide.quickstart.dashboardText')}</li>
+                  <li><strong>{t('guide.quickstart.pagesLabel')}</strong> {t('guide.quickstart.pagesText')}</li>
+                  <li><strong>{t('guide.quickstart.leadsLabel')}</strong> {t('guide.quickstart.leadsText')}</li>
+                  <li><strong>{t('guide.quickstart.roundRobinLabel')}</strong> {t('guide.quickstart.roundRobinText')}</li>
+                  <li><strong>{t('guide.quickstart.settingsLabel')}</strong> {t('guide.quickstart.settingsText')}</li>
                 </ul>
               </div>
             </div>
@@ -195,7 +220,7 @@ export default function UserGuideClient() {
         )}
 
         {/* SECTION 2: LANDING PAGES CMS */}
-        {(activeTab === 'all' || activeTab === 'pages') && matchesSearch('landing page create campaign template itinerary value stack packages pricing') && (
+        {showSection('pages') && (
           <section id="landing-pages" className="rounded-3xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/40 p-6 sm:p-8 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-emerald-950 pb-4">
               <div className="flex items-center gap-3">
@@ -204,10 +229,10 @@ export default function UserGuideClient() {
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">
-                    How to Create &amp; Launch a New Landing Page
+                    {t('guide.pages.title')}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-gray-400">
-                    Step-by-step guide to publishing high-ticket business delegations and event campaigns
+                    {t('guide.pages.subtitle')}
                   </p>
                 </div>
               </div>
@@ -215,7 +240,7 @@ export default function UserGuideClient() {
                 href="/admin/pages/new"
                 className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
               >
-                <span>Open Page Creator</span>
+                <span>{t('guide.pages.open')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -223,59 +248,59 @@ export default function UserGuideClient() {
             <div className="space-y-4 text-xs text-slate-600 dark:text-gray-300 leading-relaxed">
               <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50">
                 <h4 className="font-bold text-sm text-emerald-900 dark:text-emerald-200 mb-1">
-                  Step 1: Choose an Industry Template
+                  {t('guide.pages.step1')}
                 </h4>
-                <p>When you click <strong>&quot;+ New Page&quot;</strong>, choose from 5 built-in presets:</p>
+                <p>{t('guide.pages.step1Before')}<strong>{t('guide.pages.step1Button')}</strong>{t('guide.pages.step1After')}</p>
                 <div className="grid sm:grid-cols-3 gap-2 pt-2">
                   <div className="p-2.5 rounded-xl bg-white dark:bg-[#060D09] border border-emerald-900/30">
-                    <strong className="text-slate-900 dark:text-white block">B2B Trade Delegation</strong>
-                    <span className="text-[11px] text-slate-500 dark:text-gray-400">For foreign business trips (Vietnam, Korea). Includes 4D3N itinerary, value stack &amp; 1-on-1 matchmaking.</span>
+                    <strong className="text-slate-900 dark:text-white block">{t('guide.pages.tplB2b')}</strong>
+                    <span className="text-[11px] text-slate-500 dark:text-gray-400">{t('guide.pages.tplB2bDesc')}</span>
                   </div>
                   <div className="p-2.5 rounded-xl bg-white dark:bg-[#060D09] border border-emerald-900/30">
-                    <strong className="text-slate-900 dark:text-white block">Trade Expo &amp; Exhibition</strong>
-                    <span className="text-[11px] text-slate-500 dark:text-gray-400">For expos with booth tiers (Corner, Island, Shell Scheme) and exhibitor registration.</span>
+                    <strong className="text-slate-900 dark:text-white block">{t('guide.pages.tplExpo')}</strong>
+                    <span className="text-[11px] text-slate-500 dark:text-gray-400">{t('guide.pages.tplExpoDesc')}</span>
                   </div>
                   <div className="p-2.5 rounded-xl bg-white dark:bg-[#060D09] border border-emerald-900/30">
-                    <strong className="text-slate-900 dark:text-white block">Concert &amp; Festival</strong>
-                    <span className="text-[11px] text-slate-500 dark:text-gray-400">For mega-events with artist/DJ lineups, set times, VIP pit passes, and party tables.</span>
+                    <strong className="text-slate-900 dark:text-white block">{t('guide.pages.tplConcert')}</strong>
+                    <span className="text-[11px] text-slate-500 dark:text-gray-400">{t('guide.pages.tplConcertDesc')}</span>
                   </div>
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-2">
-                  <h4 className="font-bold text-slate-900 dark:text-white">Step 2: Core Info &amp; Slug</h4>
+                  <h4 className="font-bold text-slate-900 dark:text-white">{t('guide.pages.step2')}</h4>
                   <ul className="list-disc list-inside space-y-1 text-[11px]">
-                    <li><strong>Title:</strong> e.g., <em>Korea B2B Business Delegation 2026 (Seoul)</em></li>
-                    <li><strong>URL Slug:</strong> e.g., <code>korea-b2b-trip-2026</code> becomes <code>sale.khbevents.com/korea-b2b-trip-2026</code>.</li>
-                    <li><strong>Status:</strong> Set to <strong>Published</strong> when ready to go live.</li>
+                    <li><strong>{t('guide.pages.titleLabel')}</strong> {t('guide.common.eg')}<em>{t('guide.pages.titleExample')}</em></li>
+                    <li><strong>{t('guide.pages.slugLabel')}</strong> {t('guide.common.eg')}<code>korea-b2b-trip-2026</code>{t('guide.pages.slugBecomes')}<code>sale.khbevents.com/korea-b2b-trip-2026</code>{t('guide.common.period')}</li>
+                    <li><strong>{t('guide.pages.statusLabel')}</strong> {t('guide.pages.statusBefore')}<strong>{t('guide.pages.statusPublished')}</strong>{t('guide.pages.statusAfter')}</li>
                   </ul>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-2">
-                  <h4 className="font-bold text-slate-900 dark:text-white">Step 3: Dates, Venue &amp; Urgency</h4>
+                  <h4 className="font-bold text-slate-900 dark:text-white">{t('guide.pages.step3')}</h4>
                   <ul className="list-disc list-inside space-y-1 text-[11px]">
-                    <li><strong>Event Dates:</strong> e.g., <code>2026-11-25</code> (4 Days / 3 Nights).</li>
-                    <li><strong>Countdown Timer:</strong> Enable to show live ticking countdown.</li>
-                    <li><strong>Seats Scarcity:</strong> Set Total <code>30</code> and Claimed <code>19</code> to show <em>&quot;Only 11 seats remaining!&quot;</em></li>
-                    <li><strong>Early Bird Pricing:</strong> Enter discount price (e.g. <code>$750</code> vs <code>$799</code> regular).</li>
+                    <li><strong>{t('guide.pages.datesLabel')}</strong> {t('guide.common.eg')}<code>2026-11-25</code>{t('guide.pages.datesAfter')}</li>
+                    <li><strong>{t('guide.pages.countdownLabel')}</strong> {t('guide.pages.countdownText')}</li>
+                    <li><strong>{t('guide.pages.seatsLabel')}</strong> {t('guide.pages.seatsBefore')}<code>30</code>{t('guide.pages.seatsMid')}<code>19</code>{t('guide.pages.seatsAfter')}<em>{t('guide.pages.seatsExample')}</em></li>
+                    <li><strong>{t('guide.pages.earlyLabel')}</strong> {t('guide.pages.earlyBefore')}<code>$750</code>{t('guide.pages.earlyMid')}<code>$799</code>{t('guide.pages.earlyAfter')}</li>
                   </ul>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-2">
-                  <h4 className="font-bold text-slate-900 dark:text-white">Step 4: Itinerary &amp; Packages</h4>
+                  <h4 className="font-bold text-slate-900 dark:text-white">{t('guide.pages.step4')}</h4>
                   <ul className="list-disc list-inside space-y-1 text-[11px]">
-                    <li><strong>Itinerary Tab:</strong> Add Day 1, Day 2, Day 3 with times and activities (factory visits, B2B dinners).</li>
-                    <li><strong>Packages Tab:</strong> Add pass tiers (Executive Pass, VIP Chairman Pass).</li>
-                    <li><strong>Value Stack Tab:</strong> Checklist of inclusions with dollar values (Flights $450, Hotel $300, Badges $150).</li>
+                    <li><strong>{t('guide.pages.itineraryLabel')}</strong> {t('guide.pages.itineraryText')}</li>
+                    <li><strong>{t('guide.pages.packagesLabel')}</strong> {t('guide.pages.packagesText')}</li>
+                    <li><strong>{t('guide.pages.valueLabel')}</strong> {t('guide.pages.valueText')}</li>
                   </ul>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-2">
-                  <h4 className="font-bold text-slate-900 dark:text-white">Step 5: Khmer Translation (ខ្មែរ)</h4>
+                  <h4 className="font-bold text-slate-900 dark:text-white">{t('guide.pages.step5')}</h4>
                   <ul className="list-disc list-inside space-y-1 text-[11px]">
-                    <li>Click the <strong>Khmer Tab</strong> in the editor to enter Khmer headlines and itinerary.</li>
-                    <li>The system renders with native Khmer typography (<code>Hanuman</code> / <code>Kantumruy Pro</code>) with custom 1.8 line spacing.</li>
+                    <li>{t('guide.pages.khmerBefore')}<strong>{t('guide.pages.khmerTab')}</strong>{t('guide.pages.khmerAfter')}</li>
+                    <li>{t('guide.pages.fontsBefore')}<code>Hanuman</code>{t('guide.pages.fontsMid')}<code>Kantumruy Pro</code>{t('guide.pages.fontsAfter')}</li>
                   </ul>
                 </div>
               </div>
@@ -284,7 +309,7 @@ export default function UserGuideClient() {
         )}
 
         {/* SECTION 3: LEADS CRM */}
-        {(activeTab === 'all' || activeTab === 'leads') && matchesSearch('leads crm pipeline status won contacted whatsapp notes csv export') && (
+        {showSection('leads') && (
           <section id="leads-crm" className="rounded-3xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/40 p-6 sm:p-8 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-emerald-950 pb-4">
               <div className="flex items-center gap-3">
@@ -293,10 +318,10 @@ export default function UserGuideClient() {
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">
-                    How to Manage Inbound Leads in the CRM
+                    {t('guide.leads.title')}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-gray-400">
-                    Qualify prospects, message on WhatsApp, record notes, and close deals
+                    {t('guide.leads.subtitle')}
                   </p>
                 </div>
               </div>
@@ -304,7 +329,7 @@ export default function UserGuideClient() {
                 href="/admin/leads"
                 className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
               >
-                <span>Open Leads CRM</span>
+                <span>{t('guide.leads.open')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -312,28 +337,28 @@ export default function UserGuideClient() {
             <div className="space-y-4">
               <div className="grid sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
                 <div className="p-3 rounded-2xl bg-amber-400 text-black font-bold text-center text-xs">
-                  <span className="block font-black text-sm">NEW</span>
-                  <span className="text-[10px] opacity-80">Call in 15 mins</span>
+                  <span className="block font-black text-sm">{t('guide.leads.statusNew')}</span>
+                  <span className="text-[10px] opacity-80">{t('guide.leads.statusNewDesc')}</span>
                 </div>
                 <div className="p-3 rounded-2xl bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-bold text-center text-xs border border-blue-300 dark:border-blue-800">
-                  <span className="block font-black text-sm">CONTACTED</span>
-                  <span className="text-[10px] opacity-80">First call made</span>
+                  <span className="block font-black text-sm">{t('guide.leads.statusContacted')}</span>
+                  <span className="text-[10px] opacity-80">{t('guide.leads.statusContactedDesc')}</span>
                 </div>
                 <div className="p-3 rounded-2xl bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 font-bold text-center text-xs border border-purple-300 dark:border-purple-800">
-                  <span className="block font-black text-sm">PROPOSAL</span>
-                  <span className="text-[10px] opacity-80">Invoice sent</span>
+                  <span className="block font-black text-sm">{t('guide.leads.statusProposal')}</span>
+                  <span className="text-[10px] opacity-80">{t('guide.leads.statusProposalDesc')}</span>
                 </div>
                 <div className="p-3 rounded-2xl bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 font-bold text-center text-xs border border-orange-300 dark:border-orange-800">
-                  <span className="block font-black text-sm">NEGOTIATING</span>
-                  <span className="text-[10px] opacity-80">Discussing terms</span>
+                  <span className="block font-black text-sm">{t('guide.leads.statusNegotiating')}</span>
+                  <span className="text-[10px] opacity-80">{t('guide.leads.statusNegotiatingDesc')}</span>
                 </div>
                 <div className="p-3 rounded-2xl bg-emerald-500 text-black font-bold text-center text-xs">
-                  <span className="block font-black text-sm">WON</span>
-                  <span className="text-[10px] opacity-80">Deposit paid!</span>
+                  <span className="block font-black text-sm">{t('guide.leads.statusWon')}</span>
+                  <span className="text-[10px] opacity-80">{t('guide.leads.statusWonDesc')}</span>
                 </div>
                 <div className="p-3 rounded-2xl bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-gray-400 font-bold text-center text-xs">
-                  <span className="block font-black text-sm">LOST</span>
-                  <span className="text-[10px] opacity-80">Declined / deferred</span>
+                  <span className="block font-black text-sm">{t('guide.leads.statusLost')}</span>
+                  <span className="text-[10px] opacity-80">{t('guide.leads.statusLostDesc')}</span>
                 </div>
               </div>
 
@@ -341,24 +366,24 @@ export default function UserGuideClient() {
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-2">
                   <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <MessageCircle className="w-4 h-4 text-emerald-500" />
-                    <span>1-Click Contact Actions</span>
+                    <span>{t('guide.leads.contactActions')}</span>
                   </h4>
                   <ul className="space-y-1.5 text-[11px]">
-                    <li><strong>WhatsApp Chat:</strong> Click to immediately open a pre-filled chat with the client with a personalized greeting.</li>
-                    <li><strong>Call Dialer:</strong> Click the phone icon to dial their phone directly from your smartphone or Mac.</li>
-                    <li><strong>Visitor Demographics:</strong> View country flags (🇰🇭 Cambodia, 🇻🇳 Vietnam, 🇰🇷 South Korea, 🇺🇸 USA) and detected city to tailor your pitch.</li>
+                    <li><strong>{t('guide.leads.whatsappLabel')}</strong> {t('guide.leads.whatsappText')}</li>
+                    <li><strong>{t('guide.leads.callLabel')}</strong> {t('guide.leads.callText')}</li>
+                    <li><strong>{t('guide.leads.demoLabel')}</strong> {t('guide.leads.demoText')}</li>
                   </ul>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-2">
                   <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <Download className="w-4 h-4 text-amber-500" />
-                    <span>Notes &amp; CSV Export</span>
+                    <span>{t('guide.leads.notesExport')}</span>
                   </h4>
                   <ul className="space-y-1.5 text-[11px]">
-                    <li><strong>Team Notes:</strong> Type updates in the note box (e.g., *&quot;Client wants 2 VIP passes and invoice by Friday&quot;*). Every note records the author and timestamp.</li>
-                    <li><strong>Delete Lead:</strong> Click the red trash button to remove test or spam submissions safely.</li>
-                    <li><strong>Export CSV:</strong> Click &quot;Export CSV&quot; to download an instant spreadsheet for weekly executive meetings.</li>
+                    <li><strong>{t('guide.leads.notesLabel')}</strong> {t('guide.leads.notesText')}</li>
+                    <li><strong>{t('guide.leads.deleteLabel')}</strong> {t('guide.leads.deleteText')}</li>
+                    <li><strong>{t('guide.leads.exportLabel')}</strong> {t('guide.leads.exportText')}</li>
                   </ul>
                 </div>
               </div>
@@ -367,7 +392,7 @@ export default function UserGuideClient() {
         )}
 
         {/* SECTION 4: ROUND ROBIN */}
-        {(activeTab === 'all' || activeTab === 'roundrobin') && matchesSearch('round robin sales team staff allocation telegram bot routing direct chat') && (
+        {showSection('roundrobin') && (
           <section id="round-robin" className="rounded-3xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/40 p-6 sm:p-8 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-emerald-950 pb-4">
               <div className="flex items-center gap-3">
@@ -376,10 +401,10 @@ export default function UserGuideClient() {
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">
-                    How to Manage the Round-Robin Sales Team
+                    {t('guide.roundrobin.title')}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-gray-400">
-                    Automated lead rotation, staff quotas, and direct Telegram redirection
+                    {t('guide.roundrobin.subtitle')}
                   </p>
                 </div>
               </div>
@@ -387,7 +412,7 @@ export default function UserGuideClient() {
                 href="/admin/round-robin"
                 className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
               >
-                <span>Open Round Robin</span>
+                <span>{t('guide.roundrobin.open')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -395,38 +420,38 @@ export default function UserGuideClient() {
             <div className="space-y-4 text-xs text-slate-600 dark:text-gray-300">
               <div className="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/40 space-y-2">
                 <h4 className="font-bold text-sm text-purple-900 dark:text-purple-200">
-                  How Inbound Lead Routing Works
+                  {t('guide.roundrobin.howTitle')}
                 </h4>
                 <p>
-                  When a client clicks the floating <strong>Telegram</strong> button or submits a booking form on any landing page:
+                  {t('guide.roundrobin.howBefore')}<strong>{t('guide.roundrobin.howTelegram')}</strong>{t('guide.roundrobin.howAfter')}
                 </p>
                 <ol className="list-decimal list-inside space-y-1 text-[11px]">
-                  <li>The Round-Robin algorithm selects the next eligible sales representative according to configured weights.</li>
-                  <li><strong>Instant Direct Redirect:</strong> The visitor&apos;s Telegram app opens immediately to chat with the assigned sales rep (<code>https://t.me/&lt;staff_telegram&gt;</code>).</li>
-                  <li><strong>Silent Bot Notification:</strong> <code>@khb_sale_admin_bot</code> simultaneously sends lead details to the rep and to the Event Director (Chat ID: <code>5746705393</code>).</li>
+                  <li>{t('guide.roundrobin.step1')}</li>
+                  <li><strong>{t('guide.roundrobin.step2Label')}</strong> {t('guide.roundrobin.step2Before')}<code>https://t.me/&lt;staff_telegram&gt;</code>{t('guide.roundrobin.step2After')}</li>
+                  <li><strong>{t('guide.roundrobin.step3Label')}</strong> <code>@khb_sale_admin_bot</code>{t('guide.roundrobin.step3Mid')}<code>5746705393</code>{t('guide.roundrobin.step3After')}</li>
                 </ol>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-2">
-                  <h4 className="font-bold text-slate-900 dark:text-white">Adding or Editing Sales Reps</h4>
+                  <h4 className="font-bold text-slate-900 dark:text-white">{t('guide.roundrobin.addTitle')}</h4>
                   <ul className="space-y-1 text-[11px]">
-                    <li><strong>Full Name &amp; Title:</strong> e.g., <em>Your Name - Sales Consultant</em></li>
-                    <li><strong>Telegram Username:</strong> Enter username <strong>WITHOUT</strong> the <code>@</code> symbol (e.g. <code>your_telegram_name</code>).</li>
-                    <li><strong>Percentage Weight:</strong> Set their share (e.g. 20% each for 5 reps). Click <strong>&quot;Rebalance Weights&quot;</strong> to sum to 100%.</li>
+                    <li><strong>{t('guide.roundrobin.nameLabel')}</strong> {t('guide.common.eg')}<em>{t('guide.roundrobin.nameExample')}</em></li>
+                    <li><strong>{t('guide.roundrobin.usernameLabel')}</strong> {t('guide.roundrobin.usernameBefore')}<strong>{t('guide.roundrobin.usernameWithout')}</strong>{t('guide.roundrobin.usernameMid')}<code>@</code>{t('guide.roundrobin.usernameAfter')}<code>your_telegram_name</code>{t('guide.roundrobin.usernameEnd')}</li>
+                    <li><strong>{t('guide.roundrobin.weightLabel')}</strong> {t('guide.roundrobin.weightBefore')}<strong>{t('guide.roundrobin.rebalance')}</strong>{t('guide.roundrobin.weightAfter')}</li>
                   </ul>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-2">
-                  <h4 className="font-bold text-slate-900 dark:text-white">Handling Staff on Leave / Vacation</h4>
+                  <h4 className="font-bold text-slate-900 dark:text-white">{t('guide.roundrobin.leaveTitle')}</h4>
                   <p className="text-[11px]">
-                    If a sales consultant is out of the office or on leave:
+                    {t('guide.roundrobin.leaveIntro')}
                   </p>
                   <ol className="list-decimal list-inside space-y-1 text-[11px]">
-                    <li>Find their card in <code>/admin/round-robin</code>.</li>
-                    <li>Toggle their status to <strong>OFF (Idle)</strong>.</li>
-                    <li>Click <strong>&quot;Rebalance Weights&quot;</strong> so their leads are automatically redirected to active reps.</li>
-                    <li>When they return, toggle them back <strong>ON (Active)</strong>.</li>
+                    <li>{t('guide.roundrobin.leave1Before')}<code>/admin/round-robin</code>{t('guide.common.period')}</li>
+                    <li>{t('guide.roundrobin.leave2Before')}<strong>{t('guide.roundrobin.leaveOff')}</strong>{t('guide.common.period')}</li>
+                    <li>{t('guide.roundrobin.leave3Before')}<strong>{t('guide.roundrobin.rebalance')}</strong>{t('guide.roundrobin.leave3After')}</li>
+                    <li>{t('guide.roundrobin.leave4Before')}<strong>{t('guide.roundrobin.leaveOn')}</strong>{t('guide.common.period')}</li>
                   </ol>
                 </div>
               </div>
@@ -435,7 +460,7 @@ export default function UserGuideClient() {
         )}
 
         {/* SECTION 5: SETTINGS & BOT */}
-        {(activeTab === 'all' || activeTab === 'settings') && matchesSearch('settings telegram bot token chat id password hotline address') && (
+        {showSection('settings') && (
           <section id="settings" className="rounded-3xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/40 p-6 sm:p-8 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-emerald-950 pb-4">
               <div className="flex items-center gap-3">
@@ -444,10 +469,10 @@ export default function UserGuideClient() {
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">
-                    How to Configure Settings &amp; Telegram Bot Alerts
+                    {t('guide.settings.title')}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-gray-400">
-                    Official hotlines, bot API tokens, and real-time manager alerts
+                    {t('guide.settings.subtitle')}
                   </p>
                 </div>
               </div>
@@ -455,7 +480,7 @@ export default function UserGuideClient() {
                 href="/admin/settings"
                 className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
               >
-                <span>Open Settings</span>
+                <span>{t('guide.settings.open')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -464,14 +489,14 @@ export default function UserGuideClient() {
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-3">
                 <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Bell className="w-4 h-4 text-amber-500" />
-                  <span>Official Telegram Alert Bot</span>
+                  <span>{t('guide.settings.botTitle')}</span>
                 </h4>
                 <div className="space-y-2 text-[11px]">
-                  <p><strong>Bot Username:</strong> <code className="bg-slate-200 dark:bg-black px-2 py-0.5 rounded text-amber-600 dark:text-amber-400">@khb_sale_admin_bot</code></p>
-                  <p><strong>Manager Chat ID:</strong> <code className="bg-slate-200 dark:bg-black px-2 py-0.5 rounded font-mono">5746705393</code></p>
-                  <p><strong>Bot Token:</strong> <code className="bg-slate-200 dark:bg-black px-2 py-0.5 rounded font-mono text-[10px]">8808252369:AAH-avDR3sXatJoHx6qOFfsN2p9lpNyXqkw</code></p>
+                  <p><strong>{t('guide.settings.botUsername')}</strong> <code className="bg-slate-200 dark:bg-black px-2 py-0.5 rounded text-amber-600 dark:text-amber-400">@khb_sale_admin_bot</code></p>
+                  <p><strong>{t('guide.settings.managerChatId')}</strong> <code className={CODE_CLASS}>5746705393</code></p>
+                  <p><strong>{t('guide.settings.botToken')}</strong> <code className={`${CODE_CLASS} text-[10px]`}>8808252369:AAH-avDR3sXatJoHx6qOFfsN2p9lpNyXqkw</code></p>
                   <p className="text-slate-500 dark:text-gray-400 pt-1">
-                    To receive alerts on your phone, open Telegram, search for <code>@khb_sale_admin_bot</code>, and tap <strong>Start</strong>.
+                    {t('guide.settings.botHelpBefore')}<code>@khb_sale_admin_bot</code>{t('guide.settings.botHelpMid')}<strong>{t('guide.settings.botStart')}</strong>{t('guide.common.period')}
                   </p>
                 </div>
               </div>
@@ -479,15 +504,15 @@ export default function UserGuideClient() {
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-3">
                 <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Phone className="w-4 h-4 text-emerald-500" />
-                  <span>Company Hotlines &amp; Location</span>
+                  <span>{t('guide.settings.hotlinesTitle')}</span>
                 </h4>
                 <div className="space-y-1.5 text-[11px]">
-                  <p><strong>Hotline:</strong> <code>+855 12 888 999</code></p>
-                  <p><strong>WhatsApp:</strong> <code>85512888999</code> (without + sign)</p>
-                  <p><strong>Email:</strong> <code>sale@khbevents.com</code></p>
-                  <p><strong>Address:</strong> Diamond Island (Koh Pich), Phnom Penh, Cambodia</p>
+                  <p><strong>{t('guide.settings.hotline')}</strong> <code>+855 12 888 999</code></p>
+                  <p><strong>{t('guide.settings.whatsapp')}</strong> <code>85512888999</code> {t('guide.settings.whatsappNote')}</p>
+                  <p><strong>{t('guide.settings.email')}</strong> <code>sale@khbevents.com</code></p>
+                  <p><strong>{t('guide.settings.address')}</strong> {t('guide.settings.addressValue')}</p>
                   <p className="text-amber-600 dark:text-amber-400 pt-1">
-                    Updating these fields automatically updates the navbar and footer on all landing pages.
+                    {t('guide.settings.updateNote')}
                   </p>
                 </div>
               </div>
@@ -496,43 +521,43 @@ export default function UserGuideClient() {
         )}
 
         {/* SECTION 6: ADS & POPUPS */}
-        {(activeTab === 'all' || activeTab === 'ads') && matchesSearch('ads popups popup promotion banner offer schedule frequency cooldown preview telegram') && (
+        {showSection('ads') && (
           <section id="ads" className="rounded-3xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/40 p-6 sm:p-8 shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-emerald-900/40">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-amber-400/20 text-amber-500 dark:text-amber-400"><Megaphone className="w-6 h-6" /></div>
                 <div>
-                  <h2 className="text-xl font-black text-slate-900 dark:text-white">6. Ads &amp; Popups</h2>
-                  <p className="text-xs text-slate-500 dark:text-gray-400">Promotional popups on the landing pages, managed without touching code.</p>
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white">{t('guide.ads.title')}</h2>
+                  <p className="text-xs text-slate-500 dark:text-gray-400">{t('guide.ads.subtitle')}</p>
                 </div>
               </div>
-              <Link href="/admin/ads" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs shadow-md"><span>Open Ads &amp; Popups</span></Link>
+              <Link href="/admin/ads" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs shadow-md"><span>{t('guide.ads.open')}</span></Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-700 dark:text-gray-300">
               <div className="space-y-3">
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Create a popup in five steps</h3>
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">{t('guide.ads.createTitle')}</h3>
                 <ol className="list-decimal pl-5 space-y-1.5">
-                  <li><strong>New popup</strong> or pick a ready-made template (Ask us on Telegram, Reserve a seat, Before you go).</li>
-                  <li><strong>Content:</strong> title under 12 words, one to three short sentences, a button that says what happens next. Khmer fields are optional and fall back to English.</li>
-                  <li><strong>Design:</strong> centered card, bottom sheet, bottom banner or image first. Dark green matches the page; gold is the site button colour.</li>
-                  <li><strong>Rules:</strong> which pages, phones or desktop, when it appears (after seconds, after scrolling, when leaving), how often per visitor, start and end dates, priority.</li>
-                  <li>Press <strong>Done</strong>, then <strong>Save all</strong>. Use the eye icon to preview on the real page, even while paused.</li>
+                  <li><strong>{t('guide.ads.s1Strong')}</strong>{t('guide.ads.s1After')}</li>
+                  <li><strong>{t('guide.ads.s2Strong')}</strong>{t('guide.ads.s2After')}</li>
+                  <li><strong>{t('guide.ads.s3Strong')}</strong>{t('guide.ads.s3After')}</li>
+                  <li><strong>{t('guide.ads.s4Strong')}</strong>{t('guide.ads.s4After')}</li>
+                  <li>{t('guide.ads.s5Before')}<strong>{t('guide.ads.s5Done')}</strong>{t('guide.ads.s5Mid')}<strong>{t('guide.ads.s5SaveAll')}</strong>{t('guide.ads.s5After')}</li>
                 </ol>
               </div>
               <div className="space-y-3">
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">How the rules protect conversion</h3>
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">{t('guide.ads.rulesTitle')}</h3>
                 <ul className="list-disc pl-5 space-y-1.5">
-                  <li>Only <strong>one popup per page view</strong>. If two qualify, the higher priority wins.</li>
-                  <li>Each popup has its own frequency (once a day, once a week…). The global <strong>cooldown</strong> stops a second popup from following the first for a number of hours.</li>
-                  <li>A visitor who already sent the form never sees a popup marked &quot;hide after lead&quot;.</li>
-                  <li>Views, clicks and the click rate come from the visitor&apos;s browser and are close estimates.</li>
-                  <li>The Telegram button goes through the same Round Robin routing as every other Telegram button.</li>
+                  <li>{t('guide.ads.r1Before')}<strong>{t('guide.ads.r1Strong')}</strong>{t('guide.ads.r1After')}</li>
+                  <li>{t('guide.ads.r2Before')}<strong>{t('guide.ads.r2Strong')}</strong>{t('guide.ads.r2After')}</li>
+                  <li>{t('guide.ads.r3')}</li>
+                  <li>{t('guide.ads.r4')}</li>
+                  <li>{t('guide.ads.r5')}</li>
                 </ul>
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white pt-2">Three tips</h3>
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white pt-2">{t('guide.ads.tipsTitle')}</h3>
                 <ul className="list-disc pl-5 space-y-1.5">
-                  <li>One message per popup. A question or an offer, not both.</li>
-                  <li>Khmer copy shorter than English: readers scan slower on phones.</li>
-                  <li>Never a fake deadline. A passed deadline still on screen destroys every other claim on the page.</li>
+                  <li>{t('guide.ads.tip1')}</li>
+                  <li>{t('guide.ads.tip2')}</li>
+                  <li>{t('guide.ads.tip3')}</li>
                 </ul>
               </div>
             </div>
@@ -540,7 +565,7 @@ export default function UserGuideClient() {
         )}
 
         {/* SECTION 7: FAQS & TROUBLESHOOTING */}
-        {(activeTab === 'all' || activeTab === 'faqs') && matchesSearch('faq troubleshooting sold out early bird duplicate export') && (
+        {showSection('faqs') && (
           <section id="faqs" className="rounded-3xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/40 p-6 sm:p-8 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-emerald-950 pb-4">
               <div className="flex items-center gap-3">
@@ -549,10 +574,10 @@ export default function UserGuideClient() {
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">
-                    Operator &quot;How Do I...&quot; Cheat Sheet
+                    {t('guide.faqs.title')}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-gray-400">
-                    Quick answers to common questions and operational tasks
+                    {t('guide.faqs.subtitle')}
                   </p>
                 </div>
               </div>
@@ -562,42 +587,42 @@ export default function UserGuideClient() {
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-1">
                 <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>How do I change the Early Bird price or extend the deadline?</span>
+                  <span>{t('guide.faqs.q1')}</span>
                 </h4>
                 <p className="text-slate-600 dark:text-gray-300 text-[11px]">
-                  Go to <strong>Landing Pages</strong> &rarr; Click <strong>Edit</strong> on the campaign &rarr; Open the <strong>Event &amp; Urgency</strong> tab &rarr; Update <em>Early Bird Price</em> and <em>Early Bird Deadline</em> &rarr; Click <strong>Save Landing Page</strong>. Changes are live immediately.
+                  {t('guide.faqs.a1')}
                 </p>
               </div>
 
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-1">
                 <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>How do I mark a campaign as &quot;Sold Out&quot;?</span>
+                  <span>{t('guide.faqs.q2')}</span>
                 </h4>
                 <p className="text-slate-600 dark:text-gray-300 text-[11px]">
-                  Edit the landing page &rarr; Go to the <strong>Isolated Settings</strong> tab &rarr; Toggle <strong>&quot;Mark as Sold Out&quot;</strong> to ON &rarr; Enter your custom message (e.g. <em>&quot;All 30 seats booked! Join the waitlist&quot;</em>) &rarr; Save. The booking form will disable or show a waitlist button.
+                  {t('guide.faqs.a2')}
                 </p>
               </div>
 
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-1">
                 <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>A sales rep is not receiving Telegram alerts. What should I check?</span>
+                  <span>{t('guide.faqs.q3')}</span>
                 </h4>
                 <p className="text-slate-600 dark:text-gray-300 text-[11px]">
-                  1. Have the rep open Telegram, search for <code>@khb_sale_admin_bot</code>, and tap <strong>Start</strong>.<br />
-                  2. Check that their <strong>Telegram Username</strong> in <code>/admin/round-robin</code> is spelled correctly without <code>@</code>.<br />
-                  3. Verify that their status is toggled <strong>Active (ON)</strong>.
+                  {t('guide.faqs.a3s1')}<br />
+                  {t('guide.faqs.a3s2')}<br />
+                  {t('guide.faqs.a3s3')}
                 </p>
               </div>
 
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#07120C] border border-slate-200 dark:border-emerald-950 space-y-1">
                 <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>How do I create a new business trip for Japan or Europe?</span>
+                  <span>{t('guide.faqs.q4')}</span>
                 </h4>
                 <p className="text-slate-600 dark:text-gray-300 text-[11px]">
-                  Go to <strong>Landing Pages</strong> &rarr; Click <strong>Duplicate</strong> on the Korea trip card &rarr; Change the title, slug (e.g. <code>japan-b2b-trip-2026</code>), dates, venue, and itinerary &rarr; Save. Your new page is live at <code>sale.khbevents.com/japan-b2b-trip-2026</code>!
+                  {t('guide.faqs.a4')}
                 </p>
               </div>
             </div>

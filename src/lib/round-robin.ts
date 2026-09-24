@@ -286,7 +286,8 @@ export interface RoundRobinHealthItem {
  */
 export function roundRobinHealth(
   settings: RoundRobinSettings,
-  context: { telegramConfigured: boolean; contactUsername?: string }
+  context: { telegramConfigured: boolean; contactUsername?: string },
+  lang: 'en' | 'kh' = 'en'
 ): RoundRobinHealthItem[] {
   const items: RoundRobinHealthItem[] = [];
   const active = (settings.staffList || []).filter((s) => s.isActive);
@@ -295,35 +296,94 @@ export function roundRobinHealth(
   const noChatId = active.filter((s) => !(s.telegramChatId || '').trim());
   const contact = cleanTelegramUsername(context.contactUsername);
   const fallbackIsBot = !contact || contact.toLowerCase() === DEFAULT_BOT_USERNAME.toLowerCase();
+  const kh = lang === 'kh';
+  const target = fallbackIsBot ? (kh ? 'Bot' : 'the bot') : '@' + contact;
+  const names = (list: RoundRobinStaff[]) => list.map((s) => s.name).join(', ');
 
   if (placeholders.length > 0) {
     items.push({
       level: 'error',
-      title: `${placeholders.length} sample account${placeholders.length > 1 ? 's' : ''} still in the team`,
-      detail: `${placeholders.map((s) => s.name).join(', ')} are demo entries, not real people. Visitors routed to them reach nobody. Replace them with your team or delete them.`,
+      title: kh
+        ? `នៅមានគណនីគំរូ ${placeholders.length} នៅក្នុងក្រុម`
+        : `${placeholders.length} sample account${placeholders.length > 1 ? 's' : ''} still in the team`,
+      detail: kh
+        ? `${names(placeholders)} ជាគណនីគំរូ មិនមែនមនុស្សពិតទេ។ អ្នកទស្សនាដែលបញ្ជូនទៅពួកគេនឹងមិនដល់នរណាឡើយ។ សូមជំនួសដោយក្រុមរបស់លោកអ្នក ឬលុបចេញ។`
+        : `${names(placeholders)} are demo entries, not real people. Visitors routed to them reach nobody. Replace them with your team or delete them.`,
     });
   }
   if (!settings.enabled) {
-    items.push({ level: 'warning', title: 'Round Robin is paused', detail: `Every Telegram click goes to ${fallbackIsBot ? 'the bot' : '@' + contact} and form leads only reach the group chat.` });
+    items.push({
+      level: 'warning',
+      title: kh ? 'Round Robin កំពុងផ្អាក' : 'Round Robin is paused',
+      detail: kh
+        ? `រាល់ការចុច Telegram ទៅកាន់ ${target} ហើយ Lead ពីទម្រង់ទៅដល់តែក្រុម Chat ប៉ុណ្ណោះ។`
+        : `Every Telegram click goes to ${target} and form leads only reach the group chat.`,
+    });
   } else if (active.length === 0) {
-    items.push({ level: 'error', title: 'No active staff', detail: `Nobody receives leads. Add at least one person with a Telegram username. Until then clicks go to ${fallbackIsBot ? 'the bot' : '@' + contact}.` });
+    items.push({
+      level: 'error',
+      title: kh ? 'គ្មានបុគ្គលិកសកម្ម' : 'No active staff',
+      detail: kh
+        ? `គ្មាននរណាទទួល Lead ទេ។ សូមបន្ថែមយ៉ាងហោចណាស់ម្នាក់ដែលមាន Telegram Username។ រហូតដល់ពេលនោះ ការចុចនឹងទៅកាន់ ${target}។`
+        : `Nobody receives leads. Add at least one person with a Telegram username. Until then clicks go to ${target}.`,
+    });
   }
   if (noUsername.length > 0) {
-    items.push({ level: 'error', title: `${noUsername.length} active member${noUsername.length > 1 ? 's' : ''} without a Telegram username`, detail: `${noUsername.map((s) => s.name).join(', ')}: visitors cannot be redirected to them, so they are skipped for clicks.` });
+    items.push({
+      level: 'error',
+      title: kh
+        ? `សមាជិកសកម្ម ${noUsername.length} នាក់គ្មាន Telegram Username`
+        : `${noUsername.length} active member${noUsername.length > 1 ? 's' : ''} without a Telegram username`,
+      detail: kh
+        ? `${names(noUsername)}៖ មិនអាចបញ្ជូនអ្នកទស្សនាទៅពួកគេបានទេ ដូច្នេះត្រូវរំលងពេលមានការចុច។`
+        : `${names(noUsername)}: visitors cannot be redirected to them, so they are skipped for clicks.`,
+    });
   }
   if (!context.telegramConfigured) {
-    items.push({ level: 'warning', title: 'Bot token missing', detail: 'Clicks still redirect to staff, but nobody gets an alert and form leads are not delivered to Telegram. Add the token from @BotFather below.' });
+    items.push({
+      level: 'warning',
+      title: kh ? 'បាត់ Bot Token' : 'Bot token missing',
+      detail: kh
+        ? 'ការចុចនៅតែបញ្ជូនទៅបុគ្គលិក ប៉ុន្តែគ្មាននរណាទទួលការជូនដំណឹង ហើយ Lead ពីទម្រង់មិនផ្ញើទៅ Telegram ទេ។ សូមបញ្ចូល Token ពី @BotFather ខាងក្រោម។'
+        : 'Clicks still redirect to staff, but nobody gets an alert and form leads are not delivered to Telegram. Add the token from @BotFather below.',
+    });
   } else if (noChatId.length > 0) {
-    items.push({ level: 'warning', title: `${noChatId.length} active member${noChatId.length > 1 ? 's' : ''} without a Chat ID`, detail: `${noChatId.map((s) => s.name).join(', ')}: they get no alert when a visitor is sent to them, and form leads skip them. Ask each to send /start to the bot, then paste their Chat ID and press Test.` });
+    items.push({
+      level: 'warning',
+      title: kh
+        ? `សមាជិកសកម្ម ${noChatId.length} នាក់គ្មាន Chat ID`
+        : `${noChatId.length} active member${noChatId.length > 1 ? 's' : ''} without a Chat ID`,
+      detail: kh
+        ? `${names(noChatId)}៖ ពួកគេមិនទទួលការជូនដំណឹងពេលអ្នកទស្សនាត្រូវបញ្ជូនមក ហើយ Lead ពីទម្រង់នឹងរំលងពួកគេ។ សូមឱ្យម្នាក់ៗផ្ញើ /start ទៅ Bot រួចបិទភ្ជាប់ Chat ID ហើយចុច Test។`
+        : `${names(noChatId)}: they get no alert when a visitor is sent to them, and form leads skip them. Ask each to send /start to the bot, then paste their Chat ID and press Test.`,
+    });
   }
   if (settings.directContactRoutingEnabled === false) {
-    items.push({ level: 'warning', title: 'Direct contact routing is off', detail: `"Chat on Telegram" clicks bypass the team and go to ${fallbackIsBot ? 'the bot' : '@' + contact}.` });
+    items.push({
+      level: 'warning',
+      title: kh ? 'ការបញ្ជូនទំនាក់ទំនងផ្ទាល់ត្រូវបានបិទ' : 'Direct contact routing is off',
+      detail: kh
+        ? `ការចុច "Chat on Telegram" រំលងក្រុម ហើយទៅកាន់ ${target}។`
+        : `"Chat on Telegram" clicks bypass the team and go to ${target}.`,
+    });
   }
   if (settings.enabled && active.length > 0 && !settings.managerChatId && !settings.fallbackChatId) {
-    items.push({ level: 'warning', title: 'No manager copy', detail: 'Set a Manager or Fallback Chat ID so you see every routed lead even when a staff alert fails.' });
+    items.push({
+      level: 'warning',
+      title: kh ? 'គ្មានច្បាប់ចម្លងទៅអ្នកគ្រប់គ្រង' : 'No manager copy',
+      detail: kh
+        ? 'សូមកំណត់ Chat ID អ្នកគ្រប់គ្រង ឬ Fallback ដើម្បីឃើញគ្រប់ Lead ទោះការជូនដំណឹងទៅបុគ្គលិកបរាជ័យក៏ដោយ។'
+        : 'Set a Manager or Fallback Chat ID so you see every routed lead even when a staff alert fails.',
+    });
   }
   if (items.length === 0) {
-    items.push({ level: 'ok', title: 'Ready', detail: `${active.length} active member${active.length > 1 ? 's' : ''}, every one reachable, alerts on.` });
+    items.push({
+      level: 'ok',
+      title: kh ? 'រួចរាល់' : 'Ready',
+      detail: kh
+        ? `សមាជិកសកម្ម ${active.length} នាក់ ទាក់ទងបានទាំងអស់ ការជូនដំណឹងបើក។`
+        : `${active.length} active member${active.length > 1 ? 's' : ''}, every one reachable, alerts on.`,
+    });
   }
   return items;
 }

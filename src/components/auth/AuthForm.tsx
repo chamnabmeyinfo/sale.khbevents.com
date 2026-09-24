@@ -4,6 +4,18 @@ import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Mail, Phone, Lock, User, ArrowRight, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/context/LanguageContext';
+
+/** Map raw Supabase auth errors to a friendly, translated message. */
+function friendlyAuthError(message: string, t: (key: string) => string, fallbackKey: string): string {
+  const m = message.toLowerCase();
+  if (m.includes('invalid login credentials')) return t('auth.errInvalidCredentials');
+  if (m.includes('email not confirmed')) return t('auth.errEmailNotConfirmed');
+  if (m.includes('already registered')) return t('auth.errAlreadyRegistered');
+  if (m.includes('at least 6 characters')) return t('auth.errPasswordShort');
+  if (m.includes('rate limit') || m.includes('too many')) return t('auth.errRateLimit');
+  return message || t(fallbackKey);
+}
 
 interface AuthFormProps {
   onSuccess?: () => void;
@@ -12,6 +24,7 @@ interface AuthFormProps {
 
 export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const { signInWithGoogle, signInWithEmail, signUpWithEmail, signInWithPhone, verifyPhoneOtp } = useAuth();
 
   const [authMethod, setAuthMethod] = useState<'google' | 'email' | 'phone'>('google');
@@ -38,7 +51,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
       const { error } = await signInWithGoogle();
       if (error) throw error;
     } catch (err) {
-      setError((err as Error).message || 'Failed to sign in with Google');
+      setError(friendlyAuthError((err as Error).message, t, 'auth.errGoogle'));
       setLoading(false);
     }
   };
@@ -57,27 +70,27 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
       if (emailMode === 'signin') {
         const { error } = await signInWithEmail(email, password);
         if (error) throw error;
-        setSuccessMsg('Successfully signed in!');
+        setSuccessMsg(t('auth.successSignedIn'));
         if (onSuccess) onSuccess();
         router.push(isPrivileged ? '/admin' : redirectUrl);
       } else {
-        if (!fullName.trim()) throw new Error('Please enter your full name');
+        if (!fullName.trim()) throw new Error(t('auth.errFullName'));
         const { error } = await signUpWithEmail(email, password, fullName, phone);
         if (error) throw error;
 
         // Auto-login immediately after sign up
         const { error: loginErr } = await signInWithEmail(email, password);
         if (!loginErr) {
-          setSuccessMsg('Account created and signed in successfully!');
+          setSuccessMsg(t('auth.successCreatedSignedIn'));
           if (onSuccess) onSuccess();
           router.push(isPrivileged ? '/admin' : redirectUrl);
         } else {
-          setSuccessMsg('Account created successfully! Please sign in with your password.');
+          setSuccessMsg(t('auth.successCreatedSignIn'));
           setEmailMode('signin');
         }
       }
     } catch (err) {
-      setError((err as Error).message || 'Authentication failed');
+      setError(friendlyAuthError((err as Error).message, t, 'auth.errAuthFailed'));
     } finally {
       setLoading(false);
     }
@@ -91,13 +104,13 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
     setLoading(true);
 
     try {
-      if (!phone.trim()) throw new Error('Please enter a valid phone number');
+      if (!phone.trim()) throw new Error(t('auth.errPhoneInvalid'));
       const { error } = await signInWithPhone(phone);
       if (error) throw error;
       setOtpSent(true);
-      setSuccessMsg(`SMS verification code sent to ${phone}`);
+      setSuccessMsg(t('auth.successSmsSent', { phone }));
     } catch (err) {
-      setError((err as Error).message || 'Failed to send SMS code');
+      setError(friendlyAuthError((err as Error).message, t, 'auth.errSmsFailed'));
     } finally {
       setLoading(false);
     }
@@ -111,14 +124,14 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
     setLoading(true);
 
     try {
-      if (!otpCode.trim()) throw new Error('Please enter the 6-digit code');
+      if (!otpCode.trim()) throw new Error(t('auth.errCodeRequired'));
       const { error } = await verifyPhoneOtp(phone, otpCode);
       if (error) throw error;
-      setSuccessMsg('Phone verified successfully!');
+      setSuccessMsg(t('auth.successPhoneVerified'));
       if (onSuccess) onSuccess();
       router.push(redirectUrl);
     } catch (err) {
-      setError((err as Error).message || 'Invalid or expired verification code');
+      setError(friendlyAuthError((err as Error).message, t, 'auth.errCodeInvalid'));
     } finally {
       setLoading(false);
     }
@@ -129,13 +142,13 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
       {/* Brand Header */}
       <div className="text-center mb-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
-          KHB Events Portal
+          {t('auth.portalBadge')}
         </div>
         <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
-          Welcome to <span className="text-amber-500 dark:text-amber-400">KHB EVENTS</span>
+          {t('auth.welcomePrefix')} <span className="text-amber-500 dark:text-amber-400">{t('auth.welcomeBrand')}</span>
         </h2>
         <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
-          Access your bookings, event passes, inquiries, and VIP services.
+          {t('auth.subtitle')}
         </p>
       </div>
 
@@ -150,7 +163,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
               : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          Google
+          {t('auth.tabGoogle')}
         </button>
         <button
           type="button"
@@ -161,7 +174,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
               : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <Mail className="w-3.5 h-3.5" /> Email
+          <Mail className="w-3.5 h-3.5" /> {t('auth.tabEmail')}
         </button>
         <button
           type="button"
@@ -172,7 +185,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
               : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <Phone className="w-3.5 h-3.5" /> Phone
+          <Phone className="w-3.5 h-3.5" /> {t('auth.tabPhone')}
         </button>
       </div>
 
@@ -195,7 +208,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
       {authMethod === 'google' && (
         <div className="space-y-4">
           <p className="text-xs text-slate-500 dark:text-zinc-400 text-center">
-            Sign in with your Google account for instantaneous 1-click access with no password required.
+            {t('auth.googleHint')}
           </p>
 
           <button
@@ -226,7 +239,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                   />
                 </svg>
-                <span>Continue with Google</span>
+                <span>{t('auth.googleButton')}</span>
               </>
             )}
           </button>
@@ -237,19 +250,19 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
       {authMethod === 'email' && (
         <form onSubmit={handleEmailAuth} className="space-y-4">
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 mb-1">
-            <span>{emailMode === 'signin' ? 'Sign In to existing account' : 'Create a new client account'}</span>
+            <span>{emailMode === 'signin' ? t('auth.emailSignInHint') : t('auth.emailSignUpHint')}</span>
             <button
               type="button"
               onClick={() => { setEmailMode(emailMode === 'signin' ? 'signup' : 'signin'); setError(null); }}
               className="text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 font-semibold underline cursor-pointer"
             >
-              {emailMode === 'signin' ? 'Need an account? Sign Up' : 'Already registered? Sign In'}
+              {emailMode === 'signin' ? t('auth.needAccount') : t('auth.alreadyRegistered')}
             </button>
           </div>
 
           {emailMode === 'signup' && (
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Full Name</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">{t('auth.fullName')}</label>
               <div className="relative">
                 <User className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 dark:text-zinc-500" />
                 <input
@@ -265,7 +278,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Email Address</label>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">{t('auth.emailAddress')}</label>
             <div className="relative">
               <Mail className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 dark:text-zinc-500" />
               <input
@@ -280,7 +293,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Password</label>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">{t('auth.password')}</label>
             <div className="relative">
               <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 dark:text-zinc-500" />
               <input
@@ -297,7 +310,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
 
           {emailMode === 'signup' && (
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Phone Number (Optional)</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">{t('auth.phoneOptional')}</label>
               <div className="relative">
                 <Phone className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 dark:text-zinc-500" />
                 <input
@@ -320,7 +333,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                <span>{emailMode === 'signin' ? 'Sign In with Email' : 'Create Account'}</span>
+                <span>{emailMode === 'signin' ? t('auth.signInWithEmail') : t('auth.createAccount')}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -334,11 +347,11 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
           {!otpSent ? (
             <form onSubmit={handlePhoneSendOtp} className="space-y-4">
               <p className="text-xs text-slate-500 dark:text-zinc-400">
-                Enter your mobile number to receive a one-time SMS verification code. Supports Cambodian (+855) and international numbers.
+                {t('auth.phoneHint')}
               </p>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Mobile Phone</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">{t('auth.mobilePhone')}</label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 dark:text-zinc-500" />
                   <input
@@ -346,7 +359,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
                     required
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="012 888 999 or +855 12 888 999"
+                    placeholder={t('auth.phonePlaceholder')}
                     className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors"
                   />
                 </div>
@@ -361,7 +374,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
-                    <span>Send SMS Code</span>
+                    <span>{t('auth.sendSmsCode')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -370,18 +383,18 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
           ) : (
             <form onSubmit={handlePhoneVerifyOtp} className="space-y-4">
               <div className="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400">
-                <span>Code sent to <b className="text-slate-900 dark:text-white">{phone}</b></span>
+                <span>{t('auth.codeSentTo')} <b className="text-slate-900 dark:text-white">{phone}</b></span>
                 <button
                   type="button"
                   onClick={() => { setOtpSent(false); setOtpCode(''); }}
                   className="text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
                 >
-                  Change
+                  {t('auth.change')}
                 </button>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">6-Digit Code</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">{t('auth.sixDigitCode')}</label>
                 <input
                   type="text"
                   maxLength={6}
@@ -401,7 +414,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
                 {loading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <span>Verify & Sign In</span>
+                  <span>{t('auth.verifyAndSignIn')}</span>
                 )}
               </button>
             </form>
@@ -411,7 +424,7 @@ export function AuthForm({ onSuccess, redirectUrl = '/' }: AuthFormProps) {
 
       {/* Footer */}
       <div className="mt-6 pt-4 border-t border-slate-200 dark:border-zinc-800 text-center text-xs text-slate-500 dark:text-zinc-500">
-        By continuing, you agree to KHB EVENTS Terms of Service and Privacy Policy.
+        {t('auth.footer')}
       </div>
     </div>
   );

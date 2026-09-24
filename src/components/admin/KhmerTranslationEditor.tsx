@@ -13,6 +13,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { LandingPage, LandingPageTranslation } from '@/lib/types';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface KhmerTranslationEditorProps {
   formData: Partial<LandingPage>;
@@ -144,6 +145,7 @@ export const DEFAULT_KHMER_TRANSLATION: LandingPageTranslation = {
 export default function KhmerTranslationEditor({ formData, setFormData }: KhmerTranslationEditorProps) {
   const [activeSubTab, setActiveSubTab] = useState<'hero' | 'values' | 'problems' | 'audiences' | 'itinerary' | 'valuestack' | 'guarantee' | 'seo'>('hero');
 
+  const { t } = useLanguage();
   const kh = formData.translations?.kh || {};
 
   const updateField = <K extends keyof LandingPageTranslation>(field: K, val: LandingPageTranslation[K]) => {
@@ -160,7 +162,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
   };
 
   const handleAutoFill = () => {
-    if (confirm('Are you sure you want to load the standard Khmer copy? It will fill in all missing or default Khmer text.')) {
+    if (confirm(t('khmer.confirmLoad'))) {
       setFormData(prev => ({
         ...prev,
         translations: {
@@ -184,13 +186,13 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
           </div>
           <div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span>Khmer Translation Manager (កម្មវិធីគ្រប់គ្រងខ្លឹមសារជាភាសាខ្មែរ)</span>
+              <span>{t('khmer.title')}</span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300">
-                Active
+                {t('common.active')}
               </span>
             </h3>
             <p className="text-xs text-slate-600 dark:text-gray-400 mt-1">
-              Information entered here will appear when visitors toggle <strong>ភាសាខ្មែរ</strong> on the public website and mobile app. If a field is left empty, the system automatically uses the standard Khmer dictionary.
+              {t('khmer.descBefore')} <strong>ភាសាខ្មែរ</strong> {t('khmer.descAfter')}
             </p>
           </div>
         </div>
@@ -201,21 +203,21 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
           className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-md transition-all cursor-pointer"
         >
           <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-          <span>Load Standard Khmer Copy</span>
+          <span>{t('khmer.loadStandard')}</span>
         </button>
       </div>
 
       {/* Sub-tabs for Khmer sections */}
       <div className="flex flex-wrap gap-1.5 border-b border-slate-200 dark:border-emerald-900/40 pb-2">
         {[
-          { id: 'hero', label: '1. Hero & Overview', icon: FileText },
-          { id: 'values', label: '2. Core Values', icon: HeartHandshake },
-          { id: 'problems', label: '3. Problems', icon: AlertCircle },
-          { id: 'audiences', label: '4. Audiences', icon: Tag },
-          { id: 'itinerary', label: '5. Itinerary', icon: Calendar },
-          { id: 'valuestack', label: '6. 9-in-1 Stack', icon: Layers },
-          { id: 'guarantee', label: '7. Guarantee & FAQs', icon: ShieldCheck },
-          { id: 'seo', label: '8. SEO / Meta', icon: HelpCircle },
+          { id: 'hero', label: t('khmer.tab.hero'), icon: FileText },
+          { id: 'values', label: t('khmer.tab.values'), icon: HeartHandshake },
+          { id: 'problems', label: t('khmer.tab.problems'), icon: AlertCircle },
+          { id: 'audiences', label: t('khmer.tab.audiences'), icon: Tag },
+          { id: 'itinerary', label: t('khmer.tab.itinerary'), icon: Calendar },
+          { id: 'valuestack', label: t('khmer.tab.valuestack'), icon: Layers },
+          { id: 'guarantee', label: t('khmer.tab.guarantee'), icon: ShieldCheck },
+          { id: 'seo', label: t('khmer.tab.seo'), icon: HelpCircle },
         ].map((tab) => {
           const isActive = activeSubTab === tab.id;
           const Icon = tab.icon;
@@ -243,9 +245,9 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-800 dark:text-gray-200">
-                Campaign Title in Khmer (ចំណងជើងយុទ្ធនាការ)
+                {t('khmer.field.title')}
               </label>
-              <span className="text-[11px] text-slate-400">English: &ldquo;{formData.title}&rdquo;</span>
+              <span className="text-[11px] text-slate-400">{t('khmer.english', { text: formData.title ?? '' })}</span>
             </div>
             <input
               type="text"
@@ -259,9 +261,9 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-800 dark:text-gray-200">
-                Top Badge / Tag (ស្លាកសញ្ញា)
+                {t('khmer.field.badge')}
               </label>
-              <span className="text-[11px] text-slate-400">English: &ldquo;{formData.badge}&rdquo;</span>
+              <span className="text-[11px] text-slate-400">{t('khmer.english', { text: formData.badge ?? '' })}</span>
             </div>
             <input
               type="text"
@@ -275,9 +277,9 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-800 dark:text-gray-200">
-                Hero Main Headline (ចំណងជើងធំផ្នែកខាងលើ)
+                {t('khmer.field.heroHeadline')}
               </label>
-              <span className="text-[11px] text-slate-400">English: &ldquo;{formData.heroHeadline || formData.title}&rdquo;</span>
+              <span className="text-[11px] text-slate-400">{t('khmer.english', { text: formData.heroHeadline || formData.title || '' })}</span>
             </div>
             <input
               type="text"
@@ -291,9 +293,9 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-800 dark:text-gray-200">
-                Headline Highlight (ពាក្យស្លោកលេចធ្លោ / ចំណងជើងរង)
+                {t('khmer.field.subtitle')}
               </label>
-              <span className="text-[11px] text-slate-400">English: &ldquo;{formData.subtitle}&rdquo;</span>
+              <span className="text-[11px] text-slate-400">{t('khmer.english', { text: formData.subtitle ?? '' })}</span>
             </div>
             <input
               type="text"
@@ -307,9 +309,9 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-800 dark:text-gray-200">
-                Hero Subheadline / Paragraph (ការពិពណ៌នាលម្អិតផ្នែកខាងលើ)
+                {t('khmer.field.heroSub')}
               </label>
-              <span className="text-[11px] text-slate-400">English: &ldquo;{formData.heroSubheadline || formData.description}&rdquo;</span>
+              <span className="text-[11px] text-slate-400">{t('khmer.english', { text: formData.heroSubheadline || formData.description || '' })}</span>
             </div>
             <textarea
               rows={3}
@@ -323,7 +325,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
               <label className="text-xs font-bold text-slate-800 dark:text-gray-200">
-                CTA Button Text (អត្ថបទប៊ូតុងចុះឈ្មោះ)
+                {t('khmer.field.cta')}
               </label>
               <input
                 type="text"
@@ -336,7 +338,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
 
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
               <label className="text-xs font-bold text-slate-800 dark:text-gray-200">
-                Destination Pill (ទីតាំង / គោលដៅ)
+                {t('khmer.field.venue')}
               </label>
               <input
                 type="text"
@@ -351,7 +353,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
               <label className="text-xs font-bold text-slate-800 dark:text-gray-200">
-                Urgency / Early Bird Notice (សារ Early Bird បន្ទាន់)
+                {t('khmer.field.urgency')}
               </label>
               <input
                 type="text"
@@ -364,7 +366,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
 
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
               <label className="text-xs font-bold text-slate-800 dark:text-gray-200">
-                Risk Note (កំណត់សម្គាល់ការជឿជាក់)
+                {t('khmer.field.risk')}
               </label>
               <input
                 type="text"
@@ -382,7 +384,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
       {activeSubTab === 'values' && (
         <div className="space-y-4">
           <p className="text-xs text-slate-500 dark:text-gray-400">
-            Translate the 4 core business outcomes into Khmer.
+            {t('khmer.values.desc')}
           </p>
           {(kh.coreValues || DEFAULT_KHMER_TRANSLATION.coreValues || []).map((v, i) => {
             const enItem = formData.coreValues?.[i];
@@ -390,14 +392,14 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
               <div key={i} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                    Outcome #{v.num || `0${i + 1}`}
+                    {t('khmer.values.item', { n: v.num || `0${i + 1}` })}
                   </span>
                   {enItem && (
-                    <span className="text-[11px] text-slate-400">EN: &ldquo;{enItem.title}&rdquo;</span>
+                    <span className="text-[11px] text-slate-400">{t('khmer.en', { text: enItem.title })}</span>
                   )}
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">Title (ចំណងជើង)</label>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">{t('khmer.item.title')}</label>
                   <input
                     type="text"
                     value={v.title}
@@ -410,7 +412,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">Description (ការពន្យល់)</label>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">{t('khmer.item.desc')}</label>
                   <textarea
                     rows={2}
                     value={v.desc}
@@ -432,7 +434,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
       {activeSubTab === 'problems' && (
         <div className="space-y-4">
           <p className="text-xs text-slate-500 dark:text-gray-400">
-            Translate the 3 sourcing pain points into Khmer.
+            {t('khmer.problems.desc')}
           </p>
           {(kh.problems || DEFAULT_KHMER_TRANSLATION.problems || []).map((p, i) => {
             const enItem = formData.problems?.[i];
@@ -440,14 +442,14 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
               <div key={i} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                    Problem #{i + 1}
+                    {t('khmer.problems.item', { n: i + 1 })}
                   </span>
                   {enItem && (
-                    <span className="text-[11px] text-slate-400">EN: &ldquo;{enItem.title}&rdquo;</span>
+                    <span className="text-[11px] text-slate-400">{t('khmer.en', { text: enItem.title })}</span>
                   )}
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">Title (ចំណងជើង)</label>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">{t('khmer.item.title')}</label>
                   <input
                     type="text"
                     value={p.title}
@@ -460,7 +462,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">Description (ការពន្យល់)</label>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">{t('khmer.item.desc')}</label>
                   <textarea
                     rows={2}
                     value={p.desc}
@@ -482,7 +484,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
       {activeSubTab === 'audiences' && (
         <div className="space-y-4">
           <p className="text-xs text-slate-500 dark:text-gray-400">
-            Translate the 4 target audience participant profiles into Khmer.
+            {t('khmer.audiences.desc')}
           </p>
           {(kh.audiences || DEFAULT_KHMER_TRANSLATION.audiences || []).map((a, i) => {
             const enItem = formData.audiences?.[i];
@@ -490,15 +492,15 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
               <div key={i} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
-                    Audience Profile #{i + 1}
+                    {t('khmer.audiences.item', { n: i + 1 })}
                   </span>
                   {enItem && (
-                    <span className="text-[11px] text-slate-400">EN: &ldquo;{enItem.title}&rdquo;</span>
+                    <span className="text-[11px] text-slate-400">{t('khmer.en', { text: enItem.title })}</span>
                   )}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">Title (ចំណងជើង)</label>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">{t('khmer.item.title')}</label>
                     <input
                       type="text"
                       value={a.title}
@@ -511,7 +513,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">Tag / Category (ស្លាក)</label>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">{t('khmer.item.tag')}</label>
                     <input
                       type="text"
                       value={a.tag || ''}
@@ -525,7 +527,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">Description (ការពន្យល់)</label>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">{t('khmer.item.desc')}</label>
                   <textarea
                     rows={2}
                     value={a.desc}
@@ -547,17 +549,17 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
       {activeSubTab === 'itinerary' && (
         <div className="space-y-5">
           <p className="text-xs text-slate-500 dark:text-gray-400">
-            Translate each day&apos;s title and key activities in Khmer.
+            {t('khmer.itinerary.desc')}
           </p>
           {(kh.itinerary || DEFAULT_KHMER_TRANSLATION.itinerary || []).map((day, dIdx) => (
             <div key={dIdx} className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                  Day {day.day} &bull; {day.date}
+                  {t('khmer.itinerary.day', { day: day.day, date: day.date })}
                 </span>
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">Day Title (ចំណងជើងប្រចាំថ្ងៃ)</label>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">{t('khmer.itinerary.dayTitle')}</label>
                 <input
                   type="text"
                   value={day.title}
@@ -571,7 +573,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
               </div>
 
               <div className="space-y-2 mt-2">
-                <label className="block text-[11px] font-bold text-slate-500 dark:text-gray-400">Schedule Events</label>
+                <label className="block text-[11px] font-bold text-slate-500 dark:text-gray-400">{t('khmer.itinerary.events')}</label>
                 {day.events.map((ev, evIdx) => (
                   <div key={evIdx} className="flex items-center gap-2">
                     <span className="px-2 py-1 rounded bg-slate-200 dark:bg-emerald-950 font-mono text-[10px] text-slate-600 dark:text-emerald-300 shrink-0">
@@ -601,12 +603,12 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
       {activeSubTab === 'valuestack' && (
         <div className="space-y-5">
           <p className="text-xs text-slate-500 dark:text-gray-400">
-            Translate the 9-in-1 turnkey value stack and each included service into Khmer.
+            {t('khmer.valuestack.desc')}
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
-              <label className="text-xs font-bold text-slate-800 dark:text-gray-200">Value Stack Title</label>
+              <label className="text-xs font-bold text-slate-800 dark:text-gray-200">{t('khmer.valuestack.title')}</label>
               <input
                 type="text"
                 value={kh.valueStack?.title || DEFAULT_KHMER_TRANSLATION.valueStack?.title || ''}
@@ -618,7 +620,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
               />
             </div>
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
-              <label className="text-xs font-bold text-slate-800 dark:text-gray-200">Value Stack Subtitle</label>
+              <label className="text-xs font-bold text-slate-800 dark:text-gray-200">{t('khmer.valuestack.subtitle')}</label>
               <input
                 type="text"
                 value={kh.valueStack?.subtitle || DEFAULT_KHMER_TRANSLATION.valueStack?.subtitle || ''}
@@ -632,7 +634,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
           </div>
 
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-gray-400">9 Inclusions in Khmer</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-gray-400">{t('khmer.valuestack.inclusions')}</h4>
             {((kh.valueStack?.inclusions && kh.valueStack.inclusions.length > 0)
               ? kh.valueStack.inclusions
               : DEFAULT_KHMER_TRANSLATION.valueStack!.inclusions
@@ -675,9 +677,9 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
       {activeSubTab === 'guarantee' && (
         <div className="space-y-5">
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Guarantee Section in Khmer</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{t('khmer.guarantee.section')}</h4>
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">Guarantee Title</label>
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">{t('khmer.guarantee.title')}</label>
               <input
                 type="text"
                 value={kh.guarantee?.title || DEFAULT_KHMER_TRANSLATION.guarantee?.title || ''}
@@ -689,7 +691,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">Guarantee Subtitle / Promise</label>
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">{t('khmer.guarantee.subtitle')}</label>
               <textarea
                 rows={2}
                 value={kh.guarantee?.subtitle || DEFAULT_KHMER_TRANSLATION.guarantee?.subtitle || ''}
@@ -703,7 +705,7 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
           </div>
 
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-gray-400">Frequently Asked Questions in Khmer</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-gray-400">{t('khmer.faqs.section')}</h4>
             {((kh.faqs && kh.faqs.length > 0) ? kh.faqs : DEFAULT_KHMER_TRANSLATION.faqs!).map((faq, i) => (
               <div key={i} className="p-3.5 rounded-lg bg-white dark:bg-[#040C07] border border-slate-200 dark:border-emerald-900 space-y-2">
                 <input
@@ -736,15 +738,15 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
       {activeSubTab === 'seo' && (
         <div className="space-y-4">
           <p className="text-xs text-slate-500 dark:text-gray-400">
-            Customize how Google and Telegram/Facebook show this page when shared in Khmer.
+            {t('khmer.seo.desc')}
           </p>
 
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-800 dark:text-gray-200">
-                Khmer Meta Title (ចំណងជើងលើ Google / Telegram)
+                {t('khmer.seo.metaTitle')}
               </label>
-              <span className="text-[11px] text-slate-400">English: &ldquo;{formData.metaTitle}&rdquo;</span>
+              <span className="text-[11px] text-slate-400">{t('khmer.english', { text: formData.metaTitle ?? '' })}</span>
             </div>
             <input
               type="text"
@@ -758,9 +760,9 @@ export default function KhmerTranslationEditor({ formData, setFormData }: KhmerT
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#07130D] border border-slate-200 dark:border-emerald-900/60 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-800 dark:text-gray-200">
-                Khmer Meta Description (ការពិពណ៌នាលើ Google / Telegram)
+                {t('khmer.seo.metaDesc')}
               </label>
-              <span className="text-[11px] text-slate-400">English: &ldquo;{formData.metaDescription}&rdquo;</span>
+              <span className="text-[11px] text-slate-400">{t('khmer.english', { text: formData.metaDescription ?? '' })}</span>
             </div>
             <textarea
               rows={3}
