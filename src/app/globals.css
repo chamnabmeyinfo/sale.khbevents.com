@@ -2,6 +2,7 @@
 @import "../styles/smart-city.css";
 @import "../styles/smart-city-app.css";
 @import "../styles/popup-ads.css";
+@import "../styles/builder.css";
 
 @variant dark (&:where(.dark, .dark *));
 

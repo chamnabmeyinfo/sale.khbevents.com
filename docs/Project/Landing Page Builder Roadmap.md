@@ -47,6 +47,7 @@ What this means for the build:
 - [ ] Add the **Offer** to the page data, and move the Smart City facts into it without changing the live page.
 
 ### Phase 2 — Block builder with live preview
+- [x] Pilot done 2026-09-24: drag and drop editor with Hero, Offer card and FAQ (2 designs each), one Offer, EN/KH and phone/desktop preview, publish. See [[Page Builder]].
 - [ ] Turn the Smart City design into reusable blocks: hero, offer card (price, seats or stock, countdown), benefits, how it works, what's included, gallery, packages or variants, FAQ, guarantee, coordinator, form, final call to action.
 - [ ] Type-specific blocks: itinerary and agenda (seats), variants and delivery (product), booking slots (service), curriculum (digital).
 - [ ] One screen: the page on the right, click a block to edit it on the left. English and Khmer side by side. Phone and desktop toggle. Drag to reorder, switch to hide.

@@ -6,6 +6,7 @@ import DynamicLandingPageView from '@/components/landing/DynamicLandingPageView'
 import SmartCityLandingPageView from '@/components/landing/SmartCityLandingPageView';
 import SmartCityAppView from '@/components/landing/SmartCityAppView';
 import SmartCityOptinView from '@/components/landing/SmartCityOptinView';
+import BuilderPageView from '@/components/builder/BuilderPageView';
 import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -83,6 +84,11 @@ export default async function CampaignPage({ params, searchParams }: PageProps) 
   const popupPreviewId = typeof sp.popup_preview === 'string' ? sp.popup_preview : undefined;
   const popupAds = await getActivePopupAds(cleanSlug, popupPreviewId);
   const popupProps = { popupAds, popupPreviewId };
+
+  // Pages made with the drag-and-drop builder render their own components.
+  if (page?.template === 'builder' && page.builder) {
+    return <BuilderPageView page={page} initialLang={initialLang} {...popupProps} />;
+  }
 
   if (cleanSlug === 'smart-city-tea-cafe') {
     if (view === 'app') {

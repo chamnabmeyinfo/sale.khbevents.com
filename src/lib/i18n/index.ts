@@ -20,12 +20,13 @@ import { guide } from './dict/guide';
 import { editor } from './dict/editor';
 import { editorExtras } from './dict/editor-extras';
 import { auth } from './dict/auth';
+import { builder } from './dict/builder';
 
 export type Lang = 'en' | 'kh';
 export const LANGS: readonly Lang[] = ['en', 'kh'];
 export type Dictionary = { en: Record<string, string>; kh: Record<string, string> };
 
-const parts: Dictionary[] = [common, nav, login, dashboard, pages, leads, settings, roundRobin, ads, guide, editor, editorExtras, auth];
+const parts: Dictionary[] = [common, nav, login, dashboard, pages, leads, settings, roundRobin, ads, guide, editor, editorExtras, auth, builder];
 
 export const messages: Record<Lang, Record<string, string>> = {
   en: Object.assign({}, ...parts.map((p) => p.en)),

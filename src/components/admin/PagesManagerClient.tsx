@@ -2,6 +2,8 @@
 
 import React, { useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { defaultBuilderDoc } from '@/lib/builder';
 import { 
   Plus, 
   Search, 
@@ -34,6 +36,8 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+  const [creatingBuilder, setCreatingBuilder] = useState(false);
+  const router = useRouter();
   const importInputRef = useRef<HTMLInputElement>(null);
 
   const [activeTab, setActiveTab] = useState<string>('ALL');
@@ -80,6 +84,33 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
       alert(t('pages.deleteError'));
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  // New page for the drag-and-drop builder: starts as a draft with the three pilot components.
+  const handleCreateBuilderPage = async () => {
+    setCreatingBuilder(true);
+    try {
+      const suffix = Date.now().toString(36).slice(-5);
+      const res = await fetch('/api/pages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: t('builder.newPageName'),
+          slug: `new-page-${suffix}`,
+          status: 'draft',
+          template: 'builder',
+          category: 'General',
+          testimonials: [],
+          builder: defaultBuilderDoc(),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.page?.id) throw new Error(data.error || t('common.errorSaving'));
+      router.push(`/admin/builder/${data.page.id}`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : t('common.errorSaving'));
+      setCreatingBuilder(false);
     }
   };
 
@@ -203,6 +234,16 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
           >
             <Upload className="w-4 h-4" />
             <span>{importing ? t('pages.importing') : t('pages.importJson')}</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleCreateBuilderPage}
+            disabled={creatingBuilder}
+            title={t('builder.newTitle')}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer disabled:opacity-60"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>{creatingBuilder ? t('builder.creating') : t('builder.new')}</span>
           </button>
           <Link
           href="/admin/pages/new"
@@ -368,7 +409,7 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
                   </Link>
 
                   <Link
-                    href={`/admin/pages/${page.id}`}
+                    href={page.template === 'builder' ? `/admin/builder/${page.id}` : `/admin/pages/${page.id}`}
                     className="px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/30 border border-amber-300 dark:border-amber-500/40 text-xs font-semibold flex items-center gap-1 transition-colors"
                   >
                     <Edit className="w-3 h-3" />

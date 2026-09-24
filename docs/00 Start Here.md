@@ -23,7 +23,7 @@ New here? Read [[How to Use This Vault]] first.
 ## The sales portal
 
 - [[System Map]]: how the website and admin fit together.
-- Features: [[Landing Pages CMS]], [[Leads CRM]], [[Round Robin]], [[Ads and Popups]], [[Languages]], [[Image Uploads]], [[Content Packs]], [[Tracking and Analytics]], [[Admin and Security]].
+- Features: [[Landing Pages CMS]], [[Page Builder]], [[Leads CRM]], [[Round Robin]], [[Ads and Popups]], [[Languages]], [[Image Uploads]], [[Content Packs]], [[Tracking and Analytics]], [[Admin and Security]].
 - Runbooks: [[Deploy to Production]], [[Verify Changes Locally]], [[Launch a New Trip Page]], [[Add a Sales Staff Member]], [[Create a Popup]], [[Change the Admin Password]], [[Rotate the Telegram Bot Token]], [[Run the RLS Lockdown Migration]].
 
 ## Keeping track

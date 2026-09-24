@@ -28,6 +28,8 @@ source:
 
 ## What it does for sales
 
+> A drag and drop builder for new sales pages now sits next to this editor: **New drag & drop page**. See [[Page Builder]].
+
 Every trip or event gets its own page at `sale.khbevents.com/<slug>`. The page carries the offer: headline, price, seats left, programme, FAQ and a registration form. Sales can launch or change a page without a developer. Each page can have its own contacts, lead tags, passcode and ad pixels.
 
 The page on sale right now is `/smart-city-tea-cafe`. See [[Smart City Tea and Cafe Vietnam 2026]]. How to write the words on a page: [[Copy Rules]].

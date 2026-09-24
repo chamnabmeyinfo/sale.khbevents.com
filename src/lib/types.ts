@@ -429,7 +429,8 @@ export type PageTemplateType =
   | "trade-expo" 
   | "concert-festival" 
   | "corporate-summit" 
-  | "custom";
+  | "custom"
+  | "builder";
 
 export interface ExpoBoothTier {
   id: string;
@@ -624,6 +625,8 @@ export interface IsolatedPageSettings {
 
 export interface LandingPage {
   id: string;
+  /** Drag-and-drop builder document; used when template is 'builder'. */
+  builder?: import('./builder').BuilderDoc;
   slug: string;
   title: string;
   subtitle: string;

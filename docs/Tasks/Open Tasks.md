@@ -33,6 +33,10 @@ Suggested order: lock the database first, then change the token and the password
 - [ ] Choose the **Remember a visitor for** period in Admin → Staff Round Robin → Advanced Routing Engine Rules & Fallbacks. Choices: Off, 1, 2, 3 or 6 months. The default in the repo is 1 month. → [[Round Robin]] #owner
 - [ ] Decide whether to run a popup, and create the first one if wanted. → [[Create a Popup]], [[Ads and Popups]] #owner
 
+### Page builder
+
+- [ ] Try **New drag & drop page** in Admin → Landing Pages CMS with one real product and say what feels hard or missing. → [[Page Builder]] #owner
+
 ### Setup
 
 - [ ] Set up Obsidian and GitHub Desktop on your computer and open the `docs` folder as a vault. → [[How to Use This Vault]] #owner
@@ -47,6 +51,7 @@ Suggested order: lock the database first, then change the token and the password
 - [ ] When the owner sends real testimonials and outcome photos, add them to the page and show the section again. Never invent any. → [[Landing Pages CMS]], [[Copy Rules]] #for-claude
 - [ ] After each security task above, check the live site still works (landing page, test lead, Telegram alert, admin) and log it in a session note. → [[Deploy to Production]], [[Verify Changes Locally]] #for-claude
 - [ ] Apply the Khmer wording fixes from the native review. → [[Languages]] #for-claude
+- [ ] Page builder, next components: benefits, how it works, gallery, guarantee, and a lead form section. → [[Page Builder]], [[Landing Page Builder Roadmap]] #for-claude
 
 ### Code problems found while writing the vault
 

@@ -20,7 +20,9 @@ function rowToLandingPage(row: any): LandingPage {
     category: row.category || 'General',
     badge: row.badge || undefined,
     status: row.status || 'published',
-    template: row.template || extra.template || 'b2b-delegation',
+    // Builder pages keep their template in the JSON extra; an optional `template`
+    // column (default 'b2b-delegation') must not turn them back into the old layout.
+    template: extra.template === 'builder' ? 'builder' : (row.template || extra.template || 'b2b-delegation'),
     heroHeadline: row.hero_headline || row.title,
     heroSubheadline: row.hero_subheadline || row.subtitle || '',
     heroCtaText: row.hero_cta_text || 'Get Started',
@@ -50,6 +52,7 @@ function rowToLandingPage(row: any): LandingPage {
     artists: Array.isArray(extra.artists) ? extra.artists : [],
     speakers: Array.isArray(extra.speakers) ? extra.speakers : [],
     translations: row.translations || extra.translations || undefined,
+    builder: extra.builder || undefined,
     tracking: row.tracking || extra.tracking || undefined,
     isolatedSettings: row.isolatedSettings || row.isolated_settings || extra.isolatedSettings || undefined,
     formConfig: {
@@ -96,6 +99,7 @@ function landingPageToRow(page: LandingPage) {
       translations: page.translations,
       tracking: page.tracking,
       isolatedSettings: page.isolatedSettings,
+      builder: page.builder,
     }
   };
 

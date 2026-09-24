@@ -34,6 +34,7 @@ import {
 import { isSupabaseConfigured } from './supabase';
 import { runAfterResponse } from './after-response';
 import { defaultPopupAdsState, normalizePopupAdsState, selectPublicPopupAds } from './popup-ads';
+import { normalizeBuilderDoc } from './builder';
 import {
   supabaseGetPages,
   supabaseGetPageBySlug,
@@ -541,6 +542,8 @@ const RESERVED_SLUGS = new Set(['admin', 'api', 'auth', 'login', 'images', 'phot
 export class PageSlugError extends Error {}
 
 export async function savePage(pageData: Partial<LandingPage> & { title: string; slug: string }): Promise<LandingPage> {
+  // Builder documents come straight from the editor: clean them before they are stored.
+  if (pageData.builder !== undefined) pageData = { ...pageData, builder: normalizeBuilderDoc(pageData.builder) };
   const slug = pageData.slug.toLowerCase().trim().replace(/[^a-z0-9-_]/g, '-');
   const now = new Date().toISOString();
 
@@ -620,6 +623,10 @@ export async function savePage(pageData: Partial<LandingPage> & { title: string;
       translations: pageData.translations,
       tracking: pageData.tracking,
       isolatedSettings: pageData.isolatedSettings,
+      // Kept on creation: without them a new page lost its chosen template until its next save.
+      template: pageData.template,
+      builder: pageData.builder,
+      ogImage: pageData.ogImage,
       formConfig: pageData.formConfig || {
         headline: 'Inquire or Register',
         subheadline: 'Fill in your details below and our team will get in touch.',

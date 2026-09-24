@@ -26,6 +26,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-24 — Drag and drop pages store their sections on the page itself
+
+- **Decision:** A page made in the drag and drop builder has `template: builder` and a `builder` document: one Offer (price, stock, deadline, button action), a brand colour, and the list of sections. Every section reads its facts from the Offer. In Supabase the document is stored in the page's `form_config._extra`.
+- **Why:** No database migration is needed, and prices, dates and stock are typed once, so sections cannot disagree. The classic Smart City page is untouched.
+- **Decided by:** Claude with owner approval ("follow your recommendation").
+- **Affects:** [[Page Builder]], [[Landing Page Builder Roadmap]].
+
 ## 2026-09-24 — Build our own landing page system that sells anything
 
 - **Decision:** Keep and grow our own landing page system instead of moving to an off-the-shelf builder. It must be easy to use and able to sell anything: seats, products, services, digital products, or leads by conversation.
