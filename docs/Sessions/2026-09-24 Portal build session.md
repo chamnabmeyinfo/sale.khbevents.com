@@ -62,6 +62,8 @@ What the commit messages record:
 - `1a24644`: build, typecheck, lint and 48 tests passed; upload into the social share image field tested in the browser.
 - `f203da0`: popup rules are in a unit-tested module (`src/lib/popup-ads.ts`).
 - `6d1e831`: 1,625 strings in both languages, with no missing Khmer entry.
+- `5d00eb5` (this vault): typecheck, lint, 78 tests, production build and `npm run vault:check` passed. Vercel deployment READY with no runtime errors. The ignore-build script was tested in a throwaway clone for nine cases: note-only pushes skip; no previous deployment, unknown commit, no changes, and any code change all build.
+- The first note-only push after `5d00eb5` is the live test of the skip rule; its result is recorded in [[Deploy to Production]].
 
 See [[Verify Changes Locally]] for the standard checks.
 
