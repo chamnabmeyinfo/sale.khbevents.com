@@ -25,6 +25,20 @@ Today the system is built around trips (seats, itinerary, departure date). To se
 
 Every offer type shares: bilingual name and description, price or "from" price, optional discount with a real end date, payment options (KHQR, ABA, bank transfer, cash on delivery), and the contact route (form, Telegram through round robin, phone).
 
+## The owner's vision: designed components, dragged onto a page (2026-09-24)
+
+"A page system that lets me drag and drop and design beautiful sales page components. Each component has its own uniqueness and core value."
+
+What this means for the build:
+
+- **Every component has a sales job** (its core value), written on the component itself: e.g. Hero = promise the result, Offer card = make the price and urgency clear, FAQ = remove doubt, Guarantee = remove risk, Form = capture the lead.
+- **Every component has its own designed variants**, not one generic layout: e.g. Hero as split photo, full-bleed photo, video background or minimal text.
+- **Design controls per component**, inside safe limits: theme (dark, light, brand), background (colour, gradient, photo), alignment, spacing, accent colour, animation on or off.
+- **Drag and drop**: a component library on the left, the live page in the middle, settings on the right. Components snap into place as full-width sections so every page still works on a phone.
+- **A brand kit** (fonts, colours, button style, corner radius) set once, so every component looks consistent and beautiful by default.
+- **My components**: save a designed component or a whole page as a reusable template.
+- **Health hints** on each component: missing button, headline too long, Khmer missing, fake-looking claim.
+
 ## Phases
 
 ### Phase 1 — Fix the foundations
@@ -67,7 +81,7 @@ Every offer type shares: bilingual name and description, price or "from" price, 
 
 ## To confirm
 - Who builds pages: only the owner, or sales staff too?
-- Design freedom: arrange ready-made blocks (recommended, keeps pages fast and consistent), or free drag-and-drop anywhere?
+- Design freedom: answered by the owner on 2026-09-24: drag-and-drop designed components (see the vision above). Still to confirm: sections only, or free placement of elements inside a section?
 - Online payment: is showing KHQR / ABA and confirming by hand enough at first, or is an automatic payment gateway needed?
 - Delivery for products: which areas, and is the fee fixed or by zone?
 - First priority after Phase 1: easy building (Phases 2–3) or taking orders (Phase 4)?
