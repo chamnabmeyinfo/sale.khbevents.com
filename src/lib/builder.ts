@@ -71,7 +71,7 @@ export interface FaqBlock extends BlockBase {
 }
 
 /** Icons a benefit can show; drawn by the renderer. */
-export const BENEFIT_ICONS = ['sparkles', 'check', 'star', 'shield', 'clock', 'gift', 'heart', 'truck', 'chat', 'users', 'leaf', 'award', 'tent', 'glasses', 'briefcase', 'plane'] as const;
+export const BENEFIT_ICONS = ['sparkles', 'check', 'star', 'shield', 'clock', 'gift', 'heart', 'truck', 'chat', 'users', 'leaf', 'award', 'tent', 'glasses', 'briefcase', 'plane', 'robot', 'utensils'] as const;
 export type BenefitIcon = (typeof BENEFIT_ICONS)[number];
 
 export interface BenefitItem {

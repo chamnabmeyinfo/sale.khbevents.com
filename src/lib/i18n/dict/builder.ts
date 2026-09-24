@@ -166,6 +166,8 @@ export const builder: Dictionary = {
     'builder.icon.glasses': 'Eyewear',
     'builder.icon.briefcase': 'Business',
     'builder.icon.plane': 'Travel',
+    'builder.icon.robot': 'Robot',
+    'builder.icon.utensils': 'Food',
   },
   kh: {
     'builder.new': 'ទំព័រអូសទម្លាក់ថ្មី',
@@ -331,5 +333,7 @@ export const builder: Dictionary = {
     'builder.icon.glasses': 'វ៉ែនតា',
     'builder.icon.briefcase': 'អាជីវកម្ម',
     'builder.icon.plane': 'ធ្វើដំណើរ',
+    'builder.icon.robot': 'រ៉ូបូត',
+    'builder.icon.utensils': 'អាហារ',
   },
 };

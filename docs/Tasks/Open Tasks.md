@@ -38,7 +38,8 @@ Suggested order: lock the database first, then change the token and the password
 - [ ] Confirm the early-bird date. The caption says "before 31/9/26"; the page uses 30 September 2026. Change it in the builder if needed. → [[Korea Sourcing Trip Seoul 2026]] #owner
 - [ ] Send real photos for the Korea page (hero and social sharing), and a day-by-day itinerary if it should be shown. → [[Korea Sourcing Trip Seoul 2026]] #owner
 - [ ] Decide whether the Korea page's Telegram button goes to Mr. Tim Vutha directly (as now) or through Round Robin. → [[Round Robin]] #owner
-- [ ] Send the caption for the second new trip. #owner
+- [x] Second new trip page: [[Korea Robot and Food Trip Seoul 2026]] (2026-09-24).
+- [ ] Confirm the robot and food trip's early-bird date (caption "31/9/26"; the page uses 30 September) and send photos. → [[Korea Robot and Food Trip Seoul 2026]] #owner
 
 ### Page builder
 

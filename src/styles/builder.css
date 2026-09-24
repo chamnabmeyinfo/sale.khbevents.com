@@ -310,7 +310,7 @@
 .kb-final-box .kb-risk { justify-content: center; }
 
 @container kb (min-width: 760px) {
-  .kb-benefit-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+  .kb-benefit-cards { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 22px; }
   .kb-included-card { padding: 40px 44px; }
   .kb-included-card .kb-checklist { grid-template-columns: 1fr 1fr; gap: 18px 40px; }
   .kb-included-split { grid-template-columns: 0.95fr 1.05fr; gap: 56px; }
