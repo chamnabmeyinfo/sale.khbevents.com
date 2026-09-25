@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useMemo, useState } from 'react';
 import {
   BarChart3,
@@ -423,9 +424,14 @@ export default function AdsManagerClient({ initialState, initialStats, pages, no
           <h2 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
             <BarChart3 className="w-4 h-4 text-amber-500" /><span>{t('ads.listTitle')}</span>
           </h2>
-          <button type="button" onClick={refreshStats} disabled={refreshing} className={BTN_SECONDARY}>
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} /><span>{t('ads.refreshStats')}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <Link href="/admin/ads/analytics" className={BTN_SECONDARY}>
+              <BarChart3 className="w-3.5 h-3.5" /><span>{t('ads.openAnalytics')}</span>
+            </Link>
+            <button type="button" onClick={refreshStats} disabled={refreshing} className={BTN_SECONDARY}>
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} /><span>{t('ads.refreshStats')}</span>
+            </button>
+          </div>
         </div>
 
         {state.ads.length === 0 ? (

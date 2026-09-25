@@ -6,9 +6,10 @@ import { rateLimitByIp } from '@/lib/rate-limit';
 
 const EVENT_TYPES: readonly TrackingEventType[] = [
   'page_view', 'scroll_depth', 'cta_click', 'telegram_click', 'seat_select', 'form_submit', 'lang_toggle',
-  'popup_view', 'popup_click', 'popup_close',
+  'popup_view', 'popup_click', 'popup_close', 'popup_lead',
 ];
-const POPUP_EVENT_TYPES: readonly TrackingEventType[] = ['popup_view', 'popup_click', 'popup_close'];
+const POPUP_EVENT_TYPES: readonly TrackingEventType[] = ['popup_view', 'popup_click', 'popup_close', 'popup_lead'];
+const seconds = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? Math.min(3600, Math.round(v * 10) / 10) : undefined);
 const DEVICE_TYPES = ['mobile', 'desktop', 'tablet'] as const;
 const LANGS = ['en', 'kh'] as const;
 
@@ -53,6 +54,10 @@ export async function POST(req: NextRequest) {
         action: str(eventData?.action, 20),
         smartReasons: parseSmartReasons(eventData?.smartReasons).join(',') || undefined,
         smartScore: typeof eventData?.smartScore === 'number' && Number.isFinite(eventData.smartScore) ? Math.max(0, Math.min(200, Math.round(eventData.smartScore))) : undefined,
+        source: /^[a-z0-9._-]{1,30}$/.test(str(eventData?.source, 30) || '') ? str(eventData?.source, 30) : undefined,
+        secondsOpen: seconds(eventData?.secondsOpen),
+        secondsOnPage: seconds(eventData?.secondsOnPage),
+        clicked: eventData?.clicked === true ? true : undefined,
       };
     }
     if (slug) {
@@ -68,7 +73,7 @@ export async function POST(req: NextRequest) {
         utmContent: str(body.utmContent),
         utmTerm: str(body.utmTerm),
         deviceType: oneOf(body.deviceType, DEVICE_TYPES),
-        browser: str(body.browser, 100),
+        browser: str(body.browser, 400),
         os: str(body.os, 100),
         lang: oneOf(body.lang, LANGS),
       };

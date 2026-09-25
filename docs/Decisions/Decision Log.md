@@ -26,6 +26,16 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-25 — Popup analytics are stored as daily counts, not raw events
+
+- **Decision:** Each popup event adds to a small per-day record on the popup's stats row (by page, source, device, browser, language, hour, timing, leads), kept for 120 days.
+- **Why:** On Vercel the individual tracking events are not saved anywhere permanent; only the stats row in Supabase is. Daily counts need no new table or migration, stay small, and let every chart follow the date filter.
+- **Details:** Counts are approximate under heavy simultaneous traffic (the row is read and rewritten). No names or phone numbers are stored.
+- **Decided by:** Claude with owner approval (owner asked for detailed popup analytics).
+- **Affects:** [[Ads and Popups]], [[Tracking and Analytics]].
+
+---
+
 ## 2026-09-24 — Smart popup timing uses plain rules, not a trained model
 
 - **Decision:** The "Smart timing" trigger adds up interest points (reading time, scroll, price or form seen, re-reading, several pages, return visit, leaving) in the visitor's browser and shows the popup at a threshold set by the sensitivity.

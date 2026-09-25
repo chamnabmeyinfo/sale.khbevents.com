@@ -29,6 +29,7 @@ export const ads: Dictionary = {
     // List
     'ads.listTitle': 'Popups & performance',
     'ads.refreshStats': 'Refresh stats',
+    'ads.openAnalytics': 'Detailed analytics',
     'ads.empty': 'No popups yet. Start from a ready-made one, then change the words, picture and rules:',
     'ads.startFromTemplate': 'Start from a template:',
     'ads.th.popup': 'Popup',
@@ -295,6 +296,7 @@ export const ads: Dictionary = {
 
     'ads.listTitle': 'Popup និងលទ្ធផល',
     'ads.refreshStats': 'ធ្វើបច្ចុប្បន្នភាពស្ថិតិ',
+    'ads.openAnalytics': 'វិភាគលម្អិត',
     'ads.empty': 'មិនទាន់មាន Popup ទេ។ ចាប់ផ្តើមពីគំរូ រួចកែពាក្យ រូបភាព និងលក្ខខណ្ឌ៖',
     'ads.startFromTemplate': 'ចាប់ផ្តើមពីគំរូ៖',
     'ads.th.popup': 'Popup',

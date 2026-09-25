@@ -1,0 +1,73 @@
+/* Popup analytics charts (admin). Colours are roles, set once per theme.
+   Series: slot 1 blue = views, slot 2 orange = clicks (validated on the
+   white card and on the dark card #0A1610). Text never uses a series colour. */
+.pa-root {
+  --pa-surface: #ffffff;
+  --pa-ink: #0b0b0b;
+  --pa-ink-2: #52514e;
+  --pa-muted: #6f6d67;
+  --pa-grid: #e8e7e1;
+  --pa-axis: #c3c2b7;
+  --pa-views: #2a78d6;
+  --pa-clicks: #eb6834;
+  --pa-views-wash: rgba(42, 120, 214, 0.1);
+  --pa-track: #eef3fb;
+  --pa-tip-bg: #ffffff;
+  --pa-tip-border: rgba(11, 11, 11, 0.12);
+}
+.dark .pa-root {
+  --pa-surface: #0a1610;
+  --pa-ink: #ffffff;
+  --pa-ink-2: #c3c2b7;
+  --pa-muted: #9a988f;
+  --pa-grid: #1b2a22;
+  --pa-axis: #2f4238;
+  --pa-views: #3987e5;
+  --pa-clicks: #d95926;
+  --pa-views-wash: rgba(57, 135, 229, 0.12);
+  --pa-track: #10241a;
+  --pa-tip-bg: #0e1d15;
+  --pa-tip-border: rgba(255, 255, 255, 0.14);
+}
+
+.pa-chart { position: relative; width: 100%; }
+.pa-chart svg { display: block; width: 100%; overflow: visible; }
+.pa-chart:focus-visible { outline: 2px solid var(--pa-views); outline-offset: 4px; border-radius: 8px; }
+.pa-grid line { stroke: var(--pa-grid); stroke-width: 1; shape-rendering: crispEdges; }
+.pa-axis-line { stroke: var(--pa-axis); stroke-width: 1; shape-rendering: crispEdges; }
+.pa-tick { fill: var(--pa-muted); font: 11px system-ui, -apple-system, 'Segoe UI', sans-serif; font-variant-numeric: tabular-nums; }
+.pa-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.pa-line--views { stroke: var(--pa-views); }
+.pa-line--clicks { stroke: var(--pa-clicks); }
+.pa-area { fill: var(--pa-views-wash); }
+.pa-dot { stroke: var(--pa-surface); stroke-width: 2; }
+.pa-dot--views { fill: var(--pa-views); }
+.pa-dot--clicks { fill: var(--pa-clicks); }
+.pa-cross { stroke: var(--pa-axis); stroke-width: 1; }
+.pa-col { fill: var(--pa-views); transition: opacity 0.12s; }
+.pa-col--dim { opacity: 0.45; }
+.pa-hit { fill: transparent; cursor: default; }
+
+.pa-legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--pa-ink-2); }
+.pa-key { display: inline-flex; align-items: center; gap: 6px; }
+.pa-key i { display: inline-block; width: 14px; height: 2px; border-radius: 2px; }
+.pa-key i.pa-key--views { background: var(--pa-views); }
+.pa-key i.pa-key--clicks { background: var(--pa-clicks); }
+.pa-key i.pa-key--box { width: 10px; height: 10px; border-radius: 3px; }
+
+.pa-tip {
+  position: absolute; z-index: 5; pointer-events: none; min-width: 132px;
+  padding: 8px 10px; border-radius: 10px; background: var(--pa-tip-bg);
+  border: 1px solid var(--pa-tip-border); box-shadow: 0 10px 26px -12px rgba(0, 0, 0, 0.35);
+  font: 12px/1.4 system-ui, -apple-system, 'Segoe UI', sans-serif; color: var(--pa-ink-2);
+}
+.pa-tip__title { color: var(--pa-muted); font-size: 11px; margin-bottom: 4px; }
+.pa-tip__row { display: flex; align-items: center; gap: 8px; }
+.pa-tip__row b { color: var(--pa-ink); font-weight: 700; min-width: 28px; font-variant-numeric: tabular-nums; }
+.pa-tip__row i { display: inline-block; width: 12px; height: 2px; border-radius: 2px; }
+
+/* Horizontal bar rows (breakdowns and the popup comparison). */
+.pa-bar { position: relative; height: 10px; border-radius: 0 4px 4px 0; background: var(--pa-track); overflow: hidden; }
+.pa-bar > span { position: absolute; inset: 0 auto 0 0; background: var(--pa-views); border-radius: 0 4px 4px 0; min-width: 2px; }
+.pa-bar--clicks > span { background: var(--pa-clicks); }
+.pa-num { font-variant-numeric: tabular-nums; }

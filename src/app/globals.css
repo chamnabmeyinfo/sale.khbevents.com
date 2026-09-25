@@ -3,6 +3,7 @@
 @import "../styles/smart-city-app.css";
 @import "../styles/popup-ads.css";
 @import "../styles/builder.css";
+@import "../styles/popup-analytics.css";
 
 @variant dark (&:where(.dark, .dark *));
 

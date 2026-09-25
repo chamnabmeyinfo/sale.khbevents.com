@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { PopupAd, PopupAdSmartSensitivity } from '@/lib/types';
 import { pickPopupToShow, pickText, popupStorageKeys, inAppBrowserName, nextOpening, popupSkipReason, resolveCtaHref, RETURNING_AFTER_MS, settingsFromPublicAds, SKIP_REASON_TEXT, smartShouldShow, SMART_RULES, visitSources, type PopupVisitorContext, type PublicPopupAd } from '@/lib/popup-ads';
 import { getDeviceType, trackClientEvent } from '@/components/common/LandingPageTracking';
+import { rememberPopupSeen, visitSource } from '@/components/common/popup-attribution';
 import { useStoredChoice, useUrlParam } from '@/lib/use-browser-state';
 
 /**
@@ -306,6 +307,8 @@ const writeSession = (key: string, value: string) => {
     // ignore
   }
 };
+/** Seconds since a moment (ms), one decimal, for the analytics. */
+const secondsSince = (ms: number): number | undefined => (ms ? Math.round((Date.now() - ms) / 100) / 10 : undefined);
 const numberOrUndefined = (value: string | null): number | undefined => {
   const n = value ? Number(value) : NaN;
   return Number.isFinite(n) ? n : undefined;
@@ -329,6 +332,9 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
   const viewedRef = useRef(false);
   /** Why a smart popup appeared (score and top reasons), sent with the view event. */
   const smartRef = useRef<{ score: number; reasons: string } | null>(null);
+  /** For the analytics: when the page started and when the popup opened (ms). */
+  const pageStartRef = useRef(0);
+  const openedAtRef = useRef(0);
   /** ?popup_debug=1: an on-screen panel that says why each popup shows or not (in-app browsers have no console). */
   const [debugInfo, setDebugInfo] = useState<{ browser: string; rows: Array<{ name: string; status: string }>; smart?: string } | null>(null);
 
@@ -350,6 +356,7 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
     };
 
     function decide(cleanups: Array<() => void>) {
+    pageStartRef.current = Date.now();
     const previewAd = previewId ? ads.find((a) => a.id === previewId) : undefined;
     if (previewAd) {
       setActive(previewAd);
@@ -583,13 +590,19 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
   // When the popup appears: remember it, count the view, lock scrolling, listen for ESC.
   useEffect(() => {
     if (!visible || !active) return;
+    openedAtRef.current = Date.now();
     if (!preview && !viewedRef.current) {
       viewedRef.current = true;
       const stamp = String(Date.now());
       writeLocal(popupStorageKeys.shown(active.id), stamp);
       writeLocal(popupStorageKeys.lastAny, stamp);
       writeSession(popupStorageKeys.sessionShown(active.id), '1');
-      trackClientEvent(pageSlug, 'popup_view', { adId: active.id, adName: active.name, template: active.template, trigger: active.trigger.type, ...(smartRef.current ? { smartScore: smartRef.current.score, smartReasons: smartRef.current.reasons } : {}) }, langRef.current);
+      rememberPopupSeen(active.id, false);
+      trackClientEvent(pageSlug, 'popup_view', {
+        adId: active.id, adName: active.name, template: active.template, trigger: active.trigger.type, source: visitSource(),
+        secondsOnPage: pageStartRef.current ? (Date.now() - pageStartRef.current) / 1000 : undefined,
+        ...(smartRef.current ? { smartScore: smartRef.current.score, smartReasons: smartRef.current.reasons } : {}),
+      }, langRef.current);
     }
     // Only popups that dim the page block scrolling; the chat bubble and banner leave the page usable.
     const lock = popupDefaults(active).overlay !== 'none' && active.template !== 'banner' && active.template !== 'chat';
@@ -597,7 +610,7 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
     if (lock) document.body.style.overflow = 'hidden';
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
-      if (!preview) trackClientEvent(pageSlug, 'popup_close', { adId: active.id, adName: active.name, template: active.template }, langRef.current);
+      if (!preview) trackClientEvent(pageSlug, 'popup_close', { adId: active.id, adName: active.name, template: active.template, source: visitSource(), secondsOpen: secondsSince(openedAtRef.current) }, langRef.current);
       setVisible(false);
     };
     document.addEventListener('keydown', onKey);
@@ -609,7 +622,7 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
 
   const close = useCallback((reason: 'close' | 'click') => {
     if (active && !preview && reason === 'close') {
-      trackClientEvent(pageSlug, 'popup_close', { adId: active.id, adName: active.name, template: active.template }, langRef.current);
+      trackClientEvent(pageSlug, 'popup_close', { adId: active.id, adName: active.name, template: active.template, source: visitSource(), secondsOpen: secondsSince(openedAtRef.current) }, langRef.current);
     }
     setVisible(false);
     if (active?.launcher) setLauncherShown(true);
@@ -625,7 +638,8 @@ export default function PopupAdsHost({ ads = [], pageSlug, lang: langProp, previ
   const onCta = useCallback((href: string | null) => {
     if (!active) return;
     if (!preview) {
-      trackClientEvent(pageSlug, 'popup_click', { adId: active.id, adName: active.name, template: active.template, action: active.cta.action, ...(smartRef.current ? { smartReasons: smartRef.current.reasons } : {}) }, langRef.current);
+      rememberPopupSeen(active.id, true);
+      trackClientEvent(pageSlug, 'popup_click', { adId: active.id, adName: active.name, template: active.template, action: active.cta.action, source: visitSource(), secondsOpen: secondsSince(openedAtRef.current), ...(smartRef.current ? { smartReasons: smartRef.current.reasons } : {}) }, langRef.current);
     }
     close('click');
     if (preview) return;

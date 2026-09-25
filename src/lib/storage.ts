@@ -33,7 +33,8 @@ import {
 } from './round-robin';
 import { isSupabaseConfigured } from './supabase';
 import { runAfterResponse } from './after-response';
-import { defaultPopupAdsState, normalizePopupAdsState, parseSmartReasons, selectPublicPopupAds, type SmartReason } from './popup-ads';
+import { defaultPopupAdsState, inAppBrowserName, normalizePopupAdsState, parseSmartReasons, selectPublicPopupAds, type SmartReason } from './popup-ads';
+import { applyPopupEvent, type PopupEventDetail } from './popup-analytics';
 import { normalizeBuilderDoc } from './builder';
 import { normalizeMediaMeta, type MediaMeta } from './media-library';
 import {
@@ -1261,14 +1262,15 @@ export async function getPopupAdStats(): Promise<PopupAdStatsMap> {
  * Counts one popup event. Runs after the tracking response; the Supabase row is
  * read-modify-write, so counts are approximate under heavy concurrency.
  */
-export async function recordPopupAdEvent(adId: string, kind: 'view' | 'click' | 'close', reasons: SmartReason[] = []): Promise<void> {
-  const now = new Date().toISOString();
+export async function recordPopupAdEvent(adId: string, detail: PopupEventDetail, reasons: SmartReason[] = []): Promise<void> {
+  const kind = detail.kind;
+  const now = new Date(detail.nowMs).toISOString();
   const bump = (stats: PopupAdStatsMap) => {
     const s = stats[adId] || { views: 0, clicks: 0, closes: 0 };
     if (kind === 'view') { s.views += 1; s.lastViewAt = now; }
     if (kind === 'click') { s.clicks += 1; s.lastClickAt = now; }
     if (kind === 'close') s.closes += 1;
-    if (kind !== 'close' && reasons.length) {
+    if ((kind === 'view' || kind === 'click') && reasons.length) {
       s.smart = s.smart || {};
       for (const r of reasons) {
         const c = s.smart[r] || { views: 0, clicks: 0 };
@@ -1277,6 +1279,7 @@ export async function recordPopupAdEvent(adId: string, kind: 'view' | 'click' | 
         s.smart[r] = c;
       }
     }
+    applyPopupEvent(s, detail);
     stats[adId] = s;
     return stats;
   };
@@ -1406,12 +1409,25 @@ export async function recordTrackingEvent(payload: RecordTrackingPayload): Promi
 
   await saveDatabase(db);
 
-  if (eventType === 'popup_view' || eventType === 'popup_click' || eventType === 'popup_close') {
-    const adId = typeof payload.eventData?.adId === 'string' ? payload.eventData.adId : '';
+  if (eventType === 'popup_view' || eventType === 'popup_click' || eventType === 'popup_close' || eventType === 'popup_lead') {
+    const data = payload.eventData || {};
+    const adId = typeof data.adId === 'string' ? data.adId : '';
     if (adId) {
-      const kind = eventType === 'popup_view' ? 'view' : eventType === 'popup_click' ? 'click' : 'close';
-      const reasons = parseSmartReasons(payload.eventData?.smartReasons);
-      runAfterResponse(() => recordPopupAdEvent(adId, kind, reasons));
+      const kind = eventType === 'popup_view' ? 'view' : eventType === 'popup_click' ? 'click' : eventType === 'popup_close' ? 'close' : 'lead';
+      const reasons = parseSmartReasons(data.smartReasons);
+      const detail: PopupEventDetail = {
+        kind,
+        nowMs: Date.now(),
+        page: cleanSlug,
+        device: payload.deviceType,
+        lang: payload.lang,
+        source: typeof data.source === 'string' ? data.source : undefined,
+        app: (payload.browser && inAppBrowserName(payload.browser)) || 'Browser',
+        secondsOpen: typeof data.secondsOpen === 'number' ? data.secondsOpen : undefined,
+        secondsOnPage: typeof data.secondsOnPage === 'number' ? data.secondsOnPage : undefined,
+        clicked: data.clicked === true,
+      };
+      runAfterResponse(() => recordPopupAdEvent(adId, detail, reasons));
     }
   }
 }

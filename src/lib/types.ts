@@ -512,7 +512,8 @@ export type TrackingEventType =
   | 'lang_toggle'
   | 'popup_view'
   | 'popup_click'
-  | 'popup_close';
+  | 'popup_close'
+  | 'popup_lead';
 
 export interface TrackingEvent {
   id: string;
@@ -953,6 +954,37 @@ export interface PopupAdStats {
   lastClickAt?: string;
   /** Smart popups: views and clicks per reason it appeared (a view counts for each of its top reasons). */
   smart?: Partial<Record<PopupAdSmartReason, { views: number; clicks: number }>>;
+  /** Detailed counts per day (Phnom Penh date YYYY-MM-DD), kept for the last 120 days. */
+  daily?: Record<string, PopupDayStats>;
+}
+
+/** [views, clicks, closes, leads] */
+export type PopupCounts = [number, number, number, number];
+
+/** One popup's activity on one day. Short keys keep the stored row small. */
+export interface PopupDayStats {
+  /** Totals for the day. */
+  t: PopupCounts;
+  /** Leads sent by visitors who had clicked the popup. */
+  lc?: number;
+  /** [total seconds, count] from the popup appearing to a click. */
+  ck?: [number, number];
+  /** [total seconds, count] from the popup appearing to a close. */
+  cl?: [number, number];
+  /** [total seconds, count] on the page before the popup appeared. */
+  sp?: [number, number];
+  /** By hour of day, Phnom Penh time ("0"–"23"). */
+  h?: Record<string, PopupCounts>;
+  /** By page slug. */
+  p?: Record<string, PopupCounts>;
+  /** By device: mobile, desktop, tablet. */
+  d?: Record<string, PopupCounts>;
+  /** By where the visit came from: telegram, facebook, google… or direct. */
+  s?: Record<string, PopupCounts>;
+  /** By browser: Facebook, Telegram… app browsers, or Browser. */
+  a?: Record<string, PopupCounts>;
+  /** By language: en, kh. */
+  g?: Record<string, PopupCounts>;
 }
 
 export type PopupAdStatsMap = Record<string, PopupAdStats>;

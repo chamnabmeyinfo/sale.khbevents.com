@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import Script from 'next/script';
 import { LandingPage, TrackingEventType } from '@/lib/types';
+import { takePopupLeads } from '@/components/common/popup-attribution';
 
 // Helper: Get or create session ID
 export function getSessionId(): string {
@@ -23,11 +24,16 @@ export function getSessionId(): string {
 export function getDeviceType(): 'mobile' | 'tablet' | 'desktop' {
   if (typeof window === 'undefined') return 'desktop';
   const ua = navigator.userAgent.toLowerCase();
-  if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+  if (/tablet|ipad|playbook|silk/i.test(ua)) {
     return 'tablet';
   }
-  if (/mobile|iphone|ipod|blackberry|opera mini|iemobile|wpdesktop/i.test(ua) || window.innerWidth < 768) {
+  // Phones first: app browsers such as Telegram add "Telegram-Android/…" after "Mobile",
+  // which the old "android without mobi after it" test took for a tablet.
+  if (/mobi|iphone|ipod|blackberry|opera mini|iemobile|wpdesktop/i.test(ua) || window.innerWidth < 768) {
     return 'mobile';
+  }
+  if (/android/i.test(ua)) {
+    return 'tablet';
   }
   return 'desktop';
 }
@@ -81,6 +87,11 @@ export function trackClientEvent(
     browser: navigator.userAgent,
     lang: lang || (document.documentElement.lang === 'kh' ? 'kh' : 'en'),
   };
+
+  // A form sent after seeing a popup is credited to that popup in the popup analytics.
+  if (eventType === 'form_submit') {
+    for (const lead of takePopupLeads()) trackClientEvent(pageSlug, 'popup_lead', lead, lang);
+  }
 
   const bodyStr = JSON.stringify(payload);
   if (navigator.sendBeacon) {

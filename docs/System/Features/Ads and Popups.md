@@ -169,8 +169,21 @@ Defaults for a new popup (`newPopupAd` in `src/lib/popup-ads.ts`): switched off,
 ## Stats
 
 - Views, clicks and closes are counted per popup and shown in the list and the KPI tiles.
-- They come from the visitor's browser as tracking events `popup_view`, `popup_click` and `popup_close` through `/api/track`. See [[Tracking and Analytics]].
+- They come from the visitor's browser as tracking events `popup_view`, `popup_click`, `popup_close` and `popup_lead` through `/api/track`. See [[Tracking and Analytics]].
 - The counters are stored in the `popup_ad_stats` row. Treat them as close estimates: ad blockers, closed tabs and simultaneous updates can lose a count.
+
+## Popup analytics
+
+**Admin → Ads & Popups → Performance** (`/admin/ads/analytics`), or **Detailed analytics** above the popup list.
+
+- **Filters:** last 7, 30 or 90 days (Phnom Penh dates) and one popup or all. Every number on the page follows them.
+- **Tiles:** views, clicks with click rate, closed with close rate, leads after a popup (and how many had clicked it), average seconds from opening to a click (and to a close).
+- **What the numbers say:** plain findings (best popup, page, device, source, browser, busiest 3 hours, quick closes, leads). None below 20 views, so small numbers are not over-read.
+- **Views and clicks per day** (line chart, hover or arrow keys for each day, or **Show as table**), **Compare popups** (click a name to filter), and breakdowns by page, where visitors came from, device, browser (Facebook, Messenger, Telegram, TikTok… or a normal browser), language and hour of day. Smart timing reasons are shown all-time.
+- **Download CSV:** one row per popup per day.
+- **Lead credit:** a form sent in the same browser tab after a popup was seen counts as a lead for that popup; "after clicking" when it was clicked first. No names or phone numbers are stored in the stats.
+
+How it is stored: each popup's stats row (`popup_ad_stats`) keeps a small record per day for the last 120 days (`daily`, see `src/lib/popup-analytics.ts`), with at most 40 values per breakdown per day. Individual tracking events are not kept on Vercel (only in the local file fallback), so the dashboard reads these daily records. Detail starts on 2026-09-25; the older all-time totals stay in the popup list.
 
 ## How it works
 

@@ -146,7 +146,7 @@ export default function AdminSidebar() {
       isActive: pathname.startsWith('/admin/ads'),
       subItems: [
         { label: t('nav.ads.all'), href: '/admin/ads', icon: Megaphone, badge: 'New' },
-        { label: t('nav.ads.performance'), href: '/admin/ads#performance', icon: BarChart3 },
+        { label: t('nav.ads.performance'), href: '/admin/ads/analytics', icon: BarChart3 },
       ]
     },
     {
