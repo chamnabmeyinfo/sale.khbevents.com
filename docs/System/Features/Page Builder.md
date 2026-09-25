@@ -107,8 +107,10 @@ Every section can play a silent, looping video behind its text: select the secti
 - The video covers the whole section without black bars and is darkened like a background photo. Choose **Dark** or **Brand** colours so the text stays readable.
 - The **Background photo** is the poster: it shows while the video loads, and instead of the video for visitors whose phone or computer is set to reduce motion.
 - Short (10 to 30 seconds), calm clips work best. A video uses mobile data; keep uploads small.
+- **On phones** (since 2026-09-25) an uploaded video starts by itself on most phones. Some phones block autoplay: the in-app browsers of Telegram, Facebook, Messenger and Instagram on Android, iPhone Low Power Mode and Android Data Saver. There the photo shows, and the video starts at the visitor's first tap anywhere on the page. Videos pause when scrolled off screen, to save battery and data.
+- **Upload MP4.** MOV files from an iPhone often do not play on Android phones, and the editor warns when one is used. Export or share the clip as MP4 (H.264) instead.
 
-Source: `src/lib/video-embed.ts` (accepted sources), `src/app/api/uploads/video/route.ts` (upload), `src/components/admin/VideoField.tsx`.
+Source: `src/lib/video-embed.ts` (accepted sources), `src/components/builder/BackgroundVideo.tsx` (phone playback), `src/app/api/uploads/video/route.ts` (upload), `src/components/admin/VideoField.tsx`.
 
 ## Public page
 

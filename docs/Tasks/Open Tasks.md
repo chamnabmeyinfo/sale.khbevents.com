@@ -28,6 +28,7 @@ Suggested order: lock the database first, then change the token and the password
 
 ### Sales page
 
+- [ ] If a page's background video was uploaded as a MOV file (from an iPhone), re-upload it as MP4 (H.264) so Android phones play it too. → [[Page Builder]] #owner
 - [ ] Vietnam page, now in the builder:
   - Check it after the next deploy: Admin → Landing Pages CMS → Edit.
   - Its registration deadline (20 Sept 2026) has passed, so the page shows no countdown. Set a new date, or clear it, in the builder → Offer.

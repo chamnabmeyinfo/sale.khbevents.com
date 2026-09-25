@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import BackgroundVideo from './BackgroundVideo';
 import type {
   BenefitIcon,
   BenefitsBlock,
@@ -130,14 +131,6 @@ function sectionClass(block: BuilderBlock): string {
   ].filter(Boolean).join(' ');
 }
 
-/** Starts a muted background video: React does not always render `muted` in server HTML, and browsers only autoplay muted video. */
-function startMuted(el: HTMLVideoElement | null) {
-  if (!el) return;
-  el.muted = true;
-  el.defaultMuted = true;
-  el.play?.().catch(() => {});
-}
-
 function SectionBackground({ image, video }: { image?: string; video?: string }) {
   const v = video ? parseVideoSource(video) : null;
   if (!image && !v) return null;
@@ -145,7 +138,7 @@ function SectionBackground({ image, video }: { image?: string; video?: string })
     <div className={`kb-bg${v ? ' kb-bg--video' : ''}`} aria-hidden="true">
       {image && <img className="kb-bg__poster" src={image} alt="" loading="lazy" decoding="async" />}
       {v?.provider === 'file' && (
-        <video className="kb-bg__media kb-bg__video" src={v.src} poster={image} ref={startMuted} autoPlay muted loop playsInline preload="metadata" tabIndex={-1} />
+        <BackgroundVideo className="kb-bg__media kb-bg__video" src={v.src} poster={image} />
       )}
       {v && v.provider !== 'file' && (
         <iframe

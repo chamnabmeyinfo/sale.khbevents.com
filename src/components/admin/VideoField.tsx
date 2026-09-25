@@ -102,6 +102,9 @@ export default function VideoField({ label, value, onChange, hint }: { label: st
           {(current.provider === 'facebook' || current.provider === 'tiktok') && <span className="font-normal text-amber-700 dark:text-amber-400"> {t('video.socialNote')}</span>}
         </p>
       )}
+      {!error && current?.provider === 'file' && /\.(mov|m4v)(?:$|[?#])/i.test(current.url) && (
+        <p className="mt-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400">{t('video.movNote')}</p>
+      )}
       {hint && !error && <p className="mt-1 text-[11px] text-slate-500 dark:text-gray-400">{hint}</p>}
     </div>
   );
