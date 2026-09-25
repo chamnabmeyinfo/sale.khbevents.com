@@ -228,7 +228,8 @@ export function safeSecondaryHref(value: unknown): string | undefined {
   return safeRedirectUrl(raw) || undefined;
 }
 
-function normalizeHours(value: unknown): PopupAdHours | undefined {
+/** Valid days and HH:MM times, or undefined. Shared with the sales team's working hours. */
+export function normalizeHours(value: unknown): PopupAdHours | undefined {
   if (!value || typeof value !== 'object') return undefined;
   const v = value as Record<string, unknown>;
   const days = Array.isArray(v.days)
@@ -450,19 +451,24 @@ export function pickPopupToShow(ads: PopupAd[], settings: PopupAdsSettings, ctx:
   return sortByPriority(ads).find((ad) => popupSkipReason(ad, settings, ctx) === null) || null;
 }
 
-/** The next time office hours open, in Phnom Penh time as "Mon 08:00", or null when there are no hours. */
-export function nextOpening(hours: PopupAdHours | undefined, nowMs: number): string | null {
+/** The next minute the hours open after `nowMs` (ms), or null when there are no hours or none within 8 days. */
+export function nextOpeningMs(hours: PopupAdHours | undefined, nowMs: number): number | null {
   if (!hours) return null;
-  const names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const start = Math.floor(nowMs / 60000) * 60000;
   for (let m = 1; m <= 8 * 24 * 60; m += 1) {
     const t = start + m * 60000;
-    if (withinHours(hours, t)) {
-      const local = new Date(t + PHNOM_PENH_OFFSET_MS);
-      return `${names[local.getUTCDay()]} ${String(local.getUTCHours()).padStart(2, '0')}:${String(local.getUTCMinutes()).padStart(2, '0')}`;
-    }
+    if (withinHours(hours, t)) return t;
   }
   return null;
+}
+
+/** The next time office hours open, in Phnom Penh time as "Mon 08:00", or null when there are no hours. */
+export function nextOpening(hours: PopupAdHours | undefined, nowMs: number): string | null {
+  const t = nextOpeningMs(hours, nowMs);
+  if (t === null) return null;
+  const names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const local = new Date(t + PHNOM_PENH_OFFSET_MS);
+  return `${names[local.getUTCDay()]} ${String(local.getUTCHours()).padStart(2, '0')}:${String(local.getUTCMinutes()).padStart(2, '0')}`;
 }
 
 /** Where the button sends the visitor. Null means "just close". */

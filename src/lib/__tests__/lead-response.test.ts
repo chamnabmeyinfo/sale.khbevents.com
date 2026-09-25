@@ -108,3 +108,54 @@ describe('passing an unanswered lead on', () => {
     expect(leadIsOverdue(l, settings(), NOW)).toBe(false);
   });
 });
+
+import { eligibleStaff, selectNextStaff, shiftStartMs, staffOnShift, staffServesPage } from '../round-robin';
+
+describe('working hours and page teams', () => {
+  // NOW is Thursday 1 Oct 2026, 10:00 in Phnom Penh.
+  const day = { days: [1, 2, 3, 4, 5], from: '08:00', to: '18:00' };
+  const night = { days: [1, 2, 3, 4, 5], from: '18:00', to: '23:00' };
+  const team = () => settings({
+    staffList: [
+      staff('a', { workHours: day, pages: ['korea'] }),
+      staff('b', { workHours: night, pages: ['korea'] }),
+      staff('c', { pages: ['vietnam'] }),
+    ],
+  });
+
+  it('knows who is working and which pages they serve', () => {
+    expect(staffOnShift({ workHours: day }, NOW)).toBe(true);
+    expect(staffOnShift({ workHours: night }, NOW)).toBe(false);
+    expect(staffOnShift({}, NOW)).toBe(true);
+    expect(staffServesPage({ pages: ['korea'] }, 'Korea')).toBe(true);
+    expect(staffServesPage({ pages: ['korea'] }, 'vietnam')).toBe(false);
+    expect(staffServesPage({}, 'vietnam')).toBe(true);
+  });
+
+  it('prefers the page team, then who is working now', () => {
+    expect(eligibleStaff(team(), 'chatId', { pageSlug: 'korea', nowMs: NOW }).map((s) => s.id)).toEqual(['a']);
+    expect(eligibleStaff(team(), 'chatId', { pageSlug: 'vietnam', nowMs: NOW }).map((s) => s.id)).toEqual(['c']);
+    // Evening: only b works on the Korea team.
+    const evening = NOW + 9 * 60 * MIN;
+    expect(eligibleStaff(team(), 'chatId', { pageSlug: 'korea', nowMs: evening }).map((s) => s.id)).toEqual(['b']);
+    // A page with no team: everyone, then who works now (c has no hours, a works).
+    expect(eligibleStaff(team(), 'chatId', { pageSlug: 'home', nowMs: NOW }).map((s) => s.id)).toEqual(['a', 'c']);
+  });
+
+  it('never leaves a lead without someone', () => {
+    const lateNight = NOW + 15 * 60 * MIN; // 01:00 Friday: nobody on the Korea team works.
+    expect(eligibleStaff(team(), 'chatId', { pageSlug: 'korea', nowMs: lateNight }).map((s) => s.id)).toEqual(['a', 'b']);
+    expect(selectNextStaff(team(), { need: 'chatId', ctx: { pageSlug: 'korea', nowMs: lateNight } })).not.toBeNull();
+  });
+
+  it('starts the response clock when the shift opens', () => {
+    const lateNight = NOW + 15 * 60 * MIN;
+    expect(shiftStartMs({ workHours: day }, NOW)).toBe(NOW);
+    expect(new Date(shiftStartMs({ workHours: day }, lateNight) + 7 * 3600e3).toISOString()).toBe('2026-10-02T08:00:00.000Z');
+    const l = lead({}, 0);
+    l.routing!.assignedAt = new Date(lateNight).toISOString();
+    const start = shiftStartMs({ workHours: day }, lateNight);
+    expect(leadIsOverdue(l, settings(), lateNight + 60 * MIN, start)).toBe(false);
+    expect(leadIsOverdue(l, settings(), start + 16 * MIN, start)).toBe(true);
+  });
+});

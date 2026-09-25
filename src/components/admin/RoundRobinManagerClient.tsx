@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Users,
   Send,
@@ -56,11 +56,14 @@ import {
 import { errorMessage } from '@/lib/errors';
 import { MAX_HANDOVERS, RESPONSE_MINUTE_CHOICES } from '@/lib/lead-response';
 import { useLanguage } from '@/context/LanguageContext';
+import StaffAvailability from './StaffAvailability';
 
 interface RoundRobinManagerClientProps {
   initialSettings: RoundRobinSettings;
   initialLogs: RoundRobinLog[];
   systemSettings: SystemSettings;
+  /** Landing pages, for choosing which pages a salesperson serves. */
+  pages?: Array<{ slug: string; title: string }>;
 }
 
 const staffColors = [
@@ -138,8 +141,17 @@ interface SimulationResult {
 export default function RoundRobinManagerClient({
   initialSettings,
   initialLogs,
-  systemSettings
+  systemSettings,
+  pages = []
 }: RoundRobinManagerClientProps) {
+  // Current time for "working now / off until", set after mount and every minute.
+  const [clientNow, setClientNow] = useState(0);
+  useEffect(() => {
+    const tick = () => setClientNow(Date.now());
+    const first = window.setTimeout(tick, 0);
+    const id = window.setInterval(tick, 60 * 1000);
+    return () => { window.clearTimeout(first); window.clearInterval(id); };
+  }, []);
   const { t, lang } = useLanguage();
   const [settings, setSettings] = useState<RoundRobinSettings>(initialSettings);
   const [logs, setLogs] = useState<RoundRobinLog[]>(initialLogs);
@@ -1280,6 +1292,8 @@ export default function RoundRobinManagerClient({
                         ) : null}
                       </div>
                     </div>
+
+                    <StaffAvailability staff={staff} pages={pages} nowMs={clientNow} onChange={(patch) => handleStaffChange(staff.id, patch)} />
                   </div>
                 );
               })}

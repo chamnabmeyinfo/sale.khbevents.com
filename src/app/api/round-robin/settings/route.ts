@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { getRoundRobinSettings, updateRoundRobinSettings, getSettings, updateSettings } from '@/lib/storage';
 import { normalizeStaffPercentages } from '@/lib/round-robin';
+import { normalizeHours } from '@/lib/popup-ads';
+import { RESPONSE_MINUTE_CHOICES } from '@/lib/lead-response';
 import { isMaskedSecret } from '@/lib/secrets';
 import { RoundRobinStaff } from '@/lib/types';
 import { errorMessage } from '@/lib/errors';
@@ -45,7 +47,15 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    let staffList = settings.staffList || [];
+    // Working hours and page teams: only valid values are stored.
+    let staffList = (Array.isArray(settings.staffList) ? settings.staffList : []).map((s: RoundRobinStaff) => {
+      const pages = Array.isArray(s.pages)
+        ? Array.from(new Set(s.pages.map((p) => String(p).toLowerCase().trim()).filter((p) => /^[a-z0-9_-]{1,120}$/.test(p))))
+        : [];
+      return { ...s, workHours: normalizeHours(s.workHours), pages: pages.length ? pages : undefined };
+    });
+    const minutes = Number(settings.responseMinutes);
+    settings.responseMinutes = (RESPONSE_MINUTE_CHOICES as readonly number[]).includes(minutes) ? minutes : 0;
     if (autoNormalize) {
       staffList = normalizeStaffPercentages(staffList);
     }

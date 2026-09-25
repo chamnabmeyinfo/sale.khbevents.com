@@ -8,6 +8,7 @@ import {
 import { errorMessage } from '@/lib/errors';
 import { toWhatsAppNumber } from './phone';
 import { claimKeyboard } from './lead-response';
+import { nextOpeningMs, withinHours } from './popup-ads';
 
 /**
  * No staff ship by default: every routed visitor must land on a real person, so
@@ -164,6 +165,7 @@ export function sameCustomer(a: { phone?: string; email?: string }, b: { phone?:
  * still able to take the assignment. Null means: use the rotation.
  */
 export function rememberedStaff(settings: RoundRobinSettings, staffId: string | undefined, need?: StaffRequirement): RoundRobinStaff | null {
+  // Working hours and page teams do not apply here: a returning customer stays with "their" person.
   if (!staffId || visitorMemoryMs(settings) <= 0) return null;
   // Same eligibility as the rotation: a remembered person who could not take a
   // fresh assignment (inactive, no username for a click, no Chat ID while
@@ -180,12 +182,51 @@ export type StaffRequirement = 'username' | 'chatId';
  * With a requirement nobody meets, form leads fall back to every active member
  * (the lead is still recorded and the manager alerted), clicks return nobody.
  */
-export function eligibleStaff(settings: RoundRobinSettings, need?: StaffRequirement): RoundRobinStaff[] {
+export function eligibleStaff(settings: RoundRobinSettings, need?: StaffRequirement, ctx?: RoutingContext): RoundRobinStaff[] {
   const active = (settings.staffList || []).filter((s) => s.isActive);
-  if (!need) return active;
-  const fit = active.filter((s) => (need === 'username' ? cleanTelegramUsername(s.telegramUsername) : (s.telegramChatId || '').trim()));
-  if (fit.length > 0) return fit;
-  return need === 'chatId' ? active : [];
+  let pool: RoundRobinStaff[];
+  if (!need) pool = active;
+  else {
+    const fit = active.filter((s) => (need === 'username' ? cleanTelegramUsername(s.telegramUsername) : (s.telegramChatId || '').trim()));
+    pool = fit.length > 0 ? fit : need === 'chatId' ? active : [];
+  }
+  if (!ctx) return pool;
+  // Preferences narrow the pool only when someone is left, so a lead or click is never lost:
+  // first the page's team, then who is working now.
+  pool = prefer(pool, (s) => staffServesPage(s, ctx.pageSlug));
+  if (ctx.nowMs !== undefined) pool = prefer(pool, (s) => staffOnShift(s, ctx.nowMs!));
+  return pool;
+}
+
+/** Where and when an assignment happens, for page teams and working hours. */
+export interface RoutingContext {
+  pageSlug?: string;
+  nowMs?: number;
+}
+
+const prefer = <T,>(pool: T[], keep: (item: T) => boolean): T[] => {
+  const kept = pool.filter(keep);
+  return kept.length ? kept : pool;
+};
+
+/** True when the person serves this page (no pages chosen = every page). */
+export function staffServesPage(s: Pick<RoundRobinStaff, 'pages'>, pageSlug?: string): boolean {
+  if (!pageSlug || !s.pages || s.pages.length === 0) return true;
+  return s.pages.includes(pageSlug.toLowerCase());
+}
+
+/** True when the person is working at this moment (no hours set = always). */
+export function staffOnShift(s: Pick<RoundRobinStaff, 'workHours'>, nowMs: number): boolean {
+  return withinHours(s.workHours, nowMs);
+}
+
+/**
+ * When the person's response clock starts for a lead given at `fromMs`: right
+ * away during their hours, otherwise when their next shift opens.
+ */
+export function shiftStartMs(s: Pick<RoundRobinStaff, 'workHours'>, fromMs: number): number {
+  if (!s.workHours || withinHours(s.workHours, fromMs)) return fromMs;
+  return nextOpeningMs(s.workHours, fromMs) ?? fromMs;
 }
 
 const assignments = (s: RoundRobinStaff) => (s.totalLeadsRouted || 0) + (s.totalDirectClicks || 0);
@@ -202,9 +243,9 @@ const assignments = (s: RoundRobinStaff) => (s.totalLeadsRouted || 0) + (s.total
  */
 export function selectNextStaff(
   settings: RoundRobinSettings,
-  options: { need?: StaffRequirement } = {}
+  options: { need?: StaffRequirement; ctx?: RoutingContext } = {}
 ): { staff: RoundRobinStaff; effectivePercentage: number; nextIndex: number } | null {
-  const activeStaff = eligibleStaff(settings, options.need);
+  const activeStaff = eligibleStaff(settings, options.need, options.ctx);
   if (activeStaff.length === 0) return null;
 
   if (activeStaff.length === 1) {

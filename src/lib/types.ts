@@ -1002,6 +1002,10 @@ export interface RoundRobinStaff {
   avatar?: string;
   notes?: string;
   preferredLanguage?: 'km' | 'en' | 'compact'; // Preferred alert language for this staff member
+  /** Working days and hours, Phnom Penh time. Missing = always available. */
+  workHours?: PopupAdHours;
+  /** Landing page slugs this person serves. Missing or empty = every page. */
+  pages?: string[];
   
   // Real-time tracking counters
   totalLeadsRouted: number;

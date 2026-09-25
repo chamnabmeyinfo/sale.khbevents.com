@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
       // Plain /start without payload — route to sales rep using round robin
       if (!payload) {
         const rrSettings = await getRoundRobinSettings();
-        const selection = rrSettings?.enabled ? selectNextStaff(rrSettings, { need: 'username' }) : null;
+        const selection = rrSettings?.enabled ? selectNextStaff(rrSettings, { need: 'username', ctx: { nowMs: Date.now() } }) : null;
         if (selection) await commitBotAssignment(rrSettings, selection.staff, selection.nextIndex);
         const rep = selection?.staff;
         const repButtons: Array<Array<{ text: string; url?: string; callback_data?: string }>> = [
@@ -225,7 +225,7 @@ export async function POST(req: NextRequest) {
         : null;
 
       if (!assignedStaff && rrSettings?.enabled) {
-        const sel = selectNextStaff(rrSettings, { need: 'username' });
+        const sel = selectNextStaff(rrSettings, { need: 'username', ctx: { pageSlug: page?.slug || pageSlug || undefined, nowMs: Date.now() } });
         if (sel) {
           assignedStaff = sel.staff;
           await commitBotAssignment(rrSettings, sel.staff, sel.nextIndex);

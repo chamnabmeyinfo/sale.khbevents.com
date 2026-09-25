@@ -29,11 +29,12 @@ import {
   phoneKey,
   visitorMemoryMs,
   sendLeadToStaffTelegram,
-  escapeHtml
+  escapeHtml,
+  staffOnShift
 } from './round-robin';
 import { isSupabaseConfigured } from './supabase';
 import { runAfterResponse } from './after-response';
-import { defaultPopupAdsState, inAppBrowserName, normalizePopupAdsState, parseSmartReasons, selectPublicPopupAds, type SmartReason } from './popup-ads';
+import { defaultPopupAdsState, inAppBrowserName, nextOpening, normalizePopupAdsState, parseSmartReasons, selectPublicPopupAds, type SmartReason } from './popup-ads';
 import { applyPopupEvent, type PopupEventDetail } from './popup-analytics';
 import { normalizeBuilderDoc } from './builder';
 import { normalizeMediaMeta, type MediaMeta } from './media-library';
@@ -901,7 +902,7 @@ export async function createLead(leadData: {
     // 3. Otherwise the rotation. With a bot token, prefer people who can actually receive the alert.
     const selection = remembered
       ? { staff: remembered, effectivePercentage: remembered.percentage || 0, nextIndex: effectiveRrSettings.lastAssignedIndex || 0 }
-      : selectNextStaff(effectiveRrSettings, { need });
+      : selectNextStaff(effectiveRrSettings, { need, ctx: { pageSlug: newLead.landingPageSlug, nowMs: Date.now() } });
     if (selection) {
       const { staff, effectivePercentage, nextIndex } = selection;
       // Advance the rotation before awaiting Telegram, so a second lead arriving
@@ -932,7 +933,9 @@ export async function createLead(leadData: {
               ? '🔁 <b>អតិថិជនចាស់របស់អ្នក / Returning customer:</b> this person contacted us before and was assigned to you.'
               : assignmentReason === 'returning_visitor'
                 ? '🔁 <b>Returning visitor:</b> this person clicked through to you earlier and now sent the form.'
-                : undefined
+                : staff.workHours && !staffOnShift(staff, Date.now())
+                  ? `🌙 <b>ក្រៅម៉ោងធ្វើការ / Outside your hours:</b> nobody was working when this came in. Please contact them when your shift starts${nextOpening(staff.workHours, Date.now()) ? ` (${nextOpening(staff.workHours, Date.now())})` : ''}.`
+                  : undefined
           }
         );
       }
@@ -1709,7 +1712,7 @@ export async function recordDirectContactRoute(params: {
   }
   if (params.allowNewAssignment === false) return null;
 
-  const selection = selectNextStaff(rrSettings, { need: 'username' });
+  const selection = selectNextStaff(rrSettings, { need: 'username', ctx: { pageSlug: params.pageSlug, nowMs: Date.now() } });
   if (!selection) return null;
 
   const { staff, effectivePercentage, nextIndex } = selection;

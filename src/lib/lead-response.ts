@@ -82,14 +82,15 @@ export const assignedAtMs = (lead: Lead): number => Date.parse(lead.routing?.ass
  * Whether a form lead has waited too long without a button tap. Only new,
  * untouched, recent leads; at most MAX_HANDOVERS times.
  */
-export function leadIsOverdue(lead: Lead, settings: Pick<RoundRobinSettings, 'responseMinutes'>, nowMs: number): boolean {
+export function leadIsOverdue(lead: Lead, settings: Pick<RoundRobinSettings, 'responseMinutes'>, nowMs: number, clockStartMs?: number): boolean {
   const minutes = responseMinutes(settings);
   const r = lead.routing;
   if (!minutes || !r || r.routeType !== 'FORM_SUBMISSION' || r.claim) return false;
   if (lead.status !== 'NEW') return false;
   if (nowMs - Date.parse(lead.createdAt) > HANDOVER_WINDOW_MS) return false;
   if ((r.handovers?.length || 0) >= MAX_HANDOVERS && r.managerAlerted) return false;
-  return nowMs - assignedAtMs(lead) >= minutes * 60 * 1000;
+  // The clock starts at the assignment, or when the salesperson's shift opens if they got it off shift.
+  return nowMs - (clockStartMs ?? assignedAtMs(lead)) >= minutes * 60 * 1000;
 }
 
 /** Everyone who already had this lead. */

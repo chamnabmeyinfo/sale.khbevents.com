@@ -7,6 +7,7 @@ admin_menu: Staff Round Robin
 source:
   - src/lib/round-robin.ts
   - src/lib/lead-response.ts
+  - src/components/admin/StaffAvailability.tsx
   - src/lib/lead-followup.ts
   - src/app/api/round-robin/tick/route.ts
   - src/app/api/telegram/webhook/route.ts
@@ -77,6 +78,23 @@ Details that apply to all three (`selectNextStaff` in `src/lib/round-robin.ts`):
 - Only active people count. With one active person, they get everything.
 - If every share is 0, it falls back to plain one-after-another.
 - Clicks and form leads both count as assignments for the fair share.
+
+## Working hours and page teams
+
+Each staff card has an **availability** row (`StaffAvailability.tsx`; rules `eligibleStaff` in `src/lib/round-robin.ts`):
+
+- **Only during working hours:** days and from–to time, Phnom Penh time (default when switched on: Monday to Saturday, 08:00 to 18:00). The card says "Working now" or "Off now, back …".
+- **Serves pages:** tap the landing pages this person serves. None chosen means every page.
+
+How they apply to a new form lead, a Telegram click and the bot:
+
+1. The page's team first (people with that page, plus people with no pages chosen). If nobody on the team can take it, everyone.
+2. Then whoever is working now. If nobody is working, the normal rotation still assigns it, so nothing is lost; the lead card then says it arrived outside working hours and when the shift starts.
+3. Then the usual fair share among the people left.
+
+- A **returning** visitor or customer stays with their salesperson whatever the hours or teams.
+- **Hand-over clock:** for a lead given outside someone's hours, the minutes count from the start of their next shift. Hand-overs only go to people working now, the page's team first. Leads older than 24 hours are not passed on (a Friday-night lead whose owner is back on Monday is the manager's call).
+- Pages with their own Round Robin in Dedicated Settings keep using that separate setup.
 
 ## Who can receive what (eligibility)
 

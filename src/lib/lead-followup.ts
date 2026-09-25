@@ -23,7 +23,7 @@ import {
   statusAfterClaim,
   type InlineKeyboard,
 } from './lead-response';
-import { escapeHtml, readTelegramResponse, sendLeadToStaffTelegram } from './round-robin';
+import { escapeHtml, readTelegramResponse, sendLeadToStaffTelegram, shiftStartMs, staffOnShift, staffServesPage } from './round-robin';
 import {
   getDatabase,
   getLeadById,
@@ -155,7 +155,13 @@ export async function runLeadResponseCheck(options: { force?: boolean; nowMs?: n
 
   const settings = await getSettings();
   const botToken = settings.telegramBotToken;
-  const leads = (await recentFormLeads(nowMs)).filter((l) => leadIsOverdue(l, rr, nowMs));
+  // The response clock of a lead given outside someone's hours starts when their shift opens.
+  const clockStart = (l: Lead) => {
+    const owner = rr.staffList.find((s) => s.id === l.routing?.staffId);
+    return owner ? shiftStartMs(owner, assignedAtMs(l)) : assignedAtMs(l);
+  };
+  const overdue = (l: Lead) => leadIsOverdue(l, rr, nowMs, clockStart(l));
+  const leads = (await recentFormLeads(nowMs)).filter(overdue);
   const result: CheckResult = { checked: leads.length, handedOver: 0, managerAlerts: 0 };
   if (!leads.length || !botToken) return result;
 
@@ -166,10 +172,14 @@ export async function runLeadResponseCheck(options: { force?: boolean; nowMs?: n
     const r = lead.routing!;
     // Re-read: another instance may have handled it a moment ago.
     const fresh = await getLeadById(lead.id);
-    if (!fresh || !leadIsOverdue(fresh, rr, nowMs)) continue;
+    if (!fresh || !overdue(fresh)) continue;
 
     const previous = rr.staffList.find((s) => s.id === r.staffId);
-    const next = handoverCandidate(rr, fresh, (s) => (options.canTake ? options.canTake(s, fresh) : true));
+    // Only people working now; the page's team first, then anyone working.
+    const extra = (s: RoundRobinStaff) => (options.canTake ? options.canTake(s, fresh) : true) && staffOnShift(s, nowMs);
+    const next =
+      handoverCandidate(rr, fresh, (s) => extra(s) && staffServesPage(s, fresh.landingPageSlug)) ||
+      handoverCandidate(rr, fresh, extra);
 
     if (!next) {
       if (fresh.routing!.managerAlerted) continue;
