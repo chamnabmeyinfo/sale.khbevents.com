@@ -1,7 +1,7 @@
 ---
 type: feature
 tags: [system, feature, analytics, tracking, marketing]
-updated: 2026-09-24
+updated: 2026-09-25
 admin_path: /admin/pages/<id>/analytics
 admin_menu: Landing Pages CMS → Page Tracking & Analytics
 source:
@@ -20,6 +20,11 @@ source:
 ---
 
 # Tracking and Analytics
+
+> [!info] Campaign report (2026-09-25)
+> Since 2026-09-25 every visit is also saved to the database as one visit record: campaign, channel, device, app, language, active time, scroll depth, sections reached, clicks, form started or sent. The campaign report, the AI analyst and the server-side conversions for Meta and TikTok are built on it. See [[Campaigns and AI Analyst]].
+>
+> The event log behind the page analytics screen below lives in a temporary file on each server and is capped at 5,000 events, so on the live site it is partial. Use Admin → Campaigns for decisions.
 
 ## What it does for sales
 

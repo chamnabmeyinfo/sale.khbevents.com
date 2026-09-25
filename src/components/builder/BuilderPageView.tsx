@@ -40,7 +40,7 @@ export default function BuilderPageView({ page, initialLang = 'en', serverNowMs,
 
   return (
     <BuilderRoot brand={doc.brand} lang={lang}>
-      <LandingPageTracking page={page} lang={lang} />
+      <LandingPageTracking page={page} lang={lang} sections={doc.blocks.map((b) => b.id)} />
       <PopupAdsHost ads={popupAds} previewId={popupPreviewId} pageSlug={page.slug} lang={lang} />
       <div className="kb-langbar" role="group" aria-label="Language">
         <button type="button" aria-pressed={lang === 'en'} onClick={() => switchLang('en')}>EN</button>
@@ -70,9 +70,9 @@ export default function BuilderPageView({ page, initialLang = 'en', serverNowMs,
               nowMs,
               serverNowMs,
               onCta: (b) => trackLandingEvent(page, ctaOpensTelegram(doc.offer) ? 'telegram_click' : 'cta_click', { placement: `builder_${b.type}` }, lang),
-              onLead: (b) => {
+              onLead: (b, eventId) => {
                 // No names or phone numbers in tracking: the lead itself is in Leads.
-                trackLandingEvent(page, 'form_submit', { placement: `builder_${b.type}`, ...(leadValue ? { value: leadValue } : {}) }, lang);
+                trackLandingEvent(page, 'form_submit', { placement: `builder_${b.type}`, ...(leadValue ? { value: leadValue } : {}), ...(eventId ? { eventId } : {}) }, lang);
                 try {
                   localStorage.setItem(popupStorageKeys.leadSent, '1');
                 } catch {}

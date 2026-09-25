@@ -26,6 +26,27 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-25 — Campaigns: measure and analyse, not buy ads; visits stored as daily JSON rows; AI analyst on Claude
+
+- **Decision:** The portal does not create or pay for ads. It measures them:
+  - tracked campaign links;
+  - durable visit records;
+  - server-side conversions to Meta and TikTok;
+  - a campaign report.
+- **AI analyst:** a Claude-based analyst reads the report and proposes the plan, every evening and on demand.
+- **Visit storage:** visit records are stored as one JSON row per page per day in `system_settings`, kept 120 days, instead of a new table.
+- **Why:**
+  - Ads Manager already does ad buying well. The gap was knowing which ad brings paying customers.
+  - The old event log was a temporary per-server file, so its numbers were partial.
+  - JSON rows need no database migration.
+- **Details:**
+  - Only aggregated numbers go to the AI; personal data goes to the ad platforms only as hashes.
+  - All keys are Vercel environment variables.
+- **Decided by:** Owner (goal); Claude with owner approval (approach).
+- **Affects:** [[Campaigns and AI Analyst]], [[Tracking and Analytics]].
+
+---
+
 ## 2026-09-25 — The print agenda picks its sections by the kind of page
 
 - **Decision:** Print has two modes, a smart Agenda (default) and the Entire page. The agenda reads the page as a trip (day-by-day programme), an event (deadline or seats) or a product, and keeps only the practical sections: programme, places, what's included, how to join, who it's for and a few questions. Problems, long "why" lists, photos and most of the FAQ are left out.

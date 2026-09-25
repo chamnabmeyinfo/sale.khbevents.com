@@ -178,6 +178,7 @@ flowchart LR
 |---|---|
 | [[Landing Pages CMS]] | Build and publish trip pages without code |
 | [[Print Agenda]] | Print any page as an A4 agenda, with a QR code |
+| [[Campaigns and AI Analyst]] | Which ads bring leads and customers, visitor behaviour, and an AI plan |
 | [[Leads CRM]] | Every inquiry, its status, notes and export |
 | [[Round Robin]] | Fair sharing of leads and Telegram chats among sales staff |
 | [[Ads and Popups]] | Promotional popups on the landing pages |

@@ -654,6 +654,32 @@ export async function supabaseSetMarker(id: string, value: string): Promise<bool
   return !error;
 }
 
+/** JSON rows with fromId <= id < beforeId, e.g. all `visits:<day>:*` rows of a date range. */
+export async function supabaseGetMarkerRange(fromId: string, beforeId: string): Promise<Array<{ id: string; value: string }> | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('system_settings')
+    .select('id, brand_tagline')
+    .gte('id', fromId)
+    .lt('id', beforeId)
+    .limit(2000);
+  if (error) {
+    console.error('Supabase getMarkerRange error:', error);
+    return null;
+  }
+  return (data || []).map((r: { id: string; brand_tagline: string | null }) => ({ id: r.id, value: r.brand_tagline || '' }));
+}
+
+/** Deletes JSON rows with fromId <= id < beforeId. */
+export async function supabaseDeleteMarkerRange(fromId: string, beforeId: string): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  const { error } = await supabase.from('system_settings').delete().gte('id', fromId).lt('id', beforeId);
+  if (error) console.error('Supabase deleteMarkerRange error:', error);
+  return !error;
+}
+
 export async function supabaseGetRoundRobinLogs(limit: number = 100): Promise<RoundRobinLog[] | null> {
   const supabase = getSupabase();
   if (!supabase) return null;

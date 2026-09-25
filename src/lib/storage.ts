@@ -40,6 +40,7 @@ import { runAfterResponse } from './after-response';
 import { defaultPopupAdsState, inAppBrowserName, nextOpening, normalizePopupAdsState, parseSmartReasons, selectPublicPopupAds, type SmartReason } from './popup-ads';
 import { applyPopupEvent, phnomPenhDay, type PopupEventDetail } from './popup-analytics';
 import { normalizeBuilderDoc } from './builder';
+import { dayKeys, parseVisitRow, upsertVisit, visitRowId, VISIT_RETENTION_DAYS, type VisitRecord } from './visits';
 import { normalizeMediaMeta, type MediaMeta } from './media-library';
 import { findDemoLeads, isDemoLead, type ClearDemoRequest, type ClearDemoResult, type DemoScan } from './demo-data';
 import {
@@ -64,6 +65,8 @@ import {
   supabaseGetDeletedPages,
   supabaseSaveDeletedPages,
   supabaseGetMarker,
+  supabaseGetMarkerRange,
+  supabaseDeleteMarkerRange,
   supabaseSetMarker,
   supabaseGetStaffClickStats,
   supabaseSaveStaffClickStats,
@@ -1900,6 +1903,57 @@ export async function setMarker(id: string, value: string): Promise<void> {
   const db = await getDatabase();
   db.markers = { ...(db.markers || {}), [id]: value };
   await saveDatabase(db);
+}
+
+// ─── Visits (campaign analytics) ───────────────────────────────────────────
+
+/** Saves one visit beacon into its day's row (merged with earlier beacons of the same visit). */
+export async function recordVisit(rec: VisitRecord): Promise<void> {
+  const id = visitRowId(phnomPenhDay(rec.t0), rec.p);
+  if (isSupabaseConfigured()) {
+    const list = parseVisitRow(await supabaseGetMarker(id).catch(() => null));
+    await supabaseSetMarker(id, JSON.stringify(upsertVisit(list, rec))).catch(() => false);
+    await pruneVisits(rec.t0);
+    return;
+  }
+  const db = await getDatabase();
+  const log = db.visitLog || {};
+  log[id] = upsertVisit(parseVisitRow(JSON.stringify(log[id] || [])), rec);
+  db.visitLog = log;
+  await saveDatabase(db);
+}
+
+/** Visits of the last `days` days (Phnom Penh time), optionally for one page. */
+export async function getVisits(days: number, pageSlug?: string, nowMs: number = Date.now()): Promise<VisitRecord[]> {
+  const keys = dayKeys(days, nowMs);
+  // Rows from the first day up to (not including) the day after the last: safe whatever
+  // the database's text ordering does with the ':' separators.
+  const from = `visits:${keys[0]}`;
+  const before = `visits:${phnomPenhDay(nowMs + 86_400_000)}`;
+  let rows: Array<{ id: string; value: string }> = [];
+  if (isSupabaseConfigured()) {
+    rows = (await supabaseGetMarkerRange(from, before).catch(() => null)) || [];
+  } else {
+    const db = await getDatabase();
+    rows = Object.entries(db.visitLog || {})
+      .filter(([id]) => id >= from && id < before)
+      .map(([id, list]) => ({ id, value: JSON.stringify(list) }));
+  }
+  const out: VisitRecord[] = [];
+  for (const row of rows) {
+    if (pageSlug && !row.id.endsWith(`:${pageSlug}`)) continue;
+    out.push(...parseVisitRow(row.value));
+  }
+  return out;
+}
+
+/** Once a day, removes visit rows older than the retention period. */
+async function pruneVisits(nowMs: number): Promise<void> {
+  const today = phnomPenhDay(nowMs);
+  if ((await getMarker('visits_pruned').catch(() => null)) === today) return;
+  await setMarker('visits_pruned', today);
+  const cutoff = phnomPenhDay(nowMs - VISIT_RETENTION_DAYS * 86_400_000);
+  if (isSupabaseConfigured()) await supabaseDeleteMarkerRange('visits:0000', `visits:${cutoff}`).catch(() => false);
 }
 
 // ─── Clear demo data (Admin → Settings & Security) ────────────────────────

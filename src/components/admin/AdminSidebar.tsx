@@ -16,6 +16,8 @@ import {
   PlusCircle, 
   Layers, 
   Sparkles,
+  Target,
+  Link2,
   UserCheck, 
   Clock, 
   CheckCircle2, 
@@ -69,6 +71,7 @@ export default function AdminSidebar() {
     leads: pathname.startsWith('/admin/leads'),
     roundRobin: pathname.startsWith('/admin/round-robin'),
     ads: pathname.startsWith('/admin/ads'),
+    campaigns: pathname.startsWith('/admin/campaigns'),
     settings: pathname.startsWith('/admin/settings'),
     guide: pathname.startsWith('/admin/guide')
   });
@@ -149,6 +152,19 @@ export default function AdminSidebar() {
       subItems: [
         { label: t('nav.ads.all'), href: '/admin/ads', icon: Megaphone, badge: 'New' },
         { label: t('nav.ads.performance'), href: '/admin/ads/analytics', icon: BarChart3 },
+      ]
+    },
+    {
+      id: 'campaigns',
+      label: t('nav.campaigns'),
+      icon: Target,
+      href: '/admin/campaigns',
+      isActive: pathname.startsWith('/admin/campaigns'),
+      subItems: [
+        { label: t('nav.campaigns.performance'), href: '/admin/campaigns', icon: BarChart3, badge: 'New' },
+        { label: t('nav.campaigns.manage'), href: '/admin/campaigns?tab=manage', icon: Link2 },
+        { label: t('nav.campaigns.ai'), href: '/admin/campaigns?tab=ai', icon: Sparkles },
+        { label: t('nav.campaigns.setup'), href: '/admin/campaigns?tab=setup', icon: Settings },
       ]
     },
     {

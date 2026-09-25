@@ -4,10 +4,13 @@ import { recordTrackingEvent, RecordTrackingPayload } from '@/lib/storage';
 import { TrackingEventType } from '@/lib/types';
 import { rateLimitByIp } from '@/lib/rate-limit';
 import { scheduleLeadResponseCheck } from '@/lib/lead-followup';
+import { recordVisit } from '@/lib/storage';
+import { visitFromEvent } from '@/lib/visits';
+import { runAfterResponse } from '@/lib/after-response';
 
 const EVENT_TYPES: readonly TrackingEventType[] = [
   'page_view', 'scroll_depth', 'cta_click', 'telegram_click', 'seat_select', 'form_submit', 'lang_toggle',
-  'popup_view', 'popup_click', 'popup_close', 'popup_lead',
+  'popup_view', 'popup_click', 'popup_close', 'popup_lead', 'session_summary',
 ];
 const POPUP_EVENT_TYPES: readonly TrackingEventType[] = ['popup_view', 'popup_click', 'popup_close', 'popup_lead'];
 const seconds = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? Math.min(3600, Math.round(v * 10) / 10) : undefined);
@@ -78,7 +81,28 @@ export async function POST(req: NextRequest) {
         os: str(body.os, 100),
         lang: oneOf(body.lang, LANGS),
       };
-      await recordTrackingEvent(payload);
+      // Visits (campaign report): the landing and the visit summary, kept in the database.
+      const visit = visitFromEvent({
+        slug,
+        eventType,
+        sessionId: payload.sessionId,
+        visitorId: str(body.visitorId, 60),
+        returning: body.returning === true,
+        eventData,
+        referrer: payload.referrer,
+        utmSource: payload.utmSource,
+        utmMedium: payload.utmMedium,
+        utmCampaign: payload.utmCampaign,
+        utmContent: payload.utmContent,
+        deviceType: payload.deviceType,
+        userAgent: payload.browser,
+        lang: payload.lang,
+        ownHost: req.headers.get('host') || undefined,
+        nowMs: Date.now(),
+      });
+      if (visit) runAfterResponse(() => recordVisit(visit));
+      // The summary is a visit record only; the raw event log keeps the individual events.
+      if (eventType !== 'session_summary') await recordTrackingEvent(payload);
       // Ordinary traffic keeps the lead follow-up check running (about once a minute).
       scheduleLeadResponseCheck();
     }

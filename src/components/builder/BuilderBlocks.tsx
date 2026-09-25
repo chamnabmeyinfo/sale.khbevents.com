@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import BackgroundVideo from './BackgroundVideo';
+import { leadAttribution, newEventId } from '@/components/common/attribution';
+import { getSessionId } from '@/components/common/LandingPageTracking';
 import { BenefitIconSvg } from './icons';
 export { BenefitIconSvg };
 import type {
@@ -42,7 +44,8 @@ export interface RenderContext {
   editing?: boolean;
   onCta?: (block: BuilderBlock) => void;
   /** Called after a form was accepted by the server. */
-  onLead?: (block: FormBlock) => void;
+  /** A lead was sent; eventId is shared with the server's Conversions API call. */
+  onLead?: (block: FormBlock, eventId?: string) => void;
 }
 
 const UI = {
@@ -476,7 +479,10 @@ function LeadFormBlock({ block, ctx }: { block: FormBlock; ctx: RenderContext })
     setState('sending');
     setError('');
     try {
-      const params = new URLSearchParams(window.location.search);
+      // The campaign the visit landed with (kept for the whole visit), the first campaign
+      // that found this visitor, and one conversion id shared with the ad platforms.
+      const attr = leadAttribution(getSessionId());
+      const eventId = newEventId();
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -489,18 +495,27 @@ function LeadFormBlock({ block, ctx }: { block: FormBlock; ctx: RenderContext })
           // The chosen option in English for the sales team, whatever language the visitor used.
           eventType: interestChoice ? pick(interestChoice, 'en') : undefined,
           landingPageSlug: ctx.slug,
-          utmSource: params.get('utm_source') || undefined,
-          utmMedium: params.get('utm_medium') || undefined,
-          utmCampaign: params.get('utm_campaign') || undefined,
-          utmContent: params.get('utm_content') || undefined,
-          referrer: document.referrer || undefined,
+          utmSource: attr.utmSource || attr.firstTouch?.utmSource,
+          utmMedium: attr.utmMedium || attr.firstTouch?.utmMedium,
+          utmCampaign: attr.utmCampaign || attr.firstTouch?.utmCampaign,
+          utmContent: attr.utmContent || attr.firstTouch?.utmContent,
+          referrer: attr.referrer || document.referrer || undefined,
+          tracking: {
+            eventId,
+            sessionId: attr.sessionId,
+            visitorId: attr.visitorId,
+            fbclid: attr.fbclid || attr.firstTouch?.fbclid,
+            ttclid: attr.ttclid || attr.firstTouch?.ttclid,
+            pageUrl: window.location.href.split('#')[0],
+            firstCampaign: attr.firstTouch?.utmCampaign,
+          },
           customFields: { language: lang, ...(interestChoice ? { interest: pick(interestChoice, 'en') } : {}) },
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(typeof data.error === 'string' ? data.error : t.failed);
       setState('done');
-      ctx.onLead?.(block);
+      ctx.onLead?.(block, eventId);
     } catch (err) {
       setState('idle');
       setError(err instanceof Error && err.message ? err.message : t.failed);

@@ -312,6 +312,15 @@ const PP_OFFSET_MS = 7 * 60 * 60 * 1000;
  * Sends the day's summary to the manager chat once per Phnom Penh day, at or
  * after the chosen hour. Safe to call often.
  */
+/** Sends an HTML message to the manager chat (Round Robin settings). False when no bot or chat is set. */
+export async function sendManagerMessage(text: string): Promise<boolean> {
+  const [rr, settings] = await Promise.all([getRoundRobinSettings(), getSettings()]);
+  const manager = managerChat(rr, settings.telegramChatId);
+  if (!settings.telegramBotToken || !manager) return false;
+  const res = await sendText(settings.telegramBotToken, manager, text);
+  return Boolean(res.ok);
+}
+
 export async function maybeSendDailySummary(options: { nowMs?: number; force?: boolean } = {}): Promise<{ sent: boolean; reason?: string }> {
   const nowMs = options.nowMs ?? Date.now();
   const rr = await getRoundRobinSettings();

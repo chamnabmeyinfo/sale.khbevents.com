@@ -28,6 +28,11 @@ Suggested order: lock the database first, then change the token and the password
 
 ### Sales page
 
+- [ ] Campaigns & AI (new):
+  - Add `META_CAPI_ACCESS_TOKEN`, `TIKTOK_EVENTS_ACCESS_TOKEN` and `ANTHROPIC_API_KEY` in Vercel → Settings → Environment Variables, then redeploy.
+  - Check each with a test code in Admin → Campaigns → Tracking setup.
+  - Create a campaign for every running ad, use its link, and enter the spend weekly.
+  - → [[Campaigns and AI Analyst]] #owner
 - [ ] If a page's background video was uploaded as a MOV file (from an iPhone), re-upload it as MP4 (H.264) so Android phones play it too. → [[Page Builder]] #owner
 - [ ] Vietnam page, now in the builder:
   - Check it after the next deploy: Admin → Landing Pages CMS → Edit.

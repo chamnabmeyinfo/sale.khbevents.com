@@ -513,7 +513,8 @@ export type TrackingEventType =
   | 'popup_view'
   | 'popup_click'
   | 'popup_close'
-  | 'popup_lead';
+  | 'popup_lead'
+  | 'session_summary';
 
 export interface TrackingEvent {
   id: string;
@@ -813,6 +814,8 @@ export interface DatabaseSchema {
   staffClickStats?: StaffClickStats;
   /** Small flags such as the day the last daily summary was sent (local fallback for Supabase markers). */
   markers?: Record<string, string>;
+  /** Visit records by row id `visits:<day>:<slug>` (local fallback for the Supabase rows). */
+  visitLog?: Record<string, unknown[]>;
   // Display names of uploaded photos, keyed by storage file name (admin photo library).
   mediaLibrary?: import('./media-library').MediaMeta;
 }

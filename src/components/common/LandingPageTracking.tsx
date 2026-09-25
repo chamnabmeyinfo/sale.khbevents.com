@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import Script from 'next/script';
 import { LandingPage, TrackingEventType } from '@/lib/types';
 import { takePopupLeads } from '@/components/common/popup-attribution';
+import { getAttribution, getFirstTouch, getVisitor } from '@/components/common/attribution';
 
 // Helper: Get or create session ID
 export function getSessionId(): string {
@@ -50,21 +51,85 @@ export function getMarketingParams(): {
   ttclid?: string;
 } {
   if (typeof window === 'undefined') return {};
-  try {
-    const p = new URLSearchParams(window.location.search);
-    return {
-      utmSource: p.get('utm_source') || undefined,
-      utmMedium: p.get('utm_medium') || undefined,
-      utmCampaign: p.get('utm_campaign') || undefined,
-      utmContent: p.get('utm_content') || undefined,
-      utmTerm: p.get('utm_term') || undefined,
-      gclid: p.get('gclid') || undefined,
-      fbclid: p.get('fbclid') || undefined,
-      ttclid: p.get('ttclid') || undefined,
-    };
-  } catch {
-    return {};
-  }
+  // The visit keeps the campaign it landed with (see attribution.ts), so later events
+  // and the lead form still credit the ad after the address loses its utm_ tags.
+  const a = getAttribution();
+  return {
+    utmSource: a.utmSource,
+    utmMedium: a.utmMedium,
+    utmCampaign: a.utmCampaign,
+    utmContent: a.utmContent,
+    utmTerm: a.utmTerm,
+    gclid: a.gclid,
+    fbclid: a.fbclid,
+    ttclid: a.ttclid,
+  };
+}
+
+/**
+ * What one visit did, sent as a single "session_summary" when the visitor leaves or
+ * switches away (and refreshed if they come back). The campaign report is built from
+ * these: engagement, how far they read, which sections they reached, what they clicked.
+ */
+interface VisitState {
+  slug: string;
+  startedAt: number;
+  visibleSince: number | null;
+  activeMs: number;
+  lastInput: number;
+  maxScroll: number;
+  cta: number;
+  telegram: number;
+  formStarted: boolean;
+  lead: boolean;
+  langToggles: number;
+  sections: string[];
+  seen: Set<string>;
+  maxSection: number;
+}
+
+let visit: VisitState | null = null;
+const IDLE_MS = 60_000;
+
+function accrueActive(now = Date.now()) {
+  if (!visit || visit.visibleSince === null) return;
+  // Time with the page open and the visitor active in the last minute.
+  const until = Math.min(now, visit.lastInput + IDLE_MS);
+  if (until > visit.visibleSince) visit.activeMs += until - visit.visibleSince;
+  visit.visibleSince = now;
+}
+
+function noteVisitEvent(eventType: TrackingEventType) {
+  if (!visit) return;
+  if (eventType === 'cta_click') visit.cta++;
+  else if (eventType === 'telegram_click') visit.telegram++;
+  else if (eventType === 'form_submit') { visit.lead = true; visit.formStarted = true; }
+  else if (eventType === 'lang_toggle') visit.langToggles++;
+}
+
+function sendVisitSummary(lang?: 'en' | 'kh') {
+  if (!visit) return;
+  accrueActive();
+  const ft = getFirstTouch();
+  trackClientEvent(visit.slug, 'session_summary', {
+    activeSeconds: Math.round(visit.activeMs / 1000),
+    maxScroll: visit.maxScroll,
+    cta: visit.cta,
+    telegram: visit.telegram,
+    formStarted: visit.formStarted,
+    lead: visit.lead,
+    langToggles: visit.langToggles,
+    seen: Array.from(visit.seen).slice(0, 40),
+    maxSection: visit.maxSection,
+    sectionCount: visit.sections.length,
+    firstCampaign: ft?.utmCampaign,
+    firstSource: ft?.utmSource,
+  }, lang);
+}
+
+function visitorFields() {
+  const v = getVisitor(getSessionId());
+  return { visitorId: v.visitorId, returning: v.returning };
 }
 
 // Helper: Send event to /api/track via beacon or fetch
@@ -80,6 +145,7 @@ export function trackClientEvent(
     slug: pageSlug,
     eventType,
     sessionId: getSessionId(),
+    ...visitorFields(),
     eventData,
     referrer: document.referrer || '',
     ...utms,
@@ -88,6 +154,7 @@ export function trackClientEvent(
     lang: lang || (document.documentElement.lang === 'kh' ? 'kh' : 'en'),
   };
 
+  noteVisitEvent(eventType);
   // A form sent after seeing a popup is credited to that popup in the popup analytics.
   if (eventType === 'form_submit') {
     for (const lead of takePopupLeads()) trackClientEvent(pageSlug, 'popup_lead', lead, lang);
@@ -153,12 +220,14 @@ export function trackLandingEvent(
   // Meta (Facebook) Pixel
   if (tracking?.facebookPixelId && tracking.facebookPixelEnabled !== false && typeof win.fbq === 'function') {
     if (eventType === 'form_submit') {
-      win.fbq('track', 'Lead', {
+      const lead = {
         content_name: page.title,
         content_category: page.category,
-        value: eventData?.value || page.urgency?.earlyBirdPrice || 499,
-        currency: 'USD',
-      });
+        ...(eventData?.value ? { value: eventData.value, currency: 'USD' } : {}),
+      };
+      // The same id is sent by the server (Conversions API), so Meta counts the lead once.
+      if (typeof eventData?.eventId === 'string') win.fbq('track', 'Lead', lead, { eventID: eventData.eventId });
+      else win.fbq('track', 'Lead', lead);
     } else if (eventType === 'telegram_click') {
       win.fbq('track', 'Contact', {
         content_name: page.title,
@@ -184,8 +253,7 @@ export function trackLandingEvent(
     if (eventType === 'form_submit') {
       win.gtag('event', 'generate_lead', {
         page_title: page.title,
-        value: eventData?.value || page.urgency?.earlyBirdPrice || 499,
-        currency: 'USD',
+        ...(eventData?.value ? { value: eventData.value, currency: 'USD' } : {}),
       });
     } else if (eventType === 'telegram_click') {
       win.gtag('event', 'contact', {
@@ -214,11 +282,13 @@ export function trackLandingEvent(
   // TikTok Pixel
   if (tracking?.tiktokPixelId && tracking.tiktokPixelEnabled !== false && typeof win.ttq?.track === 'function') {
     if (eventType === 'form_submit') {
-      win.ttq.track('SubmitForm', {
+      const lead = {
         contents: [{ content_id: slug, content_name: page.title }],
-        value: eventData?.value || 499,
-        currency: 'USD',
-      });
+        ...(eventData?.value ? { value: eventData.value, currency: 'USD' } : {}),
+      };
+      // Matching event_id with the Events API sent by the server: counted once.
+      if (typeof eventData?.eventId === 'string') win.ttq.track('SubmitForm', lead, { event_id: eventData.eventId });
+      else win.ttq.track('SubmitForm', lead);
     } else if (eventType === 'telegram_click') {
       win.ttq.track('Contact');
     } else if (eventType === 'cta_click') {
@@ -230,9 +300,11 @@ export function trackLandingEvent(
 interface LandingPageTrackingProps {
   page?: LandingPage;
   lang?: 'en' | 'kh';
+  /** Builder section ids in page order, to report how far visitors read. */
+  sections?: string[];
 }
 
-export default function LandingPageTracking({ page, lang = 'en' }: LandingPageTrackingProps) {
+export default function LandingPageTracking({ page, lang = 'en', sections }: LandingPageTrackingProps) {
   const scrollMilestones = useRef<Set<number>>(new Set());
 
   // ── First-party Page View & Scroll Depth Tracking
@@ -262,6 +334,101 @@ export default function LandingPageTracking({ page, lang = 'en' }: LandingPageTr
     return () => window.removeEventListener('scroll', handleScroll);
   }, [page?.slug, lang]);
 
+  // ── Visit summary: active time, deepest scroll, sections reached, form started.
+  const sectionKey = (sections || []).join(',');
+  const langRef = useRef(lang);
+  useEffect(() => { langRef.current = lang; }, [lang]);
+  useEffect(() => {
+    if (!page?.slug) return;
+    const now = Date.now();
+    visit = {
+      slug: page.slug,
+      startedAt: now,
+      visibleSince: document.visibilityState === 'visible' ? now : null,
+      activeMs: 0,
+      lastInput: now,
+      maxScroll: 0,
+      cta: 0,
+      telegram: 0,
+      formStarted: false,
+      lead: false,
+      langToggles: 0,
+      sections: sectionKey ? sectionKey.split(',') : [],
+      seen: new Set(),
+      maxSection: -1,
+    };
+    const state = visit;
+    let dirty = false;
+    const onInput = () => {
+      accrueActive();
+      state.lastInput = Date.now();
+    };
+    const onScroll = () => {
+      onInput();
+      const h = document.documentElement;
+      const range = h.scrollHeight - h.clientHeight;
+      const pct = range > 0 ? Math.round((h.scrollTop / range) * 100) : 100;
+      if (pct > state.maxScroll) { state.maxScroll = Math.min(100, pct); dirty = true; }
+    };
+    const onFocus = (e: FocusEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el?.closest?.('form') && !state.formStarted) { state.formStarted = true; dirty = true; }
+    };
+    const flush = () => {
+      if (dirty || state.activeMs > 0) sendVisitSummary(langRef.current);
+      dirty = false;
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        accrueActive();
+        state.visibleSince = null;
+        flush();
+      } else {
+        state.visibleSince = Date.now();
+        state.lastInput = Date.now();
+      }
+    };
+
+    // Sections: the page's top-level blocks in order, matched to the builder ids.
+    const main = document.querySelector('main');
+    const blocks = main ? Array.from(main.children) : [];
+    const io = typeof IntersectionObserver === 'function' && state.sections.length
+      ? new IntersectionObserver((entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            const index = blocks.indexOf(entry.target);
+            const id = state.sections[index];
+            if (!id || state.seen.has(id)) continue;
+            state.seen.add(id);
+            if (index > state.maxSection) state.maxSection = index;
+            dirty = true;
+          }
+        }, { threshold: 0.35 })
+      : null;
+    blocks.forEach((b) => io?.observe(b));
+
+    // A first summary after 15 seconds, for visitors whose browser never reports leaving.
+    const early = window.setTimeout(flush, 15_000);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('pointerdown', onInput, { passive: true });
+    window.addEventListener('keydown', onInput);
+    document.addEventListener('focusin', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', flush);
+    return () => {
+      window.clearTimeout(early);
+      io?.disconnect();
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('pointerdown', onInput);
+      window.removeEventListener('keydown', onInput);
+      document.removeEventListener('focusin', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', flush);
+      flush();
+      if (visit === state) visit = null;
+    };
+  }, [page?.slug, sectionKey]);
+
   if (!page) return null;
   const tracking = page.tracking;
 
@@ -282,7 +449,7 @@ export default function LandingPageTracking({ page, lang = 'en' }: LandingPageTr
               'https://connect.facebook.net/en_US/fbevents.js');
               fbq('init', ${jsString(tracking.facebookPixelId)});
               fbq('track', 'PageView');
-              fbq('track', 'ViewContent', { content_name: ${jsString(page.title)}, value: 499, currency: 'USD' });
+              fbq('track', 'ViewContent', { content_name: ${jsString(page.title)} });
             `}
           </Script>
           <noscript>

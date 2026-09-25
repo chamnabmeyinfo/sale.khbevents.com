@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { maybeSendDailySummary, runLeadResponseCheck } from '@/lib/lead-followup';
+import { maybeSendDailySummary, runLeadResponseCheck, sendManagerMessage } from '@/lib/lead-followup';
+import { maybeRunDailyAi } from '@/lib/ai-store';
+import { runAfterResponse } from '@/lib/after-response';
 import { rateLimitByIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
+// The daily AI campaign analysis runs after the answer and needs time.
+export const maxDuration = 300;
 
 /**
  * Daily safety net (Vercel cron, see vercel.json): sends the manager's daily
@@ -22,6 +26,8 @@ export async function GET(req: NextRequest) {
   try {
     await runLeadResponseCheck();
     await maybeSendDailySummary();
+    // Once a day the AI analyst reads the campaign report and sends the top actions.
+    runAfterResponse(() => maybeRunDailyAi(sendManagerMessage));
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('Daily summary route error:', err);
