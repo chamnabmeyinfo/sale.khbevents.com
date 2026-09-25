@@ -58,7 +58,8 @@ describe('findUsage', () => {
 
 describe('staff photos count as in use', () => {
   it('names the salesperson whose avatar uses the file', () => {
-    const used = findUsage('abc-photo.webp', [], [], [{ id: 's-a', name: 'Dara', avatar: '/api/uploads/abc-photo.webp' }]);
+    const dara = { id: 's-a', name: 'Dara', avatar: '/api/uploads/abc-photo.webp' };
+    const used = findUsage('abc-photo.webp', [], [], [dara]);
     expect(used).toEqual([{ kind: 'staff', id: 's-a', title: 'Dara' }]);
     expect(findUsage('abc-photo.webp', [], [])).toEqual([]);
   });
