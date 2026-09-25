@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSettings, getRoundRobinSettings, updateRoundRobinSettings, getPageBySlug, isTelegramWebhookSecured } from '@/lib/storage';
-import { selectNextStaff, escapeHtml, readTelegramResponse } from '@/lib/round-robin';
+import { getSettings, getRoundRobinSettings, updateRoundRobinSettings, getPageBySlug, isTelegramWebhookSecured, recordStaffClick } from '@/lib/storage';
+import { selectNextStaff, escapeHtml, readTelegramResponse, countAssignment } from '@/lib/round-robin';
 import { runAfterResponse } from '@/lib/after-response';
 import type { RoundRobinSettings, RoundRobinStaff } from '@/lib/types';
 import { isValidTelegramWebhookSecret } from '@/lib/auth';
@@ -94,8 +94,10 @@ async function telegramCall(botToken: string, method: string, body: Record<strin
 /** Records a bot-side assignment so the rotation and the fairness counters move on. */
 async function commitBotAssignment(rrSettings: RoundRobinSettings, staff: RoundRobinStaff, nextIndex: number) {
   staff.totalDirectClicks = (staff.totalDirectClicks || 0) + 1;
+  countAssignment(staff, Date.now());
   staff.lastAssignedAt = new Date().toISOString();
   await updateRoundRobinSettings({ staffList: rrSettings.staffList, lastAssignedIndex: nextIndex });
+  await recordStaffClick(staff.id, Date.now());
 }
 
 export async function POST(req: NextRequest) {

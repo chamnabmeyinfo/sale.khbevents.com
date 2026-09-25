@@ -23,12 +23,16 @@ import {
   statusAfterClaim,
   type InlineKeyboard,
 } from './lead-response';
-import { escapeHtml, readTelegramResponse, sendLeadToStaffTelegram, shiftStartMs, staffOnShift, staffServesPage } from './round-robin';
+import { countAssignment, escapeHtml, readTelegramResponse, sendLeadToStaffTelegram, shiftStartMs, staffOnShift, staffServesPage, underDailyLimit } from './round-robin';
+import { phnomPenhDay } from './popup-analytics';
 import {
   getDatabase,
   getLeadById,
   getLeads,
+  getMarker,
   getRoundRobinSettings,
+  getStaffClickStats,
+  setMarker,
   getSettings,
   saveDatabase,
   updateRoundRobinSettings,
@@ -42,6 +46,7 @@ import {
   supabaseUpdateLeadRouting,
 } from './supabase-store';
 import { runAfterResponse } from './after-response';
+import { dailySummaryText } from './staff-performance';
 
 async function telegram(botToken: string, method: string, body: Record<string, unknown>) {
   try {
@@ -176,7 +181,7 @@ export async function runLeadResponseCheck(options: { force?: boolean; nowMs?: n
 
     const previous = rr.staffList.find((s) => s.id === r.staffId);
     // Only people working now; the page's team first, then anyone working.
-    const extra = (s: RoundRobinStaff) => (options.canTake ? options.canTake(s, fresh) : true) && staffOnShift(s, nowMs);
+    const extra = (s: RoundRobinStaff) => (options.canTake ? options.canTake(s, fresh) : true) && staffOnShift(s, nowMs) && underDailyLimit(s, phnomPenhDay(nowMs));
     const next =
       handoverCandidate(rr, fresh, (s) => extra(s) && staffServesPage(s, fresh.landingPageSlug)) ||
       handoverCandidate(rr, fresh, extra);
@@ -226,6 +231,7 @@ export async function runLeadResponseCheck(options: { force?: boolean; nowMs?: n
     result.handedOver += 1;
 
     next.totalLeadsRouted = (next.totalLeadsRouted || 0) + 1;
+    countAssignment(next, nowMs);
     if (sent.status === 'DELIVERED') next.successfulDeliveries = (next.successfulDeliveries || 0) + 1;
     else next.failedDeliveries = (next.failedDeliveries || 0) + 1;
     next.lastAssignedAt = at;
@@ -286,5 +292,38 @@ export function scheduleLeadResponseCheck(canTake?: (s: RoundRobinStaff, lead: L
     } catch (err) {
       console.error('Lead response check error:', err);
     }
+    try {
+      await maybeSendDailySummary();
+    } catch (err) {
+      console.error('Daily summary error:', err);
+    }
   });
+}
+
+// ─── Daily summary to the manager ──────────────────────────────────────────
+
+const PP_OFFSET_MS = 7 * 60 * 60 * 1000;
+
+/**
+ * Sends the day's summary to the manager chat once per Phnom Penh day, at or
+ * after the chosen hour. Safe to call often.
+ */
+export async function maybeSendDailySummary(options: { nowMs?: number; force?: boolean } = {}): Promise<{ sent: boolean; reason?: string }> {
+  const nowMs = options.nowMs ?? Date.now();
+  const rr = await getRoundRobinSettings();
+  const hour = rr.dailySummaryHour;
+  if (hour === undefined || hour === null || !Number.isInteger(hour)) return { sent: false, reason: 'off' };
+  const localHour = new Date(nowMs + PP_OFFSET_MS).getUTCHours();
+  if (!options.force && localHour < hour) return { sent: false, reason: 'too early' };
+  const day = phnomPenhDay(nowMs);
+  if (!options.force && (await getMarker('rr_daily_summary')) === day) return { sent: false, reason: 'already sent' };
+  const settings = await getSettings();
+  const manager = managerChat(rr, settings.telegramChatId);
+  if (!settings.telegramBotToken || !manager) return { sent: false, reason: 'no bot or manager chat' };
+  await setMarker('rr_daily_summary', day);
+  const since = new Date(nowMs - 2 * 24 * 60 * 60 * 1000).toISOString();
+  const leads = isSupabaseConfigured() ? (await supabaseGetLeadsSince(since).catch(() => null)) || [] : (await getLeads()).filter((l) => l.createdAt >= since);
+  const text = dailySummaryText(leads, await getStaffClickStats(), rr.staffList, day);
+  const res = await sendText(settings.telegramBotToken, manager, text);
+  return { sent: Boolean(res.ok) };
 }

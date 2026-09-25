@@ -52,10 +52,13 @@ export async function PUT(req: NextRequest) {
       const pages = Array.isArray(s.pages)
         ? Array.from(new Set(s.pages.map((p) => String(p).toLowerCase().trim()).filter((p) => /^[a-z0-9_-]{1,120}$/.test(p))))
         : [];
-      return { ...s, workHours: normalizeHours(s.workHours), pages: pages.length ? pages : undefined };
+      const limit = Math.round(Number(s.dailyLimit) || 0);
+      return { ...s, workHours: normalizeHours(s.workHours), pages: pages.length ? pages : undefined, dailyLimit: limit > 0 ? Math.min(limit, 500) : undefined };
     });
     const minutes = Number(settings.responseMinutes);
     settings.responseMinutes = (RESPONSE_MINUTE_CHOICES as readonly number[]).includes(minutes) ? minutes : 0;
+    const hour = Number(settings.dailySummaryHour);
+    settings.dailySummaryHour = settings.dailySummaryHour !== undefined && settings.dailySummaryHour !== null && [17, 18, 19, 20].includes(hour) ? hour : undefined;
     if (autoNormalize) {
       staffList = normalizeStaffPercentages(staffList);
     }
@@ -67,7 +70,7 @@ export async function PUT(req: NextRequest) {
     staffList = staffList.map((s: RoundRobinStaff) => {
       const c = live.get(s.id);
       return c
-        ? { ...s, totalLeadsRouted: c.totalLeadsRouted, totalDirectClicks: c.totalDirectClicks, lastAssignedAt: c.lastAssignedAt }
+        ? { ...s, totalLeadsRouted: c.totalLeadsRouted, totalDirectClicks: c.totalDirectClicks, lastAssignedAt: c.lastAssignedAt, todayDay: c.todayDay, todayCount: c.todayCount }
         : s;
     });
 

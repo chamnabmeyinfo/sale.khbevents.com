@@ -136,6 +136,7 @@ export default function AdminSidebar() {
       subItems: [
         { label: t('nav.roundRobin.staff'), href: '/admin/round-robin', icon: Users, badge: 'Routing' },
         { label: t('nav.roundRobin.log'), href: '/admin/round-robin', icon: Activity },
+        { label: t('nav.roundRobin.performance'), href: '/admin/round-robin/performance', icon: BarChart3 },
       ]
     },
     {

@@ -1,5 +1,5 @@
 import { getSupabase } from './supabase';
-import { LandingPage, Lead, LeadStatus, SystemSettings, RoundRobinSettings, RoundRobinLog,
+import { LandingPage, Lead, LeadStatus, SystemSettings, RoundRobinSettings, RoundRobinLog, StaffClickStats,
   PopupAdsState,
   PopupAdStatsMap
 } from './types';
@@ -688,4 +688,15 @@ export async function supabaseSaveRoundRobinLog(log: RoundRobinLog): Promise<boo
   } catch {
     return false;
   }
+}
+
+/** Telegram clicks per salesperson per day (row staff_click_stats). */
+export async function supabaseGetStaffClickStats(): Promise<StaffClickStats | null | undefined> {
+  const value = await readJsonRow<StaffClickStats>('staff_click_stats');
+  if (value === null || value === undefined) return value;
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : undefined;
+}
+
+export async function supabaseSaveStaffClickStats(stats: StaffClickStats): Promise<boolean> {
+  return writeJsonRow('staff_click_stats', stats);
 }

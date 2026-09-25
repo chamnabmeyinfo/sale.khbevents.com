@@ -7,6 +7,10 @@ admin_menu: Staff Round Robin
 source:
   - src/lib/round-robin.ts
   - src/lib/lead-response.ts
+  - src/lib/staff-performance.ts
+  - src/components/admin/TeamPerformanceClient.tsx
+  - src/app/api/round-robin/daily-summary/route.ts
+  - vercel.json
   - src/components/admin/StaffAvailability.tsx
   - src/lib/lead-followup.ts
   - src/app/api/round-robin/tick/route.ts
@@ -95,6 +99,12 @@ How they apply to a new form lead, a Telegram click and the bot:
 - A **returning** visitor or customer stays with their salesperson whatever the hours or teams.
 - **Hand-over clock:** for a lead given outside someone's hours, the minutes count from the start of their next shift. Hand-overs only go to people working now, the page's team first. Leads older than 24 hours are not passed on (a Friday-night lead whose owner is back on Monday is the manager's call).
 - Pages with their own Round Robin in Dedicated Settings keep using that separate setup.
+
+## Daily limit, Team performance and the daily summary
+
+- **Daily limit** (staff card): most new contacts (form leads plus Telegram clicks) per Phnom Penh day; 0 means no limit. The card shows today's count. People at their limit are skipped while a colleague below it can take the contact; if everyone is at their limit, the rotation continues. Hand-overs also skip people at their limit.
+- **Team performance** (`/admin/round-robin/performance`, sidebar **Team Performance**, or the button on the Round Robin page): today, 7, 30 or 90 days. Tiles for form leads and clicks, replied (button tapped), average reply time, won and lost, still waiting. A row per salesperson with share of new contacts, leads, clicks, reply rate and time, the three button outcomes, won, waiting and hand-overs; new contacts per day; and the list of leads still waiting for a reply with links to the CRM. Built from the lead records (`src/lib/staff-performance.ts`); Telegram clicks per person per day are kept in the `staff_click_stats` row for 120 days. Replies start with the buttons (25 Sep 2026).
+- **Daily summary to the manager chat** (Advanced rules): Off, or every day at 17:00, 18:00, 19:00 or 20:00 Phnom Penh. One Telegram message with the day's leads and clicks per person, taps and reply times, and the leads still waiting. Sent to the Manager Chat ID (or Fallback, or the company chat) once per day, at or after the chosen time, on site traffic; a Vercel cron at 20:00 (`/api/round-robin/daily-summary`, once a day, allowed on the free plan) sends it if nothing did. If `CRON_SECRET` is set on the server, that address only accepts Vercel's call.
 
 ## Who can receive what (eligibility)
 

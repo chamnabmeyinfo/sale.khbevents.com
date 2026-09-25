@@ -4,5 +4,11 @@
     "sin1"
   ],
   "buildCommand": "npm run build",
-  "ignoreCommand": "bash scripts/vercel-ignore-build.sh"
+  "ignoreCommand": "bash scripts/vercel-ignore-build.sh",
+  "crons": [
+    {
+      "path": "/api/round-robin/daily-summary",
+      "schedule": "0 13 * * *"
+    }
+  ]
 }

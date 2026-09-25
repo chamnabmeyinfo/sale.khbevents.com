@@ -9,6 +9,7 @@ import { errorMessage } from '@/lib/errors';
 import { toWhatsAppNumber } from './phone';
 import { claimKeyboard } from './lead-response';
 import { nextOpeningMs, withinHours } from './popup-ads';
+import { phnomPenhDay } from './popup-analytics';
 
 /**
  * No staff ship by default: every routed visitor must land on a real person, so
@@ -194,8 +195,30 @@ export function eligibleStaff(settings: RoundRobinSettings, need?: StaffRequirem
   // Preferences narrow the pool only when someone is left, so a lead or click is never lost:
   // first the page's team, then who is working now.
   pool = prefer(pool, (s) => staffServesPage(s, ctx.pageSlug));
-  if (ctx.nowMs !== undefined) pool = prefer(pool, (s) => staffOnShift(s, ctx.nowMs!));
+  if (ctx.nowMs !== undefined) {
+    pool = prefer(pool, (s) => staffOnShift(s, ctx.nowMs!));
+    const day = phnomPenhDay(ctx.nowMs);
+    pool = prefer(pool, (s) => underDailyLimit(s, day));
+  }
   return pool;
+}
+
+/** New contacts this person got on a Phnom Penh day. */
+export function assignmentsOn(s: Pick<RoundRobinStaff, 'todayDay' | 'todayCount'>, day: string): number {
+  return s.todayDay === day ? s.todayCount || 0 : 0;
+}
+
+/** True when the person has no daily limit or is still below it. */
+export function underDailyLimit(s: Pick<RoundRobinStaff, 'dailyLimit' | 'todayDay' | 'todayCount'>, day: string): boolean {
+  const limit = Number(s.dailyLimit) || 0;
+  return limit <= 0 || assignmentsOn(s, day) < limit;
+}
+
+/** Counts one new contact for today (call wherever totalLeadsRouted or totalDirectClicks goes up). */
+export function countAssignment(s: RoundRobinStaff, nowMs: number): void {
+  const day = phnomPenhDay(nowMs);
+  s.todayCount = assignmentsOn(s, day) + 1;
+  s.todayDay = day;
 }
 
 /** Where and when an assignment happens, for page teams and working hours. */

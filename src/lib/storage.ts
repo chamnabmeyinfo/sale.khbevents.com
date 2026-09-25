@@ -17,7 +17,8 @@ import {
   AssignmentReason,
   PopupAd,
   PopupAdsState,
-  PopupAdStatsMap
+  PopupAdStatsMap,
+  StaffClickStats
 } from './types';
 import {
   defaultRoundRobinSettings,
@@ -30,12 +31,13 @@ import {
   visitorMemoryMs,
   sendLeadToStaffTelegram,
   escapeHtml,
-  staffOnShift
+  staffOnShift,
+  countAssignment
 } from './round-robin';
 import { isSupabaseConfigured } from './supabase';
 import { runAfterResponse } from './after-response';
 import { defaultPopupAdsState, inAppBrowserName, nextOpening, normalizePopupAdsState, parseSmartReasons, selectPublicPopupAds, type SmartReason } from './popup-ads';
-import { applyPopupEvent, type PopupEventDetail } from './popup-analytics';
+import { applyPopupEvent, phnomPenhDay, type PopupEventDetail } from './popup-analytics';
 import { normalizeBuilderDoc } from './builder';
 import { normalizeMediaMeta, type MediaMeta } from './media-library';
 import {
@@ -61,6 +63,8 @@ import {
   supabaseSaveDeletedPages,
   supabaseGetMarker,
   supabaseSetMarker,
+  supabaseGetStaffClickStats,
+  supabaseSaveStaffClickStats,
   supabaseGetPopupAds,
   supabaseSavePopupAds,
   supabaseGetMediaMeta,
@@ -961,6 +965,7 @@ export async function createLead(leadData: {
 
       // Update staff live performance counters
       staff.totalLeadsRouted = (staff.totalLeadsRouted || 0) + 1;
+      countAssignment(staff, Date.now());
       if (dispatchResult.status === 'DELIVERED') {
         staff.successfulDeliveries = (staff.successfulDeliveries || 0) + 1;
       } else {
@@ -1724,6 +1729,7 @@ export async function recordDirectContactRoute(params: {
   // Rotation state is updated in memory now, so a second click arriving before the
   // deferred work runs already sees this assignment.
   staff.totalDirectClicks = (staff.totalDirectClicks || 0) + 1;
+  countAssignment(staff, Date.now());
   staff.lastAssignedAt = now;
   rrSettings.lastAssignedIndex = nextIndex;
 
@@ -1745,6 +1751,7 @@ export async function recordDirectContactRoute(params: {
     if (!useCustomRr) {
       tasks.push(updateRoundRobinSettings({ staffList: rrSettings.staffList, lastAssignedIndex: nextIndex }));
     }
+    tasks.push(recordStaffClick(staff.id, Date.now()));
 
     let alertNote: string | undefined;
     if (botToken && staff.telegramChatId) {
@@ -1810,3 +1817,67 @@ export async function recordDirectContactRoute(params: {
   return { staff, targetTelegramUrl, logId, repeat: false, rememberSeconds };
 }
 
+
+// ─── Salesperson click history (for Team performance) ─────────────────────
+
+/** Telegram clicks per salesperson per day, last 120 days. */
+export async function getStaffClickStats(): Promise<StaffClickStats> {
+  if (isSupabaseConfigured()) {
+    try {
+      const remote = await supabaseGetStaffClickStats();
+      if (remote) return remote;
+      if (remote === undefined) return {};
+    } catch (err) {
+      console.error('Supabase getStaffClickStats error:', err);
+    }
+  }
+  const db = await getDatabase();
+  return db.staffClickStats || {};
+}
+
+/** Counts one Telegram click for a salesperson (runs after the redirect). */
+export async function recordStaffClick(staffId: string, nowMs: number): Promise<void> {
+  const day = phnomPenhDay(nowMs);
+  const oldest = phnomPenhDay(nowMs - 119 * 24 * 60 * 60 * 1000);
+  const bump = (stats: StaffClickStats) => {
+    const row = stats[staffId] || {};
+    row[day] = (row[day] || 0) + 1;
+    for (const k of Object.keys(row)) if (k < oldest) delete row[k];
+    stats[staffId] = row;
+    return stats;
+  };
+  const db = await getDatabase();
+  db.staffClickStats = bump(db.staffClickStats || {});
+  await saveDatabase(db);
+  if (isSupabaseConfigured()) {
+    try {
+      const remote = await supabaseGetStaffClickStats();
+      await supabaseSaveStaffClickStats(bump(remote || {}));
+    } catch (err) {
+      console.error('Supabase recordStaffClick error:', err);
+    }
+  }
+}
+
+/** A small named flag (Supabase marker, or the local file). */
+export async function getMarker(id: string): Promise<string | null> {
+  if (isSupabaseConfigured()) {
+    try {
+      return await supabaseGetMarker(id);
+    } catch {
+      return null;
+    }
+  }
+  const db = await getDatabase();
+  return db.markers?.[id] ?? null;
+}
+
+export async function setMarker(id: string, value: string): Promise<void> {
+  if (isSupabaseConfigured()) {
+    await supabaseSetMarker(id, value).catch(() => false);
+    return;
+  }
+  const db = await getDatabase();
+  db.markers = { ...(db.markers || {}), [id]: value };
+  await saveDatabase(db);
+}

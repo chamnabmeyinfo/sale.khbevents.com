@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Clock, LayoutTemplate } from 'lucide-react';
+import { Clock, Gauge, LayoutTemplate } from 'lucide-react';
 import type { RoundRobinStaff } from '@/lib/types';
 import { nextOpening } from '@/lib/popup-ads';
-import { staffOnShift } from '@/lib/round-robin';
+import { assignmentsOn, staffOnShift } from '@/lib/round-robin';
+import { phnomPenhDay } from '@/lib/popup-analytics';
 import { useLanguage } from '@/context/LanguageContext';
 
 const DAY_KEYS = ['ads.day.sun', 'ads.day.mon', 'ads.day.tue', 'ads.day.wed', 'ads.day.thu', 'ads.day.fri', 'ads.day.sat'];
@@ -95,6 +96,24 @@ export default function StaffAvailability({
           })}
         </div>
         <p className="mt-1 text-[10px] text-slate-500 dark:text-gray-400">{t('rr.avail.pagesHint')}</p>
+      </div>
+
+      <div className="lg:col-span-2 flex flex-wrap items-center gap-2">
+        <Gauge className="w-3.5 h-3.5 text-slate-500" />
+        <label htmlFor={`limit-${staff.id}`} className="font-bold text-slate-700 dark:text-gray-300">{t('rr.avail.limit')}</label>
+        <input
+          id={`limit-${staff.id}`}
+          type="number"
+          min={0}
+          max={500}
+          value={staff.dailyLimit || 0}
+          onChange={(e) => onChange({ dailyLimit: Math.max(0, Math.round(Number(e.target.value) || 0)) || undefined })}
+          className={`${TIME_INPUT} w-20 text-center`}
+        />
+        <span className="text-[11px] text-slate-500 dark:text-gray-400">
+          {staff.dailyLimit ? t('rr.avail.limitHint') : t('rr.avail.noLimit')}
+          {nowMs > 0 && <> · {t('rr.avail.today', { n: assignmentsOn(staff, phnomPenhDay(nowMs)) })}</>}
+        </span>
       </div>
     </div>
   );

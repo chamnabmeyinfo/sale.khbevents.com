@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useEffect, useState, useMemo } from 'react';
 import {
   Users,
@@ -740,6 +741,14 @@ export default function RoundRobinManagerClient({
             <span>{t('rr.runSimulation')}</span>
           </button>
 
+          <Link
+            href="/admin/round-robin/performance"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-emerald-800 bg-white dark:bg-emerald-950/60 text-slate-800 dark:text-emerald-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-emerald-900"
+          >
+            <BarChart3 className="w-4 h-4" />
+            <span>{t('rr.perf.link')}</span>
+          </Link>
+
           <button
             type="button"
             onClick={handleSaveSettings}
@@ -1369,6 +1378,23 @@ export default function RoundRobinManagerClient({
                 </select>
                 <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">
                   {t('rr.adv.responseHint', { max: MAX_HANDOVERS })}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">
+                  {t('rr.adv.summary')}
+                </label>
+                <select
+                  value={settings.dailySummaryHour ?? ''}
+                  onChange={(e) => setSettings({ ...settings, dailySummaryHour: e.target.value === '' ? undefined : Number(e.target.value) })}
+                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-semibold focus:border-amber-400 focus:outline-none"
+                >
+                  <option value="">{t('rr.adv.summaryOff')}</option>
+                  {[17, 18, 19, 20].map((h) => <option key={h} value={h}>{t('rr.adv.summaryAt', { time: `${h}:00` })}</option>)}
+                </select>
+                <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">
+                  {t('rr.adv.summaryHint')}
                 </p>
               </div>
 

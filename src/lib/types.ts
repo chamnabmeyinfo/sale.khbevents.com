@@ -806,6 +806,10 @@ export interface DatabaseSchema {
   popupAds?: PopupAdsState;
   // Per-ad counters (views / clicks / closes), keyed by ad id.
   popupAdStats?: PopupAdStatsMap;
+  /** Telegram clicks per salesperson per Phnom Penh day: { staffId: { 'YYYY-MM-DD': count } }. */
+  staffClickStats?: StaffClickStats;
+  /** Small flags such as the day the last daily summary was sent (local fallback for Supabase markers). */
+  markers?: Record<string, string>;
   // Display names of uploaded photos, keyed by storage file name (admin photo library).
   mediaLibrary?: import('./media-library').MediaMeta;
 }
@@ -989,6 +993,8 @@ export interface PopupDayStats {
 
 export type PopupAdStatsMap = Record<string, PopupAdStats>;
 
+export type StaffClickStats = Record<string, Record<string, number>>;
+
 export interface RoundRobinStaff {
   id: string;
   name: string;
@@ -1006,6 +1012,12 @@ export interface RoundRobinStaff {
   workHours?: PopupAdHours;
   /** Landing page slugs this person serves. Missing or empty = every page. */
   pages?: string[];
+  /** Most new contacts (form leads + Telegram clicks) per day. Missing or 0 = no limit. */
+  dailyLimit?: number;
+  /** Phnom Penh date of todayCount (YYYY-MM-DD). */
+  todayDay?: string;
+  /** New contacts assigned on todayDay. */
+  todayCount?: number;
   
   // Real-time tracking counters
   totalLeadsRouted: number;
@@ -1059,6 +1071,8 @@ export interface RoundRobinSettings {
   rememberVisitorMonths?: RememberVisitorMonths; // Same visitor or customer → same salesperson for this long (default 1)
   /** Minutes a salesperson has to tap a button on a new form lead before it goes to a colleague. 0 or missing = off. */
   responseMinutes?: number;
+  /** Hour (Phnom Penh, 0–23) for the daily summary to the manager chat. Missing = off. */
+  dailySummaryHour?: number;
 }
 
 export type RoutingDeliveryStatus = 'DELIVERED' | 'FAILED' | 'FALLBACK' | 'PENDING';
