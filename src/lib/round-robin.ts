@@ -7,6 +7,7 @@ import {
 } from './types';
 import { errorMessage } from '@/lib/errors';
 import { toWhatsAppNumber } from './phone';
+import { claimKeyboard } from './lead-response';
 
 /**
  * No staff ship by default: every routed visitor must land on a real person, so
@@ -497,6 +498,8 @@ export async function sendLeadToStaffTelegram(
     defer?: (task: () => Promise<unknown>) => void;
     /** Extra line shown above the lead card, e.g. "returning customer". */
     noteLine?: string;
+    /** Contacted / No answer / Not interested buttons under the card (default on). */
+    claimButtons?: boolean;
   }
 ): Promise<{
   status: RoutingDeliveryStatus;
@@ -543,7 +546,8 @@ export async function sendLeadToStaffTelegram(
         chat_id: staff.telegramChatId,
         text,
         parse_mode: 'HTML',
-        disable_web_page_preview: true
+        disable_web_page_preview: true,
+        ...(options?.claimButtons === false ? {} : { reply_markup: claimKeyboard(lead.id) }),
       })
     });
 

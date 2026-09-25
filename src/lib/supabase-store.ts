@@ -403,6 +403,39 @@ export async function supabaseAddLeadNote(
   return { ...existing, notes, updatedAt: new Date().toISOString() };
 }
 
+/** Form leads created since a moment, newest first (for the response check). */
+export async function supabaseGetLeadsSince(sinceIso: string): Promise<Lead[] | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('leads')
+    .select('*')
+    .gte('created_at', sinceIso)
+    .order('created_at', { ascending: false })
+    .limit(200);
+  if (error || !data) return null;
+  return data.map(rowToLead);
+}
+
+/** Saves a lead's status, notes and routing detail (kept in custom_fields._routing). */
+export async function supabaseUpdateLeadRouting(lead: Lead): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  const { data: row } = await supabase.from('leads').select('custom_fields').eq('id', lead.id).maybeSingle();
+  const custom = (row?.custom_fields && typeof row.custom_fields === 'object' ? row.custom_fields : {}) as Record<string, unknown>;
+  const { error } = await supabase
+    .from('leads')
+    .update({
+      status: lead.status,
+      notes: lead.notes,
+      custom_fields: { ...custom, _routing: lead.routing || null },
+      updated_at: lead.updatedAt,
+    })
+    .eq('id', lead.id);
+  if (error) console.error('Supabase updateLeadRouting error:', error);
+  return !error;
+}
+
 export async function supabaseDeleteLead(id: string): Promise<boolean> {
   const supabase = getSupabase();
   if (!supabase) return false;

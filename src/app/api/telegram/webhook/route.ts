@@ -4,6 +4,8 @@ import { selectNextStaff, escapeHtml, readTelegramResponse } from '@/lib/round-r
 import { runAfterResponse } from '@/lib/after-response';
 import type { RoundRobinSettings, RoundRobinStaff } from '@/lib/types';
 import { isValidTelegramWebhookSecret } from '@/lib/auth';
+import { parseClaimData } from '@/lib/lead-response';
+import { claimLeadFromTelegram, scheduleLeadResponseCheck } from '@/lib/lead-followup';
 
 /**
  * Telegram Bot Webhook Handler for @khb_sale_admin_bot
@@ -43,6 +45,12 @@ interface TelegramUpdate {
       length: number;
     }>;
   };
+  callback_query?: {
+    id: string;
+    from: { id: number; first_name?: string; username?: string };
+    message?: { message_id: number; chat: { id: number } };
+    data?: string;
+  };
 }
 
 async function sendTelegramMessage(
@@ -67,6 +75,20 @@ async function sendTelegramMessage(
     body: JSON.stringify(body),
   });
   return readTelegramResponse(res);
+}
+
+async function telegramCall(botToken: string, method: string, body: Record<string, unknown>) {
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/${method}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return await readTelegramResponse(res);
+  } catch (err) {
+    console.error(`Telegram ${method} error:`, err);
+    return null;
+  }
 }
 
 /** Records a bot-side assignment so the rotation and the fairness counters move on. */
@@ -98,6 +120,24 @@ export async function POST(req: NextRequest) {
     }
 
     const update: TelegramUpdate = await req.json();
+    scheduleLeadResponseCheck();
+
+    // ─── Buttons under a lead card: Contacted / No answer / Not interested ───
+    if (update.callback_query) {
+      const cq = update.callback_query;
+      const claim = parseClaimData(cq.data);
+      let answer = '';
+      if (claim) {
+        const result = await claimLeadFromTelegram({ leadId: claim.leadId, fromUserId: cq.from.id, outcome: claim.outcome });
+        answer = result.text;
+        if (result.ok && result.keyboard && cq.message) {
+          await telegramCall(botToken, 'editMessageReplyMarkup', { chat_id: cq.message.chat.id, message_id: cq.message.message_id, reply_markup: result.keyboard });
+        }
+      }
+      await telegramCall(botToken, 'answerCallbackQuery', { callback_query_id: cq.id, text: answer.slice(0, 190) });
+      return NextResponse.json({ ok: true });
+    }
+
     const message = update.message;
 
     if (!message?.text) {

@@ -26,6 +26,16 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-25 — Lead hand-over runs on site traffic, not a paid cron
+
+- **Decision:** The check that passes unanswered form leads to a colleague runs after ordinary requests (at most once a minute) and on a public tick address, instead of a Vercel cron job.
+- **Why:** On the Hobby plan a Vercel cron may run only once a day, and a cron that runs more often makes the deployment fail. Traffic-driven checks cost nothing and are on time whenever visitors or staff are active; a free external scheduler can call the tick address for exact timing.
+- **Details:** The tick address only moves leads that are already overdue, so calling it early or often does nothing harmful. Default is Off; the owner chooses the minutes.
+- **Decided by:** Claude with owner approval (owner chose the follow-up and hand-over features).
+- **Affects:** [[Round Robin]].
+
+---
+
 ## 2026-09-25 — Popup analytics are stored as daily counts, not raw events
 
 - **Decision:** Each popup event adds to a small per-day record on the popup's stats row (by page, source, device, browser, language, hour, timing, leads), kept for 120 days.

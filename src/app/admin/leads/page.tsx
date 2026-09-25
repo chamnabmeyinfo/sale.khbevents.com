@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth';
+import { scheduleLeadResponseCheck } from '@/lib/lead-followup';
 import { getLeads, getPages } from '@/lib/storage';
 import LeadsCrmClient from '@/components/admin/LeadsCrmClient';
 
@@ -12,6 +13,7 @@ export default async function AdminLeadsPage({
 }) {
   const authed = await isAuthenticated();
   if (!authed) redirect('/admin/login');
+  scheduleLeadResponseCheck();
 
   const [leads, pages, sp] = await Promise.all([getLeads(), getPages(), searchParams]);
   // Read deep-link params on the server so the first render is already filtered.

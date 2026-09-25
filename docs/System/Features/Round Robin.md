@@ -6,6 +6,10 @@ admin_path: /admin/round-robin
 admin_menu: Staff Round Robin
 source:
   - src/lib/round-robin.ts
+  - src/lib/lead-response.ts
+  - src/lib/lead-followup.ts
+  - src/app/api/round-robin/tick/route.ts
+  - src/app/api/telegram/webhook/route.ts
   - src/lib/staff-cookie.ts
   - src/lib/after-response.ts
   - src/lib/storage.ts
@@ -107,6 +111,24 @@ For a Telegram click, speed matters: the visitor should be in the chat before th
 
 For a form lead, the alert to the salesperson is sent before the thank-you reply, so its delivery status can be saved on the lead. The manager copy goes after the reply.
 
+## After the assignment: buttons and hand-over
+
+Every form lead card sent to a salesperson has three buttons (`src/lib/lead-response.ts`, `src/lib/lead-followup.ts`):
+
+| Button | Lead status in the CRM | Note added |
+|---|---|---|
+| ✅ Contacted | NEW becomes CONTACTED (a later status is kept) | Yes, with the response time |
+| 📞 No answer | Unchanged; Contacted and Not interested stay available for a later call | Yes |
+| ❌ Not interested | LOST | Yes |
+
+- Only the salesperson who currently has the lead can tap; anyone else is told who has it.
+- The **response time** is measured from the assignment to the first tap, and shown on the lead in the CRM.
+- Setting **Pass a form lead on if nobody responds within**: Off (default), 5, 10, 15, 30 or 60 minutes. With no tap in time, the lead goes to the active colleague with a Chat ID who waited longest and has not had it yet. The first person's buttons change to "Passed to …", they get a short message, and the manager gets a copy when CC is on. The clock restarts for the new person.
+- At most **2** hand-overs per lead. After that, or when nobody else can take it, the manager chat gets one "Lead waiting for a reply" alert.
+- Only form leads from the last 24 hours that are still NEW and have no tap. Telegram clicks cannot be followed: the visitor chats with the salesperson directly.
+- The check runs after normal site traffic (page tracking, the Telegram bot, the admin Leads and Round Robin pages), at most once a minute. For exact timing at night or on quiet days, a free scheduler such as cron-job.org can open `https://sale.khbevents.com/api/round-robin/tick` every 2 to 5 minutes. That address only moves leads that are already overdue.
+- The buttons need the bot to receive taps: after this update, press **Register / secure bot webhook** once in Admin → Settings & Security (it asks Telegram for button taps).
+
 ## Staying with the same salesperson
 
 Setting: **Remember a visitor for**. Choices: **Off**, **1 month**, **2 months**, **3 months**, **6 months**. Default: **1 month**. A month counts as 30 days.
@@ -117,7 +139,7 @@ Setting: **Remember a visitor for**. Choices: **Off**, **1 month**, **2 months**
 | **Same phone number or email** as an earlier lead inside the period | Form leads, even from another device | Returning customer |
 
 - Phones are compared by their last 8 digits, so `+855 12 ...` and `012 ...` match. Emails are compared without case.
-- A returning visitor who clicks again is sent to the same person without a second alert and without counting again.
+- A returning visitor who clicks again is sent to the same person without a second alert and without counting again. A returning customer who sends the form again gets a new lead card marked as returning.
 - The remembered person must still be able to take the assignment (active, with a username for a click, or a Chat ID for a form lead). If not, the rotation picks someone new.
 - With **Off**, the cookie is cleared and every contact re-enters the rotation.
 - The lead card tells the salesperson when the customer is returning.

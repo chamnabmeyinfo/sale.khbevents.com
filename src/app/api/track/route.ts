@@ -3,6 +3,7 @@ import { parseSmartReasons } from '@/lib/popup-ads';
 import { recordTrackingEvent, RecordTrackingPayload } from '@/lib/storage';
 import { TrackingEventType } from '@/lib/types';
 import { rateLimitByIp } from '@/lib/rate-limit';
+import { scheduleLeadResponseCheck } from '@/lib/lead-followup';
 
 const EVENT_TYPES: readonly TrackingEventType[] = [
   'page_view', 'scroll_depth', 'cta_click', 'telegram_click', 'seat_select', 'form_submit', 'lang_toggle',
@@ -78,6 +79,8 @@ export async function POST(req: NextRequest) {
         lang: oneOf(body.lang, LANGS),
       };
       await recordTrackingEvent(payload);
+      // Ordinary traffic keeps the lead follow-up check running (about once a minute).
+      scheduleLeadResponseCheck();
     }
     return NextResponse.json({ success: true });
   } catch (err) {

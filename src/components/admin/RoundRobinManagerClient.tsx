@@ -54,6 +54,7 @@ import {
   DEFAULT_REMEMBER_VISITOR_MONTHS
 } from '@/lib/round-robin';
 import { errorMessage } from '@/lib/errors';
+import { MAX_HANDOVERS, RESPONSE_MINUTE_CHOICES } from '@/lib/lead-response';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface RoundRobinManagerClientProps {
@@ -1336,6 +1337,24 @@ export default function RoundRobinManagerClient({
                 </select>
                 <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">
                   {t('rr.adv.rememberHint')}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-gray-300 mb-1">
+                  {t('rr.adv.response')}
+                </label>
+                <select
+                  value={settings.responseMinutes ?? 0}
+                  onChange={(e) => setSettings({ ...settings, responseMinutes: Number(e.target.value) })}
+                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-semibold focus:border-amber-400 focus:outline-none"
+                >
+                  {RESPONSE_MINUTE_CHOICES.map((m) => (
+                    <option key={m} value={m}>{m === 0 ? t('rr.adv.responseOff') : t('rr.adv.responseMin', { n: m })}</option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">
+                  {t('rr.adv.responseHint', { max: MAX_HANDOVERS })}
                 </p>
               </div>
 

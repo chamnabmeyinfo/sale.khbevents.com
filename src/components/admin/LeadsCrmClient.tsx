@@ -1,5 +1,6 @@
 'use client';
 
+import { formatWait, OUTCOME_LABEL } from '@/lib/lead-response';
 import React, { useState } from 'react';
 import { 
   Users, 
@@ -666,7 +667,7 @@ export default function LeadsCrmClient({ initialLeads, pages, initialStatus, ini
                       <strong className="text-slate-900 dark:text-white">{selectedLead.routing.staffName}</strong>
                       {selectedLead.routing.assignmentReason && selectedLead.routing.assignmentReason !== 'rotation' && (
                         <span className="block text-[10px] font-bold text-sky-700 dark:text-sky-300">
-                          🔁 {selectedLead.routing.assignmentReason === 'returning_customer' ? t('leads.returningCustomer') : t('leads.returningVisitor')}
+                          🔁 {selectedLead.routing.assignmentReason === 'returning_customer' ? t('leads.returningCustomer') : selectedLead.routing.assignmentReason === 'handover' ? t('leads.handedOver') : t('leads.returningVisitor')}
                         </span>
                       )}
                     </div>
@@ -683,6 +684,22 @@ export default function LeadsCrmClient({ initialLeads, pages, initialStatus, ini
                       <span>{new Date(selectedLead.routing.routedAt).toLocaleTimeString(locale)}</span>
                     </div>
                   </div>
+
+                  {(selectedLead.routing.claim || selectedLead.routing.handovers?.length) && (
+                    <div className="text-[11px] p-2 rounded-lg bg-slate-50 dark:bg-emerald-950/40 border border-slate-200 dark:border-emerald-900/60 space-y-1 text-slate-700 dark:text-gray-300">
+                      {selectedLead.routing.claim ? (
+                        <div>
+                          <strong className="text-slate-900 dark:text-white">{OUTCOME_LABEL[selectedLead.routing.claim.outcome]}</strong>
+                          {' · '}{t('leads.claimBy', { name: selectedLead.routing.claim.staffName, wait: formatWait(selectedLead.routing.claim.seconds) })}
+                        </div>
+                      ) : (
+                        <div className="font-bold text-amber-700 dark:text-amber-400">{t('leads.noTapYet')}</div>
+                      )}
+                      {(selectedLead.routing.handovers || []).map((h, i) => (
+                        <div key={i} className="text-[10px]">➡️ {t('leads.passedOn', { from: h.fromName, to: h.toName, time: new Date(h.at).toLocaleString(locale, { timeZone: 'Asia/Phnom_Penh', hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }) })}</div>
+                      ))}
+                    </div>
+                  )}
 
                   {selectedLead.routing.deliveryError && (
                     <div className="text-[10px] text-rose-600 dark:text-rose-400 p-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60">

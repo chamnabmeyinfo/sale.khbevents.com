@@ -1017,7 +1017,28 @@ export type RoundRobinAlgorithm = 'weighted_percentage' | 'strict_round_robin' |
 export type RememberVisitorMonths = 0 | 1 | 2 | 3 | 6;
 
 /** Why a lead or click went to this person. */
-export type AssignmentReason = 'rotation' | 'returning_visitor' | 'returning_customer';
+export type AssignmentReason = 'rotation' | 'returning_visitor' | 'returning_customer' | 'handover';
+
+/** What a salesperson reported with the buttons under a lead card. */
+export type LeadClaimOutcome = 'CONTACTED' | 'NO_ANSWER' | 'NOT_INTERESTED';
+
+export interface LeadClaim {
+  outcome: LeadClaimOutcome;
+  at: string;
+  staffId: string;
+  staffName: string;
+  /** Seconds from the assignment to the tap. */
+  seconds: number;
+}
+
+export interface LeadHandover {
+  fromStaffId: string;
+  fromName: string;
+  toStaffId: string;
+  toName: string;
+  at: string;
+  reason: 'no_response';
+}
 
 export interface RoundRobinSettings {
   enabled: boolean;
@@ -1032,6 +1053,8 @@ export interface RoundRobinSettings {
   customMessageTemplate?: string; // Customizable template for staff Telegram alerts
   customWhatsappMessage?: string; // Customizable pre-filled WhatsApp greeting text
   rememberVisitorMonths?: RememberVisitorMonths; // Same visitor or customer → same salesperson for this long (default 1)
+  /** Minutes a salesperson has to tap a button on a new form lead before it goes to a colleague. 0 or missing = off. */
+  responseMinutes?: number;
 }
 
 export type RoutingDeliveryStatus = 'DELIVERED' | 'FAILED' | 'FALLBACK' | 'PENDING';
@@ -1051,6 +1074,14 @@ export interface RoutingDetail {
   routedAt: string;
   routeType: 'FORM_SUBMISSION' | 'DIRECT_CONTACT_CLICK';
   assignmentReason?: AssignmentReason;
+  /** When the current salesperson got the lead (differs from routedAt after a hand-over). */
+  assignedAt?: string;
+  /** First tap on the lead card buttons. */
+  claim?: LeadClaim;
+  /** Passed to a colleague because nobody responded in time. */
+  handovers?: LeadHandover[];
+  /** The manager was told that nobody else could take it. */
+  managerAlerted?: boolean;
 }
 
 export interface RoundRobinLog {

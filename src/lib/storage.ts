@@ -951,6 +951,7 @@ export async function createLead(leadData: {
         fallbackChatId: effectiveRrSettings.fallbackChatId,
         fallbackSent: dispatchResult.fallbackSent,
         routedAt: now,
+        assignedAt: now,
         routeType: 'FORM_SUBMISSION',
         assignmentReason
       };
