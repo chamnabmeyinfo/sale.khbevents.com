@@ -42,6 +42,7 @@ Suggested order: lock the database first, then change the token and the password
 - [ ] Send real photos for the Korea page (hero and social sharing), and a day-by-day itinerary if it should be shown. → [[Korea Sourcing Trip Seoul 2026]] #owner
 - [ ] Decide whether the Korea page's Telegram button goes to Mr. Tim Vutha directly (as now) or through Round Robin. Since 2026-09-25 a third option exists: make him (and helpers) the Korea pages' team under **Serves pages**. → [[Round Robin]] #owner
 - [ ] Set each salesperson's working hours, pages and (if needed) daily limit in Staff Round Robin, choose the **Daily summary** time, check the Manager Chat ID, then Save. → [[Round Robin]] #owner
+- [ ] Before going live: open **Settings & Security → Demo data**, check the list (untick anything real), tick **Reset all statistics to zero**, type DELETE and run it once. → [[Admin and Security]] #owner
 - [ ] Upload each salesperson's photo in Staff Round Robin (camera button), then Save. → [[Round Robin]] #owner
 - [ ] After a week, open **Staff Round Robin → Team Performance** and review reply times with the team. → [[Round Robin]] #owner
 - [x] Second new trip page: [[Korea Robot and Food Trip Seoul 2026]] (2026-09-24).

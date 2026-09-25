@@ -135,6 +135,14 @@ Track them in [[Open Tasks]].
 - After changing the bot token, press **Register / secure bot webhook** again in Admin → Settings & Security (save the new token first).
 - Rate limits reset when a server instance restarts.
 
+## Clear demo data
+
+**Admin → Settings & Security → Demo data** (`/admin/settings#data`, sidebar **Clear Demo Data**). Rules in `src/lib/demo-data.ts`, work in `scanDemoData` / `clearDemoData` (`src/lib/storage.ts`), address `/api/demo-data` (admin only).
+
+- Lists every lead with a clear demo sign, with the reason: **simulation** (made by Round Robin → Simulation Studio: "[SIMULATION TEST]", the simulation flag or utm_source simulation_tool), **sample** (shipped with the site in `data/db.json`), **test name** (name or e-mail says test, tester, demo, sample or dummy, or uses example.com). Each can be unticked.
+- Also: sample staff accounts; the Round Robin routing log (entries of the deleted leads by default, or the whole log, since test Telegram clicks look like real ones); and **Reset all statistics to zero** (page views, popup stats, Telegram click history, staff counters; lead counts recalculated), off by default.
+- Nothing happens until the word DELETE is typed. The server checks every lead id against the demo rules again, so a real lead cannot be deleted this way even by calling the address directly. Deleting cannot be undone.
+
 ## Related
 
 - Runbooks: [[Change the Admin Password]], [[Rotate the Telegram Bot Token]], [[Run the RLS Lockdown Migration]], [[Deploy to Production]]

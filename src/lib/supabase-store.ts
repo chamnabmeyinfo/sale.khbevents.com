@@ -700,3 +700,17 @@ export async function supabaseGetStaffClickStats(): Promise<StaffClickStats | nu
 export async function supabaseSaveStaffClickStats(stats: StaffClickStats): Promise<boolean> {
   return writeJsonRow('staff_click_stats', stats);
 }
+
+/** Replaces the stored routing log (used when clearing demo data). */
+export async function supabaseReplaceRoundRobinLogs(logs: RoundRobinLog[]): Promise<boolean> {
+  return writeJsonRow('round_robin_logs', logs.slice(0, 200));
+}
+
+/** Deletes every row of the page_views table (used when resetting statistics). */
+export async function supabaseClearPageViews(): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  const { error } = await supabase.from('page_views').delete().gte('id', 0);
+  if (error) console.error('Supabase clearPageViews error:', error);
+  return !error;
+}

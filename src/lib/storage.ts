@@ -32,7 +32,8 @@ import {
   sendLeadToStaffTelegram,
   escapeHtml,
   staffOnShift,
-  countAssignment
+  countAssignment,
+  isPlaceholderStaff
 } from './round-robin';
 import { isSupabaseConfigured } from './supabase';
 import { runAfterResponse } from './after-response';
@@ -40,6 +41,7 @@ import { defaultPopupAdsState, inAppBrowserName, nextOpening, normalizePopupAdsS
 import { applyPopupEvent, phnomPenhDay, type PopupEventDetail } from './popup-analytics';
 import { normalizeBuilderDoc } from './builder';
 import { normalizeMediaMeta, type MediaMeta } from './media-library';
+import { findDemoLeads, type ClearDemoRequest, type ClearDemoResult, type DemoScan } from './demo-data';
 import {
   supabaseGetPages,
   supabaseGetPageBySlug,
@@ -70,7 +72,9 @@ import {
   supabaseGetMediaMeta,
   supabaseSaveMediaMeta,
   supabaseGetPopupAdStats,
-  supabaseSavePopupAdStats
+  supabaseSavePopupAdStats,
+  supabaseReplaceRoundRobinLogs,
+  supabaseClearPageViews
 } from './supabase-store';
 import bundledDbJson from '../../data/db.json';
 
@@ -1880,4 +1884,84 @@ export async function setMarker(id: string, value: string): Promise<void> {
   const db = await getDatabase();
   db.markers = { ...(db.markers || {}), [id]: value };
   await saveDatabase(db);
+}
+
+// ─── Clear demo data (Admin → Settings & Security) ────────────────────────
+
+/** What would be removed: demo leads with their reasons, sample staff, log and stats sizes. */
+export async function scanDemoData(): Promise<DemoScan> {
+  const [leads, rr, logs, popupStats, pages] = await Promise.all([getLeads(), getRoundRobinSettings(), getRoundRobinLogs(500), getPopupAdStats(), getPages()]);
+  const sampleIds = new Set((bundledDb.leads || []).map((l) => l.id));
+  const demo = findDemoLeads(leads, sampleIds);
+  const demoIds = new Set(demo.map((d) => d.id));
+  return {
+    leads: demo,
+    sampleStaff: rr.staffList.filter(isPlaceholderStaff).map((s) => ({ id: s.id, name: s.name, username: s.telegramUsername })),
+    routingLog: { total: logs.length, linkedToDemoLeads: logs.filter((l) => l.leadId && demoIds.has(l.leadId)).length },
+    stats: {
+      pageViews: pages.reduce((sum, p) => sum + (p.viewsCount || 0), 0),
+      popupsWithStats: Object.values(popupStats).filter((s) => s.views || s.clicks || s.closes).length,
+      staffWithCounts: rr.staffList.filter((s) => s.totalLeadsRouted || s.totalDirectClicks || s.successfulDeliveries || s.failedDeliveries).length,
+    },
+  };
+}
+
+/**
+ * Deletes the chosen demo data. Lead ids are checked again against the demo
+ * rules, so a real lead can never be deleted through this path.
+ */
+export async function clearDemoData(req: ClearDemoRequest): Promise<ClearDemoResult> {
+  const scan = await scanDemoData();
+  const allowed = new Set(scan.leads.map((l) => l.id));
+  const ids = req.leadIds.filter((id) => allowed.has(id));
+  const result: ClearDemoResult = { leadsDeleted: 0, staffRemoved: 0, logEntriesRemoved: 0, statsReset: false };
+
+  for (const id of ids) {
+    if (await deleteLead(id)) result.leadsDeleted += 1;
+  }
+  const deleted = new Set(ids);
+
+  if (req.routingLog !== 'none') {
+    const logs = await getRoundRobinLogs(500);
+    const keep = req.routingLog === 'all' ? [] : logs.filter((l) => !(l.leadId && deleted.has(l.leadId)));
+    result.logEntriesRemoved = logs.length - keep.length;
+    const db = await getDatabase();
+    db.roundRobinLogs = req.routingLog === 'all' ? [] : (db.roundRobinLogs || []).filter((l) => !(l.leadId && deleted.has(l.leadId)));
+    await saveDatabase(db);
+    if (isSupabaseConfigured()) await supabaseReplaceRoundRobinLogs(keep);
+  }
+
+  let rr = await getRoundRobinSettings();
+  if (req.removeSampleStaff) {
+    const before = rr.staffList.length;
+    const staffList = rr.staffList.filter((s) => !isPlaceholderStaff(s));
+    result.staffRemoved = before - staffList.length;
+    if (result.staffRemoved) rr = await updateRoundRobinSettings({ staffList, lastAssignedIndex: 0 });
+  }
+
+  if (req.resetStats) {
+    const staffList = rr.staffList.map((s) => ({ ...s, totalLeadsRouted: 0, totalDirectClicks: 0, successfulDeliveries: 0, failedDeliveries: 0, todayCount: 0, todayDay: undefined }));
+    await updateRoundRobinSettings({ staffList });
+    const db = await getDatabase();
+    db.pageViews = [];
+    db.trackingEvents = [];
+    db.popupAdStats = {};
+    db.staffClickStats = {};
+    await saveDatabase(db);
+    if (isSupabaseConfigured()) {
+      await supabaseSavePopupAdStats({}).catch(() => false);
+      await supabaseSaveStaffClickStats({}).catch(() => false);
+      await supabaseClearPageViews().catch(() => false);
+    }
+    // Page counters: views to zero, leads to the number of leads that remain.
+    const remaining = await getLeads();
+    for (const page of await getPages()) {
+      const leadsCount = remaining.filter((l) => l.landingPageSlug === page.slug).length;
+      if ((page.viewsCount || 0) !== 0 || (page.leadsCount || 0) !== leadsCount) {
+        await savePage({ ...page, viewsCount: 0, leadsCount });
+      }
+    }
+    result.statsReset = true;
+  }
+  return result;
 }

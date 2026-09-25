@@ -13,8 +13,10 @@ import {
   Key,
   Sun,
   Moon,
-  Laptop
+  Laptop,
+  Eraser,
 } from 'lucide-react';
+import ClearDemoData from './ClearDemoData';
 import { SystemSettings } from '@/lib/types';
 import { useTheme } from '@/context/ThemeContext';
 import { errorMessage } from '@/lib/errors';
@@ -25,7 +27,7 @@ interface SettingsClientProps {
   initialSettings: SystemSettings;
 }
 
-type SettingsTab = 'profile' | 'social' | 'telegram' | 'appearance' | 'security';
+type SettingsTab = 'profile' | 'social' | 'telegram' | 'appearance' | 'security' | 'data';
 
 export default function SettingsClient({ initialSettings }: SettingsClientProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
@@ -78,7 +80,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '');
-      if (['profile', 'social', 'telegram', 'appearance', 'security'].includes(hash)) {
+      if (['profile', 'social', 'telegram', 'appearance', 'security', 'data'].includes(hash)) {
         setActiveTab(hash as SettingsTab);
       }
     };
@@ -142,7 +144,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer"
+          className={`${activeTab === 'data' ? 'hidden' : 'inline-flex'} items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer`}
         >
           <Save className="w-4 h-4 text-black stroke-[3]" />
           <span>{saving ? t('settings.saving') : t('settings.saveSettings')}</span>
@@ -156,7 +158,8 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
           { id: 'social', label: `📢 ${t('settings.tab.social')}`, icon: Share2 },
           { id: 'telegram', label: `🤖 ${t('settings.tab.telegram')}`, icon: Bell },
           { id: 'appearance', label: `🎨 ${t('settings.tab.appearance')}`, icon: Sun },
-          { id: 'security', label: `🛡️ ${t('settings.tab.security')}`, icon: ShieldCheck }
+          { id: 'security', label: `🛡️ ${t('settings.tab.security')}`, icon: ShieldCheck },
+          { id: 'data', label: `🧹 ${t('settings.tab.data')}`, icon: Eraser }
         ].map((tab) => {
           const TabIcon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -191,7 +194,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
         </div>
       )}
 
-      <form onSubmit={handleSave} className="space-y-6">
+      <form onSubmit={handleSave} className={`space-y-6${activeTab === 'data' ? ' hidden' : ''}`}>
         {/* TAB 1: Company Profile */}
         {activeTab === 'profile' && (
           <div className="rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 p-6 sm:p-8 space-y-5 shadow-sm dark:shadow-xl transition-colors">
@@ -596,6 +599,8 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
           </button>
         </div>
       </form>
+
+      {activeTab === 'data' && <ClearDemoData />}
     </div>
   );
 }

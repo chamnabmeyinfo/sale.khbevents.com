@@ -28,6 +28,7 @@ import {
   Activity,
   Sliders,
   BarChart3,
+  Eraser,
   Megaphone,
   BookOpen,
   Images,
@@ -161,6 +162,7 @@ export default function AdminSidebar() {
         { label: t('nav.settings.appearance'), href: '/admin/settings#appearance', icon: Sun },
         { label: t('nav.settings.telegram'), href: '/admin/settings#telegram', icon: Bell },
         { label: t('nav.settings.security'), href: '/admin/settings#security', icon: ShieldCheck },
+        { label: t('nav.settings.demoData'), href: '/admin/settings#data', icon: Eraser },
       ]
     },
     {
