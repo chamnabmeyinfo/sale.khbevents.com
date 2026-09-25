@@ -26,6 +26,15 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-25 — The print agenda picks its sections by the kind of page
+
+- **Decision:** Print has two modes, a smart Agenda (default) and the Entire page. The agenda reads the page as a trip (day-by-day programme), an event (deadline or seats) or a product, and keeps only the practical sections: programme, places, what's included, how to join, who it's for and a few questions. Problems, long "why" lists, photos and most of the FAQ are left out.
+- **Why:** The owner wants an agenda that is straight to the point for visitors to review, and the whole page when needed, with a real print design.
+- **Decided by:** Owner (feature); Claude with owner approval (rules).
+- **Affects:** [[Print Agenda]].
+
+---
+
 ## 2026-09-25 — Printable agenda is generated from the live page
 
 - **Decision:** `/<page>/print` builds an A4 agenda from the page's latest saved version on every visit, with a QR code back to the page. There is no separate PDF to maintain.

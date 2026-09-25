@@ -57,7 +57,7 @@ Steps: [[Verify Changes Locally]], then [[Deploy to Production]].
 |---|---|
 | `/` | Home page of the sales portal. Lists published pages that have no passcode. Popups target it under the name `main-sales`. |
 | `/<slug>` | One landing page from the CMS, for example `/smart-city-tea-cafe`. See [[Landing Pages CMS]]. |
-| `/<slug>/print` | The page as a printable A4 agenda with a QR code, always the latest version. See [[Print Agenda]]. |
+| `/<slug>/print` | The page printed as a designed A4 document: smart agenda (default) or `?mode=full` for the entire page, always the latest version. See [[Print Agenda]]. |
 | `/smart-city-tea-cafe/app` or `?view=app` | Phone "app" layout of the Smart City page. Exists only for this slug. |
 | `/smart-city-tea-cafe/optin` or `?view=optin` | Short opt-in layout of the Smart City page. Exists only for this slug. |
 | `/login` | Client sign-in page (Supabase Auth). `/auth/callback` finishes the sign-in. |
