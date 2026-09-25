@@ -45,6 +45,17 @@ export default function BuilderPageView({ page, initialLang = 'en', serverNowMs,
       <div className="kb-langbar" role="group" aria-label="Language">
         <button type="button" aria-pressed={lang === 'en'} onClick={() => switchLang('en')}>EN</button>
         <button type="button" aria-pressed={lang === 'kh'} onClick={() => switchLang('kh')}>ខ្មែរ</button>
+        <a
+          className="kb-langbar__print"
+          href={`/${page.slug}/print?lang=${lang}`}
+          aria-label={lang === 'kh' ? 'បោះពុម្ពកម្មវិធី' : 'Print agenda'}
+          title={lang === 'kh' ? 'បោះពុម្ពកម្មវិធី' : 'Print agenda'}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+            <rect x="6" y="14" width="12" height="7" />
+          </svg>
+        </a>
       </div>
       <main>
         {doc.blocks.map((block) => (

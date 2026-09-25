@@ -26,6 +26,15 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-25 — Printable agenda is generated from the live page
+
+- **Decision:** `/<page>/print` builds an A4 agenda from the page's latest saved version on every visit, with a QR code back to the page. There is no separate PDF to maintain.
+- **Why:** The owner wants staff and visitors to print the latest update; a generated sheet can never be out of date.
+- **Decided by:** Owner (feature); Claude with owner approval (approach).
+- **Affects:** [[Print Agenda]], [[Page Builder]].
+
+---
+
 ## 2026-09-25 — Every page is edited in the drag-and-drop builder
 
 - **Decision:** The Vietnam page moved to the builder. New pages are always builder pages. The old fixed layouts (B2B delegation, trade expo, concert, summit, custom) are no longer offered. A page still on one gets a "Move to drag-and-drop" button. The conversion only reuses the page's own text, price, deadlines and seats.

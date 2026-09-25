@@ -10,6 +10,7 @@ import {
   Copy,
   ExternalLink,
   GripVertical,
+  Printer,
   LayoutTemplate,
   Monitor,
   Plus,
@@ -784,6 +785,9 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
           </div>
           <a href={`/${page.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-[11px] font-bold text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-emerald-950/60" title={t('builder.viewHint')}>
             <ExternalLink className="w-3.5 h-3.5" />{t('builder.view')}
+          </a>
+          <a href={`/${page.slug}/print?lang=${previewLang}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-[11px] font-bold text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-emerald-950/60" title={t('builder.printHint')}>
+            <Printer className="w-3.5 h-3.5" />{t('builder.print')}
           </a>
           {meta.status !== 'published' ? (
             <button type="button" disabled={saving} onClick={() => save('published')} className="px-3 py-2 rounded-xl text-[11px] font-bold bg-emerald-600 hover:bg-emerald-500 text-[#fff] on-dark cursor-pointer disabled:opacity-50">{t('builder.publish')}</button>

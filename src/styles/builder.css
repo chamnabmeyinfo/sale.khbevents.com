@@ -450,6 +450,9 @@
 .kb-langbar { position: fixed; top: 14px; right: 14px; z-index: 50; display: flex; gap: 4px; padding: 4px; border-radius: 9999px; background: rgba(11, 23, 18, 0.72); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 .kb-langbar button { border: 0; padding: 6px 12px; border-radius: 9999px; background: transparent; color: #E6EDE8; font: 700 0.8rem/1 var(--kb-font); cursor: pointer; }
 .kb-langbar button[aria-pressed='true'] { background: var(--kb-accent); color: var(--kb-on-accent); }
+.kb-langbar__print { display: inline-flex; align-items: center; justify-content: center; padding: 5px 10px; border-radius: 9999px; color: #E6EDE8; }
+.kb-langbar__print:hover { background: rgba(255, 255, 255, 0.12); }
+@media print { .kb-langbar { display: none; } }
 
 @media (prefers-reduced-motion: reduce) {
   .kb-bg__media { display: none; }

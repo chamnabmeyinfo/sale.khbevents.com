@@ -10,6 +10,7 @@ export const pages: Dictionary = {
     'pages.importing': 'Importing…',
     'pages.importTitle': 'Import a page content pack (JSON) — updates the page with the same slug',
     'pages.createNew': '+ Create New Landing Page',
+    'pages.printAgenda': 'Print agenda (latest version, with QR code)',
 
     // Tabs
     'pages.tab.all': 'All Campaigns',
@@ -100,6 +101,7 @@ export const pages: Dictionary = {
     'pages.importing': 'កំពុងនាំចូល…',
     'pages.importTitle': 'នាំចូលឯកសារខ្លឹមសារទំព័រ (JSON) — ធ្វើបច្ចុប្បន្នភាពទំព័រដែលមាន slug ដូចគ្នា',
     'pages.createNew': '+ បង្កើតទំព័រ Landing ថ្មី',
+    'pages.printAgenda': 'បោះពុម្ពកម្មវិធី (កំណែចុងក្រោយ មាន QR)',
 
     'pages.tab.all': 'យុទ្ធនាការទាំងអស់',
     'pages.tab.published': 'បានបោះផ្សាយ',

@@ -20,7 +20,8 @@ import {
   FileText,
   Activity,
   Sliders,
-  Upload
+  Upload,
+  Printer
 } from 'lucide-react';
 import { LandingPage } from '@/lib/types';
 import { isContentPack, mergeContentPack } from '@/lib/content-pack';
@@ -367,6 +368,17 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                   </Link>
+
+                  <a
+                    href={`/${page.slug}/print`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-2 rounded-lg bg-slate-100 dark:bg-emerald-950 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-200 dark:border-emerald-800/60 transition-colors"
+                    title={t('pages.printAgenda')}
+                    aria-label={t('pages.printAgenda')}
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                  </a>
 
                   <button
                     type="button"

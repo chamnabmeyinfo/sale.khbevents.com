@@ -4,6 +4,8 @@ import type { Dictionary } from '../index';
 export const builder: Dictionary = {
   en: {
     'builder.new': 'New drag & drop page',
+    'builder.print': 'Print agenda',
+    'builder.printHint': 'A printable agenda of the last saved version, with a QR code to the page',
     'builder.newTitle': 'Create a page by dragging designed components',
     'builder.creating': 'Creating…',
     'builder.newPageName': 'New page',
@@ -199,6 +201,8 @@ export const builder: Dictionary = {
   },
   kh: {
     'builder.new': 'ទំព័រអូសទម្លាក់ថ្មី',
+    'builder.print': 'បោះពុម្ពកម្មវិធី',
+    'builder.printHint': 'កម្មវិធីសម្រាប់បោះពុម្ព ពីកំណែដែលបានរក្សាទុកចុងក្រោយ មាន QR ទៅទំព័រ',
     'builder.newTitle': 'បង្កើតទំព័រដោយអូសសមាសភាគដែលបានរចនារួច',
     'builder.creating': 'កំពុងបង្កើត…',
     'builder.newPageName': 'ទំព័រថ្មី',

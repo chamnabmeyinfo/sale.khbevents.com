@@ -149,3 +149,6 @@ Dates without a time zone count as Cambodia time. A content pack can do the same
 
 For a builder page, the old editor keeps only **SEO & Social**, **Tracking & Pixels** and **Dedicated Settings**. Everything else is edited in the builder.
 
+## Printing
+
+Every builder page has a printable agenda with a QR code: see [[Print Agenda]].
