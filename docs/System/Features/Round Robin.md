@@ -12,6 +12,9 @@ source:
   - src/app/api/round-robin/daily-summary/route.ts
   - vercel.json
   - src/components/admin/StaffAvailability.tsx
+  - src/components/admin/StaffSummary.tsx
+  - src/components/admin/AvatarUpload.tsx
+  - src/components/admin/StaffAvatar.tsx
   - src/lib/lead-followup.ts
   - src/app/api/round-robin/tick/route.ts
   - src/app/api/telegram/webhook/route.ts
@@ -82,6 +85,12 @@ Details that apply to all three (`selectNextStaff` in `src/lib/round-robin.ts`):
 - Only active people count. With one active person, they get everything.
 - If every share is 0, it falls back to plain one-after-another.
 - Clicks and form leads both count as assignments for the fair share.
+
+## Staff list views and photos
+
+- **Views** (switch above the staff list, remembered in this browser): **Detailed** (the full cards), **Compact list** (one row per person with share, counts and status chips) and **Grid** (tiles with a big photo). In Compact list and Grid, **Edit** opens that person's full card; **Done editing** closes it. Active and Test Ping work from every view.
+- **Photo** (the round picture with a camera button, in every view): pick an image; it is shrunk to 400 px and uploaded to the photo library, then saved with **Save All Settings**. × removes it from the card. Without a photo the card shows initials on a colour. The photo appears on Team performance too.
+- The photo library counts a staff photo as in use ("Staff photo: name") and asks before deleting it. Only an upload on this site or an https address is saved as a photo.
 
 ## Working hours and page teams
 

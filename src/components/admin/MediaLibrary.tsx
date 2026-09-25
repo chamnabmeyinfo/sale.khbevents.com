@@ -156,7 +156,7 @@ export default function MediaLibrary({ onPick, exclude = [], presets = [], reloa
   const total = files.length + presets.length;
   const grid = compact ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3';
 
-  const usageText = (u: MediaUsage) => (u.kind === 'page' ? `${u.title} (/${u.slug})` : t('media.popupNamed', { name: u.title }));
+  const usageText = (u: MediaUsage) => (u.kind === 'page' ? `${u.title} (/${u.slug})` : u.kind === 'staff' ? t('media.staffNamed', { name: u.title }) : t('media.popupNamed', { name: u.title }));
 
   return (
     <div

@@ -8,6 +8,19 @@ import { isMaskedSecret } from '@/lib/secrets';
 import { RoundRobinStaff } from '@/lib/types';
 import { errorMessage } from '@/lib/errors';
 
+/** A staff photo: an upload on this site or an https image address. Anything else is dropped. */
+function safeAvatar(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const v = value.trim().slice(0, 1000);
+  if (/^\/api\/uploads\/[A-Za-z0-9._-]+$/.test(v)) return v;
+  try {
+    const u = new URL(v);
+    return u.protocol === 'https:' ? u.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function GET() {
   const unauthorized = await requireAdmin();
   if (unauthorized) return unauthorized;
@@ -53,7 +66,7 @@ export async function PUT(req: NextRequest) {
         ? Array.from(new Set(s.pages.map((p) => String(p).toLowerCase().trim()).filter((p) => /^[a-z0-9_-]{1,120}$/.test(p))))
         : [];
       const limit = Math.round(Number(s.dailyLimit) || 0);
-      return { ...s, workHours: normalizeHours(s.workHours), pages: pages.length ? pages : undefined, dailyLimit: limit > 0 ? Math.min(limit, 500) : undefined };
+      return { ...s, avatar: safeAvatar(s.avatar), workHours: normalizeHours(s.workHours), pages: pages.length ? pages : undefined, dailyLimit: limit > 0 ? Math.min(limit, 500) : undefined };
     });
     const minutes = Number(settings.responseMinutes);
     settings.responseMinutes = (RESPONSE_MINUTE_CHOICES as readonly number[]).includes(minutes) ? minutes : 0;

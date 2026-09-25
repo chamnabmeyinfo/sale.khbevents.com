@@ -114,3 +114,5 @@ Without Supabase (local development) files go to `public/uploads` and are served
 - Features: [[Landing Pages CMS]], [[Ads and Popups]], [[Admin and Security]]
 - Runbooks: [[Launch a New Trip Page]], [[Create a Popup]]
 - Map: [[System Map]]
+
+- Staff photos in Staff Round Robin use the same upload (shrunk to 400 px) and count as "in use" in the photo library. See [[Round Robin]].

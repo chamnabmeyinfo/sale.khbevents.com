@@ -31,7 +31,10 @@ import {
   RotateCcw,
   Code,
   UserPlus,
-  Trash2
+  Trash2,
+  LayoutGrid,
+  LayoutList,
+  Rows3,
 } from 'lucide-react';
 import {
   RoundRobinSettings,
@@ -58,6 +61,9 @@ import { errorMessage } from '@/lib/errors';
 import { MAX_HANDOVERS, RESPONSE_MINUTE_CHOICES } from '@/lib/lead-response';
 import { useLanguage } from '@/context/LanguageContext';
 import StaffAvailability from './StaffAvailability';
+import AvatarUpload from './AvatarUpload';
+import StaffSummary, { type StaffView } from './StaffSummary';
+import { useStoredChoice } from '@/lib/use-browser-state';
 
 interface RoundRobinManagerClientProps {
   initialSettings: RoundRobinSettings;
@@ -145,6 +151,9 @@ export default function RoundRobinManagerClient({
   systemSettings,
   pages = []
 }: RoundRobinManagerClientProps) {
+  // Staff list view: detailed cards, compact list or grid (remembered in this browser).
+  const [staffView, setStaffView] = useStoredChoice<StaffView>('khb_rr_view', ['cards', 'list', 'grid'] as const, 'cards');
+  const [expandedStaffId, setExpandedStaffId] = useState<string | null>(null);
   // Current time for "working now / off until", set after mount and every minute.
   const [clientNow, setClientNow] = useState(0);
   useEffect(() => {
@@ -714,7 +723,7 @@ export default function RoundRobinManagerClient({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/60 cursor-pointer shadow-xs">
             <span className="text-xs font-bold text-slate-700 dark:text-gray-300">{t('rr.systemEnabled')}</span>
             <input
@@ -823,7 +832,7 @@ export default function RoundRobinManagerClient({
       </div>
 
       {/* Main Tabs Navigation */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-emerald-950 pb-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-emerald-950 pb-2">
         <button
           type="button"
           onClick={() => setActiveTab('config')}
@@ -1056,7 +1065,14 @@ export default function RoundRobinManagerClient({
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex gap-1 p-1 rounded-xl bg-slate-100 dark:bg-emerald-950/60 border border-slate-200 dark:border-emerald-900/60" role="group" aria-label={t('rr.view.label')}>
+                  {([['cards', LayoutList, 'rr.view.cards'], ['list', Rows3, 'rr.view.list'], ['grid', LayoutGrid, 'rr.view.grid']] as const).map(([v, Icon, key]) => (
+                    <button key={v} type="button" aria-pressed={staffView === v} title={t(key)} onClick={() => { setStaffView(v); setExpandedStaffId(null); }} className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer ${staffView === v ? 'bg-amber-400 text-black shadow-xs' : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'}`}>
+                      <Icon className="w-3.5 h-3.5" /><span className="hidden sm:inline">{t(key)}</span>
+                    </button>
+                  ))}
+                </div>
                 <button
                   type="button"
                   onClick={handleAddStaff}
@@ -1068,16 +1084,31 @@ export default function RoundRobinManagerClient({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className={staffView === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4' : staffView === 'list' ? 'rounded-2xl border border-slate-200 dark:border-emerald-900/50 bg-white dark:bg-[#0A1610] divide-y divide-slate-100 dark:divide-emerald-950/60 overflow-hidden' : 'grid grid-cols-1 gap-4'}>
               {settings.staffList.map((staff, idx) => {
-                const color = staffColors[idx % staffColors.length];
                 const testResult = testResults[staff.id];
                 const cleanUser = (staff.telegramUsername || '').replace(/^@/, '');
+
+                if (staffView !== 'cards' && expandedStaffId !== staff.id) {
+                  return (
+                    <StaffSummary
+                      key={staff.id}
+                      staff={staff}
+                      index={idx}
+                      view={staffView}
+                      nowMs={clientNow}
+                      testing={testResult?.testing}
+                      onChange={(patch) => handleStaffChange(staff.id, patch)}
+                      onEdit={() => setExpandedStaffId(staff.id)}
+                      onTest={() => handleTestConnection(staff)}
+                    />
+                  );
+                }
 
                 return (
                   <div
                     key={staff.id}
-                    className={`p-5 rounded-2xl border transition-all ${
+                    className={`p-5 ${staffView === 'grid' ? 'sm:col-span-2 xl:col-span-3 ' : ''}${staffView === 'list' ? 'rounded-none border-0 ' : 'rounded-2xl border '}transition-all ${
                       staff.isActive
                         ? 'bg-white dark:bg-[#0A1610] border-slate-200 dark:border-emerald-900/50 shadow-sm'
                         : 'bg-slate-50 dark:bg-[#060D09] border-slate-200 dark:border-gray-800/40 opacity-75'
@@ -1085,11 +1116,10 @@ export default function RoundRobinManagerClient({
                   >
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-emerald-950">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl ${color} text-black font-black flex items-center justify-center text-sm shadow-sm`}>
-                          #{idx + 1}
-                        </div>
+                        <AvatarUpload name={staff.name || t('rr.staff.defaultName', { n: idx + 1 })} src={staff.avatar} size={48} onChange={(avatar) => handleStaffChange(staff.id, { avatar })} />
                         <div>
                           <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black text-slate-400">#{idx + 1}</span>
                             <h3 className="font-bold text-slate-900 dark:text-white text-sm">{staff.name || t('rr.staff.defaultName', { n: idx + 1 })}</h3>
                             {cleanUser && (
                               <a
@@ -1108,7 +1138,12 @@ export default function RoundRobinManagerClient({
                       </div>
 
                       {/* Right controls: Active switch, Test button & Delete button */}
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        {staffView !== 'cards' && (
+                          <button type="button" onClick={() => setExpandedStaffId(null)} className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black text-xs font-bold cursor-pointer">
+                            {t('rr.view.done')}
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => handleTestConnection(staff)}

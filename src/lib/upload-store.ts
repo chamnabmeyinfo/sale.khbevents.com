@@ -4,7 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
 import { UPLOAD_BUCKET } from './uploads';
 import { findUsage, isUploadName, labelFor, withoutFile, type MediaFile } from './media-library';
-import { getMediaMeta, getPages, getPopupAds, saveMediaMeta } from './storage';
+import { getMediaMeta, getPages, getPopupAds, getRoundRobinSettings, saveMediaMeta } from './storage';
 
 /**
  * Server side of the photo library: where uploaded files live and how to list
@@ -51,8 +51,10 @@ async function listStored(): Promise<StoredFile[]> {
 }
 
 async function usageSources() {
-  const [pages, popups] = await Promise.all([getPages(), getPopupAds(true)]);
-  return { pages, popups: popups.ads };
+  const [pages, popups, rr] = await Promise.all([getPages(), getPopupAds(true), getRoundRobinSettings()]);
+  // Only the avatar matters for staff; the rest of the record is not searched.
+  const staff = (rr.staffList || []).filter((s) => s.avatar).map((s) => ({ id: s.id, name: s.name, avatar: s.avatar }));
+  return { pages, popups: popups.ads, staff };
 }
 
 /** Every uploaded photo, newest first, with its display name and where it is shown. */
@@ -61,13 +63,13 @@ export async function listLibrary(): Promise<MediaFile[]> {
   return stored.map((f) => ({
     ...f,
     label: labelFor(f.name, meta),
-    usedBy: isUploadName(f.name) ? findUsage(f.name, sources.pages, sources.popups) : [],
+    usedBy: isUploadName(f.name) ? findUsage(f.name, sources.pages, sources.popups, sources.staff) : [],
   }));
 }
 
 export async function usageOf(name: string) {
   const sources = await usageSources();
-  return findUsage(name, sources.pages, sources.popups);
+  return findUsage(name, sources.pages, sources.popups, sources.staff);
 }
 
 export async function fileExists(name: string): Promise<boolean> {

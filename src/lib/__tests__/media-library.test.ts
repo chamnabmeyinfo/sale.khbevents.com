@@ -55,3 +55,11 @@ describe('findUsage', () => {
     expect(matchesSearch({ name: NAME, label: 'Hero shot' }, 'tea')).toBe(false);
   });
 });
+
+describe('staff photos count as in use', () => {
+  it('names the salesperson whose avatar uses the file', () => {
+    const used = findUsage('abc-photo.webp', [], [], [{ id: 's-a', name: 'Dara', avatar: '/api/uploads/abc-photo.webp' }]);
+    expect(used).toEqual([{ kind: 'staff', id: 's-a', title: 'Dara' }]);
+    expect(findUsage('abc-photo.webp', [], [])).toEqual([]);
+  });
+});

@@ -23,7 +23,7 @@ export interface MediaMetaEntry {
 export type MediaMeta = Record<string, MediaMetaEntry>;
 
 export interface MediaUsage {
-  kind: 'page' | 'popup';
+  kind: 'page' | 'popup' | 'staff';
   id: string;
   title: string;
   /** Page web address, for pages. */
@@ -101,7 +101,7 @@ const text = (v: unknown): string => (typeof v === 'string' ? v : '');
  * Pages and popups whose saved content contains the photo's URL. Matching on
  * the file name also catches the same photo stored under another host or path.
  */
-export function findUsage(name: string, pages: UsageSource[], popups: UsageSource[]): MediaUsage[] {
+export function findUsage(name: string, pages: UsageSource[], popups: UsageSource[], staff: UsageSource[] = []): MediaUsage[] {
   const used: MediaUsage[] = [];
   const contains = (item: unknown) => {
     try {
@@ -115,6 +115,9 @@ export function findUsage(name: string, pages: UsageSource[], popups: UsageSourc
   }
   for (const a of popups) {
     if (contains(a)) used.push({ kind: 'popup', id: a.id, title: text(a.name) || a.id });
+  }
+  for (const s of staff) {
+    if (contains(s)) used.push({ kind: 'staff', id: s.id, title: text(s.name) || s.id });
   }
   return used;
 }
