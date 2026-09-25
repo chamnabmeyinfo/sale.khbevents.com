@@ -83,7 +83,7 @@ export interface FaqBlock extends BlockBase {
 }
 
 /** Icons a benefit can show; drawn by the renderer. */
-export const BENEFIT_ICONS = ['sparkles', 'check', 'star', 'shield', 'clock', 'gift', 'heart', 'truck', 'chat', 'users', 'leaf', 'award', 'tent', 'glasses', 'briefcase', 'plane', 'robot', 'utensils'] as const;
+export const BENEFIT_ICONS = ['sparkles', 'check', 'star', 'shield', 'clock', 'gift', 'heart', 'truck', 'chat', 'users', 'leaf', 'award', 'tent', 'glasses', 'briefcase', 'plane', 'robot', 'utensils', 'coffee', 'cpu', 'chart', 'search', 'trend-down', 'zap'] as const;
 export type BenefitIcon = (typeof BENEFIT_ICONS)[number];
 
 export interface BenefitItem {
@@ -589,7 +589,7 @@ function normalizeBlock(v: unknown): BuilderBlock | null {
     const items = Array.isArray(o.items)
       ? o.items.slice(0, 8).map((it) => {
           const r = obj(it);
-          return { title: bi(r.title, 120), text: optBi(r.text, 400), image: url(r.image) };
+          return { title: bi(r.title, 120), text: optBi(r.text, 1000), image: url(r.image) };
         }).filter((it) => hasText(it.title))
       : [];
     return {

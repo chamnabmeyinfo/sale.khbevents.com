@@ -118,7 +118,7 @@ Landing-page copy lives in git as a content pack, `content/pages/<slug>.json`, h
 - **Production build**: after `next build` succeeds, `npm run build` runs `scripts/sync-content-packs.mjs`, which applies each pack once per file version (a `content_pack:<slug>` marker in `system_settings` remembers the applied hash, and `content_pack_backup:<slug>` keeps the page as it was before). It only writes during a Vercel production build and never fails the build.
 - **Admin → Pages → Import JSON**: applies a pack on demand.
 
-Regenerate the Smart City pack from the copy module with `npm run content:pack`.
+A pack with `"convertToBuilder": true` moves an old fixed-layout page to the drag-and-drop builder, built from the page's own live text, price, deadlines and seats (`src/lib/classic-to-builder.ts`). The Smart City page was moved this way; every page is now edited in the builder.
 
 ## Popup ads
 

@@ -273,7 +273,7 @@
 .kb-step__num { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 9999px; background: linear-gradient(135deg, var(--kb-accent), var(--kb-accent-dark)); color: var(--kb-on-accent); font-weight: 800; flex: none; }
 .kb-theme-brand .kb-step__num { background: #FFFFFF; color: #0B1712; }
 .kb-step__title { margin: 14px 0 6px; font-size: 1.1rem; font-weight: 800; line-height: 1.3; }
-.kb-step__text { margin: 0; color: var(--kb-muted); font-size: 0.97rem; }
+.kb-step__text { margin: 0; color: var(--kb-muted); font-size: 0.97rem; white-space: pre-line; }
 .kb-timeline { gap: 0; max-width: 720px; }
 .kb-align-center .kb-timeline { margin: 0 auto; }
 .kb-timeline .kb-step { display: flex; gap: 18px; position: relative; padding-bottom: 28px; }

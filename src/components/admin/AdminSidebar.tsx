@@ -111,7 +111,7 @@ export default function AdminSidebar() {
         { label: t('nav.pages.all'), href: '/admin/pages', icon: Layers },
         { label: t('nav.pages.media'), href: '/admin/media', icon: Images },
         { label: t('nav.pages.new'), href: '/admin/pages/new', icon: PlusCircle, isHighlight: true },
-        { label: t('nav.pages.smartCity'), href: '/admin/pages/page-smart-city', icon: Sparkles },
+        { label: t('nav.pages.smartCity'), href: '/admin/builder/page-smart-city', icon: Sparkles },
         { label: t('nav.pages.analytics'), href: '/admin/pages/page-smart-city/analytics', icon: Activity },
       ]
     },

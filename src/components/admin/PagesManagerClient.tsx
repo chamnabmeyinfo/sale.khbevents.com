@@ -3,7 +3,7 @@
 import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { defaultBuilderDoc } from '@/lib/builder';
+import { createBuilderPage } from './create-builder-page';
 import { featureImage } from '@/lib/feature-image';
 import { 
   ImageOff,
@@ -89,27 +89,12 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
     }
   };
 
-  // New page for the drag-and-drop builder: starts as a draft with the three pilot components.
+  // Every new page is a drag-and-drop builder page (one editor for all pages).
   const handleCreateBuilderPage = async () => {
     setCreatingBuilder(true);
     try {
-      const suffix = Date.now().toString(36).slice(-5);
-      const res = await fetch('/api/pages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: t('builder.newPageName'),
-          slug: `new-page-${suffix}`,
-          status: 'draft',
-          template: 'builder',
-          category: 'General',
-          testimonials: [],
-          builder: defaultBuilderDoc(),
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.page?.id) throw new Error(data.error || t('common.errorSaving'));
-      router.push(`/admin/builder/${data.page.id}`);
+      const id = await createBuilderPage(t('builder.newPageName'));
+      router.push(`/admin/builder/${id}`);
     } catch (err) {
       alert(err instanceof Error ? err.message : t('common.errorSaving'));
       setCreatingBuilder(false);
@@ -242,18 +227,11 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
             onClick={handleCreateBuilderPage}
             disabled={creatingBuilder}
             title={t('builder.newTitle')}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer disabled:opacity-60"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition-all cursor-pointer disabled:opacity-60"
           >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span>{creatingBuilder ? t('builder.creating') : t('builder.new')}</span>
+            <Plus className="w-4 h-4 text-black stroke-[3]" />
+            <span>{creatingBuilder ? t('builder.creating') : t('pages.createNew')}</span>
           </button>
-          <Link
-          href="/admin/pages/new"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
-        >
-          <Plus className="w-4 h-4 text-black stroke-[3]" />
-          <span>{t('pages.createNew')}</span>
-          </Link>
         </div>
       </div>
 

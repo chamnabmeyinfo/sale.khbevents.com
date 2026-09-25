@@ -1,7 +1,7 @@
 ---
 type: feature
 tags: [system, feature, cms, landing-pages]
-updated: 2026-09-24
+updated: 2026-09-25
 admin_path: /admin/pages
 admin_menu: Landing Pages CMS
 source:
@@ -28,7 +28,7 @@ source:
 
 ## What it does for sales
 
-> A drag and drop builder for new sales pages now sits next to this editor: **New drag & drop page**. See [[Page Builder]].
+> **Since 2026-09-25 every page is built and edited in the drag-and-drop builder.** See [[Page Builder]]. This note now covers the page list and the per-page settings (SEO, tracking, dedicated settings). The fixed templates below are kept only for history.
 
 Every trip or event gets its own page at `sale.khbevents.com/<slug>`. The page carries the offer: headline, price, seats left, programme, FAQ and a registration form. Sales can launch or change a page without a developer. Each page can have its own contacts, lead tags, passcode and ad pixels.
 
@@ -41,7 +41,7 @@ The page on sale right now is `/smart-city-tea-cafe`. See [[Smart City Tea and C
 | Element | What it does |
 |---|---|
 | Tabs: All Campaigns, Published (Live), Drafts, Corporate Events, Trade & Delegations | Filter the page list |
-| **+ Create New Landing Page** | Opens the editor for a new page (`/admin/pages/new`) |
+| **+ Create New Landing Page** | Creates a draft builder page and opens it in the builder (`/admin/pages/new` does the same) |
 | **Import JSON** | Applies a content pack file. See [[Content Packs]] |
 | Card button Copy Public URL | Copies the live link |
 | Card button Preview Live | Opens the page |
@@ -50,14 +50,14 @@ The page on sale right now is `/smart-city-tea-cafe`. See [[Smart City Tea and C
 | Card button Dedicated Page Settings | Opens the page's own settings |
 | Card button Delete Page | Deletes the page after a confirmation |
 
-The sidebar also has direct links to the Smart City page editor and its analytics.
+The sidebar also has direct links to the Vietnam page in the builder and to its analytics.
 
 ## How to use it
 
 Full launch steps are in [[Launch a New Trip Page]]. The short version:
 
 - [ ] Click **+ Create New Landing Page**, or **Duplicate** an existing page.
-- [ ] In **General & Template**, set the title, the URL slug, the template and the status.
+- [ ] In the builder, set the title, the URL slug, the Offer and the sections, then Publish. See [[Page Builder]].
 - [ ] Fill the tabs you need (list below). Switch to the **ភាសាខ្មែរ (Khmer)** tab for the Khmer version. See [[Languages]].
 - [ ] Press **Save & Publish Landing Page**.
 - [ ] Open the live link and check it on a phone.
@@ -81,7 +81,10 @@ Full launch steps are in [[Launch a New Trip Page]]. The short version:
 | 📊 Tracking & Pixels | Meta, Google and TikTok pixel IDs. See [[Tracking and Analytics]] |
 | ⚙️ Dedicated Settings | This page's own contacts, alerts, tags, sold-out mode, passcode, payment details |
 
-### Templates
+### Templates (old, no longer offered)
+
+The fixed templates below are no longer offered for new pages. A page still on one shows **Move to drag-and-drop** in its editor.
+
 
 | Template | Code name | Typical use |
 |---|---|---|
@@ -125,12 +128,11 @@ Private fields (bot token, chat ID, webhook, passcode) are removed before the pa
 
 - The admin screens are `src/components/admin/PagesManagerClient.tsx` (list) and `src/components/admin/PageEditor.tsx` (editor).
 - Saves go to `/api/pages` and `/api/pages/<id>`, then `savePage` in `src/lib/storage.ts` writes the local copy and the `landing_pages` table in Supabase.
-- Public pages render in `src/app/[slug]/page.tsx`. The slug `smart-city-tea-cafe` uses its own designed views (`SmartCityLandingPageView.tsx`, `SmartCityAppView.tsx`, `SmartCityOptinView.tsx`) while its template is `b2b-delegation`. All other pages use `DynamicLandingPageView.tsx`.
+- Public pages render in `src/app/[slug]/page.tsx`. Builder pages (all live pages since 2026-09-25) render with `BuilderPageView.tsx`. The old Smart City views (`SmartCityLandingPageView.tsx` and the `/app` and `/optin` views) are used only if the page is not a builder page. `/smart-city-tea-cafe/app` and `/optin` now open the main page.
 - The Smart City page still renders from built-in copy if the CMS has no page for it.
 
 ## Limits and gotchas
 
-- The `?view=app` and `?view=optin` layouts exist only for the Smart City page.
 - Khmer page content shows on the Smart City views. At the time of writing, the generic page view (`DynamicLandingPageView.tsx`) does not use the Khmer tab. See [[Languages]].
 - The data model has a per-page round robin team (`useCustomRoundRobin`), but no admin screen edits it at the time of writing. All pages use the global team in [[Round Robin]].
 - Pages with a passcode are left out of the home page list.

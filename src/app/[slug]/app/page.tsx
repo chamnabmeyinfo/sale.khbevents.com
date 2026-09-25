@@ -1,5 +1,5 @@
 import SmartCityAppView from '@/components/landing/SmartCityAppView';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { Metadata } from 'next';
 import { getActivePopupAds, getPublicSettings } from '@/lib/storage';
 import { loadPublicPage } from '@/lib/page-access';
@@ -35,6 +35,8 @@ export default async function SlugAppPage({ params, searchParams }: PageProps) {
   if (result.kind === 'not_found') notFound();
   if (result.kind === 'locked') return <PageLockScreen page={result.stub} />;
   const page = result.page;
+  // The page moved to the drag-and-drop builder: this old view now opens the page itself.
+  if (page?.template === 'builder' && page.builder) redirect(`/${cleanSlug}${sp.lang === 'kh' ? '?lang=kh' : ''}`);
   const settings = await getPublicSettings();
   const popupPreviewId = typeof sp.popup_preview === 'string' ? sp.popup_preview : undefined;
   const popupAds = await getActivePopupAds(cleanSlug, popupPreviewId);

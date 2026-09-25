@@ -49,6 +49,13 @@ export const editor: Dictionary = {
 
     // Header / status / language bar
     'editor.backToPages': 'Back to Landing Pages',
+    'editor.builderNote': 'Text, photos, price, deadline, seats and the order of sections are edited in the drag-and-drop builder. Here you set search (SEO), tracking and page settings.',
+    'editor.openBuilder': 'Open the drag-and-drop builder',
+    'editor.convert.title': 'This page uses an old fixed layout.',
+    'editor.convert.body': 'Move it to the drag-and-drop builder so every page is edited in one place. Its text, photos, price, deadlines and seats are copied over; nothing is lost.',
+    'editor.convert.button': 'Move to drag-and-drop',
+    'editor.convert.working': 'Moving…',
+    'editor.convert.confirm': 'Move this page to the drag-and-drop builder? Its current text, price, deadlines and seats are copied into builder sections. The page keeps its link.',
     'editor.createTitle': 'Create New Landing Page',
     'editor.editTitle': 'Edit: {title}',
     'editor.untitled': 'Untitled Campaign',
@@ -363,6 +370,13 @@ export const editor: Dictionary = {
 
     // Header / status / language bar
     'editor.backToPages': 'ត្រឡប់ទៅទំព័រ Landing',
+    'editor.builderNote': 'អត្ថបទ រូបភាព តម្លៃ ថ្ងៃផុតកំណត់ កៅអី និងលំដាប់ផ្នែក កែនៅកម្មវិធីអូសទម្លាក់ (Builder)។ នៅទីនេះ កំណត់ SEO ការតាមដាន និងការកំណត់ទំព័រ។',
+    'editor.openBuilder': 'បើកកម្មវិធីអូសទម្លាក់',
+    'editor.convert.title': 'ទំព័រនេះប្រើប្លង់ចាស់។',
+    'editor.convert.body': 'ផ្លាស់ទៅកម្មវិធីអូសទម្លាក់ ដើម្បីកែគ្រប់ទំព័រនៅកន្លែងតែមួយ។ អត្ថបទ រូបភាព តម្លៃ ថ្ងៃផុតកំណត់ និងកៅអី ត្រូវបានចម្លងទាំងអស់។',
+    'editor.convert.button': 'ផ្លាស់ទៅអូសទម្លាក់',
+    'editor.convert.working': 'កំពុងផ្លាស់…',
+    'editor.convert.confirm': 'ផ្លាស់ទំព័រនេះទៅកម្មវិធីអូសទម្លាក់? អត្ថបទ តម្លៃ ថ្ងៃផុតកំណត់ និងកៅអីបច្ចុប្បន្ន នឹងចម្លងទៅជាផ្នែក Builder។ តំណទំព័រនៅដដែល។',
     'editor.createTitle': 'បង្កើតទំព័រ Landing ថ្មី',
     'editor.editTitle': 'កែសម្រួល៖ {title}',
     'editor.untitled': 'យុទ្ធនាការគ្មានឈ្មោះ',

@@ -3,7 +3,7 @@ type: trip
 status: on-sale
 landing_page: /smart-city-tea-cafe
 tags: [trip, vietnam, business-trip]
-updated: 2026-09-24
+updated: 2026-09-25
 price_usd: 550
 departure: 2026-10-08
 return: 2026-10-11
@@ -11,6 +11,7 @@ source:
   - src/components/landing/smart-city-content.ts
   - content/pages/smart-city-tea-cafe.json
   - data/db.json (page smart-city-tea-cafe, public fields only)
+  - src/lib/classic-to-builder.ts
   - src/components/landing/SmartCityLandingPageView.tsx
   - src/app/[slug]/page.tsx
 ---
@@ -18,6 +19,13 @@ source:
 # Smart City Tea and Cafe Vietnam 2026
 
 > Live price, deadlines and seats left are set in Admin → Landing Pages CMS. This note explains the trip; the admin is the source of truth for numbers.
+
+> [!info] Page moved to the builder (2026-09-25)
+> The page is now a drag-and-drop builder page: Admin → Landing Pages CMS → Edit, or the sidebar link. Price, registration deadline and seats are in the builder's **Offer** panel, copied from the old admin settings. The sale-phase table below describes the old layout.
+>
+> The builder has one countdown: early-bird price, then the registration deadline. It hides itself once the date has passed.
+>
+> These were not carried over: the seat map, the industry matchmaker tabs, the stats strip, the two-tier price cards and the sticky bars. See [[Page Builder]].
 
 **Full name:** Smart City, Tea & Cafe Business Trip to Vietnam 2026.
 

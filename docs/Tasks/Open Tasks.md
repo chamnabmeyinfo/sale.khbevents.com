@@ -1,7 +1,7 @@
 ---
 type: tasks
 tags: [tasks, index]
-updated: 2026-09-24
+updated: 2026-09-25
 source:
   - supabase/migrations/20260923_lock_down_rls.sql
   - src/lib/round-robin.ts
@@ -28,6 +28,11 @@ Suggested order: lock the database first, then change the token and the password
 
 ### Sales page
 
+- [ ] Vietnam page, now in the builder:
+  - Check it after the next deploy: Admin → Landing Pages CMS → Edit.
+  - Its registration deadline (20 Sept 2026) has passed, so the page shows no countdown. Set a new date, or clear it, in the builder → Offer.
+  - Check the seats left.
+  - → [[Smart City Tea and Cafe Vietnam 2026]], [[Page Builder]] #owner
 - [ ] Set the real registration and early-bird deadlines in the admin. Only the owner sets them; code and content packs never overwrite them. The page editor has no date field for them yet (see the question below). → [[Landing Pages CMS]], [[Smart City Tea and Cafe Vietnam 2026]] #owner
 - [ ] Send real testimonials and outcome photos when they exist. Until then the testimonials stay hidden; they were placeholders. → [[Smart City Tea and Cafe Vietnam 2026]], [[Image Uploads]] #owner
 - [ ] Choose the **Remember a visitor for** period in Admin → Staff Round Robin → Advanced Routing Engine Rules & Fallbacks. Choices: Off, 1, 2, 3 or 6 months. The default in the repo is 1 month. → [[Round Robin]] #owner

@@ -1,10 +1,12 @@
 ---
 type: feature
 tags: [system, feature, landing-pages, builder]
-updated: 2026-09-24
+updated: 2026-09-25
 admin_path: /admin/builder/<page id>
-admin_menu: Landing Pages CMS → New drag & drop page
+admin_menu: Landing Pages CMS → Create New Landing Page
 source:
+  - src/lib/classic-to-builder.ts
+  - src/components/admin/create-builder-page.ts
   - src/lib/builder.ts
   - src/components/builder/BuilderBlocks.tsx
   - src/components/builder/BuilderPageView.tsx
@@ -21,11 +23,11 @@ source:
 
 Builds a sales page for anything (a product, a service, a trip) by dragging ready-made sections onto a page. Each section has one job, its "core value", shown in the editor. The editor shows the page exactly as a visitor sees it, in English or Khmer, on a phone or a desktop.
 
-This started as the pilot of Phase 2 in [[Landing Page Builder Roadmap]]. The Smart City page still uses the classic editor in [[Landing Pages CMS]].
+This started as the pilot of Phase 2 in [[Landing Page Builder Roadmap]]. Since 2026-09-25 **every page is edited here**, including the Vietnam page ([[Smart City Tea and Cafe Vietnam 2026]]). The old fixed layouts are no longer offered.
 
 ## How to use it
 
-1. Admin → Landing Pages CMS → **New drag & drop page**. The page starts as a **draft** with a full sales page: Hero, Benefits, How it works, Offer card, FAQ and Final call to action. Replace the example text (a red number marks it).
+1. Admin → Landing Pages CMS → **Create New Landing Page** (also in the sidebar and dashboard). The page starts as a **draft** with a full sales page: Hero, Benefits, How it works, Offer card, FAQ and Final call to action. Replace the example text (a red number marks it).
 2. Right panel, with no section selected: page name, web address, and the **Offer**: what is sold, price, previous price, currency ($ or ៛), offer end date, stock, and the button action (Telegram round robin or a link). Every section reads these facts, so they are typed once.
 3. Drag a component from the left onto the page, or press **+** (it lands at the end, above the Final call to action). Drag sections to reorder them. Hover a section for move up/down, duplicate and delete.
 4. Click a section to edit it: design (2 per component), colour theme, alignment, spacing, background photo, and the text in EN and KH. A red number shows tips (missing Khmer, sample text left, headline too long).
@@ -40,9 +42,9 @@ Undo and redo cover the last 60 changes. The browser warns before leaving with u
 | Hero | Promise the result in one glance, with the main button on the first screen | Split with photo, Full photo |
 | Offer card | Price, saving, stock bar and countdown, so the deadline is hard to miss | Card, Price banner |
 | FAQ | Remove the doubts that stop people buying | Accordion, Two columns |
-| Benefits | Answer "why should I care?" with the results the buyer gets; 12 icons to choose | Icon cards, Icon list |
+| Benefits | Answer "why should I care?" with the results the buyer gets; 24 icons to choose | Icon cards, Icon list |
 | What's included | List exactly what the buyer gets | Checklist, Photo and list |
-| How it works | Show buying is easy, in up to 8 steps; optional button | Numbered cards, Timeline |
+| How it works | Show buying is easy, in up to 8 steps (up to 1,000 characters each, line breaks kept, so a day of an itinerary fits); optional button | Numbered cards, Timeline |
 | Lead form | Catch buyers who will not chat first | Form card, Offer and form |
 | Final call to action | Close the page with the offer, countdown and button again | Centered, Split box |
 
@@ -135,3 +137,15 @@ A builder page is a normal landing page with `template: builder` and a `builder`
 - The classic Smart City page cannot be opened in the builder.
 
 Related: [[Landing Pages CMS]], [[Landing Page Builder Roadmap]].
+
+## Moving an old page to the builder
+
+A page still on an old fixed layout shows **Move to drag-and-drop** at the top of its old editor. The conversion is in `src/lib/classic-to-builder.ts` and moves only what the page already says:
+
+- **Text:** the hero, value, problem and audience cards, what is included, itinerary (as a timeline), photos, guarantee, form, FAQ and Khmer translation.
+- **Numbers:** price, early-bird price and date, registration deadline and seats, from the page's own admin settings.
+
+Dates without a time zone count as Cambodia time. A content pack can do the same on the next production build with `"convertToBuilder": true` (see [[Content Packs]]).
+
+For a builder page, the old editor keeps only **SEO & Social**, **Tracking & Pixels** and **Dedicated Settings**. Everything else is edited in the builder.
+

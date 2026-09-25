@@ -26,6 +26,18 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-25 — Every page is edited in the drag-and-drop builder
+
+- **Decision:** The Vietnam page moved to the builder. New pages are always builder pages. The old fixed layouts (B2B delegation, trade expo, concert, summit, custom) are no longer offered. A page still on one gets a "Move to drag-and-drop" button. The conversion only reuses the page's own text, price, deadlines and seats.
+- **Why:** The owner wants one place to edit every page, not several page types.
+- **Details:**
+  - The live page is converted on the next production build through the content pack flag `convertToBuilder`, with a backup of the page as it was.
+  - Not carried over: the seat map, matchmaker tabs, stats strip, two-tier price cards and sticky bars.
+- **Decided by:** Owner.
+- **Affects:** [[Page Builder]], [[Landing Pages CMS]], [[Content Packs]], [[Smart City Tea and Cafe Vietnam 2026]].
+
+---
+
 ## 2026-09-25 — Demo data is tagged and excluded everywhere, and never refilled from the sample file
 
 - **Decision:** Simulation Studio leads and clicks are tagged demo when created; one rule (`isDemoLead`) marks them and the shipped samples; every report, count and automation uses real leads only; the CRM shows real customers first. An empty live database is shown as empty.

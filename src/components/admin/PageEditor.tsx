@@ -25,6 +25,7 @@ import {
 import KhmerTranslationEditor from './KhmerTranslationEditor';
 import TrackingAndPixelsEditor from './TrackingAndPixelsEditor';
 import IsolatedSettingsEditor from './IsolatedSettingsEditor';
+import { convertPageToBuilder } from '@/lib/classic-to-builder';
 import ImageManager from './ImageManager';
 import ImageField from './ImageField';
 import {
@@ -431,10 +432,36 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
   const hashTab = useLocationHash();
   const [chosenTab, setActiveTab] = useState<TabType | null>(null);
   const linkedTab = urlTab || hashTab;
+  // Builder pages keep their content in the drag-and-drop builder; here they only have
+  // search, tracking and page settings.
+  const isBuilderPage = !isNew && formData.template === 'builder';
   const activeTab: TabType = chosenTab
     ?? (linkedTab === 'tracking' ? 'tracking'
       : linkedTab === 'settings' || linkedTab === 'isolatedSettings' ? 'isolatedSettings'
-      : 'general');
+      : linkedTab === 'seo' ? 'seo'
+      : isBuilderPage ? 'tracking' : 'general');
+  const [converting, setConverting] = useState(false);
+
+  /** Moves an old fixed-layout page to the drag-and-drop builder, keeping its text, price and dates. */
+  const handleConvertToBuilder = async () => {
+    if (!formData.id || !confirm(t('editor.convert.confirm'))) return;
+    setConverting(true);
+    setError('');
+    try {
+      const converted = convertPageToBuilder(formData as LandingPage);
+      const res = await fetch(`/api/pages/${formData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(converted),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || t('editor.err.saveFailed'));
+      router.push(`/admin/builder/${formData.id}`);
+    } catch (err) {
+      setError(errorMessage(err, t('editor.err.saveError')));
+      setConverting(false);
+    }
+  };
   const [langTab, setLangTab] = useState<'en' | 'kh'>('en');
   const [newFeatureText, setNewFeatureText] = useState<{ [pkgIdx: number]: string }>({});
 
@@ -1122,7 +1149,9 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
     { id: 'isolatedSettings', label: t('editor.tab.settings'), highlight: true }
   ];
 
-  const tabs = [...baseTabs, ...templateTabs, ...commonTabs];
+  const tabs = isBuilderPage
+    ? commonTabs.filter((tab) => tab.id === 'seo' || tab.id === 'tracking' || tab.id === 'isolatedSettings')
+    : [...baseTabs, ...templateTabs, ...commonTabs];
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-24">
@@ -1196,8 +1225,27 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
         </div>
       )}
 
+      {isBuilderPage ? (
+        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p className="text-xs text-emerald-900 dark:text-emerald-100">{t('editor.builderNote')}</p>
+          <Link href={`/admin/builder/${formData.id}`} className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shrink-0">
+            {t('editor.openBuilder')}
+          </Link>
+        </div>
+      ) : !isNew && (
+        <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="text-xs text-amber-900 dark:text-amber-100">
+            <strong className="block">{t('editor.convert.title')}</strong>
+            {t('editor.convert.body')}
+          </div>
+          <button type="button" onClick={() => void handleConvertToBuilder()} disabled={converting} className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black text-xs font-extrabold shrink-0 cursor-pointer disabled:opacity-50">
+            {converting ? t('editor.convert.working') : t('editor.convert.button')}
+          </button>
+        </div>
+      )}
+
       {/* LANGUAGE SELECTOR BAR */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-slate-100 via-amber-50/50 to-emerald-50/30 dark:from-[#06120B] dark:via-[#08170F] dark:to-[#0A1D13] border border-slate-200 dark:border-emerald-800/60 shadow-sm">
+      <div className={`${isBuilderPage ? 'hidden' : 'flex'} flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-slate-100 via-amber-50/50 to-emerald-50/30 dark:from-[#06120B] dark:via-[#08170F] dark:to-[#0A1D13] border border-slate-200 dark:border-emerald-800/60 shadow-sm`}>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-emerald-300">
             <Globe className="w-4 h-4 text-amber-500" />

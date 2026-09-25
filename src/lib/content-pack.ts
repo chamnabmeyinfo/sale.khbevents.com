@@ -1,4 +1,5 @@
 import type { LandingPage } from '@/lib/types';
+import { convertPageToBuilder } from './classic-to-builder';
 
 /**
  * A content pack is a JSON file in `content/pages/<slug>.json` holding the copy of one
@@ -10,7 +11,15 @@ import type { LandingPage } from '@/lib/types';
  *  - the production build (`scripts/sync-content-packs.ts`), once per file version;
  *  - Admin → Pages → "Import JSON", on demand.
  */
-export type ContentPack = Partial<LandingPage> & { slug: string };
+export type ContentPack = Partial<LandingPage> & {
+  slug: string;
+  /**
+   * Move an old fixed-layout page to the drag-and-drop builder, built from the page's
+   * own live text, price, deadlines and seats (see classic-to-builder.ts). Pages that
+   * already are builder pages are left as they are.
+   */
+  convertToBuilder?: boolean;
+};
 
 /** Fields a pack can never carry into a page: they identify or count the page itself. */
 const IDENTITY_FIELDS = ['id', 'viewsCount', 'leadsCount', 'createdAt', 'updatedAt'] as const;
@@ -29,14 +38,15 @@ export function isContentPack(value: unknown): value is ContentPack {
  * `urgency.regularPrice` leaves the deadlines the admin typed. Arrays and scalars are
  * replaced whole: a list in the pack is the whole list. Identity fields are ignored.
  */
-export function mergeContentPack(base: LandingPage, pack: Partial<LandingPage>): LandingPage {
+export function mergeContentPack(base: LandingPage, pack: Partial<LandingPage> & { convertToBuilder?: boolean }): LandingPage {
   const out: Record<string, unknown> = { ...base };
   for (const [key, value] of Object.entries(pack)) {
-    if ((IDENTITY_FIELDS as readonly string[]).includes(key)) continue;
+    if ((IDENTITY_FIELDS as readonly string[]).includes(key) || key === 'convertToBuilder') continue;
     const current = out[key];
     out[key] = isPlainObject(value) && isPlainObject(current) ? { ...current, ...value } : value;
   }
-  return out as unknown as LandingPage;
+  const merged = out as unknown as LandingPage;
+  return pack.convertToBuilder === true ? convertPageToBuilder(merged) : merged;
 }
 
 /**

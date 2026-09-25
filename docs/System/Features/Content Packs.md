@@ -1,14 +1,15 @@
 ---
 type: feature
 tags: [system, feature, content, deploy]
-updated: 2026-09-24
+updated: 2026-09-25
 admin_path: /admin/pages
 admin_menu: Landing Pages CMS → Import JSON
 source:
   - src/lib/content-pack.ts
   - scripts/sync-content-packs.mjs
   - scripts/sync-content-packs.ts
-  - scripts/build-smart-city-content-pack.mts
+  - src/lib/classic-to-builder.ts
+  - scripts/convert-smart-city-to-builder.mts
   - content/pages/smart-city-tea-cafe.json
   - src/components/admin/PagesManagerClient.tsx
   - src/components/landing/smart-city-content.ts
@@ -83,15 +84,12 @@ From `mergeContentPack` in `src/lib/content-pack.ts` (tests in `src/lib/__tests_
 |---|---|
 | `npm run build` | `next build`, then applies packs (production only) |
 | `npm run sync:content` | Runs the pack step alone. Outside Vercel it only writes with `CONTENT_PACK_SYNC=1` set |
-| `npm run content:pack` | Rebuilds `content/pages/smart-city-tea-cafe.json` from the copy module `src/components/landing/smart-city-content.ts`, and merges the same fields into the seed file `data/db.json` |
 
-## How to change the Smart City copy
+## Moving a page to the builder
 
-- [ ] Edit the English and Khmer copy in `src/components/landing/smart-city-content.ts`.
-- [ ] Run `npm run content:pack`.
-- [ ] Check the diff: no deadlines, no seat counts, no invented facts or testimonials.
-- [ ] [[Verify Changes Locally]], then [[Deploy to Production]].
-- [ ] After the deploy, open the live page and the Vercel build log line `[content-packs] ... applied`.
+A pack with `"convertToBuilder": true` turns an old fixed-layout page into a builder page. It is built from the page's own live text, price, deadlines and seats (`src/lib/classic-to-builder.ts`). Builder pages are left as they are.
+
+The Vietnam pack is now only `{ "slug": "smart-city-tea-cafe", "convertToBuilder": true }` (2026-09-25). Its copy is edited in the builder, not in git. `npm run content:pack` was removed because it would have brought the old layout back.
 
 ## Undo a pack
 
@@ -99,8 +97,8 @@ The page as it was before the last applied pack is kept in the `content_pack_bac
 
 ## Limits and gotchas
 
-- A pack sets prices when it carries them. The Smart City pack carries early-bird and regular price (550). Changing those numbers in the pack changes the live price on the next deploy. The admin stays the source of truth for live numbers; keep pack prices in line with what the owner set.
-- `npm run content:pack` also rewrites `data/db.json`. Review that diff and never commit customer data or secrets in it.
+- A pack sets prices when it carries them. Changing those numbers in a pack changes the live price on the next deploy. The admin stays the source of truth for live numbers.
+- Scripts that rewrite `data/db.json` need their diff reviewed: never commit customer data or secrets in it.
 
 ## Related
 
