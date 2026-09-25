@@ -26,6 +26,15 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-25 — Demo data is tagged and excluded everywhere, and never refilled from the sample file
+
+- **Decision:** Simulation Studio leads and clicks are tagged demo when created; one rule (`isDemoLead`) marks them and the shipped samples; every report, count and automation uses real leads only; the CRM shows real customers first. An empty live database is shown as empty.
+- **Why:** The owner wants to start fresh with real data only. Before this, clearing the live data would have brought the sample leads back from the fallback file, and test runs counted in fairness and statistics.
+- **Decided by:** Owner.
+- **Affects:** [[Admin and Security]], [[Round Robin]], [[Leads CRM]].
+
+---
+
 ## 2026-09-25 — Lead hand-over runs on site traffic, not a paid cron
 
 - **Decision:** The check that passes unanswered form leads to a colleague runs after ordinary requests (at most once a minute) and on a public tick address, instead of a Vercel cron job.

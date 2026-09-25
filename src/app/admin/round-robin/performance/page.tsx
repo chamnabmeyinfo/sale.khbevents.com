@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { isAuthenticated } from '@/lib/auth';
 import { scheduleLeadResponseCheck } from '@/lib/lead-followup';
-import { getLeads, getRoundRobinSettings, getStaffClickStats } from '@/lib/storage';
+import { getRealLeads, getRoundRobinSettings, getStaffClickStats } from '@/lib/storage';
 import { serverNowMs } from '@/lib/popup-ads';
 import TeamPerformanceClient, { type PerfLead } from '@/components/admin/TeamPerformanceClient';
 
@@ -18,7 +18,7 @@ export default async function TeamPerformancePage() {
   scheduleLeadResponseCheck();
 
   const since = new Date(serverNowMs() - 92 * 24 * 60 * 60 * 1000).toISOString();
-  const [leads, clickStats, rr] = await Promise.all([getLeads(), getStaffClickStats(), getRoundRobinSettings()]);
+  const [leads, clickStats, rr] = await Promise.all([getRealLeads(), getStaffClickStats(), getRoundRobinSettings()]);
   // Only what the page needs; the customer's name only for leads still waiting for a reply.
   const slim: PerfLead[] = leads
     .filter((l) => l.createdAt >= since && l.routing?.routeType === 'FORM_SUBMISSION')

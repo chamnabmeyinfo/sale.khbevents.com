@@ -3,6 +3,11 @@ import type { Dictionary } from '../index';
 /** Leads CRM screen (/admin/leads). */
 export const leads: Dictionary = {
   en: {
+    'leads.dataView': 'Which leads to show',
+    'leads.view.real': 'Real customers ({n})',
+    'leads.view.demo': 'Demo & test ({n})',
+    'leads.view.all': 'All ({n})',
+    'leads.demoNote': 'Demo leads are not counted in the dashboard, reports or Round Robin. Remove them in Settings & Security → Demo data.',
     'leads.title': 'Leads CRM & Inquiries Pipeline',
     'leads.subtitle': 'Real-time inquiries captured from sale.khbevents.com and campaigns',
     'leads.exportCsv': 'Export {n} Leads to CSV',
@@ -122,6 +127,11 @@ export const leads: Dictionary = {
     'leads.csv.unassigned': 'Unassigned',
   },
   kh: {
+    'leads.dataView': 'Lead ណាដែលត្រូវបង្ហាញ',
+    'leads.view.real': 'អតិថិជនពិត ({n})',
+    'leads.view.demo': 'សាកល្បង ({n})',
+    'leads.view.all': 'ទាំងអស់ ({n})',
+    'leads.demoNote': 'Lead សាកល្បងមិនរាប់ក្នុងផ្ទាំងគ្រប់គ្រង របាយការណ៍ ឬ Round Robin ទេ។ លុបវានៅ Settings & Security → Demo data។',
     'leads.title': 'CRM Leads និងបញ្ជីសំណើ',
     'leads.subtitle': 'សំណើដែលទទួលបានពី sale.khbevents.com និងយុទ្ធនាការ',
     'leads.exportCsv': 'នាំចេញ {n} Leads ជា CSV',

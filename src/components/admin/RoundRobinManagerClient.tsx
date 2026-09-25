@@ -1962,8 +1962,13 @@ export default function RoundRobinManagerClient({
                                 [{log.routeType === 'FORM_SUBMISSION' ? t('rr.log.form') : t('rr.log.click')}]
                               </span>
                               {log.assignmentReason && log.assignmentReason !== 'rotation' && (
-                                <span className="font-bold text-sky-700 dark:text-sky-300 ml-1" title={t('rr.log.keptTitle')}>
-                                  🔁 {log.assignmentReason === 'returning_customer' ? t('rr.log.returningCustomer') : t('rr.log.returningVisitor')}
+                                <span className="font-bold text-sky-700 dark:text-sky-300 ml-1" title={log.assignmentReason === 'handover' ? undefined : t('rr.log.keptTitle')}>
+                                  🔁 {log.assignmentReason === 'returning_customer' ? t('rr.log.returningCustomer') : log.assignmentReason === 'handover' ? t('rr.log.handover') : t('rr.log.returningVisitor')}
+                                </span>
+                              )}
+                              {log.demo && (
+                                <span className="ml-1 px-1.5 py-0.5 rounded-full border text-[9px] font-black bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-900" title={t('demo.badgeTitle')}>
+                                  🧪 DEMO
                                 </span>
                               )}
                             </div>

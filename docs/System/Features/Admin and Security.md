@@ -135,6 +135,13 @@ Track them in [[Open Tasks]].
 - After changing the bot token, press **Register / secure bot webhook** again in Admin → Settings & Security (save the new token first).
 - Rate limits reset when a server instance restarts.
 
+## Real data and demo data
+
+- **Demo** means: made by Round Robin → Simulation Studio (tagged `demo` when created), or one of the sample leads that ship with the site. A test-looking name alone is only a hint in Clear demo data.
+- Demo leads and simulated clicks never count: not on the dashboard, Team performance, the daily summary, page analytics, the hand-over check, staff counters, fairness shares, daily limits or click history.
+- **Leads CRM** opens on **Real customers**; **Demo & test** and **All** are one click away, and demo leads carry a 🧪 DEMO badge. The routing log marks demo entries the same way. Telegram messages from Simulation Studio start with "🧪 DEMO / សាកល្បង".
+- An empty live database stays empty: the sample file (`data/db.json`) is only used when Supabase cannot be reached, so cleared demo leads and log entries do not come back.
+
 ## Clear demo data
 
 **Admin → Settings & Security → Demo data** (`/admin/settings#data`, sidebar **Clear Demo Data**). Rules in `src/lib/demo-data.ts`, work in `scanDemoData` / `clearDemoData` (`src/lib/storage.ts`), address `/api/demo-data` (admin only).

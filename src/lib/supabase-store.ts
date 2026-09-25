@@ -262,9 +262,9 @@ export async function supabaseGetLeads(filter?: {
   pageSlug?: string;
   status?: string;
   search?: string;
-}): Promise<Lead[]> {
+}): Promise<Lead[] | null> {
   const supabase = getSupabase();
-  if (!supabase) return [];
+  if (!supabase) return null;
   let query = supabase.from('leads').select('*').order('created_at', { ascending: false });
 
   if (filter?.pageSlug && filter.pageSlug !== 'ALL') {
@@ -281,7 +281,7 @@ export async function supabaseGetLeads(filter?: {
   const { data, error } = await query;
   if (error || !data) {
     console.error('Supabase getLeads error:', error);
-    return [];
+    return null;
   }
   return data.map(rowToLead);
 }

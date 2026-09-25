@@ -36,6 +36,17 @@ export function demoReasons(lead: Lead, sampleIds: Set<string>): DemoReason[] {
   return reasons;
 }
 
+/**
+ * Certain demo: made by Simulation Studio, tagged demo, or one of the shipped
+ * samples. (A test-looking name alone is only a hint, shown in Clear demo data.)
+ */
+export function isDemoLead(lead: Lead, sampleIds?: Set<string>): boolean {
+  if (lead.isDemo) return true;
+  if ((lead.tags || []).includes('demo')) return true;
+  const reasons = demoReasons(lead, sampleIds || new Set());
+  return reasons.includes('simulation') || reasons.includes('sample');
+}
+
 /** Every lead with at least one demo reason, newest first. */
 export function findDemoLeads(leads: Lead[], sampleIds: Set<string>): DemoLeadMatch[] {
   return leads

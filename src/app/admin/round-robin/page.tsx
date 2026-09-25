@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth';
 import { scheduleLeadResponseCheck } from '@/lib/lead-followup';
-import { getSettings, getRoundRobinSettings, getRoundRobinLogs, getPages } from '@/lib/storage';
+import { getSettings, getRoundRobinSettings, getRoundRobinLogsMarked, getPages } from '@/lib/storage';
 import { maskSecret } from '@/lib/secrets';
 import RoundRobinManagerClient from '@/components/admin/RoundRobinManagerClient';
 
@@ -15,7 +15,8 @@ export default async function AdminRoundRobinPage() {
   const stored = await getSettings();
   const systemSettings = { ...stored, adminPasswordHash: '', telegramBotToken: maskSecret(stored.telegramBotToken) };
   const roundRobinSettings = await getRoundRobinSettings();
-  const logs = await getRoundRobinLogs(150);
+  // Entries of demo leads (Simulation Studio, samples) carry a DEMO badge.
+  const logs = await getRoundRobinLogsMarked(150);
   const pages = (await getPages()).map((p) => ({ slug: p.slug, title: p.title }));
 
   return (

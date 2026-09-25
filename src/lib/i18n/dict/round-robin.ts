@@ -3,6 +3,7 @@ import type { Dictionary } from '../index';
 /** Staff Round Robin screen (RoundRobinManagerClient). */
 export const roundRobin: Dictionary = {
   en: {
+    'rr.log.handover': 'Passed on: no reply in time',
     // Header & master controls
     'rr.title': 'Round Robin Lead Distribution',
     'rr.staffAccountsBadge': '{n} Staff Telegram Accounts',
@@ -344,6 +345,7 @@ export const roundRobin: Dictionary = {
     'rr.sim.batch.failed': 'Benchmark Failed',
   },
   kh: {
+    'rr.log.handover': 'ផ្ទេរ៖ គ្មានការឆ្លើយទាន់ពេល',
     'rr.title': 'ការចែក Lead តាម Round Robin',
     'rr.staffAccountsBadge': 'គណនី Telegram បុគ្គលិក {n}',
     'rr.subtitle': 'ចែកសំណើអ្នកទស្សនា និងទំនាក់ទំនង Telegram ទៅបុគ្គលិកដោយស្វ័យប្រវត្តិតាមភាគរយ',

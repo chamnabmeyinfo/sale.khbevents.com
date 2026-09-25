@@ -3,6 +3,7 @@ import type { Dictionary } from '../index';
 /** Admin → Settings screen (SettingsClient) and the ThemeSwitcher. */
 export const settings: Dictionary = {
   en: {
+    'demo.badgeTitle': 'Demo or test data: not a real customer, not counted in statistics',
     // Header
     'settings.title': 'Brand & System Settings',
     'settings.subtitle': 'Configure KHB Events contact points, instant lead notifications, and security credentials.',
@@ -32,7 +33,7 @@ export const settings: Dictionary = {
     'demo.sampleStaff': 'Sample staff accounts ({n})',
     'demo.sampleStaffNone': 'None in the team.',
     'demo.log': 'Round Robin routing log ({n} entries)',
-    'demo.log.demo': 'Remove only the entries of the leads deleted above ({n})',
+    'demo.log.demo': 'Remove only demo entries: those of the leads deleted above and those tagged DEMO ({n})',
     'demo.log.all': 'Empty the whole log (test Telegram clicks cannot be told apart from real ones)',
     'demo.log.none': 'Keep the log as it is',
     'demo.stats': 'Reset all statistics to zero',
@@ -121,6 +122,7 @@ export const settings: Dictionary = {
     'settings.theme.appearance': 'Appearance',
   },
   kh: {
+    'demo.badgeTitle': 'ទិន្នន័យសាកល្បង៖ មិនមែនអតិថិជនពិត មិនរាប់ក្នុងស្ថិតិ',
     'settings.title': 'ការកំណត់ម៉ាកយីហោ និងប្រព័ន្ធ',
     'settings.subtitle': 'កំណត់ព័ត៌មានទំនាក់ទំនង KHB Events ការជូនដំណឹង Lead ភ្លាមៗ និងសុវត្ថិភាពគណនី។',
     'settings.saving': 'កំពុងរក្សាទុក...',
@@ -148,7 +150,7 @@ export const settings: Dictionary = {
     'demo.sampleStaff': 'គណនីបុគ្គលិកគំរូ ({n})',
     'demo.sampleStaffNone': 'គ្មានក្នុងក្រុមទេ។',
     'demo.log': 'កំណត់ហេតុការចែក Round Robin ({n} ធាតុ)',
-    'demo.log.demo': 'លុបតែធាតុនៃ Lead ដែលបានលុបខាងលើ ({n})',
+    'demo.log.demo': 'លុបតែធាតុសាកល្បង៖ ធាតុនៃ Lead ដែលបានលុបខាងលើ និងធាតុដែលមានស្លាក DEMO ({n})',
     'demo.log.all': 'លុបកំណត់ហេតុទាំងមូល (ការចុច Telegram សាកល្បង មិនអាចបែងចែកពីការចុចពិតបានទេ)',
     'demo.log.none': 'រក្សាកំណត់ហេតុដដែល',
     'demo.stats': 'កំណត់ស្ថិតិទាំងអស់ទៅសូន្យ',

@@ -29,6 +29,8 @@ import {
   getDatabase,
   getLeadById,
   getLeads,
+  getRealLeads,
+  sampleLeadIds,
   getMarker,
   getRoundRobinSettings,
   getStaffClickStats,
@@ -47,6 +49,7 @@ import {
 } from './supabase-store';
 import { runAfterResponse } from './after-response';
 import { dailySummaryText } from './staff-performance';
+import { isDemoLead } from './demo-data';
 
 async function telegram(botToken: string, method: string, body: Record<string, unknown>) {
   try {
@@ -123,11 +126,12 @@ let lastLocalCheck = 0;
 
 async function recentFormLeads(nowMs: number): Promise<Lead[]> {
   const since = new Date(nowMs - HANDOVER_WINDOW_MS).toISOString();
+  // Demo leads (Simulation Studio, samples) are never passed on.
   if (isSupabaseConfigured()) {
     const remote = await supabaseGetLeadsSince(since).catch(() => null);
-    if (remote) return remote;
+    if (remote) return remote.filter((l) => !isDemoLead(l, sampleLeadIds()));
   }
-  return (await getLeads()).filter((l) => l.createdAt >= since);
+  return (await getRealLeads()).filter((l) => l.createdAt >= since);
 }
 
 function managerChat(rr: RoundRobinSettings, fallback?: string): string {
@@ -322,7 +326,8 @@ export async function maybeSendDailySummary(options: { nowMs?: number; force?: b
   if (!settings.telegramBotToken || !manager) return { sent: false, reason: 'no bot or manager chat' };
   await setMarker('rr_daily_summary', day);
   const since = new Date(nowMs - 2 * 24 * 60 * 60 * 1000).toISOString();
-  const leads = isSupabaseConfigured() ? (await supabaseGetLeadsSince(since).catch(() => null)) || [] : (await getLeads()).filter((l) => l.createdAt >= since);
+  const leads = (isSupabaseConfigured() ? (await supabaseGetLeadsSince(since).catch(() => null)) || [] : (await getLeads()).filter((l) => l.createdAt >= since))
+    .filter((l) => !isDemoLead(l, sampleLeadIds()));
   const text = dailySummaryText(leads, await getStaffClickStats(), rr.staffList, day);
   const res = await sendText(settings.telegramBotToken, manager, text);
   return { sent: Boolean(res.ok) };

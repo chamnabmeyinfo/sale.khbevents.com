@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
-import { getRoundRobinLogs } from '@/lib/storage';
+import { getRoundRobinLogsMarked } from '@/lib/storage';
 import { errorMessage } from '@/lib/errors';
 
 export async function GET(req: NextRequest) {
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const limit = parseInt(searchParams.get('limit') || '100', 10);
-    const logs = await getRoundRobinLogs(limit);
+    const logs = await getRoundRobinLogsMarked(limit);
 
     return NextResponse.json({
       success: true,

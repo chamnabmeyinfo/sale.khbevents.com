@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth';
 import { scheduleLeadResponseCheck } from '@/lib/lead-followup';
-import { getLeads, getPages } from '@/lib/storage';
+import { getLeads, getPages, markDemoLeads } from '@/lib/storage';
 import LeadsCrmClient from '@/components/admin/LeadsCrmClient';
 
 export const dynamic = 'force-dynamic';
@@ -20,5 +20,5 @@ export default async function AdminLeadsPage({
   const initialStatus = typeof sp.status === 'string' ? sp.status : undefined;
   const initialLeadId = typeof sp.id === 'string' ? sp.id : undefined;
 
-  return <LeadsCrmClient initialLeads={leads} pages={pages} initialStatus={initialStatus} initialLeadId={initialLeadId} />;
+  return <LeadsCrmClient initialLeads={markDemoLeads(leads)} pages={pages} initialStatus={initialStatus} initialLeadId={initialLeadId} />;
 }

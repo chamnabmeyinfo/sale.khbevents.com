@@ -69,6 +69,11 @@ export default function LeadsCrmClient({ initialLeads, pages, initialStatus, ini
   const selectedStatus = chosenStatus ?? (initialStatus && STATUS_FILTERS.includes(initialStatus) ? initialStatus : 'ALL');
   const [selectedPage, setSelectedPage] = useState<string>('ALL');
   const [selectedTag, setSelectedTag] = useState<string>('ALL');
+  // Real customers by default; demo and test leads (Simulation Studio, samples) on their own view.
+  const [dataView, setDataView] = useState<'real' | 'demo' | 'all'>('real');
+  const realCount = leads.filter((l) => !l.isDemo).length;
+  const demoCount = leads.length - realCount;
+  const scoped = dataView === 'all' ? leads : leads.filter((l) => (dataView === 'demo' ? l.isDemo : !l.isDemo));
 
   // Telegram alerts link to /admin/leads?id=…; open that lead until the user closes it.
   const [chosenLead, setSelectedLead] = useState<Lead | null | undefined>(undefined);
@@ -83,7 +88,7 @@ export default function LeadsCrmClient({ initialLeads, pages, initialStatus, ini
     return Array.from(set).sort();
   }, [leads]);
 
-  const filteredLeads = leads.filter((lead) => {
+  const filteredLeads = scoped.filter((lead) => {
     const tags = getLeadTags(lead);
     const searchLower = search.toLowerCase();
     const matchesSearch =
@@ -112,7 +117,7 @@ export default function LeadsCrmClient({ initialLeads, pages, initialStatus, ini
 
       const data = await res.json();
       if (res.ok && data.lead) {
-        setLeads(leads.map((l) => (l.id === leadId ? data.lead : l)));
+        setLeads(leads.map((l) => (l.id === leadId ? { ...data.lead, isDemo: l.isDemo } : l)));
         if (selectedLead?.id === leadId) {
           setSelectedLead(data.lead);
         }
@@ -136,7 +141,7 @@ export default function LeadsCrmClient({ initialLeads, pages, initialStatus, ini
 
       const data = await res.json();
       if (res.ok && data.lead) {
-        setLeads(leads.map((l) => (l.id === selectedLead.id ? data.lead : l)));
+        setLeads(leads.map((l) => (l.id === selectedLead.id ? { ...data.lead, isDemo: l.isDemo } : l)));
         setSelectedLead(data.lead);
         setNewNoteText('');
       } else {
@@ -249,16 +254,30 @@ export default function LeadsCrmClient({ initialLeads, pages, initialStatus, ini
         </button>
       </div>
 
+      {/* Real customers vs demo and test data */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="inline-flex gap-1 p-1 rounded-xl bg-slate-100 dark:bg-emerald-950/60 border border-slate-200 dark:border-emerald-900/60" role="group" aria-label={t('leads.dataView')}>
+          {([['real', t('leads.view.real', { n: realCount })], ['demo', t('leads.view.demo', { n: demoCount })], ['all', t('leads.view.all', { n: leads.length })]] as const).map(([v, label]) => (
+            <button key={v} type="button" aria-pressed={dataView === v} onClick={() => setDataView(v)} className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer ${dataView === v ? (v === 'demo' ? 'bg-violet-600 text-[#fff] on-dark' : 'bg-amber-400 text-black') : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              {v === 'demo' ? '🧪 ' : ''}{label}
+            </button>
+          ))}
+        </div>
+        {dataView !== 'real' && demoCount > 0 && (
+          <span className="text-[11px] text-violet-700 dark:text-violet-300">{t('leads.demoNote')}</span>
+        )}
+      </div>
+
       {/* Sub Menu Tabs: Status Filter */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-emerald-900/40 pb-3">
         {[
-          { id: 'ALL', label: t('leads.tab.all'), count: leads.length },
-          { id: 'NEW', label: t('leads.tab.new'), count: leads.filter(l => l.status === 'NEW').length, badge: 'bg-amber-400 text-black' },
-          { id: 'CONTACTED', label: t('leads.tab.contacted'), count: leads.filter(l => l.status === 'CONTACTED').length, badge: 'bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300' },
-          { id: 'PROPOSAL_SENT', label: t('leads.tab.proposals'), count: leads.filter(l => l.status === 'PROPOSAL_SENT').length, badge: 'bg-purple-100 dark:bg-purple-500/20 text-purple-800 dark:text-purple-300' },
-          { id: 'NEGOTIATING', label: t('leads.tab.negotiating'), count: leads.filter(l => l.status === 'NEGOTIATING').length, badge: 'bg-orange-100 dark:bg-orange-500/20 text-orange-800 dark:text-orange-300' },
-          { id: 'WON', label: t('leads.tab.won'), count: leads.filter(l => l.status === 'WON').length, badge: 'bg-emerald-500 text-black' },
-          { id: 'LOST', label: t('leads.tab.lost'), count: leads.filter(l => l.status === 'LOST').length, badge: 'bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-400' }
+          { id: 'ALL', label: t('leads.tab.all'), count: scoped.length },
+          { id: 'NEW', label: t('leads.tab.new'), count: scoped.filter(l => l.status === 'NEW').length, badge: 'bg-amber-400 text-black' },
+          { id: 'CONTACTED', label: t('leads.tab.contacted'), count: scoped.filter(l => l.status === 'CONTACTED').length, badge: 'bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300' },
+          { id: 'PROPOSAL_SENT', label: t('leads.tab.proposals'), count: scoped.filter(l => l.status === 'PROPOSAL_SENT').length, badge: 'bg-purple-100 dark:bg-purple-500/20 text-purple-800 dark:text-purple-300' },
+          { id: 'NEGOTIATING', label: t('leads.tab.negotiating'), count: scoped.filter(l => l.status === 'NEGOTIATING').length, badge: 'bg-orange-100 dark:bg-orange-500/20 text-orange-800 dark:text-orange-300' },
+          { id: 'WON', label: t('leads.tab.won'), count: scoped.filter(l => l.status === 'WON').length, badge: 'bg-emerald-500 text-black' },
+          { id: 'LOST', label: t('leads.tab.lost'), count: scoped.filter(l => l.status === 'LOST').length, badge: 'bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-400' }
         ].map((tab) => {
           const isActive = selectedStatus === tab.id;
           return (
@@ -376,6 +395,9 @@ export default function LeadsCrmClient({ initialLeads, pages, initialStatus, ini
                       <td className="p-4">
                         <div className="font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors">
                           {lead.fullName}
+                          {lead.isDemo && (
+                            <span className="ml-1.5 align-middle px-1.5 py-0.5 rounded-full border text-[9px] font-black bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-900" title={t('demo.badgeTitle')}>🧪 DEMO</span>
+                          )}
                         </div>
                         {lead.company ? (
                           <div className="text-[11px] text-slate-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">

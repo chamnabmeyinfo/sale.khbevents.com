@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth';
-import { getPages, getLeads } from '@/lib/storage';
+import { getPages, getRealLeads } from '@/lib/storage';
 import DashboardOverviewClient from '@/components/admin/DashboardOverviewClient';
 
 export const dynamic = 'force-dynamic';
@@ -11,7 +11,8 @@ export default async function AdminDashboardPage() {
     redirect('/admin/login');
   }
 
-  const [pages, leads] = await Promise.all([getPages(), getLeads()]);
+  // Demo and test leads never count on the dashboard.
+  const [pages, leads] = await Promise.all([getPages(), getRealLeads()]);
 
   return <DashboardOverviewClient pages={pages} leads={leads} />;
 }

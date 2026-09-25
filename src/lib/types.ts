@@ -746,6 +746,9 @@ export interface Lead {
   // Round Robin distribution detail
   routing?: RoutingDetail;
 
+  /** Set by the server when read: a demo or test lead (Simulation Studio or shipped sample). Never stored. */
+  isDemo?: boolean;
+
   createdAt: string;
   updatedAt: string;
 }
@@ -1124,4 +1127,6 @@ export interface RoundRobinLog {
   visitorIp?: string;
   userAgent?: string;
   assignmentReason?: AssignmentReason;
+  /** Made by Simulation Studio: not a real customer, not counted in any statistics. */
+  demo?: boolean;
 }

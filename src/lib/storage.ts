@@ -41,7 +41,7 @@ import { defaultPopupAdsState, inAppBrowserName, nextOpening, normalizePopupAdsS
 import { applyPopupEvent, phnomPenhDay, type PopupEventDetail } from './popup-analytics';
 import { normalizeBuilderDoc } from './builder';
 import { normalizeMediaMeta, type MediaMeta } from './media-library';
-import { findDemoLeads, type ClearDemoRequest, type ClearDemoResult, type DemoScan } from './demo-data';
+import { findDemoLeads, isDemoLead, type ClearDemoRequest, type ClearDemoResult, type DemoScan } from './demo-data';
 import {
   supabaseGetPages,
   supabaseGetPageBySlug,
@@ -753,7 +753,8 @@ export async function getLeads(filter?: {
   if (isSupabaseConfigured()) {
     try {
       const leads = await supabaseGetLeads(filter);
-      if (leads && leads.length > 0) {
+      // An empty answer is real (a fresh start); only a failed query falls back to the local file.
+      if (leads) {
         const pending = applyLeadFilter(await syncPendingLeads(), filter);
         const remoteIds = new Set(leads.map((l) => l.id));
         return applyLeadFilter([...pending.filter((l) => !remoteIds.has(l.id)), ...leads]);
@@ -790,7 +791,7 @@ async function findPreviousLeadOfCustomer(lead: Pick<Lead, 'phone' | 'email' | '
   // text search cannot find them: compare normalized numbers over the recent leads.
   let recent: Lead[] = [];
   try {
-    recent = await getLeads();
+    recent = await getRealLeads();
   } catch (err) {
     console.error('Returning-customer lookup error:', err);
   }
@@ -830,7 +831,10 @@ export async function createLead(leadData: {
   userAgent?: string;
   /** Staff id from the visitor's cookie (set when they clicked a Telegram button or sent a form before). */
   preferredStaffId?: string;
+  /** Simulation Studio: tagged demo, never counted in statistics or fairness. */
+  demo?: boolean;
 }): Promise<Lead> {
+  const demo = leadData.demo === true;
   const db = await getDatabase();
   let pageTitle = leadData.landingPageTitle || leadData.landingPageSlug;
   const now = new Date().toISOString();
@@ -839,11 +843,11 @@ export async function createLead(leadData: {
   const page = (await getPageBySlug(leadData.landingPageSlug)) || db.pages.find((p) => p.slug === leadData.landingPageSlug);
   if (page) {
     pageTitle = page.title;
-    page.leadsCount = (page.leadsCount || 0) + 1;
+    if (!demo) page.leadsCount = (page.leadsCount || 0) + 1;
   }
 
   // Apply isolated tags if configured
-  const leadTags = page?.isolatedSettings?.leadTags || [];
+  const leadTags = [...(page?.isolatedSettings?.leadTags || []), ...(demo ? ['demo'] : [])];
   const customFields = { ...(leadData.customFields || {}) };
   if (leadTags.length > 0) {
     customFields.campaignTags = leadTags.join(', ');
@@ -937,7 +941,9 @@ export async function createLead(leadData: {
             customTemplate: effectiveRrSettings.customMessageTemplate,
             customWhatsappMessage: effectiveRrSettings.customWhatsappMessage,
             defer: runAfterResponse,
-            noteLine: assignmentReason === 'returning_customer'
+            noteLine: demo
+              ? '🧪 <b>DEMO / សាកល្បង:</b> test from Simulation Studio, not a real customer. Not counted in any statistics.'
+              : assignmentReason === 'returning_customer'
               ? '🔁 <b>អតិថិជនចាស់របស់អ្នក / Returning customer:</b> this person contacted us before and was assigned to you.'
               : assignmentReason === 'returning_visitor'
                 ? '🔁 <b>Returning visitor:</b> this person clicked through to you earlier and now sent the form.'
@@ -967,15 +973,17 @@ export async function createLead(leadData: {
         assignmentReason
       };
 
-      // Update staff live performance counters
-      staff.totalLeadsRouted = (staff.totalLeadsRouted || 0) + 1;
-      countAssignment(staff, Date.now());
-      if (dispatchResult.status === 'DELIVERED') {
-        staff.successfulDeliveries = (staff.successfulDeliveries || 0) + 1;
-      } else {
-        staff.failedDeliveries = (staff.failedDeliveries || 0) + 1;
+      // Update staff live performance counters (a demo lead counts for nothing).
+      if (!demo) {
+        staff.totalLeadsRouted = (staff.totalLeadsRouted || 0) + 1;
+        countAssignment(staff, Date.now());
+        if (dispatchResult.status === 'DELIVERED') {
+          staff.successfulDeliveries = (staff.successfulDeliveries || 0) + 1;
+        } else {
+          staff.failedDeliveries = (staff.failedDeliveries || 0) + 1;
+        }
+        staff.lastAssignedAt = now;
       }
-      staff.lastAssignedAt = now;
       if (!useCustomRr) {
         await updateRoundRobinSettings({
           staffList: effectiveRrSettings.staffList,
@@ -1005,7 +1013,8 @@ export async function createLead(leadData: {
         deliveryError: dispatchResult.error,
         visitorIp: newLead.ip,
         userAgent: newLead.userAgent,
-        assignmentReason
+        assignmentReason,
+        ...(demo ? { demo: true } : {})
       };
       db.roundRobinLogs.unshift(auditLog);
       if (db.roundRobinLogs.length > 500) db.roundRobinLogs.length = 500;
@@ -1452,8 +1461,9 @@ export async function recordPageView(slug: string, referrer?: string): Promise<v
 export async function getPageAnalytics(slug: string): Promise<PageAnalyticsSummary> {
   const cleanSlug = slug.toLowerCase().trim();
   const db = await getDatabase();
-  const page = db.pages.find((p) => p.slug === cleanSlug);
-  const leads = db.leads.filter((l) => (l.landingPageSlug || '').toLowerCase() === cleanSlug);
+  // Page and leads from the live store (the local file only holds this server's own recent events).
+  const page = (await getPageBySlug(cleanSlug)) || db.pages.find((p) => p.slug === cleanSlug);
+  const leads = await getRealLeads({ pageSlug: cleanSlug });
   const views = db.pageViews.filter((v) => (v.pageSlug || '').toLowerCase() === cleanSlug);
   const events = (db.trackingEvents || []).filter((e) => (e.pageSlug || '').toLowerCase() === cleanSlug);
 
@@ -1659,7 +1669,8 @@ export async function getRoundRobinLogs(limit: number = 100): Promise<RoundRobin
   if (isSupabaseConfigured()) {
     try {
       const remoteLogs = await supabaseGetRoundRobinLogs(limit);
-      if (remoteLogs && remoteLogs.length > 0) return remoteLogs;
+      // An empty log is real (cleared); only a failed read falls back to the local file.
+      if (remoteLogs) return remoteLogs;
     } catch (err) {
       console.error('Supabase getRoundRobinLogs error:', err);
     }
@@ -1695,6 +1706,8 @@ export async function recordDirectContactRoute(params: {
   preferredStaffId?: string;
   /** False when the caller only wants a repeat match (rate limited): no new assignment is made. */
   allowNewAssignment?: boolean;
+  /** Simulation Studio: a real assignment for testing, but not counted anywhere. */
+  demo?: boolean;
 }): Promise<DirectContactRoute | null> {
   const db = await getDatabase();
   const page = db.pages.find((p) => p.slug === params.pageSlug);
@@ -1732,9 +1745,11 @@ export async function recordDirectContactRoute(params: {
 
   // Rotation state is updated in memory now, so a second click arriving before the
   // deferred work runs already sees this assignment.
-  staff.totalDirectClicks = (staff.totalDirectClicks || 0) + 1;
-  countAssignment(staff, Date.now());
-  staff.lastAssignedAt = now;
+  if (!params.demo) {
+    staff.totalDirectClicks = (staff.totalDirectClicks || 0) + 1;
+    countAssignment(staff, Date.now());
+    staff.lastAssignedAt = now;
+  }
   rrSettings.lastAssignedIndex = nextIndex;
 
   const pageTitle = page?.title || params.pageSlug;
@@ -1755,7 +1770,7 @@ export async function recordDirectContactRoute(params: {
     if (!useCustomRr) {
       tasks.push(updateRoundRobinSettings({ staffList: rrSettings.staffList, lastAssignedIndex: nextIndex }));
     }
-    tasks.push(recordStaffClick(staff.id, Date.now()));
+    if (!params.demo) tasks.push(recordStaffClick(staff.id, Date.now()));
 
     let alertNote: string | undefined;
     if (botToken && staff.telegramChatId) {
@@ -1768,7 +1783,7 @@ export async function recordDirectContactRoute(params: {
 ━━━━━━━━━━━━━━━━━━━━
 <i>អតិថិជនទើបតែចុចប៊ូតុង Telegram នៅលើគេហទំព័រ ហើយត្រូវបានចាត់ចែងដោយស្វ័យប្រវត្តិតាមប្រព័ន្ធ Round Robin មកកាន់ Telegram របស់អ្នក (@${cleanUsername})។ សូមរៀបចំឆ្លើយតប!</i>`;
       tasks.push(
-        send(staff.telegramChatId, staffAlertText).then((data) => {
+        send(staff.telegramChatId, params.demo ? `🧪 <b>DEMO / សាកល្បង:</b> test click from Simulation Studio, not a real customer.\n\n${staffAlertText}` : staffAlertText).then((data) => {
           if (!data.ok) alertNote = `Staff alert failed: ${data.description || 'Telegram error'}`;
         })
       );
@@ -1805,7 +1820,8 @@ export async function recordDirectContactRoute(params: {
       targetTelegramUrl,
       visitorIp: params.visitorIp,
       userAgent: params.userAgent,
-      assignmentReason: 'rotation'
+      assignmentReason: 'rotation',
+      ...(params.demo ? { demo: true } : {})
     };
 
     if (!db.roundRobinLogs) db.roundRobinLogs = [];
@@ -1897,7 +1913,7 @@ export async function scanDemoData(): Promise<DemoScan> {
   return {
     leads: demo,
     sampleStaff: rr.staffList.filter(isPlaceholderStaff).map((s) => ({ id: s.id, name: s.name, username: s.telegramUsername })),
-    routingLog: { total: logs.length, linkedToDemoLeads: logs.filter((l) => l.leadId && demoIds.has(l.leadId)).length },
+    routingLog: { total: logs.length, linkedToDemoLeads: logs.filter((l) => l.demo || (l.leadId && demoIds.has(l.leadId))).length },
     stats: {
       pageViews: pages.reduce((sum, p) => sum + (p.viewsCount || 0), 0),
       popupsWithStats: Object.values(popupStats).filter((s) => s.views || s.clicks || s.closes).length,
@@ -1923,10 +1939,12 @@ export async function clearDemoData(req: ClearDemoRequest): Promise<ClearDemoRes
 
   if (req.routingLog !== 'none') {
     const logs = await getRoundRobinLogs(500);
-    const keep = req.routingLog === 'all' ? [] : logs.filter((l) => !(l.leadId && deleted.has(l.leadId)));
+    // 'demo': entries of the deleted leads, and entries tagged demo (Simulation Studio clicks).
+    const isDemoEntry = (l: RoundRobinLog) => Boolean(l.demo) || Boolean(l.leadId && deleted.has(l.leadId));
+    const keep = req.routingLog === 'all' ? [] : logs.filter((l) => !isDemoEntry(l));
     result.logEntriesRemoved = logs.length - keep.length;
     const db = await getDatabase();
-    db.roundRobinLogs = req.routingLog === 'all' ? [] : (db.roundRobinLogs || []).filter((l) => !(l.leadId && deleted.has(l.leadId)));
+    db.roundRobinLogs = req.routingLog === 'all' ? [] : (db.roundRobinLogs || []).filter((l) => !isDemoEntry(l));
     await saveDatabase(db);
     if (isSupabaseConfigured()) await supabaseReplaceRoundRobinLogs(keep);
   }
@@ -1954,7 +1972,7 @@ export async function clearDemoData(req: ClearDemoRequest): Promise<ClearDemoRes
       await supabaseClearPageViews().catch(() => false);
     }
     // Page counters: views to zero, leads to the number of leads that remain.
-    const remaining = await getLeads();
+    const remaining = await getRealLeads();
     for (const page of await getPages()) {
       const leadsCount = remaining.filter((l) => l.landingPageSlug === page.slug).length;
       if ((page.viewsCount || 0) !== 0 || (page.leadsCount || 0) !== leadsCount) {
@@ -1964,4 +1982,28 @@ export async function clearDemoData(req: ClearDemoRequest): Promise<ClearDemoRes
     result.statsReset = true;
   }
   return result;
+}
+
+/** Ids of the sample leads that ship with the site (data/db.json). */
+export function sampleLeadIds(): Set<string> {
+  return new Set((bundledDb.leads || []).map((l) => l.id));
+}
+
+/** Adds isDemo to each lead (Simulation Studio, demo tag or shipped sample), for badges and filters. */
+export function markDemoLeads(leads: Lead[]): Lead[] {
+  const samples = sampleLeadIds();
+  return leads.map((l) => ({ ...l, isDemo: isDemoLead(l, samples) }));
+}
+
+/** Real customers only: every statistic, summary and report uses this. */
+export async function getRealLeads(filter?: { pageSlug?: string; status?: string; search?: string }): Promise<Lead[]> {
+  const samples = sampleLeadIds();
+  return (await getLeads(filter)).filter((l) => !isDemoLead(l, samples));
+}
+
+/** The routing log with demo entries marked (tagged demo, or belonging to a demo lead). */
+export async function getRoundRobinLogsMarked(limit: number = 100): Promise<RoundRobinLog[]> {
+  const [logs, leads] = await Promise.all([getRoundRobinLogs(limit), getLeads()]);
+  const demoIds = new Set(markDemoLeads(leads).filter((l) => l.isDemo).map((l) => l.id));
+  return logs.map((l) => (l.demo || (l.leadId && demoIds.has(l.leadId)) ? { ...l, demo: true } : l));
 }

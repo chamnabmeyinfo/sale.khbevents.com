@@ -91,7 +91,8 @@ export async function POST(req: NextRequest) {
         utmSource: 'simulation_tool',
         utmCampaign: 'round_robin_test',
         ip: visitorIp,
-        userAgent
+        userAgent,
+        demo: true
       });
 
       return NextResponse.json({
@@ -112,7 +113,8 @@ export async function POST(req: NextRequest) {
       const routeResult = await recordDirectContactRoute({
         pageSlug,
         visitorIp,
-        userAgent
+        userAgent,
+        demo: true
       });
 
       if (!routeResult) {

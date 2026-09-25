@@ -43,3 +43,17 @@ describe('demo data rules', () => {
     });
   });
 });
+
+import { isDemoLead } from '../demo-data';
+
+describe('certain demo leads (kept out of every statistic)', () => {
+  it('counts simulation, demo tag and shipped samples, not a test-looking name alone', () => {
+    const samples = new Set(['lead-101']);
+    expect(isDemoLead(lead({ message: '[SIMULATION TEST] x' }), samples)).toBe(true);
+    expect(isDemoLead(lead({ tags: ['demo'] }), samples)).toBe(true);
+    expect(isDemoLead(lead({ id: 'lead-101' }), samples)).toBe(true);
+    expect(isDemoLead(lead({ isDemo: true }))).toBe(true);
+    expect(isDemoLead(lead({ fullName: 'Test Buyer' }), samples)).toBe(false);
+    expect(isDemoLead(lead({}), samples)).toBe(false);
+  });
+});
