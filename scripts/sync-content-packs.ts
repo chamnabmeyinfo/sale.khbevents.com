@@ -26,6 +26,7 @@ import {
   supabaseSavePage,
   supabaseSetMarker,
 } from '../src/lib/supabase-store';
+import { alertDataLoss, takeSnapshot } from '../src/lib/backups';
 
 const PACK_DIR = 'content/pages';
 const log = (message: string) => console.log(`[content-packs] ${message}`);
@@ -40,6 +41,20 @@ async function main(): Promise<void> {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     log('skipped: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are not both available to this build.');
     return;
+  }
+
+  // Full backup of the live data before this version goes live, so any update that
+  // loses data can be undone from Admin → Settings → Backups.
+  try {
+    const commit = (process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7);
+    const entry = await takeSnapshot('deploy', commit ? `deploy-${commit}` : 'deploy', { commit: commit || undefined });
+    console.log(`[backup] before deploy: ${entry.name} (${entry.counts.pages} pages, ${entry.counts.leads} leads, ${Math.round(entry.bytes / 1024)} KB)`);
+    if (entry.drop) {
+      console.log(`[backup] WARNING: fewer pages or leads than the previous backup (pages ${entry.drop.pagesBefore} → ${entry.drop.pagesNow}, leads ${entry.drop.leadsBefore} → ${entry.drop.leadsNow}).`);
+      await alertDataLoss(entry);
+    }
+  } catch (err) {
+    console.log(`[backup] could not take the pre-deploy backup: ${err instanceof Error ? err.message : err}`);
   }
   if (!existsSync(PACK_DIR)) {
     log(`skipped: no ${PACK_DIR} directory.`);

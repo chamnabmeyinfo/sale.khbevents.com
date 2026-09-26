@@ -44,6 +44,7 @@ import { dayKeys, parseVisitRow, upsertVisit, visitRowId, VISIT_RETENTION_DAYS, 
 import { normalizeMediaMeta, type MediaMeta } from './media-library';
 import { computePageStats, type PageStats } from './page-stats';
 import { withSnapshot, type PageVersion } from './page-backups';
+import { takeSnapshot } from './backups';
 import { findDemoLeads, isDemoLead, type ClearDemoRequest, type ClearDemoResult, type DemoScan } from './demo-data';
 import {
   supabaseGetPages,
@@ -434,6 +435,17 @@ async function getDeletedPageKeys(): Promise<Set<string>> {
   return keys;
 }
 
+/** Forgets the in-memory copy of the local database, so the next read comes from the file (after a restore wrote it). */
+export function reloadLocalDatabase(): void {
+  dbCache.__khbMemoryDb = null;
+}
+
+/** Clears the "deleted" marks of pages a backup restore put back, so they show again. */
+export async function undeletePages(pages: Array<{ id: string; slug: string }>): Promise<void> {
+  if (!pages.length) return;
+  await updateDeletedPageKeys([], pages.flatMap((p) => [`id:${p.id}`, `slug:${p.slug}`]));
+}
+
 async function updateDeletedPageKeys(add: string[], remove: string[]): Promise<void> {
   const keys = await getDeletedPageKeys();
   const changed = add.some((k) => !keys.has(k)) || remove.some((k) => keys.has(k));
@@ -726,6 +738,8 @@ export async function savePage(pageData: Partial<LandingPage> & { title: string;
 
 export async function deletePage(id: string): Promise<boolean> {
   const existing = await getPageById(id);
+  // Undo point: a full backup before the page goes. No backup, no deletion.
+  if (existing) await takeSnapshot('before', `delete-page-${existing.slug}`);
   let supabaseDeleted = false;
   if (isSupabaseConfigured()) {
     try {
@@ -2034,6 +2048,8 @@ export async function scanDemoData(): Promise<DemoScan> {
  * rules, so a real lead can never be deleted through this path.
  */
 export async function clearDemoData(req: ClearDemoRequest): Promise<ClearDemoResult> {
+  // Undo point: a full backup before anything is deleted. No backup, no deletion.
+  await takeSnapshot('before', 'clear-demo-data');
   const scan = await scanDemoData();
   const allowed = new Set(scan.leads.map((l) => l.id));
   const ids = req.leadIds.filter((id) => allowed.has(id));

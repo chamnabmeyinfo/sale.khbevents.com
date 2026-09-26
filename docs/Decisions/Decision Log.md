@@ -26,6 +26,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-26 — Whole-system backups before every deploy, daily and before deletions, with a data-loss check
+
+- **Decision:** A full snapshot of the business tables goes to a private storage bucket before every production build, daily, before destructive actions and on demand. Each snapshot is compared with the previous one; missing pages or a real fall in leads alert the owner (Telegram, admin banner). Restore is upsert-only (never deletes what exists now), defaults to "add back what is missing", and takes its own undo snapshot first.
+- **Why:** The owner lost edits to a code fault and asked for protection against future updates deleting data. A snapshot taken by the build itself covers exactly that moment. A private bucket needs no database migration (the RLS migration is still pending) and the service key already exists on the server.
+- **Who decided:** Claude with owner approval.
+- **Affects:** [[Backups]], [[Restore from a Backup]], [[Deploy to Production]].
+
 ## 2026-09-26 — Autosave backs up live pages, saves drafts
 
 - **Decision:** Autosave never publishes. On a live page it stores a backup copy (server + browser); only Save or Publish changes what visitors see. On a draft it saves the page. Backups are thinned to one per 2 minutes, last 20.

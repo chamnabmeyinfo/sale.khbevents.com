@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { maybeSendDailySummary, runLeadResponseCheck, sendManagerMessage } from '@/lib/lead-followup';
 import { maybeRunDailyAi } from '@/lib/ai-store';
+import { maybeDailyBackup } from '@/lib/backups';
 import { runAfterResponse } from '@/lib/after-response';
 import { rateLimitByIp } from '@/lib/rate-limit';
 
@@ -28,6 +29,8 @@ export async function GET(req: NextRequest) {
     await maybeSendDailySummary();
     // Once a day the AI analyst reads the campaign report and sends the top actions.
     runAfterResponse(() => maybeRunDailyAi(sendManagerMessage));
+    // Daily full backup (once per day); alerts the manager if data went missing.
+    runAfterResponse(() => maybeDailyBackup());
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('Daily summary route error:', err);

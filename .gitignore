@@ -63,3 +63,4 @@ next-env.d.ts
 /docs/.obsidian/community-plugins.json
 /docs/.obsidian/graph.json
 /docs/.trash/
+/data/backups/

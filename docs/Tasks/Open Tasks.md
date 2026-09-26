@@ -23,6 +23,11 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [ ] Open the page builder for the Vietnam page → **Versions** → the entry **"Before the automatic content update"** (26 Sept, about 12:26) → **Load into editor** → check photos and text → **Save**. That copy is from before the "Included & not included" change, so re-add that section afterwards if you want it. → [[Page Builder]] #owner
 - [ ] If edits made after 12:26 are still missing, check Supabase → Database → Backups for a copy of the `landing_pages` table from before 14:11 (Phnom Penh time) on 26 Sept, or ask Claude to help restore from it. #owner
 
+### Backups (new, 2026-09-26)
+
+- [ ] After this deploy, open Settings → Backups & Restore: a **Before deploy** snapshot should be listed. If the tab shows an error, `SUPABASE_SERVICE_ROLE_KEY` is missing in Vercel (see the Security list). → [[Backups]] #owner
+- [ ] Press **Back up now** once and **Download** the file to a safe place; repeat monthly. → [[Restore from a Backup]] #owner
+
 ### Security (do these first)
 
 Suggested order: lock the database first, then change the token and the password. Until the lockdown runs, the database rules let the public key read the settings, which hold the bot token and the password hash. A new token saved before the lockdown could be read the same way.

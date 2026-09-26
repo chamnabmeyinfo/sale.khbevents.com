@@ -32,6 +32,7 @@ import {
   Sliders,
   BarChart3,
   Eraser,
+  DatabaseBackup,
   Megaphone,
   BookOpen,
   Images,
@@ -193,6 +194,7 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapsed }: {
         { label: t('nav.settings.telegram'), href: '/admin/settings#telegram', icon: Bell },
         { label: t('nav.settings.security'), href: '/admin/settings#security', icon: ShieldCheck },
         { label: t('nav.settings.demoData'), href: '/admin/settings#data', icon: Eraser },
+        { label: t('nav.settings.backups'), href: '/admin/settings#backups', icon: DatabaseBackup },
       ]
     },
     {

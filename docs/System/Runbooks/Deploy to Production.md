@@ -13,6 +13,8 @@ source:
 
 # Deploy to Production
 
+> Since 2026-09-26 every production build first takes a full backup of the live data (see [[Backups]]); the build log shows `[backup] before deploy: …`.
+
 ## What this is for
 
 The live site, sale.khbevents.com, is rebuilt from the `main` branch on GitHub. A change reaches customers only after it is pushed to `main`. This runbook keeps every release safe, so a landing page never breaks while ads are running.
