@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { companyFor } from '@/lib/company';
+import { companyFor, pageText } from '@/lib/company';
+import { pick } from '@/lib/builder';
 import React from 'react';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
@@ -271,7 +272,11 @@ export default async function PrintPage({ params, searchParams }: PageProps) {
   const mode: PrintMode = sp.mode === 'full' ? 'full' : 'agenda';
   const photos = sp.photos !== '0';
   const nowMs = serverNowMs();
-  const plan = buildPrintPlan(doc, { lang, mode, nowMs, pageTitle: page.title });
+  // The page's own closing wording, else the default "Register or ask a question".
+  const iso = page.isolatedSettings;
+  const closingTitle = pageText(iso?.printClosingTitle);
+  const closingText = pageText(iso?.printClosingText);
+  const plan = buildPrintPlan(doc, { lang, mode, nowMs, pageTitle: page.title, closing: { title: closingTitle ? pick(closingTitle, lang) : undefined, text: closingText ? pick(closingText, lang) : undefined } });
   const settings = await getPublicSettings();
   const ui = UI[lang];
 
@@ -281,7 +286,8 @@ export default async function PrintPage({ params, searchParams }: PageProps) {
   const pageUrl = `${proto}://${host}/${page.slug}${lang === 'kh' ? '?lang=kh' : ''}`;
   // The page's own logo and contact details win; the rest comes from Settings → Company.
   const company = companyFor(settings, page);
-  const contacts = [company.phone, company.telegram ? `Telegram @${company.telegram}` : '', company.email].filter(Boolean);
+  const contacts = [company.phone, company.telegram ? `Telegram @${company.telegram}` : '', company.whatsapp ? `WhatsApp +${company.whatsapp}` : '', company.email].filter(Boolean);
+  const footerNote = company.note ? pick(company.note, lang) : '';
 
   const link = (o: { mode?: PrintMode; lang?: Lang; photos?: boolean }) => {
     const q = new URLSearchParams();
@@ -300,7 +306,8 @@ export default async function PrintPage({ params, searchParams }: PageProps) {
         <strong>{company.name}</strong>
         {contacts.length > 0 && <span>{contacts.join(' · ')}</span>}
         {company.address && <span>{company.address}</span>}
-        <span className="pp-link">{pageUrl}</span>
+        {footerNote && <span>{footerNote}</span>}
+        {company.website && <span className="pp-link">{pageUrl}</span>}
       </div>
       <Qr url={pageUrl} caption={ui.scan} />
     </div>

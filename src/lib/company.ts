@@ -1,4 +1,4 @@
-import type { IsolatedPageSettings, SystemSettings } from './types';
+import type { ContactLine, IsolatedPageSettings, SystemSettings } from './types';
 
 /** The built-in logo, used until the owner uploads one. */
 export const DEFAULT_LOGO = '/images/khb-logo.png';
@@ -15,7 +15,23 @@ export interface CompanyInfo {
   telegram?: string;
   email?: string;
   address?: string;
+  /** Show the page's web address (print). */
+  website: boolean;
+  /** The page's footer note, EN/KH. */
+  note?: { en: string; kh?: string };
 }
+
+export const CONTACT_LINES: ContactLine[] = ['phone', 'telegram', 'whatsapp', 'email', 'address', 'website'];
+
+const bi = (v: unknown): { en: string; kh?: string } | undefined => {
+  if (!v || typeof v !== 'object') return undefined;
+  const o = v as Record<string, unknown>;
+  const en = clean(o.en, 300) || '';
+  const kh = clean(o.kh, 300);
+  return en || kh ? { en: en || kh || '', ...(kh ? { kh } : {}) } : undefined;
+};
+/** A page's EN/KH text setting, or undefined when empty. */
+export const pageText = bi;
 
 const clean = (v: unknown, max = 300): string | undefined => {
   if (typeof v !== 'string') return undefined;
@@ -37,15 +53,19 @@ export function companyFor(settings: Partial<SystemSettings> | undefined, page?:
   const s = settings || {};
   const p = page?.isolatedSettings || {};
   const telegram = clean(p.telegramUsername) || clean(s.telegramUsername);
-  const whatsapp = (clean(p.whatsappNumber) || clean(p.whatsapp) || clean(s.whatsappNumber))?.replace(/[^0-9]/g, '');
+  const whatsapp = (clean(p.whatsapp) || clean(p.whatsappNumber) || clean(s.whatsappNumber))?.replace(/[^0-9]/g, '');
+  const hidden = new Set(Array.isArray(p.contactHidden) ? p.contactHidden : []);
+  const show = <T,>(line: ContactLine, v: T): T | undefined => (hidden.has(line) ? undefined : v);
   return {
     logo: safeLogo(p.logoUrl) || safeLogo(s.logoUrl) || DEFAULT_LOGO,
     name: clean(p.companyName, 120) || clean(s.companyName, 120) || 'KHB Events',
     tagline: clean(s.brandTagline, 160),
-    phone: clean(p.phone, 60) || clean(s.phone, 60),
-    whatsapp: whatsapp || undefined,
-    telegram: telegram?.replace(/^@/, '') || undefined,
-    email: clean(p.email, 160) || clean(s.email, 160),
-    address: clean(p.address) || clean(s.address),
+    phone: show('phone', clean(p.phone, 60) || clean(s.phone, 60)),
+    whatsapp: show('whatsapp', whatsapp || undefined),
+    telegram: show('telegram', telegram?.replace(/^@/, '') || undefined),
+    email: show('email', clean(p.email, 160) || clean(s.email, 160)),
+    address: show('address', clean(p.address) || clean(s.address)),
+    website: !hidden.has('website'),
+    note: bi(p.footerNote),
   };
 }

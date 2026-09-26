@@ -45,3 +45,24 @@ describe('Contact & company section', () => {
     expect(suggestedOrder(page('contact', 'hero', 'finalCta')).map((b) => b.type)).toEqual(['hero', 'finalCta', 'contact']);
   });
 });
+
+describe('page footer options', () => {
+  it('hides the lines the page turned off and keeps its note', () => {
+    const c = companyFor(settings, { isolatedSettings: { contactHidden: ['telegram', 'website', 'address'], footerNote: { en: 'Open Mon–Sat', kh: 'បើក ច័ន្ទ–សៅរ៍' } } });
+    expect(c.telegram).toBeUndefined();
+    expect(c.address).toBeUndefined();
+    expect(c.website).toBe(false);
+    expect(c.phone).toBe('+855 12 000 000');
+    expect(c.note).toEqual({ en: 'Open Mon–Sat', kh: 'បើក ច័ន្ទ–សៅរ៍' });
+    expect(companyFor(settings).website).toBe(true);
+    expect(companyFor(settings, { isolatedSettings: { footerNote: { en: '  ' } } }).note).toBeUndefined();
+  });
+
+  it('the print closing box uses the page wording, else the default', async () => {
+    const { buildPrintPlan } = await import('../print-plan');
+    const doc = normalizeBuilderDoc({ offer: { price: 100 }, blocks: [{ type: 'benefits', items: [{ title: 'A' }] }] });
+    const closing = (o?: { title?: string; text?: string }) => buildPrintPlan(doc, { lang: 'en', mode: 'agenda', nowMs: Date.now(), closing: o }).sections.find((s) => s.id === 'print-register');
+    expect(closing()).toMatchObject({ title: 'Register or ask a question' });
+    expect(closing({ title: 'Book your seat', text: 'Call Sovann' })).toMatchObject({ title: 'Book your seat', text: 'Call Sovann' });
+  });
+});

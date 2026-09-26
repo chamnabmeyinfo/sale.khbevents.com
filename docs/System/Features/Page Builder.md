@@ -43,6 +43,11 @@ Undo and redo cover the last 60 changes. The browser warns before leaving with u
 
 Page settings (no section selected) → **Brand & contact on this page**: this page's own logo, company name, phone, Telegram username, WhatsApp and email and address. An empty field uses the company settings (Settings → Company); the grey placeholder shows that value. They appear in the **Contact & company** section and on the printed agenda. The Telegram button of the page still goes to the next salesperson (round robin); only the contact section shows this username. Stored in the page's `isolatedSettings` (the same phone, Telegram and WhatsApp the old page editor used).
 
+Also in that group (since 2026-09-26):
+- **Show on this page:** turn off single lines (phone, Telegram, WhatsApp, email, address, the page link on the print). Hidden lines do not show in the Contact & company section or on the print.
+- **Footer note** (EN/KH), for example office hours or a licence number, shown under the contact details and on the print.
+- **Printed agenda: closing box**, a heading and text (EN/KH) that replace "Register or ask a question / Scan the QR code, or contact us…". Empty uses that default. The Entire page print uses the Final call to action instead when the page has one.
+
 A Contact & company section may sit after the Final call to action; **+** adds it at the very bottom and the Page map treats it as the footer.
 
 ## Full preview and Page map

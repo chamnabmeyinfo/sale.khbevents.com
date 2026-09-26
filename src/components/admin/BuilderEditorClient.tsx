@@ -25,8 +25,8 @@ import {
   Undo2,
   X,
 } from 'lucide-react';
-import type { LandingPage, SystemSettings } from '@/lib/types';
-import { companyFor } from '@/lib/company';
+import type { ContactLine, LandingPage, SystemSettings } from '@/lib/types';
+import { CONTACT_LINES, companyFor } from '@/lib/company';
 import type { BenefitsBlock, Bi, BlockType, BuilderBlock, BuilderDoc, FaqBlock, FinalCtaBlock, FormBlock, GalleryBlock, HeroBlock, IncludedBlock, InclusionsBlock, ContactBlock, Lang, OfferBlock, StepsBlock, TermsBlock } from '@/lib/builder';
 import {
   BENEFIT_ICONS,
@@ -76,7 +76,16 @@ const brandOf = (p: LandingPage) => {
     whatsapp: s.whatsapp || s.whatsappNumber || '',
     email: s.email || '',
     address: s.address || '',
+    contactHidden: (s.contactHidden || []) as ContactLine[],
+    footerNote: (s.footerNote || { en: '' }) as Bi,
+    printClosingTitle: (s.printClosingTitle || { en: '' }) as Bi,
+    printClosingText: (s.printClosingText || { en: '' }) as Bi,
   };
+};
+const biOrUndefined = (b: Bi) => {
+  const en = b.en.trim();
+  const kh = b.kh?.trim();
+  return en || kh ? { en: en || kh || '', ...(kh ? { kh } : {}) } : undefined;
 };
 type PageBrand = ReturnType<typeof brandOf>;
 const metaOf = (p: LandingPage) => ({ title: p.title, slug: p.slug, status: p.status, ogImage: p.ogImage || '', brand: brandOf(p) });
@@ -89,6 +98,10 @@ const brandToSettings = (b: PageBrand) => ({
   whatsappNumber: undefined,
   email: b.email.trim() || undefined,
   address: b.address.trim() || undefined,
+  contactHidden: b.contactHidden.length ? b.contactHidden : undefined,
+  footerNote: biOrUndefined(b.footerNote),
+  printClosingTitle: biOrUndefined(b.printClosingTitle),
+  printClosingText: biOrUndefined(b.printClosingText),
 });
 
 type Device = 'phone' | 'desktop';
@@ -894,6 +907,33 @@ export default function BuilderEditorClient({ initialPage, initialDoc, companySe
                 </div>
               </div>
             ))}
+            <div>
+              <label className={LABEL}>{t('builder.contactInfo.show')}</label>
+              <div className="flex flex-wrap gap-1" data-contact-lines="">
+                {CONTACT_LINES.map((line) => {
+                  const on = !meta.brand.contactHidden.includes(line);
+                  return (
+                    <button
+                      key={line}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => setBrand({ contactHidden: on ? [...meta.brand.contactHidden, line] : meta.brand.contactHidden.filter((x) => x !== line) })}
+                      className={`px-2 py-1 rounded-lg text-[11px] font-bold border cursor-pointer ${on ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300' : 'bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-emerald-900/60 text-slate-400 line-through'}`}
+                    >
+                      {t(`builder.contactInfo.line.${line}`)}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className={HINT}>{t('builder.contactInfo.showHint')}</p>
+            </div>
+            <BiInput label={t('builder.contactInfo.note')} value={meta.brand.footerNote} onChange={(v) => setBrand({ footerNote: v })} multiline hint={t('builder.contactInfo.noteHint')} />
+            <div className="pt-2 border-t border-slate-200 dark:border-emerald-900/50 space-y-2">
+              <label className={LABEL}>{t('builder.contactInfo.printClosing')}</label>
+              <BiInput label={t('builder.contactInfo.printTitle')} value={meta.brand.printClosingTitle} onChange={(v) => setBrand({ printClosingTitle: v })} />
+              <BiInput label={t('builder.contactInfo.printText')} value={meta.brand.printClosingText} onChange={(v) => setBrand({ printClosingText: v })} multiline />
+              <p className={HINT}>{t('builder.contactInfo.printHint')}</p>
+            </div>
             <p className={HINT}>{t('builder.contactInfo.where')}</p>
           </div>
         </Section>

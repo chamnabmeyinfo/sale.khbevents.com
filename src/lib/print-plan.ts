@@ -126,7 +126,7 @@ export function classifyNature(doc: BuilderDoc): PageNature {
   return 'product';
 }
 
-export function buildPrintPlan(doc: BuilderDoc, opts: { lang: Lang; mode: PrintMode; nowMs: number; pageTitle?: string }): PrintPlan {
+export function buildPrintPlan(doc: BuilderDoc, opts: { lang: Lang; mode: PrintMode; nowMs: number; pageTitle?: string; closing?: { title?: string; text?: string } }): PrintPlan {
   const { lang, mode, nowMs } = opts;
   const t = L[lang];
   const txt = (b: Parameters<typeof pick>[0] | undefined) => (b ? pick(b, lang).trim() : '');
@@ -265,7 +265,7 @@ export function buildPrintPlan(doc: BuilderDoc, opts: { lang: Lang; mode: PrintM
 
   sections = sections.map(clean).filter((s): s is PrintSection => s !== null);
   // Paper has no form: close with how to register (QR code and contacts sit beside it).
-  if (!sections.some((s) => s.kind === 'callout')) sections.push({ kind: 'callout', id: 'print-register', title: t.register, text: t.registerText });
+  if (!sections.some((s) => s.kind === 'callout')) sections.push({ kind: 'callout', id: 'print-register', title: opts.closing?.title || t.register, text: opts.closing?.text || t.registerText });
 
   return { mode, nature, lang, title: title || opts.pageTitle || '', badge, intro, heroImage, facts, sections, omitted };
 }

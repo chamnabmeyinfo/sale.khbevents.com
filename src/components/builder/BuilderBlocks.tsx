@@ -530,7 +530,8 @@ const ContactIcon = ({ kind }: { kind: 'phone' | 'telegram' | 'whatsapp' | 'emai
 
 function Contact({ block, ctx }: { block: ContactBlock; ctx: RenderContext }) {
   const { lang } = ctx;
-  const c = ctx.company || { logo: DEFAULT_LOGO, name: 'KHB Events' };
+  const c: CompanyInfo = ctx.company || { logo: DEFAULT_LOGO, name: 'KHB Events', website: true };
+  const note = c.note ? pick(c.note, lang) : '';
   const lines: Array<{ kind: 'phone' | 'telegram' | 'whatsapp' | 'email'; label: string; value: string; href: string }> = [];
   if (c.phone) lines.push({ kind: 'phone', label: lang === 'kh' ? 'ទូរស័ព្ទ' : 'Phone', value: c.phone, href: `tel:${c.phone.replace(/[^0-9+]/g, '')}` });
   if (c.telegram) lines.push({ kind: 'telegram', label: 'Telegram', value: `@${c.telegram}`, href: `https://t.me/${encodeURIComponent(c.telegram)}` });
@@ -566,8 +567,11 @@ function Contact({ block, ctx }: { block: ContactBlock; ctx: RenderContext }) {
       ))}
     </ul>
   );
-  const address = c.address && (
-    <p className="kb-contact__address"><ContactIcon kind="address" /><span>{c.address}</span></p>
+  const address = (c.address || note) && (
+    <>
+      {c.address && <p className="kb-contact__address"><ContactIcon kind="address" /><span>{c.address}</span></p>}
+      {note && <p className="kb-contact__note">{note}</p>}
+    </>
   );
   return (
     <section className={sectionClass(block)} data-anim={block.style.animation || 'rise'}>

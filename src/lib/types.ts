@@ -562,6 +562,8 @@ export interface PageAnalyticsSummary {
   recentEvents: TrackingEvent[];
 }
 
+export type ContactLine = 'phone' | 'telegram' | 'whatsapp' | 'email' | 'address' | 'website';
+
 export interface IsolatedPageSettings {
   // 1. Dedicated Communications & Support
   phone?: string;
@@ -598,6 +600,13 @@ export interface IsolatedPageSettings {
   logoUrl?: string;
   companyName?: string;
   address?: string;
+  /** Contact lines not shown on this page (Contact & company section and the print). */
+  contactHidden?: ContactLine[];
+  /** Short line under the contact details, e.g. licence number or office hours (EN/KH). */
+  footerNote?: { en: string; kh?: string };
+  /** The print's closing box ("Register or ask a question"), EN/KH; empty uses the default wording. */
+  printClosingTitle?: { en: string; kh?: string };
+  printClosingText?: { en: string; kh?: string };
   accentColor?: string;
   partnerName?: string;
   partnerLogo?: string;
