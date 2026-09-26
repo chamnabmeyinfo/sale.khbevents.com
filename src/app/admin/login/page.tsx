@@ -3,15 +3,16 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { Lock, Mail, ArrowRight } from 'lucide-react';
 import { errorMessage } from '@/lib/errors';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+import { useBrandLogo } from '@/components/admin/BrandLogo';
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const { t } = useLanguage();
+  const logo = useBrandLogo();
   const [email, setEmail] = useState('admin@khbevents.com');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -50,14 +51,8 @@ export default function AdminLoginPage() {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-4">
         <div className="w-16 h-16 rounded-2xl bg-white dark:bg-[#0C1B13] border border-slate-200 dark:border-emerald-700/60 p-3 mx-auto flex items-center justify-center shadow-xl shadow-slate-200/50 dark:shadow-emerald-950/60">
-          <Image
-            src="/images/khb-logo.png"
-            alt="KHB Logo"
-            width={40}
-            height={40}
-            className="object-contain"
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
+          {/* eslint-disable-next-line @next/next/no-img-element -- uploaded logos may live on another host */}
+          <img src={logo} alt="Logo" width={40} height={40} className="w-10 h-10 object-contain" />
         </div>
         
         <div>

@@ -266,6 +266,30 @@
 .kb-included-split__media { border-radius: var(--kb-radius-card); overflow: hidden; aspect-ratio: 4 / 3; background: var(--kb-chip); }
 .kb-included-split__media img { width: 100%; height: 100%; object-fit: cover; }
 .kb-checklist--no svg { background: #B4474A; }
+/* Contact & company */
+.kb-contact__brand { display: flex; align-items: center; gap: 14px; }
+.kb-contact__logo { flex: none; height: 52px; width: auto; max-width: 180px; object-fit: contain; }
+.kb-contact__name { font-size: 1.15rem; font-weight: 800; line-height: 1.3; }
+.kb-contact__tagline { margin-top: 2px; font-size: 0.9rem; opacity: 0.75; }
+.kb-contact__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.kb-contact__item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--kb-radius-card); background: var(--kb-surface); border: 1px solid var(--kb-border); color: inherit; text-decoration: none; transition: border-color 0.2s, transform 0.2s; }
+.kb-contact__item:hover { border-color: var(--kb-accent); transform: translateY(-1px); }
+.kb-contact__icon { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 9999px; background: var(--kb-accent); color: #0B1712; }
+.kb-contact__item--telegram .kb-contact__icon { background: #229ED9; color: #FFFFFF; }
+.kb-contact__item--whatsapp .kb-contact__icon { background: #25D366; color: #FFFFFF; }
+.kb-contact__text { display: flex; flex-direction: column; min-width: 0; }
+.kb-contact__label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.7; }
+.kb-contact__value { font-weight: 700; overflow-wrap: anywhere; }
+.kb-contact__address { display: flex; gap: 8px; align-items: flex-start; margin: 16px 0 0; opacity: 0.85; line-height: 1.6; }
+.kb-contact__address svg { flex: none; margin-top: 4px; }
+.kb-contact-footer { display: grid; gap: 28px; }
+.kb-contact-footer__title { margin: 0 0 12px; font-size: 1.25rem; font-weight: 800; }
+.kb-contact-footer .kb-section-sub { margin: 0 0 14px; }
+.kb-contact-footer__legal { margin: 32px 0 0; padding-top: 18px; border-top: 1px solid var(--kb-border); font-size: 0.8rem; opacity: 0.65; }
+.kb-contact-card { max-width: 640px; margin: 0 auto; padding: 28px 22px; border-radius: var(--kb-radius-card); background: var(--kb-surface); border: 1px solid var(--kb-border); text-align: center; }
+.kb-contact-card .kb-contact__brand { justify-content: center; flex-direction: column; margin-bottom: 18px; }
+.kb-contact-card .kb-contact__list { text-align: left; margin-top: 18px; }
+.kb-contact-card .kb-contact__address { justify-content: center; text-align: left; }
 .kb-incl { display: grid; gap: 18px; max-width: 1040px; }
 .kb-align-center .kb-incl, .kb-align-center .kb-incl__note { margin-left: auto; margin-right: auto; }
 .kb-incl__group { min-width: 0; padding: 24px 22px; border-radius: var(--kb-radius-card); background: var(--kb-surface); border: 1px solid var(--kb-border); border-top: 4px solid #1E8E5A; }
@@ -354,6 +378,9 @@
   .kb-benefit-cards { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 22px; }
   .kb-included-card { padding: 40px 44px; }
   .kb-included-card .kb-checklist { grid-template-columns: 1fr 1fr; gap: 18px 40px; }
+  .kb-contact-footer { grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: start; }
+  .kb-contact-footer .kb-contact__list, .kb-contact-card .kb-contact__list { grid-template-columns: 1fr 1fr; }
+  .kb-contact-card { padding: 40px 44px; }
   .kb-incl--columns:not(.kb-incl--single) { grid-template-columns: 1fr 1fr; gap: 24px; }
   .kb-incl__group { padding: 32px 34px; }
   .kb-incl--stacked .kb-checklist, .kb-incl--single .kb-checklist { grid-template-columns: 1fr 1fr; gap: 16px 40px; }

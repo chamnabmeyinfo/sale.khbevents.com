@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { isAuthenticated } from '@/lib/auth';
-import { getPageById } from '@/lib/storage';
+import { getPageById, getPublicSettings } from '@/lib/storage';
 import { defaultBuilderDoc, normalizeBuilderDoc } from '@/lib/builder';
 import BuilderEditorClient from '@/components/admin/BuilderEditorClient';
 
@@ -26,5 +26,8 @@ export default async function BuilderEditorPage({ params }: PageProps) {
   if (page.template !== 'builder') redirect(`/admin/pages/${page.id}`);
 
   const doc = page.builder ? normalizeBuilderDoc(page.builder) : defaultBuilderDoc();
-  return <BuilderEditorClient initialPage={page} initialDoc={doc} />;
+  const s = await getPublicSettings();
+  // The company details the page falls back to (Settings → Company), for the editor's placeholders and preview.
+  const companySettings = { companyName: s.companyName, brandTagline: s.brandTagline, logoUrl: s.logoUrl, phone: s.phone, whatsappNumber: s.whatsappNumber, telegramUsername: s.telegramUsername, email: s.email, address: s.address };
+  return <BuilderEditorClient initialPage={page} initialDoc={doc} companySettings={companySettings} />;
 }

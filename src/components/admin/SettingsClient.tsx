@@ -17,6 +17,8 @@ import {
   Eraser,
 } from 'lucide-react';
 import ClearDemoData from './ClearDemoData';
+import ImageField from './ImageField';
+import { DEFAULT_LOGO } from '@/lib/company';
 import { SystemSettings } from '@/lib/types';
 import { useTheme } from '@/context/ThemeContext';
 import { errorMessage } from '@/lib/errors';
@@ -37,6 +39,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
   const [formData, setFormData] = useState({
     companyName: initialSettings.companyName || 'KHB EVENTS',
     brandTagline: initialSettings.brandTagline || 'Creating Extraordinary Moments',
+    logoUrl: initialSettings.logoUrl || '',
     phone: initialSettings.phone || '+855 12 888 999',
     whatsappNumber: initialSettings.whatsappNumber || '85512888999',
     telegramUsername: initialSettings.telegramUsername || 'khbevents',
@@ -201,6 +204,26 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
             <div className="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-emerald-950">
               <Building className="w-4 h-4 text-amber-500 dark:text-amber-400" />
               <h2 className="text-base font-bold text-slate-900 dark:text-white">{t('settings.profile.heading')}</h2>
+            </div>
+
+            <div className="grid sm:grid-cols-[minmax(0,1fr)_220px] gap-4 items-start" data-company-logo="">
+              <ImageField
+                label={t('settings.profile.logo')}
+                value={formData.logoUrl}
+                onChange={(url) => setFormData({ ...formData, logoUrl: url })}
+                maxEdge={800}
+                preview="contain"
+                hint={t('settings.profile.logoHint')}
+              />
+              <div className="space-y-2">
+                <div className="text-[11px] font-semibold text-slate-500 dark:text-gray-400">{t('settings.profile.logoPreview')}</div>
+                <div className="flex items-center justify-center h-20 rounded-xl bg-white border border-slate-200 p-3">
+                  <img src={formData.logoUrl || DEFAULT_LOGO} alt="" className="max-h-full max-w-full object-contain" />
+                </div>
+                <div className="flex items-center justify-center h-20 rounded-xl bg-[#0B1712] border border-emerald-900 p-3">
+                  <img src={formData.logoUrl || DEFAULT_LOGO} alt="" className="max-h-full max-w-full object-contain" />
+                </div>
+              </div>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">

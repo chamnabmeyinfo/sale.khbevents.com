@@ -86,7 +86,14 @@ import bundledDbJson from '../../data/db.json';
 // round trips. These wrappers keep the results in Next's data cache for a
 // minute; admin writes call invalidateCache() so their changes show at once.
 const CACHE_SECONDS = 60;
-const cachedSupabaseSettings = unstable_cache(() => supabaseGetSettings(), ['supabase-settings'], {
+/** The company logo lives in its own settings row: the settings table has no column for it. */
+const LOGO_MARKER = 'brand_logo';
+const cachedSupabaseSettings = unstable_cache(async () => {
+  const settings = await supabaseGetSettings();
+  if (!settings) return settings;
+  const logoUrl = await supabaseGetMarker(LOGO_MARKER).catch(() => null);
+  return logoUrl ? { ...settings, logoUrl } : settings;
+}, ['supabase-settings'], {
   tags: ['settings'], revalidate: CACHE_SECONDS,
 });
 const cachedSupabasePages = unstable_cache(() => supabaseGetPages(), ['supabase-pages'], {
@@ -1183,6 +1190,11 @@ export async function updateSettings(
   if (isSupabaseConfigured()) {
     try {
       updated = await supabaseUpdateSettings(partial);
+      if (partial.logoUrl !== undefined) await supabaseSetMarker(LOGO_MARKER, partial.logoUrl || '');
+      if (updated) {
+        const logoUrl = partial.logoUrl !== undefined ? partial.logoUrl : await supabaseGetMarker(LOGO_MARKER).catch(() => null);
+        updated = { ...updated, logoUrl: logoUrl || undefined };
+      }
     } catch (err) {
       console.error('Supabase updateSettings error:', err);
     }

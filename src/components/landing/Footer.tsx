@@ -1,18 +1,21 @@
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Phone, Mail, MapPin, Lock, ArrowUpRight } from 'lucide-react';
+import { DEFAULT_LOGO } from '@/lib/company';
 
 interface FooterProps {
   phone?: string;
   email?: string;
   address?: string;
+  /** Company or page logo (see companyFor). */
+  logo?: string;
 }
 
 export default function Footer({
   phone = '+855 12 888 999',
   email = 'sale@khbevents.com',
-  address = 'Diamond Island (Koh Pich), Phnom Penh, Cambodia'
+  address = 'Diamond Island (Koh Pich), Phnom Penh, Cambodia',
+  logo = DEFAULT_LOGO,
 }: FooterProps) {
   return (
     <footer className="bg-slate-100 dark:bg-[#040806] border-t border-slate-200 dark:border-emerald-950 text-slate-600 dark:text-gray-400 text-xs py-14 transition-colors">
@@ -21,14 +24,8 @@ export default function Footer({
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white dark:bg-emerald-950 border border-slate-200 dark:border-emerald-800 p-2 flex items-center justify-center shadow-sm">
-                <Image
-                  src="/images/khb-logo.png"
-                  alt="KHB EVENTS"
-                  width={30}
-                  height={30}
-                  className="object-contain"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
+                {/* eslint-disable-next-line @next/next/no-img-element -- uploaded logos may live on another host */}
+                <img src={logo} alt="Logo" width={30} height={30} className="w-[30px] h-[30px] object-contain" />
               </div>
               <span className="text-lg font-black tracking-wider text-slate-900 dark:text-white">
                 KHB <span className="text-amber-500 dark:text-amber-400">EVENTS</span>

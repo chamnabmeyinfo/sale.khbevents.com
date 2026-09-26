@@ -44,6 +44,8 @@ Suggested order: lock the database first, then change the token and the password
 - [ ] Choose the **Remember a visitor for** period in Admin → Staff Round Robin → Advanced Routing Engine Rules & Fallbacks. Choices: Off, 1, 2, 3 or 6 months. The default in the repo is 1 month. → [[Round Robin]] #owner
 - [ ] Terms & Conditions (new builder component): write the real terms (payment, cancellation, refunds, changes, travel documents), have them checked, then add them to each page and set **Last updated**. Optionally tick **Ask visitors to agree** on the lead form. → [[Page Builder]] #owner
 - [ ] Add an **Included & not included** section to each trip page with the real items (for example flights, hotel, meals, visa, insurance). The starter items are placeholders. Vietnam: done (2026-09-26); check it on the live page, and add the single-room supplement to "Not included" if you want it listed. Korea: still to do. → [[Page Builder]] #owner
+- [ ] Upload the company logo in Settings → Company Profile & Contact (transparent PNG). → [[Admin and Security]] #owner
+- [ ] Check each builder page's **Brand & contact** (page settings). The Korea page already had its own phone number and its Telegram username is set to a bot, `@khb_sale_admin_bot`. If you add a Contact & company section, visitors will see that handle; change it to the sales account if that is not what you want. → [[Page Builder]] #owner
 - [ ] Decide whether to run a popup, and create the first one if wanted. → [[Create a Popup]], [[Ads and Popups]] #owner
 
 ### Korea trip

@@ -26,6 +26,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-26 — Company logo in its own settings row; pages override company details field by field
+
+- **Decision:** The company logo is stored as the `brand_logo` row of `system_settings`, not as a new column. A page's logo, name, phone, Telegram, WhatsApp, email and address each override the company value only when filled (`companyFor`).
+- **Why:** A new column needs a database migration the owner must run; the extra row works now, like the other settings rows (campaigns, AI). Field-by-field fallback means a page only needs what is different.
+- **Who decided:** Claude with owner approval.
+- **Affects:** [[Admin and Security]], [[Page Builder]], [[Print Agenda]].
+
 ## 2026-09-26 — Packs can replace one builder section by id
 
 - **Decision:** A content pack can carry `replaceBuilderBlocks` to swap single builder sections (matched by id), instead of replacing the whole builder page. First use: the Vietnam page's "What's included" became "Included & not included".

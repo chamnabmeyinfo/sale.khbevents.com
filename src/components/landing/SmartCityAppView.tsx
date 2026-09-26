@@ -1,5 +1,6 @@
 'use client';
 
+import { companyFor } from '@/lib/company';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { LandingPage, PopupAd, SystemSettings } from '@/lib/types';
@@ -296,7 +297,7 @@ const HERO_SLIDES = [
   '/images/events/photo_2026-09-16_22-01-09 (6).jpg',
 ];
 
-export default function SmartCityAppView({ page, initialLang, popupAds, popupPreviewId }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh'; popupAds?: PopupAd[]; popupPreviewId?: string; } = {}) {
+export default function SmartCityAppView({ page, settings, initialLang, popupAds, popupPreviewId }: { page?: LandingPage; settings?: SystemSettings; initialLang?: 'en' | 'kh'; popupAds?: PopupAd[]; popupPreviewId?: string; } = {}) {
   const [lang, setLang] = useState<'en' | 'kh'>(initialLang || 'en');
   const [activeTab, setActiveTab] = useState<'home' | 'trip' | 'seats'>('home');
   const [heroSlide, setHeroSlide] = useState(0);
@@ -788,7 +789,7 @@ export default function SmartCityAppView({ page, initialLang, popupAds, popupPre
               {/* Trust */}
               {(isVisible('guarantee') || isVisible('form') || isVisible('coreValues') || isVisible('hero')) && (
                 <div className="app-trust">
-                  <img src="/images/khb-logo.png" className="trust-logo" alt="KHB EVENTS" width={140} height={35} />
+                  <img src={companyFor(settings, page).logo} className="trust-logo" alt="KHB EVENTS" width={140} height={35} />
                   <p>{s.trustDesc}</p>
                   <div className="trust-links">
                     <a href={`tel:${GENERAL.contactPhone.replace(/\s/g, '')}`} className="trust-pill pressable">📞 Hotline</a>

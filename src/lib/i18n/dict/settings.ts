@@ -55,6 +55,9 @@ export const settings: Dictionary = {
     // Profile tab
     'settings.profile.heading': 'Company & Public Contact Information',
     'settings.profile.companyName': 'Company Name',
+    'settings.profile.logo': 'Company logo',
+    'settings.profile.logoHint': 'PNG with a transparent background works best, at least 400 px wide. Used in the admin, the login page, every landing page and the printed agenda. Each page can use its own logo instead (page builder → Page settings → Brand & contact). Remove it to go back to the KHB logo.',
+    'settings.profile.logoPreview': 'On light and dark backgrounds',
     'settings.profile.tagline': 'Brand Tagline',
     'settings.profile.phone': 'Hotline Phone Number (Display)',
     'settings.profile.whatsapp': 'WhatsApp Number (Digits only, e.g. 85512888999)',
@@ -170,6 +173,9 @@ export const settings: Dictionary = {
 
     'settings.profile.heading': 'ព័ត៌មានក្រុមហ៊ុន និងទំនាក់ទំនងសាធារណៈ',
     'settings.profile.companyName': 'ឈ្មោះក្រុមហ៊ុន',
+    'settings.profile.logo': 'ឡូហ្គោក្រុមហ៊ុន',
+    'settings.profile.logoHint': 'PNG ផ្ទៃថ្លាល្អបំផុត ទទឹងយ៉ាងតិច 400 px។ ប្រើក្នុងផ្នែកគ្រប់គ្រង ទំព័រចូល គ្រប់ទំព័រលក់ និងកម្មវិធីបោះពុម្ព។ ទំព័រនីមួយៗអាចប្រើឡូហ្គោផ្ទាល់ខ្លួន (កម្មវិធីបង្កើតទំព័រ → ការកំណត់ទំព័រ → ម៉ាក និងទំនាក់ទំនង)។ លុបចេញដើម្បីត្រឡប់ទៅឡូហ្គោ KHB។',
+    'settings.profile.logoPreview': 'លើផ្ទៃភ្លឺ និងផ្ទៃងងឹត',
     'settings.profile.tagline': 'ពាក្យស្លោកម៉ាកយីហោ',
     'settings.profile.phone': 'លេខទូរស័ព្ទ Hotline (សម្រាប់បង្ហាញ)',
     'settings.profile.whatsapp': 'លេខ WhatsApp (តែលេខ ឧ. 85512888999)',

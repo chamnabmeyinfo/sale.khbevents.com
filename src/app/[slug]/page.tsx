@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getPublicSettings, getActivePopupAds } from '@/lib/storage';
+import { companyFor } from '@/lib/company';
 import { loadPublicPage } from '@/lib/page-access';
 import PageLockScreen from '@/components/common/PageLockScreen';
 import DynamicLandingPageView from '@/components/landing/DynamicLandingPageView';
@@ -106,7 +107,8 @@ export default async function CampaignPage({ params, searchParams }: PageProps) 
       tracking: page.tracking,
       builder: page.builder,
     } as LandingPage;
-    return <BuilderPageView page={publicPage} initialLang={builderLang} serverNowMs={serverNowMs()} {...popupProps} />;
+    // Only the public contact details and logo, resolved on the server (page's own, else the company's).
+    return <BuilderPageView page={publicPage} company={companyFor(settings, page)} initialLang={builderLang} serverNowMs={serverNowMs()} {...popupProps} />;
   }
 
   if (cleanSlug === 'smart-city-tea-cafe') {

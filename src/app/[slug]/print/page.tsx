@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { companyFor } from '@/lib/company';
 import React from 'react';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
@@ -278,7 +279,9 @@ export default async function PrintPage({ params, searchParams }: PageProps) {
   const host = h.get('x-forwarded-host') || h.get('host') || 'sale.khbevents.com';
   const proto = h.get('x-forwarded-proto') || (host.startsWith('localhost') ? 'http' : 'https');
   const pageUrl = `${proto}://${host}/${page.slug}${lang === 'kh' ? '?lang=kh' : ''}`;
-  const contacts = [settings.phone, settings.telegramUsername ? `Telegram @${settings.telegramUsername.replace(/^@/, '')}` : '', settings.email].filter(Boolean);
+  // The page's own logo and contact details win; the rest comes from Settings → Company.
+  const company = companyFor(settings, page);
+  const contacts = [company.phone, company.telegram ? `Telegram @${company.telegram}` : '', company.email].filter(Boolean);
 
   const link = (o: { mode?: PrintMode; lang?: Lang; photos?: boolean }) => {
     const q = new URLSearchParams();
@@ -294,8 +297,9 @@ export default async function PrintPage({ params, searchParams }: PageProps) {
   const contactBlock = (
     <div className="pp-contact">
       <div className="pp-contact__lines">
-        <strong>{settings.companyName || 'KHB Events'}</strong>
+        <strong>{company.name}</strong>
         {contacts.length > 0 && <span>{contacts.join(' · ')}</span>}
+        {company.address && <span>{company.address}</span>}
         <span className="pp-link">{pageUrl}</span>
       </div>
       <Qr url={pageUrl} caption={ui.scan} />
@@ -344,7 +348,7 @@ export default async function PrintPage({ params, searchParams }: PageProps) {
           <div className="pp-cover__body">
             <div className="pp-brand">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/khb-logo.png" alt="" width={54} height={30} />
+              <img src={company.logo} alt="" width={54} height={30} />
               <span className="pp-brand__tag">{mode === 'agenda' ? ui.agenda : ui.full}</span>
             </div>
             {plan.badge && <p className="pp-badge">{plan.badge}</p>}

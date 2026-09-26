@@ -17,6 +17,7 @@ const STAGE_STYLE: Record<FlowStage, { bar: string; chip: string }> = {
   doubts: { bar: 'bg-teal-500', chip: 'bg-teal-100 text-teal-900 dark:bg-teal-400/15 dark:text-teal-300' },
   rules: { bar: 'bg-slate-500', chip: 'bg-slate-200 text-slate-800 dark:bg-slate-400/15 dark:text-slate-300' },
   close: { bar: 'bg-orange-500', chip: 'bg-orange-100 text-orange-900 dark:bg-orange-400/15 dark:text-orange-300' },
+  footer: { bar: 'bg-stone-500', chip: 'bg-stone-200 text-stone-800 dark:bg-stone-400/15 dark:text-stone-300' },
 };
 
 const SEVERITY_STYLE: Record<OrderIssue['severity'], string> = {

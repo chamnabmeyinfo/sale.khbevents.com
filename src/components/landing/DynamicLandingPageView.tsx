@@ -1,5 +1,6 @@
 'use client';
 
+import { companyFor } from '@/lib/company';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navbar from './Navbar';
@@ -187,6 +188,7 @@ export default function DynamicLandingPageView({ page, settings, popupAds, popup
   const seatsRemaining = Math.max(0, totalSeats - claimedSeats);
 
   const effPhone = page?.isolatedSettings?.phone || settings?.phone;
+  const pageLogo = companyFor(settings, page).logo;
   const effWhatsapp = page?.isolatedSettings?.whatsapp || settings?.whatsappNumber;
   const effTelegramUsername = page?.isolatedSettings?.telegramUsername || settings?.telegramUsername;
 
@@ -1256,7 +1258,7 @@ export default function DynamicLandingPageView({ page, settings, popupAds, popup
       <div className="min-h-screen bg-slate-50 dark:bg-[#070D0A] text-slate-900 dark:text-gray-100 flex flex-col selection:bg-amber-400 selection:text-black transition-colors">
         <LandingPageTracking page={page} />
         <PopupAdsHost ads={popupAds} previewId={popupPreviewId} pageSlug={page.slug} />
-        <Navbar phone={effPhone} whatsapp={effWhatsapp} />
+        <Navbar phone={effPhone} whatsapp={effWhatsapp} logo={pageLogo} />
 
       <main className="flex-1">
         {effectiveSectionOrder.map((sectionKey: string) => {
@@ -1296,6 +1298,7 @@ export default function DynamicLandingPageView({ page, settings, popupAds, popup
       />
 
       <Footer
+        logo={pageLogo}
         phone={effPhone}
         email={settings.email}
         address={settings.address}

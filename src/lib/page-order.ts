@@ -6,10 +6,10 @@
 import type { BlockType, BuilderBlock, Bi, Lang } from './builder';
 import { pick } from './builder';
 
-export type FlowStage = 'attention' | 'why' | 'details' | 'price' | 'action' | 'doubts' | 'rules' | 'close';
+export type FlowStage = 'attention' | 'why' | 'details' | 'price' | 'action' | 'doubts' | 'rules' | 'close' | 'footer';
 
 /** The journey from first glance to sign-up, in order. */
-export const FLOW: FlowStage[] = ['attention', 'why', 'details', 'price', 'action', 'doubts', 'rules', 'close'];
+export const FLOW: FlowStage[] = ['attention', 'why', 'details', 'price', 'action', 'doubts', 'rules', 'close', 'footer'];
 
 export const STAGE_OF: Record<BlockType, FlowStage> = {
   hero: 'attention',
@@ -23,10 +23,11 @@ export const STAGE_OF: Record<BlockType, FlowStage> = {
   faq: 'doubts',
   terms: 'rules',
   finalCta: 'close',
+  contact: 'footer',
 };
 
 /** "Why" and "details" share a rank: either may come first. */
-const RANK: Record<FlowStage, number> = { attention: 0, why: 1, details: 1, price: 2, action: 3, doubts: 4, rules: 5, close: 6 };
+const RANK: Record<FlowStage, number> = { attention: 0, why: 1, details: 1, price: 2, action: 3, doubts: 4, rules: 5, close: 6, footer: 7 };
 
 export type OrderIssueKey = 'noHero' | 'heroFirst' | 'finalLast' | 'formBeforeOffer' | 'faqBeforeOffer' | 'termsEarly' | 'detailsAfterOffer' | 'noForm';
 
@@ -61,8 +62,11 @@ export function orderIssues(blocks: BuilderBlock[]): OrderIssue[] {
   if (hero < 0) issues.push({ key: 'noHero', severity: 'high' });
   else if (hero !== 0) issues.push({ key: 'heroFirst', blockId: blocks[hero].id, severity: 'high' });
 
+  // The final call to action closes the page; only a contact footer may follow it.
+  let lastMain = blocks.length - 1;
+  while (lastMain > 0 && STAGE_OF[blocks[lastMain].type] === 'footer') lastMain--;
   const finals = blocks.map((b, i) => ({ b, i })).filter((x) => x.b.type === 'finalCta');
-  for (const x of finals) if (x.i !== blocks.length - 1) issues.push({ key: 'finalLast', blockId: x.b.id, severity: 'medium' });
+  for (const x of finals) if (x.i !== lastMain) issues.push({ key: 'finalLast', blockId: x.b.id, severity: 'medium' });
 
   if (offer >= 0) {
     if (form >= 0 && form < offer) issues.push({ key: 'formBeforeOffer', blockId: blocks[form].id, severity: 'medium' });

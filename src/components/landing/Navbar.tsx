@@ -2,23 +2,26 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Phone, MessageCircle, Menu, X, ArrowRight, Sparkles } from 'lucide-react';
 import { UserNavButton } from '@/components/auth/UserNavButton';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import FlagIcon from '@/components/common/FlagIcon';
 import { useStoredChoice, useUrlParam } from '@/lib/use-browser-state';
+import { DEFAULT_LOGO } from '@/lib/company';
 
 const LANGS = ['en', 'kh'] as const;
 
 interface NavbarProps {
   phone?: string;
   whatsapp?: string;
+  /** Company or page logo (see companyFor). */
+  logo?: string;
 }
 
 export default function Navbar({
   phone = '+855 12 888 999',
-  whatsapp = '85512888999'
+  whatsapp = '85512888999',
+  logo = DEFAULT_LOGO,
 }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const urlLang = useUrlParam('lang');
@@ -40,16 +43,8 @@ export default function Navbar({
         <div className="flex items-center justify-between h-20">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-950 dark:to-emerald-900 border border-emerald-300 dark:border-emerald-700/40 p-2 flex items-center justify-center shadow-md dark:shadow-lg dark:shadow-emerald-950/50 group-hover:border-emerald-500 transition-all">
-              <Image
-                src="/images/khb-logo.png"
-                alt="KHB EVENTS Logo"
-                width={38}
-                height={38}
-                className="object-contain"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
+              {/* eslint-disable-next-line @next/next/no-img-element -- uploaded logos may live on another host */}
+              <img src={logo} alt="Logo" width={38} height={38} className="w-[38px] h-[38px] object-contain" />
               <span className="absolute inset-0 flex items-center justify-center text-amber-500 font-bold text-lg pointer-events-none -z-10">
                 KHB
               </span>

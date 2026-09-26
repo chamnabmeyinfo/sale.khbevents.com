@@ -9,6 +9,7 @@ export { BenefitIconSvg };
 import type {
   BenefitsBlock,
   BuilderBlock,
+  ContactBlock,
   BuilderBrand,
   BuilderOffer,
   FaqBlock,
@@ -24,6 +25,7 @@ import type {
   StepsBlock,
 } from '@/lib/builder';
 import { parseVideoSource } from '@/lib/video-embed';
+import { DEFAULT_LOGO, type CompanyInfo } from '@/lib/company';
 import { countdown, ctaOpensTelegram, discountPercent, effectiveOffer, formatPrice, offerCtaHref, pick, safeLink, stockTakenPercent } from '@/lib/builder';
 
 /**
@@ -50,6 +52,8 @@ export interface RenderContext {
   onLead?: (block: FormBlock, eventId?: string) => void;
   /** The page's Terms & Conditions section, for the form's "I agree" link and the accepted version. */
   terms?: { id: string; updated?: string };
+  /** Logo, company name and contacts: the page's own, else the company settings. */
+  company?: CompanyInfo;
 }
 
 const UI = {
@@ -513,6 +517,89 @@ function Inclusions({ block, ctx }: { block: InclusionsBlock; ctx: RenderContext
   );
 }
 
+const ContactIcon = ({ kind }: { kind: 'phone' | 'telegram' | 'whatsapp' | 'email' | 'address' }) => {
+  const paths: Record<typeof kind, React.ReactNode> = {
+    phone: <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z" />,
+    telegram: <path d="m22 2-7 20-4-9-9-4Zm0 0L11 13" />,
+    whatsapp: <path d="M3 21l1.7-5A9 9 0 1 1 8 19.3L3 21zM9 8.5c0 3.5 3 6.5 6.5 6.5l1-1.5-2-1-1 .8a5 5 0 0 1-2.3-2.3l.8-1-1-2-1.5 1" />,
+    email: <><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-10 6L2 7" /></>,
+    address: <><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></>,
+  };
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[kind]}</svg>;
+};
+
+function Contact({ block, ctx }: { block: ContactBlock; ctx: RenderContext }) {
+  const { lang } = ctx;
+  const c = ctx.company || { logo: DEFAULT_LOGO, name: 'KHB Events' };
+  const lines: Array<{ kind: 'phone' | 'telegram' | 'whatsapp' | 'email'; label: string; value: string; href: string }> = [];
+  if (c.phone) lines.push({ kind: 'phone', label: lang === 'kh' ? 'ទូរស័ព្ទ' : 'Phone', value: c.phone, href: `tel:${c.phone.replace(/[^0-9+]/g, '')}` });
+  if (c.telegram) lines.push({ kind: 'telegram', label: 'Telegram', value: `@${c.telegram}`, href: `https://t.me/${encodeURIComponent(c.telegram)}` });
+  if (c.whatsapp) lines.push({ kind: 'whatsapp', label: 'WhatsApp', value: `+${c.whatsapp}`, href: `https://wa.me/${c.whatsapp}` });
+  if (c.email) lines.push({ kind: 'email', label: lang === 'kh' ? 'អ៊ីមែល' : 'Email', value: c.email, href: `mailto:${c.email}` });
+  const external = (kind: string) => kind === 'telegram' || kind === 'whatsapp';
+  const title = block.title ? pick(block.title, lang) : '';
+  const sub = block.sub ? pick(block.sub, lang) : '';
+  const brand = (
+    <div className="kb-contact__brand">
+      {/* eslint-disable-next-line @next/next/no-img-element -- uploaded logos may live on another host */}
+      <img className="kb-contact__logo" src={c.logo} alt={c.name} loading="lazy" decoding="async" />
+      <div>
+        <div className="kb-contact__name">{c.name}</div>
+        {c.tagline && <div className="kb-contact__tagline">{c.tagline}</div>}
+      </div>
+    </div>
+  );
+  const list = (
+    <ul className="kb-contact__list">
+      {lines.map((l) => (
+        <li key={l.kind}>
+          <a
+            className={`kb-contact__item kb-contact__item--${l.kind}`}
+            href={ctx.editing ? undefined : l.href}
+            target={!ctx.editing && external(l.kind) ? '_blank' : undefined}
+            rel={!ctx.editing && external(l.kind) ? 'noopener noreferrer' : undefined}
+          >
+            <span className="kb-contact__icon"><ContactIcon kind={l.kind} /></span>
+            <span className="kb-contact__text"><span className="kb-contact__label">{l.label}</span><span className="kb-contact__value">{l.value}</span></span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+  const address = c.address && (
+    <p className="kb-contact__address"><ContactIcon kind="address" /><span>{c.address}</span></p>
+  );
+  return (
+    <section className={sectionClass(block)} data-anim={block.style.animation || 'rise'}>
+      <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
+      <div className="kb-container">
+        {block.variant === 'card' ? (
+          <div className="kb-contact-card">
+            {brand}
+            {title && <h2 className="kb-section-title">{title}</h2>}
+            {sub && <p className="kb-section-sub">{sub}</p>}
+            {list}
+            {address}
+          </div>
+        ) : (
+          <div className="kb-contact-footer">
+            <div className="kb-contact-footer__about">
+              {brand}
+              {address}
+            </div>
+            <div>
+              {title && <h2 className="kb-contact-footer__title">{title}</h2>}
+              {sub && <p className="kb-section-sub">{sub}</p>}
+              {list}
+            </div>
+          </div>
+        )}
+        {block.variant === 'footer' && <p className="kb-contact-footer__legal">© {c.name}</p>}
+      </div>
+    </section>
+  );
+}
+
 function Steps({ block, ctx }: { block: StepsBlock; ctx: RenderContext }) {
   const { lang } = ctx;
   const items = block.items.filter((i) => pick(i.title, lang));
@@ -829,6 +916,8 @@ export function BlockView({ block, ctx }: { block: BuilderBlock; ctx: RenderCont
       return <Benefits block={block} ctx={ctx} />;
     case 'included':
       return <Included block={block} ctx={ctx} />;
+    case 'contact':
+      return <Contact block={block} ctx={ctx} />;
     case 'inclusions':
       return <Inclusions block={block} ctx={ctx} />;
     case 'steps':

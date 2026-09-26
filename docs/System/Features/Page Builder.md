@@ -39,6 +39,12 @@ Undo and redo cover the last 60 changes. The browser warns before leaving with u
 
 **Keyboard shortcuts:** Ctrl+S (⌘S on Mac) saves, also while typing in a field. Outside text fields: Ctrl+Z undo, Ctrl+Shift+Z or Ctrl+Y redo, Esc deselects the section, Alt+↑ / Alt+↓ moves the selected section. The Save button's tooltip lists them.
 
+## Brand & contact on this page
+
+Page settings (no section selected) → **Brand & contact on this page**: this page's own logo, company name, phone, Telegram username, WhatsApp and email and address. An empty field uses the company settings (Settings → Company); the grey placeholder shows that value. They appear in the **Contact & company** section and on the printed agenda. The Telegram button of the page still goes to the next salesperson (round robin); only the contact section shows this username. Stored in the page's `isolatedSettings` (the same phone, Telegram and WhatsApp the old page editor used).
+
+A Contact & company section may sit after the Final call to action; **+** adds it at the very bottom and the Page map treats it as the footer.
+
 ## Full preview and Page map
 
 - **Full preview** (top bar, next to the phone and computer buttons) shows the whole page over the full screen at a real computer width: **Laptop** 1280, **Desktop** 1440 or **Large screen** 1920 pixels. When the screen is narrower, the page is scaled down, so it keeps the computer layout. EN/ខ្មែរ switch inside. Close with the button or Esc. Buttons and the form do nothing in the preview.
@@ -62,6 +68,7 @@ Source: `src/lib/page-order.ts` (advice), `src/components/admin/BuilderPageMap.t
 | Lead form | Catch buyers who will not chat first | Form card, Offer and form |
 | Final call to action | Close the page with the offer, countdown and button again | Centered, Split box |
 | Included & not included | Show what the price covers and what it does not (flights, visa, personal spending…), so buyers compare fairly and nobody is surprised after paying; up to 30 items per list, each list's heading can be renamed, an empty list is hidden | Two columns (one under the other on a phone), One card |
+| Contact & company | Show who is behind the offer: logo, company name, phone, Telegram, WhatsApp, email and address, each a tap-to-contact button. It uses the page's Brand & contact details, else the company settings; empty details are hidden | Footer, Contact card |
 | Terms & Conditions | State payment, cancellation and refund rules up front, so there are no surprises after booking; up to 30 clauses, a **Last updated** date and a short note | Accordion, Full document |
 
 The saving (for example "Save 25%") shows only when the previous price is higher than the price. The countdown hides itself when the date passes. Only use a real previous price and real stock: see [[Copy Rules]].

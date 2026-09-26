@@ -1,5 +1,6 @@
 'use client';
 
+import { companyFor } from '@/lib/company';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { LandingPage, PopupAd, SystemSettings } from '@/lib/types';
@@ -272,6 +273,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang, 
   // and client by design, so the spans that render them carry suppressHydrationWarning.
   const [countdown, setCountdown] = useState(() => countdownParts(countdownTargetFor(phase) - Date.now()));
   const effPhone = page?.isolatedSettings?.phone || settings?.phone || GENERAL.contactPhone;
+  const pageLogo = companyFor(settings, page).logo;
   const effTgUsername = page?.isolatedSettings?.telegramUsername || settings?.telegramUsername || GENERAL.contactTelegramUsername;
   const effTgUrl = `/api/round-robin?page=${encodeURIComponent(page?.slug || 'smart-city-tea-cafe')}&redirect=true`;
 
@@ -1804,7 +1806,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang, 
       <header className="site-header">
         <div className="container navbar">
           <a href="#" className="brand-logo">
-            <img src="/images/khb-logo.png" alt="KHB EVENTS" className="logo-img" width={163} height={40} />
+            <img src={pageLogo} alt="KHB EVENTS" className="logo-img" width={163} height={40} />
           </a>
           <ul className="nav-links">
             {isVisible('problems') && <li><a href="#problem" className="nav-link">{c.navWhy}</a></li>}
@@ -1852,7 +1854,7 @@ export default function SmartCityLandingPageView({ page, settings, initialLang, 
       <aside className={`mobile-nav-drawer${drawerOpen ? ' active' : ''}`} aria-label="Mobile Navigation">
         <div className="mobile-drawer-header">
           <div className="brand-logo">
-            <img src="/images/khb-logo.png" alt="KHB EVENTS" className="logo-img" width={163} height={40} />
+            <img src={pageLogo} alt="KHB EVENTS" className="logo-img" width={163} height={40} />
           </div>
           <div className="lang-switcher" style={{ margin: '0 8px' }}>
             <button 

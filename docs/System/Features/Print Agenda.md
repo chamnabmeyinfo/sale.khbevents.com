@@ -40,6 +40,8 @@ The page reads what the page sells (`classifyNature` in `src/lib/print-plan.ts`)
 
 The **Included & not included** section prints on both the agenda and the entire page, as two boxes (green ticks, red crosses).
 
+The logo, company name and contact line at the top and bottom come from the page's Brand & contact settings, else the company settings (see [[Admin and Security]]).
+
 Left out of the agenda: problem sections, long "why" lists, photos, Terms & Conditions and the rest of the FAQ. The screen shows which sections were printed and which were left out, so staff can switch to **Entire page** when needed.
 
 ## Design

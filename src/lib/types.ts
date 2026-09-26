@@ -594,6 +594,10 @@ export interface IsolatedPageSettings {
   soldOutRedirectUrl?: string;
 
   // 4. Branding, Theming & Sponsorship
+  /** This page's own logo, company name and address; empty uses the company settings. */
+  logoUrl?: string;
+  companyName?: string;
+  address?: string;
   accentColor?: string;
   partnerName?: string;
   partnerLogo?: string;
@@ -759,6 +763,8 @@ export type UserRole = "owner" | "super_admin" | "admin" | "client";
 export interface SystemSettings {
   companyName: string;
   brandTagline: string;
+  /** Company logo (uploaded image address); empty uses the built-in KHB logo. */
+  logoUrl?: string;
   phone: string;
   whatsappNumber: string;
   telegramUsername: string;

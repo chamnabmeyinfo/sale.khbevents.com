@@ -1,5 +1,6 @@
 'use client';
 
+import { companyFor } from '@/lib/company';
 import React, { useState } from 'react';
 import Navbar from './Navbar';
 import HeroSection from './HeroSection';
@@ -42,7 +43,7 @@ export default function MainSalesView({ pages, settings, popupAds, popupPreviewI
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#070D0A] text-slate-900 dark:text-gray-100 flex flex-col selection:bg-amber-400 selection:text-black transition-colors">
-      <Navbar phone={settings.phone} whatsapp={settings.whatsappNumber} />
+      <Navbar phone={settings.phone} whatsapp={settings.whatsappNumber} logo={companyFor(settings).logo} />
 
       <main className="flex-1">
         <HeroSection />
@@ -68,6 +69,7 @@ export default function MainSalesView({ pages, settings, popupAds, popupPreviewI
       <PopupAdsHost ads={popupAds} previewId={popupPreviewId} pageSlug="main-sales" />
 
       <Footer
+        logo={companyFor(settings).logo}
         phone={settings.phone}
         email={settings.email}
         address={settings.address}

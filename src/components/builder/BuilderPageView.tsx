@@ -9,10 +9,13 @@ import PopupAdsHost from '@/components/common/PopupAds';
 import { popupStorageKeys } from '@/lib/popup-ads';
 import { useStoredChoice, useUrlParam } from '@/lib/use-browser-state';
 import { BlockView, BuilderRoot, useNow } from './BuilderBlocks';
+import type { CompanyInfo } from '@/lib/company';
 
 /** Public view of a page made with the drag-and-drop builder. */
-export default function BuilderPageView({ page, initialLang = 'en', serverNowMs, popupAds, popupPreviewId }: {
+export default function BuilderPageView({ page, company, initialLang = 'en', serverNowMs, popupAds, popupPreviewId }: {
   page: LandingPage;
+  /** Logo and public contact details for the Contact & company section. */
+  company?: CompanyInfo;
   /** From ?lang=, else the page's default language. */
   initialLang?: Lang;
   /** Server render time, so prices match between the server HTML and the first browser render. */
@@ -70,6 +73,7 @@ export default function BuilderPageView({ page, initialLang = 'en', serverNowMs,
               lang,
               slug: page.slug,
               terms,
+              company,
               nowMs,
               serverNowMs,
               onCta: (b) => trackLandingEvent(page, ctaOpensTelegram(doc.offer) ? 'telegram_click' : 'cta_click', { placement: `builder_${b.type}` }, lang),

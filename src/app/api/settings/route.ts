@@ -3,6 +3,7 @@ import { getSettings, getPublicSettings, updateSettings } from '@/lib/storage';
 import { isAuthenticated, hashPassword, setAdminSession } from '@/lib/auth';
 import { SystemSettings } from '@/lib/types';
 import { isMaskedSecret, maskSecret } from '@/lib/secrets';
+import { safeLogo } from '@/lib/company';
 
 export async function GET() {
   const authed = await isAuthenticated();
@@ -41,6 +42,8 @@ export async function PUT(req: NextRequest) {
     // Optional fields: an empty value clears them.
     if (text(body.brandTagline) !== undefined) updateData.brandTagline = text(body.brandTagline);
     if (text(body.address) !== undefined) updateData.address = text(body.address);
+    // Logo: an uploaded image or https link; empty goes back to the built-in logo.
+    if (text(body.logoUrl) !== undefined) updateData.logoUrl = safeLogo(body.logoUrl) || '';
     if (text(body.facebookUrl) !== undefined) updateData.facebookUrl = text(body.facebookUrl);
     if (text(body.tiktokUrl) !== undefined) updateData.tiktokUrl = text(body.tiktokUrl);
     if (text(body.telegramChatId) !== undefined) updateData.telegramChatId = text(body.telegramChatId);

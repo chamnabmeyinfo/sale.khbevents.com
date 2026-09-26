@@ -25,8 +25,9 @@ import {
   Undo2,
   X,
 } from 'lucide-react';
-import type { LandingPage } from '@/lib/types';
-import type { BenefitsBlock, Bi, BlockType, BuilderBlock, BuilderDoc, FaqBlock, FinalCtaBlock, FormBlock, GalleryBlock, HeroBlock, IncludedBlock, InclusionsBlock, Lang, OfferBlock, StepsBlock, TermsBlock } from '@/lib/builder';
+import type { LandingPage, SystemSettings } from '@/lib/types';
+import { companyFor } from '@/lib/company';
+import type { BenefitsBlock, Bi, BlockType, BuilderBlock, BuilderDoc, FaqBlock, FinalCtaBlock, FormBlock, GalleryBlock, HeroBlock, IncludedBlock, InclusionsBlock, ContactBlock, Lang, OfferBlock, StepsBlock, TermsBlock } from '@/lib/builder';
 import {
   BENEFIT_ICONS,
   BLOCK_ANIMATIONS,
@@ -60,7 +61,35 @@ import { featureImage } from '@/lib/feature-image';
 interface BuilderEditorClientProps {
   initialPage: LandingPage;
   initialDoc: BuilderDoc;
+  /** Settings → Company: what the page's logo and contact details fall back to. */
+  companySettings?: Partial<SystemSettings>;
 }
+
+/** The page's own logo and contact details (empty = use the company settings). */
+const brandOf = (p: LandingPage) => {
+  const s = p.isolatedSettings || {};
+  return {
+    logoUrl: s.logoUrl || '',
+    companyName: s.companyName || '',
+    phone: s.phone || '',
+    telegramUsername: (s.telegramUsername || '').replace(/^@/, ''),
+    whatsapp: s.whatsapp || s.whatsappNumber || '',
+    email: s.email || '',
+    address: s.address || '',
+  };
+};
+type PageBrand = ReturnType<typeof brandOf>;
+const metaOf = (p: LandingPage) => ({ title: p.title, slug: p.slug, status: p.status, ogImage: p.ogImage || '', brand: brandOf(p) });
+const brandToSettings = (b: PageBrand) => ({
+  logoUrl: b.logoUrl.trim() || undefined,
+  companyName: b.companyName.trim() || undefined,
+  phone: b.phone.trim() || undefined,
+  telegramUsername: b.telegramUsername.trim() ? `@${b.telegramUsername.trim().replace(/^@/, '')}` : undefined,
+  whatsapp: b.whatsapp.replace(/[^0-9]/g, '') || undefined,
+  whatsappNumber: undefined,
+  email: b.email.trim() || undefined,
+  address: b.address.trim() || undefined,
+});
 
 type Device = 'phone' | 'desktop';
 
@@ -143,14 +172,14 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export default function BuilderEditorClient({ initialPage, initialDoc }: BuilderEditorClientProps) {
+export default function BuilderEditorClient({ initialPage, initialDoc, companySettings }: BuilderEditorClientProps) {
   const { t, lang: uiLang } = useLanguage();
   const [page, setPage] = useState<LandingPage>(initialPage);
-  const [meta, setMeta] = useState({ title: initialPage.title, slug: initialPage.slug, status: initialPage.status, ogImage: initialPage.ogImage || '' });
+  const [meta, setMeta] = useState(() => metaOf(initialPage));
   const [doc, setDocState] = useState<BuilderDoc>(initialDoc);
   const [past, setPast] = useState<BuilderDoc[]>([]);
   const [future, setFuture] = useState<BuilderDoc[]>([]);
-  const [savedJson, setSavedJson] = useState(() => JSON.stringify({ doc: initialDoc, meta: { title: initialPage.title, slug: initialPage.slug, status: initialPage.status, ogImage: initialPage.ogImage || '' } }));
+  const [savedJson, setSavedJson] = useState(() => JSON.stringify({ doc: initialDoc, meta: metaOf(initialPage) }));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [device, setDevice] = useState<Device>('desktop');
   const [previewLang, setPreviewLang] = useState<Lang>('en');
@@ -295,8 +324,12 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
 
   /** "+" adds at the end, but above a closing call to action so the page still ends with it. */
   const defaultInsertIndex = (type: BlockType) => {
-    const last = doc.blocks[doc.blocks.length - 1];
-    return last && last.type === 'finalCta' && type !== 'finalCta' ? doc.blocks.length - 1 : doc.blocks.length;
+    if (type === 'contact') return doc.blocks.length;
+    // Above a closing call to action, and above a contact footer after it.
+    let at = doc.blocks.length;
+    while (at > 0 && doc.blocks[at - 1].type === 'contact') at--;
+    const beforeFooter = doc.blocks[at - 1];
+    return beforeFooter && beforeFooter.type === 'finalCta' && type !== 'finalCta' ? at - 1 : at;
   };
   const addBlock = (type: BlockType, index = defaultInsertIndex(type)) => {
     const block = createBlock(type);
@@ -350,13 +383,13 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
       const res = await fetch(`/api/pages/${page.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...page, title: meta.title.trim() || t('builder.untitled'), slug: meta.slug, status, ogImage: meta.ogImage.trim(), template: 'builder', builder: doc }),
+        body: JSON.stringify({ ...page, title: meta.title.trim() || t('builder.untitled'), slug: meta.slug, status, ogImage: meta.ogImage.trim(), template: 'builder', builder: doc, isolatedSettings: { ...page.isolatedSettings, ...brandToSettings(meta.brand) } }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.page) throw new Error(data.error || t('common.errorSaving'));
       const saved: LandingPage = data.page;
       const savedDoc = normalizeBuilderDoc(saved.builder);
-      const savedMeta = { title: saved.title, slug: saved.slug, status: saved.status, ogImage: saved.ogImage || '' };
+      const savedMeta = metaOf(saved);
       setPage(saved);
       setMeta(savedMeta);
       docRef.current = savedDoc;
@@ -384,12 +417,14 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
 
   const termsBlock = doc.blocks.find((b): b is TermsBlock => b.type === 'terms');
   const termsRef = termsBlock ? `terms-${termsBlock.id}|${termsBlock.updated || ''}` : '';
+  const brandKey = JSON.stringify(meta.brand);
+  const company = useMemo(() => companyFor(companySettings, { isolatedSettings: brandToSettings(JSON.parse(brandKey) as PageBrand) }), [companySettings, brandKey]);
   const ctx = useMemo(
     () => {
       const [id, updated] = termsRef ? termsRef.split('|') : [];
-      return { offer: doc.offer, brand: doc.brand, lang: previewLang, slug: meta.slug, nowMs, editing: true, terms: id ? { id, updated: updated || undefined } : undefined };
+      return { offer: doc.offer, brand: doc.brand, lang: previewLang, slug: meta.slug, nowMs, editing: true, terms: id ? { id, updated: updated || undefined } : undefined, company };
     },
-    [doc.offer, doc.brand, previewLang, meta.slug, nowMs, termsRef],
+    [doc.offer, doc.brand, previewLang, meta.slug, nowMs, termsRef, company],
   );
 
   const hintsFor = (block: BuilderBlock) => blockHints(block).map((h) => t(`builder.hint.${h}`));
@@ -665,6 +700,17 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
     );
   };
 
+  const contactContent = (b: ContactBlock) => (
+    <Section title={t('builder.content')}>
+      <BiInput label={t('builder.contact.title')} value={b.title} onChange={(v) => updateBlock(b.id, { title: v })} />
+      <BiInput label={t('builder.sectionSub')} value={b.sub} onChange={(v) => updateBlock(b.id, { sub: v })} multiline />
+      <div className="p-3 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-emerald-900/60 space-y-2">
+        <p className="text-[11px] text-slate-700 dark:text-gray-300">{t('builder.contact.source')}</p>
+        <button type="button" onClick={() => setSelectedId(null)} className="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-black text-[11px] font-extrabold cursor-pointer">{t('builder.contact.edit')}</button>
+      </div>
+    </Section>
+  );
+
   const stepsContent = (b: StepsBlock) => {
     const setItems = (items: StepsBlock['items'], typing = true) => updateBlock(b.id, { items }, typing);
     return (
@@ -777,6 +823,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
     );
   };
 
+  const setBrand = (patch: Partial<PageBrand>) => setMeta((m) => ({ ...m, brand: { ...m.brand, ...patch } }));
   const pagePanel = () => {
     const o = doc.offer;
     const setOffer = (patch: Partial<BuilderDoc['offer']>, typing = true) => setDoc((d) => ({ ...d, offer: { ...d.offer, ...patch } }), { typing });
@@ -816,6 +863,38 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
               ))}
             </div>
             <p className={HINT}>{t('builder.page.defaultLangHint')}</p>
+          </div>
+        </Section>
+        <Section title={t('builder.contactInfo')}>
+          <div data-brand-contact="" className="space-y-3">
+            <p className={HINT}>{t('builder.contactInfo.intro')}</p>
+            <ImageField
+              label={t('builder.contactInfo.logo')}
+              value={meta.brand.logoUrl}
+              onChange={(url) => setBrand({ logoUrl: url })}
+              maxEdge={800}
+              preview="contain"
+              hint={meta.brand.logoUrl ? t('builder.contactInfo.logoOwn') : t('builder.contactInfo.logoCompany')}
+            />
+            {(
+              [
+                ['companyName', 'builder.contactInfo.name', companySettings?.companyName],
+                ['phone', 'builder.contactInfo.phone', companySettings?.phone],
+                ['telegramUsername', 'builder.contactInfo.telegram', companySettings?.telegramUsername?.replace(/^@/, '')],
+                ['whatsapp', 'builder.contactInfo.whatsapp', companySettings?.whatsappNumber],
+                ['email', 'builder.contactInfo.email', companySettings?.email],
+                ['address', 'builder.contactInfo.address', companySettings?.address],
+              ] as const
+            ).map(([key, label, fallback]) => (
+              <div key={key}>
+                <label className={LABEL}>{t(label)}</label>
+                <div className="flex items-center gap-1">
+                  {key === 'telegramUsername' && <span className="text-[11px] text-slate-400 font-mono">@</span>}
+                  <input className={INPUT} data-brand-field={key} value={meta.brand[key]} placeholder={fallback || ''} onChange={(e) => setBrand({ [key]: key === 'telegramUsername' ? e.target.value.replace(/^@/, '') : e.target.value })} />
+                </div>
+              </div>
+            ))}
+            <p className={HINT}>{t('builder.contactInfo.where')}</p>
           </div>
         </Section>
         <Section title={t('builder.offer')}>
@@ -1108,6 +1187,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
               {selected.type === 'gallery' && galleryContent(selected)}
               {selected.type === 'terms' && termsContent(selected)}
               {selected.type === 'inclusions' && inclusionsContent(selected)}
+              {selected.type === 'contact' && contactContent(selected)}
             </>
           ) : (
             <>

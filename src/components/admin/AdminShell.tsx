@@ -10,8 +10,10 @@ import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { useLanguage } from '@/context/LanguageContext';
 import { useStoredChoice } from '@/lib/use-browser-state';
+import { BrandLogoContext } from './BrandLogo';
+import { DEFAULT_LOGO } from '@/lib/company';
 
-export default function AdminShell({ children }: { children: React.ReactNode }) {
+export default function AdminShell({ children, logo = DEFAULT_LOGO }: { children: React.ReactNode; logo?: string }) {
   const pathname = usePathname();
   const { user } = useAuth();
   const isLoginPage = pathname === '/admin/login';
@@ -21,7 +23,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const collapsed = navMode === 'collapsed';
 
   if (isLoginPage) {
-    return <>{children}</>;
+    return <BrandLogoContext.Provider value={logo}>{children}</BrandLogoContext.Provider>;
   }
 
   // Generate breadcrumb info based on path
@@ -46,6 +48,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const userName = isSuperAdmin ? 'Admin KHB' : 'Chamnam Mey';
 
   return (
+    <BrandLogoContext.Provider value={logo}>
     <div className="admin-shell min-h-screen bg-[#F8FAFC] dark:bg-[#070E0A] text-slate-900 dark:text-gray-100 selection:bg-[#FBBF24] selection:text-black transition-colors duration-200">
       {/* Left Aside Navigation (Fixed on desktop, sliding drawer on mobile) */}
       <AdminSidebar collapsed={collapsed} onToggleCollapsed={() => setNavMode(collapsed ? 'open' : 'collapsed')} />
@@ -95,5 +98,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </main>
       </div>
     </div>
+    </BrandLogoContext.Provider>
   );
 }

@@ -205,7 +205,15 @@ export interface GalleryBlock extends BlockBase {
   items: GalleryItem[];
 }
 
-export type BuilderBlock = HeroBlock | OfferBlock | FaqBlock | BenefitsBlock | IncludedBlock | InclusionsBlock | StepsBlock | FormBlock | FinalCtaBlock | GalleryBlock | TermsBlock;
+/** Logo, company name and contact details (the page's own, else the company's). */
+export interface ContactBlock extends BlockBase {
+  type: 'contact';
+  variant: 'footer' | 'card';
+  title?: Bi;
+  sub?: Bi;
+}
+
+export type BuilderBlock = HeroBlock | OfferBlock | FaqBlock | BenefitsBlock | IncludedBlock | InclusionsBlock | StepsBlock | FormBlock | FinalCtaBlock | GalleryBlock | TermsBlock | ContactBlock;
 export type BlockType = BuilderBlock['type'];
 
 export interface BuilderOffer {
@@ -544,6 +552,22 @@ export const BLOCK_DEFINITIONS: Record<BlockType, BlockDefinition> = {
       ctaLabel: { en: 'Chat with us on Telegram', kh: 'ជជែកតាម Telegram' },
     }),
   },
+  contact: {
+    type: 'contact',
+    name: { en: 'Contact & company', kh: 'ទំនាក់ទំនង និងក្រុមហ៊ុន' },
+    coreValue: { en: 'Show who is behind the offer: logo, company name and every way to reach you. Buyers trust a real, reachable company.', kh: 'បង្ហាញអ្នកនៅពីក្រោយការផ្តល់ជូន៖ ឡូហ្គោ ឈ្មោះក្រុមហ៊ុន និងគ្រប់មធ្យោបាយទាក់ទង។ អ្នកទិញទុកចិត្តក្រុមហ៊ុនពិតដែលអាចទាក់ទងបាន។' },
+    variants: [
+      { id: 'footer', name: { en: 'Footer', kh: 'ផ្នែកខាងក្រោម' }, detail: { en: 'A band at the bottom of the page: logo, name, contacts and address.', kh: 'ផ្នែកខាងក្រោមទំព័រ៖ ឡូហ្គោ ឈ្មោះ ទំនាក់ទំនង និងអាសយដ្ឋាន។' } },
+      { id: 'card', name: { en: 'Contact card', kh: 'កាតទំនាក់ទំនង' }, detail: { en: 'A card with the logo and a button for each way to contact you.', kh: 'កាតមានឡូហ្គោ និងប៊ូតុងសម្រាប់មធ្យោបាយទាក់ទងនីមួយៗ។' } },
+    ],
+    create: () => ({
+      id: newBlockId(),
+      type: 'contact',
+      variant: 'footer',
+      style: baseStyle('dark', 'left'),
+      title: { en: 'Questions? Contact us', kh: 'មានសំណួរ? ទាក់ទងយើង' },
+    }),
+  },
 };
 
 export const BLOCK_TYPES = Object.keys(BLOCK_DEFINITIONS) as BlockType[];
@@ -753,6 +777,15 @@ function normalizeBlock(v: unknown): BuilderBlock | null {
       privacyNote: optBi(o.privacyNote, 200),
       requireTerms: o.requireTerms === true,
       termsLabel: optBi(o.termsLabel, 200),
+    };
+  }
+  if (type === 'contact') {
+    const b = blank as ContactBlock;
+    return {
+      id, style, type,
+      variant: oneOf(o.variant, ['footer', 'card'] as const, b.variant),
+      title: optBi(o.title, 120),
+      sub: optBi(o.sub, 300),
     };
   }
   const b = blank as FinalCtaBlock;
@@ -969,6 +1002,9 @@ export function blockHints(block: BuilderBlock): HintKey[] {
     texts.push(block.title, ...block.items.flatMap((i) => (i.caption ? [i.caption] : [])));
   } else if (block.type === 'form') {
     texts.push(block.title, block.submitLabel, block.successTitle);
+  } else if (block.type === 'contact') {
+    if (block.title) texts.push(block.title);
+    if (block.sub) texts.push(block.sub);
   } else {
     if (!block.headline.en.trim()) hints.push('missingHeadline');
     if (!block.ctaLabel.en.trim()) hints.push('missingCta');
