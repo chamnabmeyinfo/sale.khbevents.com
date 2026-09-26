@@ -567,6 +567,31 @@ function Contact({ block, ctx }: { block: ContactBlock; ctx: RenderContext }) {
       ))}
     </ul>
   );
+  const coord = c.coordinator;
+  const coordRole = coord?.role ? pick(coord.role, lang) : '';
+  const coordBio = coord?.bio ? pick(coord.bio, lang) : '';
+  const coordinator = coord && (
+    <div className="kb-coord">
+      {coord.photo ? (
+        // eslint-disable-next-line @next/next/no-img-element -- uploaded photos may live on another host
+        <img className="kb-coord__photo" src={coord.photo} alt={coord.name} loading="lazy" decoding="async" />
+      ) : (
+        <span className="kb-coord__photo kb-coord__initials" aria-hidden="true">{coord.name.split(/\s+/).filter((w) => /\p{L}/u.test(w[0] || '')).map((w) => w[0]).slice(-2).join('').toUpperCase()}</span>
+      )}
+      <div className="kb-coord__body">
+        <span className="kb-coord__label">{lang === 'kh' ? 'អ្នកសម្របសម្រួលរបស់អ្នក' : 'Your coordinator'}</span>
+        <span className="kb-coord__name">{coord.name}</span>
+        {coordRole && <span className="kb-coord__role">{coordRole}</span>}
+        {coordBio && <span className="kb-coord__bio">{coordBio}</span>}
+        {(coord.phone || coord.telegram) && (
+          <span className="kb-coord__links">
+            {coord.phone && <a href={ctx.editing ? undefined : `tel:${coord.phone.replace(/[^0-9+]/g, '')}`}><ContactIcon kind="phone" />{coord.phone}</a>}
+            {coord.telegram && <a href={ctx.editing ? undefined : `https://t.me/${encodeURIComponent(coord.telegram)}`} target={ctx.editing ? undefined : '_blank'} rel="noopener noreferrer"><ContactIcon kind="telegram" />@{coord.telegram}</a>}
+          </span>
+        )}
+      </div>
+    </div>
+  );
   const address = (c.address || note) && (
     <>
       {c.address && <p className="kb-contact__address"><ContactIcon kind="address" /><span>{c.address}</span></p>}
@@ -582,6 +607,7 @@ function Contact({ block, ctx }: { block: ContactBlock; ctx: RenderContext }) {
             {brand}
             {title && <h2 className="kb-section-title">{title}</h2>}
             {sub && <p className="kb-section-sub">{sub}</p>}
+            {coordinator}
             {list}
             {address}
           </div>
@@ -594,6 +620,7 @@ function Contact({ block, ctx }: { block: ContactBlock; ctx: RenderContext }) {
             <div>
               {title && <h2 className="kb-contact-footer__title">{title}</h2>}
               {sub && <p className="kb-section-sub">{sub}</p>}
+              {coordinator}
               {list}
             </div>
           </div>

@@ -562,7 +562,7 @@ export interface PageAnalyticsSummary {
   recentEvents: TrackingEvent[];
 }
 
-export type ContactLine = 'phone' | 'telegram' | 'whatsapp' | 'email' | 'address' | 'website';
+export type ContactLine = 'coordinator' | 'phone' | 'telegram' | 'whatsapp' | 'email' | 'address' | 'website';
 
 export interface IsolatedPageSettings {
   // 1. Dedicated Communications & Support
@@ -574,6 +574,12 @@ export interface IsolatedPageSettings {
   coordinatorName?: string;
   coordinatorAvatar?: string;
   coordinatorRole?: string;
+  coordinatorRoleKh?: string;
+  /** The coordinator's own phone and Telegram (shown on the print and the Contact section). */
+  coordinatorPhone?: string;
+  coordinatorTelegram?: string;
+  /** One or two lines about the coordinator, EN/KH. */
+  coordinatorBio?: { en: string; kh?: string };
   email?: string;
 
   // 2. Lead Routing & Notifications

@@ -66,3 +66,15 @@ describe('page footer options', () => {
     expect(closing({ title: 'Book your seat', text: 'Call Sovann' })).toMatchObject({ title: 'Book your seat', text: 'Call Sovann' });
   });
 });
+
+describe('trip coordinator', () => {
+  it('builds the coordinator from the page settings and can be hidden', () => {
+    const iso = { coordinatorName: ' Sovann Meas ', coordinatorRole: 'Mission Director', coordinatorRoleKh: 'នាយកបេសកកម្ម', coordinatorAvatar: '/api/uploads/s.png', coordinatorPhone: '012 111 222', coordinatorTelegram: '@sovann', coordinatorBio: { en: 'Leads every trip.' } };
+    expect(companyFor(settings, { isolatedSettings: iso }).coordinator).toEqual({
+      name: 'Sovann Meas', role: { en: 'Mission Director', kh: 'នាយកបេសកកម្ម' }, photo: '/api/uploads/s.png', phone: '012 111 222', telegram: 'sovann', bio: { en: 'Leads every trip.' },
+    });
+    expect(companyFor(settings, { isolatedSettings: { ...iso, coordinatorTelegram: 'https://t.me/sovann_kh' } }).coordinator?.telegram).toBe('sovann_kh');
+    expect(companyFor(settings, { isolatedSettings: { ...iso, contactHidden: ['coordinator'] } }).coordinator).toBeUndefined();
+    expect(companyFor(settings, { isolatedSettings: { coordinatorRole: 'No name' } }).coordinator).toBeUndefined();
+  });
+});

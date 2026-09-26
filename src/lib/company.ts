@@ -19,9 +19,21 @@ export interface CompanyInfo {
   website: boolean;
   /** The page's footer note, EN/KH. */
   note?: { en: string; kh?: string };
+  /** The page's trip / event coordinator, when a name is set and not hidden. */
+  coordinator?: Coordinator;
 }
 
-export const CONTACT_LINES: ContactLine[] = ['phone', 'telegram', 'whatsapp', 'email', 'address', 'website'];
+export interface Coordinator {
+  name: string;
+  role?: { en: string; kh?: string };
+  photo?: string;
+  phone?: string;
+  /** Without the @. */
+  telegram?: string;
+  bio?: { en: string; kh?: string };
+}
+
+export const CONTACT_LINES: ContactLine[] = ['coordinator', 'phone', 'telegram', 'whatsapp', 'email', 'address', 'website'];
 
 const bi = (v: unknown): { en: string; kh?: string } | undefined => {
   if (!v || typeof v !== 'object') return undefined;
@@ -67,5 +79,21 @@ export function companyFor(settings: Partial<SystemSettings> | undefined, page?:
     address: show('address', clean(p.address) || clean(s.address)),
     website: !hidden.has('website'),
     note: bi(p.footerNote),
+    coordinator: hidden.has('coordinator') ? undefined : coordinatorOf(p),
+  };
+}
+
+function coordinatorOf(p: IsolatedPageSettings): Coordinator | undefined {
+  const name = clean(p.coordinatorName, 120);
+  if (!name) return undefined;
+  const roleEn = clean(p.coordinatorRole, 120);
+  const roleKh = clean(p.coordinatorRoleKh, 120);
+  return {
+    name,
+    role: roleEn || roleKh ? { en: roleEn || roleKh || '', ...(roleKh ? { kh: roleKh } : {}) } : undefined,
+    photo: safeLogo(p.coordinatorAvatar),
+    phone: clean(p.coordinatorPhone, 60),
+    telegram: clean(p.coordinatorTelegram, 60)?.replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '') || undefined,
+    bio: bi(p.coordinatorBio),
   };
 }

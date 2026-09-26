@@ -25,14 +25,14 @@ interface PageProps {
 
 const UI = {
   en: {
-    print: 'Print or save as PDF', back: 'Back to the page', updated: 'Last updated', printed: 'Printed', scan: 'Scan to register or see the latest update',
+    print: 'Print or save as PDF', back: 'Back to the page', updated: 'Last updated', printed: 'Printed', scan: 'Scan to register or see the latest update', coordinator: 'Your coordinator',
     contact: 'Contact', agenda: 'Agenda', full: 'Entire page', photos: 'Photos', on: 'On', off: 'Off', page: 'Page',
     smartTitle: 'Smart agenda', leftOut: 'Left out (see "Entire page")',
     nature: { trip: 'a trip with a day-by-day programme', event: 'an event with a deadline or limited seats', product: 'a product or service' },
     picks: 'This page reads as {nature}. The agenda prints:', fullNote: 'Every section of the page, in the page\'s order, with photos.', moreQ: '+{n} more questions on the page',
   },
   kh: {
-    print: 'បោះពុម្ព ឬរក្សាទុកជា PDF', back: 'ត្រឡប់ទៅទំព័រ', updated: 'កែប្រែចុងក្រោយ', printed: 'បោះពុម្ពនៅ', scan: 'ស្កេនដើម្បីចុះឈ្មោះ ឬមើលព័ត៌មានថ្មីបំផុត',
+    print: 'បោះពុម្ព ឬរក្សាទុកជា PDF', back: 'ត្រឡប់ទៅទំព័រ', updated: 'កែប្រែចុងក្រោយ', printed: 'បោះពុម្ពនៅ', scan: 'ស្កេនដើម្បីចុះឈ្មោះ ឬមើលព័ត៌មានថ្មីបំផុត', coordinator: 'អ្នកសម្របសម្រួលរបស់អ្នក',
     contact: 'ទំនាក់ទំនង', agenda: 'កម្មវិធី', full: 'ទំព័រទាំងមូល', photos: 'រូបភាព', on: 'បើក', off: 'បិទ', page: 'ទំព័រ',
     smartTitle: 'កម្មវិធីឆ្លាតវៃ', leftOut: 'មិនបានបញ្ចូល (មើល "ទំព័រទាំងមូល")',
     nature: { trip: 'ដំណើរមានកម្មវិធីប្រចាំថ្ងៃ', event: 'ព្រឹត្តិការណ៍មានថ្ងៃផុតកំណត់ ឬកៅអីកំណត់', product: 'ផលិតផល ឬសេវាកម្ម' },
@@ -300,14 +300,38 @@ export default async function PrintPage({ params, searchParams }: PageProps) {
     return `/${page.slug}/print?${q}`;
   };
 
+  const coord = company.coordinator;
+  const coordRole = coord?.role ? pick(coord.role, lang) : '';
+  const coordBio = coord?.bio ? pick(coord.bio, lang) : '';
+  const coordReach = coord ? [coord.phone, coord.telegram ? `Telegram @${coord.telegram}` : ''].filter(Boolean).join(' · ') : '';
+  const coordinatorCard = coord && (
+    <div className="pp-coord">
+      {coord.photo ? (
+        // eslint-disable-next-line @next/next/no-img-element -- uploaded photos may live on another host
+        <img className="pp-coord__photo" src={coord.photo} alt="" />
+      ) : (
+        <span className="pp-coord__photo pp-coord__initials" aria-hidden="true">{coord.name.split(/\s+/).filter((w) => /\p{L}/u.test(w[0] || '')).map((w) => w[0]).slice(-2).join('').toUpperCase()}</span>
+      )}
+      <div className="pp-coord__body">
+        <span className="pp-coord__label">{ui.coordinator}</span>
+        <strong>{coord.name}</strong>
+        {coordRole && <span>{coordRole}</span>}
+        {coordReach && <span className="pp-coord__reach">{coordReach}</span>}
+        {coordBio && <span className="pp-coord__bio">{coordBio}</span>}
+      </div>
+    </div>
+  );
   const contactBlock = (
     <div className="pp-contact">
+      <div className="pp-contact__main">
+      {coordinatorCard}
       <div className="pp-contact__lines">
         <strong>{company.name}</strong>
         {contacts.length > 0 && <span>{contacts.join(' · ')}</span>}
         {company.address && <span>{company.address}</span>}
         {footerNote && <span>{footerNote}</span>}
         {company.website && <span className="pp-link">{pageUrl}</span>}
+      </div>
       </div>
       <Qr url={pageUrl} caption={ui.scan} />
     </div>

@@ -80,6 +80,13 @@ const brandOf = (p: LandingPage) => {
     footerNote: (s.footerNote || { en: '' }) as Bi,
     printClosingTitle: (s.printClosingTitle || { en: '' }) as Bi,
     printClosingText: (s.printClosingText || { en: '' }) as Bi,
+    coordinatorName: s.coordinatorName || '',
+    coordinatorRole: s.coordinatorRole || '',
+    coordinatorRoleKh: s.coordinatorRoleKh || '',
+    coordinatorAvatar: s.coordinatorAvatar || '',
+    coordinatorPhone: s.coordinatorPhone || '',
+    coordinatorTelegram: s.coordinatorTelegram || '',
+    coordinatorBio: (s.coordinatorBio || { en: '' }) as Bi,
   };
 };
 const biOrUndefined = (b: Bi) => {
@@ -102,6 +109,13 @@ const brandToSettings = (b: PageBrand) => ({
   footerNote: biOrUndefined(b.footerNote),
   printClosingTitle: biOrUndefined(b.printClosingTitle),
   printClosingText: biOrUndefined(b.printClosingText),
+  coordinatorName: b.coordinatorName.trim() || undefined,
+  coordinatorRole: b.coordinatorRole.trim() || undefined,
+  coordinatorRoleKh: b.coordinatorRoleKh.trim() || undefined,
+  coordinatorAvatar: b.coordinatorAvatar.trim() || undefined,
+  coordinatorPhone: b.coordinatorPhone.trim() || undefined,
+  coordinatorTelegram: b.coordinatorTelegram.trim().replace(/^@/, '') || undefined,
+  coordinatorBio: biOrUndefined(b.coordinatorBio),
 });
 
 type Device = 'phone' | 'desktop';
@@ -907,6 +921,25 @@ export default function BuilderEditorClient({ initialPage, initialDoc, companySe
                 </div>
               </div>
             ))}
+            <div className="pt-2 border-t border-slate-200 dark:border-emerald-900/50 space-y-2" data-coordinator="">
+              <label className={LABEL}>{t('isolated.coordinator.title')}</label>
+              <div className="flex items-start gap-2">
+                <div className="w-20 shrink-0">
+                  <ImageField label="" value={meta.brand.coordinatorAvatar} onChange={(url) => setBrand({ coordinatorAvatar: url })} maxEdge={512} preview="square" compact />
+                </div>
+                <div className="flex-1 min-w-0 space-y-2">
+                  <input className={INPUT} data-brand-field="coordinatorName" placeholder={t('isolated.coordinator.name')} value={meta.brand.coordinatorName} onChange={(e) => setBrand({ coordinatorName: e.target.value })} />
+                  <input className={INPUT} placeholder={t('isolated.coordinator.role')} value={meta.brand.coordinatorRole} onChange={(e) => setBrand({ coordinatorRole: e.target.value })} />
+                  <input className={INPUT} placeholder={t('isolated.coordinator.roleKh')} value={meta.brand.coordinatorRoleKh} onChange={(e) => setBrand({ coordinatorRoleKh: e.target.value })} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <input className={INPUT} data-brand-field="coordinatorPhone" placeholder={t('isolated.coordinator.phone')} value={meta.brand.coordinatorPhone} onChange={(e) => setBrand({ coordinatorPhone: e.target.value })} />
+                <input className={INPUT} data-brand-field="coordinatorTelegram" placeholder={t('isolated.coordinator.telegram')} value={meta.brand.coordinatorTelegram} onChange={(e) => setBrand({ coordinatorTelegram: e.target.value.replace(/^@/, '') })} />
+              </div>
+              <BiInput label={t('isolated.coordinator.bio')} value={meta.brand.coordinatorBio} onChange={(v) => setBrand({ coordinatorBio: v })} multiline />
+              <p className={HINT}>{t('builder.contactInfo.coordinatorHint')}</p>
+            </div>
             <div>
               <label className={LABEL}>{t('builder.contactInfo.show')}</label>
               <div className="flex flex-wrap gap-1" data-contact-lines="">

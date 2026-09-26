@@ -157,6 +157,16 @@
 .pp-callout p { margin: 1.5mm 0 0; color: #CBD5E1; }
 .pp-contact { margin-top: 4mm; display: flex; gap: 6mm; align-items: center; justify-content: space-between; }
 .pp-contact__lines { display: grid; gap: 1mm; font-size: 9.5pt; }
+.pp-contact__main { display: grid; gap: 4mm; min-width: 0; }
+.pp-coord { display: flex; gap: 4mm; align-items: center; padding: 3mm 4mm; border-radius: 3mm; background: var(--pp-tint); border: 1px solid color-mix(in srgb, var(--pp-accent) 35%, #fff); break-inside: avoid; }
+.pp-coord__photo { flex: none; width: 18mm; height: 18mm; border-radius: 9999px; object-fit: cover; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(15, 23, 42, 0.15); }
+.pp-coord__initials { display: inline-flex; align-items: center; justify-content: center; background: var(--pp-accent); color: #0F172A; font-weight: 800; font-size: 13pt; }
+.pp-coord__body { display: grid; gap: 0.6mm; font-size: 9.5pt; min-width: 0; }
+.pp-coord__body > span { color: #334155; }
+.pp-coord__body .pp-coord__label { font-size: 7.5pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--pp-deep); }
+.pp-coord__body strong { font-size: 12pt; color: var(--pp-ink); }
+.pp-coord__body .pp-coord__reach { font-weight: 700; color: var(--pp-ink); }
+.pp-coord__body .pp-coord__bio { color: #475569; font-size: 9pt; }
 .pp-contact__lines strong { color: var(--pp-accent); font-size: 11pt; }
 .pp-contact .pp-link { color: #94A3B8; }
 .pp-contact .pp-qr { width: 30mm; border: 0; }

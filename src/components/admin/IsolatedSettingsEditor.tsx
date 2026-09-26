@@ -247,6 +247,31 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
                 maxEdge={512}
               />
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">{t('isolated.coordinator.roleKh')}</label>
+                <input type="text" value={settings.coordinatorRoleKh || ''} onChange={e => updateSetting('coordinatorRoleKh', e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs" />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">{t('isolated.coordinator.phone')}</label>
+                <input type="text" value={settings.coordinatorPhone || ''} onChange={e => updateSetting('coordinatorPhone', e.target.value)} placeholder="012 345 678" className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs" />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">{t('isolated.coordinator.telegram')}</label>
+                <input type="text" value={settings.coordinatorTelegram || ''} onChange={e => updateSetting('coordinatorTelegram', e.target.value.replace(/^@/, ''))} placeholder="username" className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">{t('isolated.coordinator.bio')} (EN)</label>
+                <textarea value={settings.coordinatorBio?.en || ''} onChange={e => updateSetting('coordinatorBio', { ...(settings.coordinatorBio || { en: '' }), en: e.target.value })} rows={2} className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs" />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">{t('isolated.coordinator.bio')} (ខ្មែរ)</label>
+                <textarea value={settings.coordinatorBio?.kh || ''} onChange={e => updateSetting('coordinatorBio', { en: settings.coordinatorBio?.en || '', kh: e.target.value })} rows={2} className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-emerald-900/60 bg-white dark:bg-[#040C07] text-slate-900 dark:text-white text-xs" />
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-500 dark:text-gray-400">{t('isolated.coordinator.where')}</p>
           </div>
         </div>
       )}
