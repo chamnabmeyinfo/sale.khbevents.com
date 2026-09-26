@@ -83,7 +83,8 @@ function serviceClient(): SupabaseClient | null {
 async function ensureBucket(supabase: SupabaseClient): Promise<void> {
   const { data } = await supabase.storage.getBucket(BACKUP_BUCKET);
   if (data) return;
-  const { error } = await supabase.storage.createBucket(BACKUP_BUCKET, { public: false, fileSizeLimit: 200 * 1024 * 1024 });
+  // No file-size limit of our own: a limit above the project's plan makes the call fail.
+  const { error } = await supabase.storage.createBucket(BACKUP_BUCKET, { public: false });
   if (error && !/already exists/i.test(error.message)) throw new Error(`Could not create the backups bucket: ${error.message}`);
 }
 

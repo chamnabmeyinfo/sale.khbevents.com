@@ -63,6 +63,7 @@ Nothing that exists now is ever deleted by a restore. A "before restore" snapsho
 ## Limits and gotchas
 
 - The backups need `SUPABASE_SERVICE_ROLE_KEY` on the server (the anon key cannot write to storage). Without it the tab shows an error and nothing is backed up.
+- A snapshot file must fit the storage plan's upload limit (50 MB on the free plan); the whole database is about 150 KB at the time of writing.
 - Uploaded photos and videos live in the public storage bucket and are not part of a snapshot; a snapshot keeps the links to them.
 - Supabase's own database backups (Supabase dashboard → Database → Backups) are a second, independent safety net.
 - Restoring **Settings** with Overwrite also puts back the admin password hash and the bot token as they were at that time.
