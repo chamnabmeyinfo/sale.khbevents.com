@@ -26,7 +26,7 @@ import type {
 } from '@/lib/builder';
 import { parseVideoSource } from '@/lib/video-embed';
 import { DEFAULT_LOGO, type CompanyInfo } from '@/lib/company';
-import { countdown, ctaOpensTelegram, discountPercent, effectiveOffer, formatPrice, offerCtaHref, pick, safeLink, stockTakenPercent } from '@/lib/builder';
+import { countdown, ctaOpensTelegram, discountPercent, effectiveOffer, formatDay, formatPrice, offerCtaHref, pick, safeLink, stockTakenPercent } from '@/lib/builder';
 
 /**
  * Renders builder components. The same code draws the editor canvas and the
@@ -373,9 +373,7 @@ function Terms({ block, ctx }: { block: TermsBlock; ctx: RenderContext }) {
   const { lang } = ctx;
   const t = UI[lang];
   const items = block.items.filter((i) => pick(i.title, lang));
-  const date = block.updated
-    ? new Date(`${block.updated}T12:00:00Z`).toLocaleDateString(lang === 'kh' ? 'km-KH' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
-    : '';
+  const date = block.updated ? formatDay(block.updated, lang) : '';
   return (
     <section id={`terms-${block.id}`} className={sectionClass(block)} data-anim={block.style.animation || 'rise'}>
       <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />

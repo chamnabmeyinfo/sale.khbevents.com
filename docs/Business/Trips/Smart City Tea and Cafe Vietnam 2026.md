@@ -3,7 +3,7 @@ type: trip
 status: on-sale
 landing_page: /smart-city-tea-cafe
 tags: [trip, vietnam, business-trip]
-updated: 2026-09-25
+updated: 2026-09-26
 price_usd: 550
 departure: 2026-10-08
 return: 2026-10-11
@@ -181,7 +181,7 @@ Routing lives in `src/app/[slug]/page.tsx`, `src/app/[slug]/app/page.tsx` and `s
 ## Where the content lives
 
 - Default English and Khmer copy: `src/components/landing/smart-city-content.ts`
-- Content pack (headline, sections, FAQ, form, Khmer): `content/pages/smart-city-tea-cafe.json`. See [[Content Packs]].
+- Content pack: `content/pages/smart-city-tea-cafe.json`. Since 2026-09-26 it holds the whole page as the owner had it (restored from their saved copy); after that deploy the builder is the source. See [[Content Packs]].
 - Live numbers: Admin → Landing Pages CMS. See [[Landing Pages CMS]].
 - `src/lib/smart-city-content.json` is an older copy file. No code uses it, and it still has an old early-bird price. Ignore it.
 
@@ -193,7 +193,7 @@ Routing lives in `src/app/[slug]/page.tsx`, `src/app/[slug]/app/page.tsx` and `s
 ## To confirm
 
 - [ ] Should the old $499 price be removed from the app view code? (See the warning under "Page variants".)
-- [ ] Single-room supplement amount.
+- [x] Single-room supplement: +$25 per night (from the owner's terms on the page, 2026-09-26).
 - [ ] Deposit or payment schedule, and the payment deadline before departure.
 - [ ] Current live seats taken and deadlines (check the admin).
 - [ ] Are there real testimonials or outcome photos from past delegations? The owner will provide them; until then the section stays hidden.

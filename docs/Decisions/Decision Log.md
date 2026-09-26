@@ -1,7 +1,7 @@
 ---
 type: decision-log
 tags: [decision, log]
-updated: 2026-09-24
+updated: 2026-09-26
 source:
   - git log (commits befb78b to 6d1e831)
   - vercel.json
@@ -25,6 +25,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 **Who decides:** "Owner" means the business owner decided it. "Claude with owner approval" means Claude proposed it during a working session and the owner accepted the result.
 
 ---
+
+## 2026-09-26 — Restore the Vietnam page from the owner's saved HTML, as a one-time content pack
+
+- **Decision:** The builder document was taken from the page data inside the owner's Chrome-saved copy of the live page and shipped as the Vietnam content pack, including the owner's own seats and deadlines from that copy. The pack applies once (its hash is remembered), and the page as it is now is kept as the pack backup.
+- **Why:** The saved copy is the only exact record of the owner's photos and text after a code update overwrote them. Carrying the owner's numbers is the one exception to "packs never touch live numbers": they are the owner's values, not new ones. The lead form and final call to action were added because the public page needs a way to register.
+- **Who decided:** Owner asked; Claude with owner approval on the additions.
+- **Affects:** [[Content Packs]], [[Smart City Tea and Cafe Vietnam 2026]], [[Page Builder]].
 
 ## 2026-09-26 — Whole-system backups before every deploy, daily and before deletions, with a data-loss check
 

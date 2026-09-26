@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { normalizeBuilderDoc, type BuilderDoc } from '../builder';
+import { normalizeBuilderDoc, pick, type BuilderDoc } from '../builder';
 import { buildPrintPlan, classifyNature, parseDay, printDate } from '../print-plan';
 import { qrPath } from '../qr';
 import type { LandingPage } from '../types';
@@ -61,7 +61,9 @@ describe('print plan', () => {
   it('prints in Khmer', () => {
     const p = plan(vietnam, 'agenda', 'kh');
     expect(p.facts[0].label).toBe('តម្លៃ');
-    expect(p.title).toBe(pages.find((x) => x.slug === 'smart-city-tea-cafe')!.translations?.kh?.heroHeadline);
+    // The cover title is the builder hero's Khmer headline (the owner's copy).
+    const hero = vietnam.blocks.find((b) => b.type === 'hero');
+    expect(p.title).toBe(hero && hero.type === 'hero' ? pick(hero.headline, 'kh') : '');
   });
 
   it('dates are Cambodia time', () => {

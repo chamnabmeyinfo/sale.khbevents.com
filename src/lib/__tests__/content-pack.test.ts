@@ -85,36 +85,40 @@ describe('suggested feature images', () => {
   });
 });
 
-describe('pack: replace builder sections by id', () => {
+describe('pack: the Vietnam page restored from the owner\'s saved copy', () => {
   const live = JSON.parse(readFileSync(join(process.cwd(), 'data/db.json'), 'utf8')).pages
     .find((p: LandingPage) => p.slug === 'smart-city-tea-cafe') as LandingPage;
   const pack = JSON.parse(readFileSync(join(process.cwd(), 'content/pages/smart-city-tea-cafe.json'), 'utf8'));
 
-  it('the Vietnam pack shows the nine included items and the four not included from the FAQ', () => {
+  it('carries the owner\'s sections, photos and offer, plus the lead form and final call to action', () => {
+    const merged = mergeContentPack({ ...structuredClone(live), builder: { ...live.builder!, blocks: [] } }, pack);
+    const ids = merged.builder!.blocks.map((b) => b.id);
+    expect(ids).toEqual(['cv-hero', 'cv-values', 'cv-problems', 'cv-audiences', 'cv-included', 'cv-itinerary', 'cv-gallery', 'cv-offer', 'cv-guarantee', 'cv-steps', 'cv-form', 'cv-faq', 'b-muh2ouop-sox0t', 'b-muh3nvax-0x2ot', 'b-muhup9e4-g3ywe', 'cv-final']);
+    expect(new Set(JSON.stringify(merged.builder).match(/https:\/\/[^"]+\.(?:webp|jpg|jpeg|png)/g)).size).toBe(23);
+    expect(merged.builder!.offer.stockLeft).toBe(16);
+    expect(merged.builder!.defaultLang).toBe('kh');
+    const terms = merged.builder!.blocks.find((b) => b.type === 'terms');
+    expect(terms && terms.type === 'terms' && terms.items).toHaveLength(5);
+  });
+
+  it('shows the nine included items under the owner\'s title, and the not-included lines from the FAQ and Terms', () => {
     const merged = mergeContentPack(live, pack);
     const block = merged.builder!.blocks.find((b) => b.id === 'cv-included');
     expect(block?.type).toBe('inclusions');
     if (block?.type !== 'inclusions') return;
+    expect(block.title.en).toBe('9 things include in this package');
     expect(block.included).toHaveLength(9);
     expect(block.excluded.map((x) => x.en)).toEqual([
       'Lunches and dinners outside the listed programme (the Halong Bay cruise lunch is included).',
       'A Vietnam SIM card.',
       'Travel insurance.',
       'Personal shopping.',
+      'Single room: +$25 per night (the price is twin or double sharing).',
     ]);
     expect(block.excluded.every((x) => x.kh)).toBe(true);
-  });
-
-  it('changes only that section: order, other sections and the offer stay the admin\'s', () => {
-    const owner = structuredClone(live);
-    owner.builder!.offer.deadline = '2026-12-01T00:00:00.000Z';
-    owner.builder!.blocks = [...owner.builder!.blocks].reverse();
-    const merged = mergeContentPack(owner, pack);
-    expect(merged.builder!.offer.deadline).toBe('2026-12-01T00:00:00.000Z');
-    expect(merged.builder!.blocks.map((b) => b.id)).toEqual(owner.builder!.blocks.map((b) => b.id));
-    const others = (p: LandingPage) => JSON.stringify(p.builder!.blocks.filter((b) => b.id !== 'cv-included'));
-    expect(others(merged)).toBe(others(owner));
-    expect(merged.title).toBe(owner.title);
+    // The page record itself (title, settings, counters) is not touched.
+    expect(merged.title).toBe(live.title);
+    expect(merged.isolatedSettings).toEqual(live.isolatedSettings);
   });
 
   it('skips ids that are not on the page and pages without a builder', () => {

@@ -1,7 +1,7 @@
 ---
 type: tasks
 tags: [tasks, index]
-updated: 2026-09-25
+updated: 2026-09-26
 source:
   - supabase/migrations/20260923_lock_down_rls.sql
   - src/lib/round-robin.ts
@@ -18,10 +18,10 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 
 ## Owner
 
-### Restore the Vietnam page (2026-09-26)
+### Vietnam page restored (2026-09-26)
 
-- [ ] Open the page builder for the Vietnam page → **Versions** → the entry **"Before the automatic content update"** (26 Sept, about 12:26) → **Load into editor** → check photos and text → **Save**. That copy is from before the "Included & not included" change, so re-add that section afterwards if you want it. → [[Page Builder]] #owner
-- [ ] If edits made after 12:26 are still missing, check Supabase → Database → Backups for a copy of the `landing_pages` table from before 14:11 (Phnom Penh time) on 26 Sept, or ask Claude to help restore from it. #owner
+- [x] Restore the Vietnam page from the owner's saved copy of the live page (2026-09-26). The page as it was before the automatic update was applied as a content pack; photos, text, terms and seats are back. → [[Smart City Tea and Cafe Vietnam 2026]]
+- [ ] After this deploy, open `/smart-city-tea-cafe` and check: all photos load (23 uploaded pictures; a missing one means the file is gone from storage and needs re-uploading), the lead form and the final call to action are back, and the "Why people choose this" and second hero sections sit before the terms as they did. Then Save once in the builder so the copy is also in Versions. → [[Page Builder]] #owner
 
 ### Backups (new, 2026-09-26)
 
@@ -53,7 +53,7 @@ Suggested order: lock the database first, then change the token and the password
 - [ ] Send real testimonials and outcome photos when they exist. Until then the testimonials stay hidden; they were placeholders. → [[Smart City Tea and Cafe Vietnam 2026]], [[Image Uploads]] #owner
 - [ ] Choose the **Remember a visitor for** period in Admin → Staff Round Robin → Advanced Routing Engine Rules & Fallbacks. Choices: Off, 1, 2, 3 or 6 months. The default in the repo is 1 month. → [[Round Robin]] #owner
 - [ ] Terms & Conditions (new builder component): write the real terms (payment, cancellation, refunds, changes, travel documents), have them checked, then add them to each page and set **Last updated**. Optionally tick **Ask visitors to agree** on the lead form. → [[Page Builder]] #owner
-- [ ] Add an **Included & not included** section to each trip page with the real items (for example flights, hotel, meals, visa, insurance). The starter items are placeholders. Vietnam: done (2026-09-26); check it on the live page, and add the single-room supplement to "Not included" if you want it listed. Korea: still to do. → [[Page Builder]] #owner
+- [ ] Add an **Included & not included** section to each trip page with the real items (for example flights, hotel, meals, visa, insurance). The starter items are placeholders. Vietnam: done (2026-09-26), with the single-room supplement listed under "Not included". Korea: still to do. → [[Page Builder]] #owner
 - [ ] Upload the company logo in Settings → Company Profile & Contact (transparent PNG). → [[Admin and Security]] #owner
 - [ ] Correct the contact details. In Settings → Company, the Telegram username is the routing bot, and the phone and address may still be the form's example values. On the Vietnam page (builder → Page settings → Brand & contact), the phone and WhatsApp look like old sample numbers. Fix them, or hide lines per page with **Show on this page**. → [[Page Builder]], [[Print Agenda]] #owner
 - [ ] Check each builder page's **Brand & contact** (page settings). The Korea page already had its own phone number and its Telegram username is set to a bot, `@khb_sale_admin_bot`. If you add a Contact & company section, visitors will see that handle; change it to the sales account if that is not what you want. → [[Page Builder]] #owner

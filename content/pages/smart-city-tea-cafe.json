@@ -1,93 +1,992 @@
 {
   "slug": "smart-city-tea-cafe",
   "convertToBuilder": true,
-  "replaceBuilderBlocks": [
-    {
-      "id": "cv-included",
-      "type": "inclusions",
-      "variant": "columns",
-      "style": {
-        "theme": "light",
-        "align": "left",
-        "spacing": "normal",
-        "animation": "rise"
+  "builder": {
+    "version": 1,
+    "defaultLang": "kh",
+    "offer": {
+      "name": {
+        "en": "Smart City, Tea & Cafe Business Trip to Vietnam 2026",
+        "kh": "ដំណើរអាជីវកម្ម Smart City, Tea & Cafe ទៅវៀតណាម ២០២៦"
       },
-      "title": {
-        "en": "One price. Nine things handled.",
-        "kh": "តម្លៃតែមួយ។ រៀបចំជូន ៩ យ៉ាង។"
+      "price": 550,
+      "compareAtPrice": null,
+      "currency": "USD",
+      "priceNote": {
+        "en": "per person",
+        "kh": "ក្នុងម្នាក់"
       },
-      "sub": {
-        "en": "Everything below is in your seat price. Book each piece yourself and the same trip costs more money and weeks of your time.",
-        "kh": "អ្វីៗខាងក្រោមរួមក្នុងតម្លៃកៅអីរបស់លោកអ្នក។ បើកក់ដោយខ្លួនឯងម្តងមួយៗ ដំណើរដូចគ្នាអស់ប្រាក់ច្រើនជាង និងពេលវេលារាប់សប្តាហ៍។"
+      "deadline": "2026-09-20T16:59:59.000Z",
+      "deadlineLabel": {
+        "en": "Registration closes in",
+        "kh": "បិទការចុះឈ្មោះក្នុងរយៈពេល"
       },
-      "includedTitle": {
-        "en": "Included in your seat",
-        "kh": "រួមក្នុងតម្លៃកៅអី"
+      "earlyPrice": null,
+      "earlyUntil": "2026-09-10T14:31:00.000Z",
+      "stockTotal": 30,
+      "stockLeft": 16,
+      "stockLabel": {
+        "en": "seats left",
+        "kh": "កៅអីនៅសល់"
       },
-      "included": [
-        {
-          "en": "Round-trip flights: Phnom Penh to Hanoi and back.",
-          "kh": "ជើងហោះហើរទៅមក: ភ្នំពេញ ទៅ ហាណូយ និងត្រឡប់មកវិញ។"
-        },
-        {
-          "en": "Hotel, 3 nights: Twin or double sharing in Hanoi and Halong Bay.",
-          "kh": "សណ្ឋាគារ ៣ យប់: បន្ទប់ Twin ឬ Double នៅហាណូយ និងហាឡុងបេ។"
-        },
-        {
-          "en": "Breakfast every day: Hotel buffet each morning.",
-          "kh": "អាហារពេលព្រឹករាល់ថ្ងៃ: ប៉ូហ្វេនៅសណ្ឋាគាររាល់ព្រឹក។"
-        },
-        {
-          "en": "Private air-conditioned coach: Every expo, factory, tour and transfer in Vietnam.",
-          "kh": "ឡានក្រុងឯកជនម៉ាស៊ីនត្រជាក់: រាល់ពិព័រណ៍ រោងចក្រ ទស្សនា និងការដឹកជញ្ជូននៅវៀតណាម។"
-        },
-        {
-          "en": "Trilingual business guide: Khmer, English and Vietnamese, beside you in every meeting.",
-          "kh": "មគ្គុទ្ទេសក៍អាជីវកម្ម ៣ ភាសា: ខ្មែរ អង់គ្លេស វៀតណាម នៅក្បែរលោកអ្នករាល់កិច្ចប្រជុំ។"
-        },
-        {
-          "en": "Expo passes: Registration for Cafe Show Vietnam and Smart City Expo.",
-          "kh": "សំបុត្រពិព័រណ៍: ចុះឈ្មោះ Cafe Show Vietnam និង Smart City Expo។"
-        },
-        {
-          "en": "Border and customs help: Arrival paperwork and immigration handled for you.",
-          "kh": "ជំនួយច្រកព្រំដែន និងគយ: ឯកសារចូលប្រទេស និងអន្តោប្រវេសន៍ រៀបចំជូន។"
-        },
-        {
-          "en": "Factory and wholesale visits: Coffee and tea processing plants and wholesale hubs.",
-          "kh": "ទស្សនារោងចក្រ និងទីផ្សារបោះដុំ: រោងចក្រកែច្នៃកាហ្វេ តែ និងមជ្ឈមណ្ឌលលក់ដុំ។"
-        },
-        {
-          "en": "Halong Bay cruise and Hanoi tour: UNESCO bay cruise with seafood lunch on board.",
-          "kh": "កប៉ាល់ហាឡុងបេ និងទស្សនាហាណូយ: ជិះកប៉ាល់ឈូងសមុទ្រ UNESCO ជាមួយអាហារថ្ងៃត្រង់លើកប៉ាល់។"
-        }
-      ],
-      "excludedTitle": {
-        "en": "Not included",
-        "kh": "មិនរួមបញ្ចូល"
-      },
-      "excluded": [
-        {
-          "en": "Lunches and dinners outside the listed programme (the Halong Bay cruise lunch is included).",
-          "kh": "អាហារថ្ងៃត្រង់ និងពេលល្ងាចក្រៅកម្មវិធី (អាហារលើកប៉ាល់ហាឡុងបេរួមបញ្ចូល)។"
-        },
-        {
-          "en": "A Vietnam SIM card.",
-          "kh": "SIM វៀតណាម។"
-        },
-        {
-          "en": "Travel insurance.",
-          "kh": "ធានារ៉ាប់រងដំណើរ។"
-        },
-        {
-          "en": "Personal shopping.",
-          "kh": "ការទិញឥវ៉ាន់ផ្ទាល់ខ្លួន។"
-        }
-      ],
-      "note": {
-        "en": "Total if arranged alone: $910+",
-        "kh": "សរុប បើរៀបចំដោយខ្លួនឯង: $910+"
+      "cta": {
+        "action": "telegram"
       }
-    }
-  ]
+    },
+    "brand": {
+      "accent": "#E5A93C",
+      "radius": "soft"
+    },
+    "blocks": [
+      {
+        "id": "cv-hero",
+        "style": {
+          "theme": "dark",
+          "align": "left",
+          "spacing": "normal",
+          "animation": "rise"
+        },
+        "type": "hero",
+        "variant": "fullbleed",
+        "badge": {
+          "en": "Cambodia's B2B delegation to Vietnam · 8–11 Oct · 11 seats l",
+          "kh": "ប្រតិភូ B2B ពីកម្ពុជាទៅវៀតណាម · 8–11 តុលា · នៅសល់ 11 កៅអី"
+        },
+        "headline": {
+          "en": "Smart City, Tea & Cafe Business Trip to Vietnam 2026",
+          "kh": "កម្មវិធីទស្សនកិច្ជពាណិជ្ចកម្មលើវិស័យ ទីក្រុងឆ្លាតវ៉ៃ តែ និង កាហ្វេ នៅប្រទេសវៀតណាម ឆ្នាំ២០២៦"
+        },
+        "sub": {
+          "en": "A 4-day B2B trip for Cambodian café, tea and retail-tech owners: two international expos, a factory visit and matched supplier meetings in Hanoi, with a multilingual guide beside you at every negotiation.",
+          "kh": "ដំណើរ B2B រយៃពេល ៤ ថ្ងៃ សម្រាប់ម្ចាស់ហាងកាហ្វេ តែ និងបច្ចេកវិទ្យាលក់រាយនៅកម្ពុជា។ ពិព័រណ៍អន្តរជាតិ ២ ទស្សនារោងចក្រ និងជួបអ្នកផ្គត់ផ្គង់ដែលផ្គូផ្គងជូន ដោយមានមគ្គុទ្ទេសក៍ ៣ ភាសានៅក្បែរលោកអ្នករាល់ការចរចា។"
+        },
+        "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muht5klz-df6e26e6-683e7ad134ad5.webp",
+        "ctaLabel": {
+          "en": "Chat with us on Telegram",
+          "kh": "ជជែកជាមួយយើងតាម Telegram"
+        },
+        "riskNote": {
+          "en": "No payment today · Seat held instantly · Coordinator replies within 15 minutes",
+          "kh": "មិនបង់ប្រាក់ថ្ងៃនេះ · កៅអីរក្សាទុកភ្លាម · អ្នកសម្របសម្រួលឆ្លើយក្នុង ១៥ នាទី"
+        }
+      },
+      {
+        "id": "cv-values",
+        "style": {
+          "theme": "light",
+          "align": "center",
+          "spacing": "normal",
+          "animation": "rise"
+        },
+        "type": "benefits",
+        "variant": "cards",
+        "title": {
+          "en": "What this trip buys your business",
+          "kh": "អ្វីដែលអ្នកនឹងទទួលបានពីកម្មវិធីនេះ"
+        },
+        "sub": {
+          "en": "Before you look at the price, look at what comes back with you. None of these can be bought from a screenshot or through a broker.",
+          "kh": "មុននឹងមើលតម្លៃ សូមមើលអ្វីដែលត្រឡប់មកជាមួយលោកអ្នក។ ទាំងនេះមិនអាចទិញបានពីរូបថត ឬតាមឈ្មួញកណ្តាលឡើយ។"
+        },
+        "items": [
+          {
+            "icon": "chart",
+            "title": {
+              "en": "Factory-direct pricing",
+              "kh": "តម្លៃផ្ទាល់ពីរោងចក្រ"
+            },
+            "text": {
+              "en": "Buy at the source and cut 25 to 35% off what brokers charge. One negotiated container order can pay for the whole trip.",
+              "kh": "ទិញពីប្រភពផ្ទាល់ កាត់បន្ថយ ២៥ ដល់ ៣៥% ពីតម្លៃឈ្មួញកណ្តាល។ ការចរចាកុងតឺន័រតែមួយ អាចសងថ្លៃដំណើរទាំងមូល។"
+            },
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhsuwxi-f378661d-nescafe-dolce-gusto-factory-feed-jpg.webp"
+          },
+          {
+            "icon": "shield",
+            "title": {
+              "en": "Trust built face to face",
+              "kh": "ទំនុកចិត្តពីការជួបផ្ទាល់"
+            },
+            "text": {
+              "en": "Walk the factory floor, see the QC lab and look your supplier in the eye before a single dollar is wired.",
+              "kh": "ដើរមើលរោងចក្រ មើលបន្ទប់ត្រួតពិនិត្យគុណភាព និងជួបអ្នកផ្គត់ផ្គង់ផ្ទាល់ មុនផ្ទេរប្រាក់មួយដុល្លារ។"
+            },
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhsvypj-6a569df1-oem-private-brand-instant-coffee-in-viet.webp"
+          },
+          {
+            "icon": "award",
+            "title": {
+              "en": "Exclusive rights for Cambodia",
+              "kh": "សិទ្ធិផ្តាច់មុខសម្រាប់ទីផ្សារកម្ពុជា"
+            },
+            "text": {
+              "en": "Sign distribution for Cambodia before another importer signs the same supplier.",
+              "kh": "ចុះកិច្ចសន្យាចែកចាយសម្រាប់កម្ពុជា មុនអ្នកនាំចូលផ្សេងចុះជាមួយអ្នកផ្គត់ផ្គង់ដូចគ្នា។"
+            },
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muht33nh-d8d56136-images-2.jpg"
+          },
+          {
+            "icon": "zap",
+            "title": {
+              "en": "Next year's products, this year",
+              "kh": "ផលិតផលឆ្នាំក្រោយ ឃើញឆ្នាំនេះ"
+            },
+            "text": {
+              "en": "Two international expos in one trip. See 2026 products, packaging and smart-retail tech before your competitors do.",
+              "kh": "ពិព័រណ៍អន្តរជាតិ ២ ក្នុងដំណើរតែមួយ។ ឃើញផលិតផល ការវេចខ្ចប់ និងបច្ចេកវិទ្យាលក់រាយ ២០២៦ មុនគូប្រកួត។"
+            },
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muht3q0i-5cdffea6-11-scaled.webp"
+          },
+          {
+            "icon": "chart",
+            "title": {
+              "en": "Business and leisure in one trip",
+              "kh": "អាជីវកម្ម និងកម្សាន្តក្នុងដំណើរតែមួយ"
+            },
+            "text": {
+              "en": "Two expo days and a factory visit, then Hanoi's Old Quarter and a Halong Bay cruise. You come home with deals and a rest.",
+              "kh": "ពិព័រណ៍ ២ ថ្ងៃ និងទស្សនារោងចក្រ បន្ទាប់មកទីក្រុងចាស់ហាណូយ និងកប៉ាល់ហាឡុងបេ។ លោកអ្នកត្រឡប់មកជាមួយកិច្ចព្រមព្រៀង និងការសម្រាក។"
+            },
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muht450u-0ac6d52d-images-1.jpg"
+          },
+          {
+            "icon": "chart",
+            "title": {
+              "en": "See your market from outside",
+              "kh": "មើលទីផ្សារលោកអ្នកពីខាងក្រៅ"
+            },
+            "text": {
+              "en": "Walking a foreign market shows you where Cambodia's café and retail scene is heading, and how to strengthen your business at home.",
+              "kh": "ការដើរមើលទីផ្សារបរទេស បង្ហាញលោកអ្នកថាវិស័យកាហ្វេ និងលក់រាយកម្ពុជាកំពុងទៅទិសណា និងរបៀបពង្រឹងអាជីវកម្មនៅផ្ទះ។"
+            },
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muht4ke8-7df87175-photo-2026-09-02-11-34-38.jpg"
+          }
+        ]
+      },
+      {
+        "id": "cv-problems",
+        "style": {
+          "theme": "dark",
+          "align": "left",
+          "spacing": "normal",
+          "animation": "rise"
+        },
+        "type": "benefits",
+        "variant": "rows",
+        "title": {
+          "en": "Why importers who source online pay up to 35% more",
+          "kh": "ហេតុអ្វីអ្នកនាំចូលដែលទិញតាមអនឡាញ បង់ថ្លៃជាងរហូតដល់ ៣៥%"
+        },
+        "sub": {
+          "en": "This trip fixes all three in four days: you walk the factory floor, negotiate face to face with a trilingual guide beside you, and lock factory-direct prices before you fly home.",
+          "kh": "ដំណើរនេះដោះស្រាយបញ្ហាទាំង ៣ ក្នុង ៤ ថ្ងៃ៖ លោកអ្នកដើរមើលរោងចក្រ ចរចាផ្ទាល់ដោយមានមគ្គុទ្ទេសក៍ ៣ ភាសានៅក្បែរ និងចាប់តម្លៃផ្ទាល់ពីរោងចក្រ មុនហោះត្រឡប់មកផ្ទះ។"
+        },
+        "items": [
+          {
+            "icon": "trend-down",
+            "title": {
+              "en": "Middleman markups",
+              "kh": "ថ្លៃឈ្មួញកណ្តាល"
+            },
+            "text": {
+              "en": "Brokers and resellers add 25 to 35% to every order before it reaches your warehouse.",
+              "kh": "ឈ្មួញកណ្តាល និងអ្នកលក់បន្ត បន្ថែម ២៥ ដល់ ៣៥% លើរាល់ការបញ្ជាទិញ មុនទំនិញមកដល់ឃ្លាំងលោកអ្នក។"
+            }
+          },
+          {
+            "icon": "chat",
+            "title": {
+              "en": "Language and trust barriers",
+              "kh": "ភាសា និងទំនុកចិត្ត"
+            },
+            "text": {
+              "en": "Without a shared language deals die in translation, and you cannot tell a real factory from a trader with a catalogue.",
+              "kh": "គ្មានភាសារួម កិច្ចព្រមព្រៀងបាត់បង់ក្នុងការបកប្រែ ហើយលោកអ្នកមិនអាចដឹងថាណាជារោងចក្រពិត ណាជាឈ្មួញកាន់កាតាឡុក។"
+            }
+          },
+          {
+            "icon": "search",
+            "title": {
+              "en": "Blind online sourcing",
+              "kh": "ទិញអនឡាញដោយមិនឃើញ"
+            },
+            "text": {
+              "en": "Ordering from photos and hoping. No factory floor, no QC lab, no face-to-face MOQ negotiation, no relationship.",
+              "kh": "បញ្ជាទិញតាមរូបថត រួចរង់ចាំសំណាង។ គ្មានរោងចក្រ គ្មានបន្ទប់ QC គ្មានការចរចា MOQ ផ្ទាល់ គ្មានទំនាក់ទំនង។"
+            }
+          }
+        ]
+      },
+      {
+        "id": "cv-audiences",
+        "style": {
+          "theme": "light",
+          "align": "center",
+          "spacing": "normal",
+          "animation": "rise"
+        },
+        "type": "benefits",
+        "variant": "cards",
+        "title": {
+          "en": "Who should be on this Biz Trip",
+          "kh": "នរណាខ្លះគួរចូលរួមកម្មវិធីទស្សនកិច្ចនេះ"
+        },
+        "sub": {
+          "en": "Built for owners and decision-makers who can sign a supplier deal on the spot. If you only want to sightsee, a tour company will serve you better.",
+          "kh": "កម្មវិធីត្រូវបានរៀបចំឡើង សម្រាប់ម្ចាស់អាជីវកម្ម និងអ្នកសម្រេចចិត្ត ដែលអាចចុះកិច្ចសន្យាជាមួយអ្នកផ្គត់ផ្គង់នៅនឹងកន្លែង។ បើលោកអ្នកគ្រាន់តែចង់ដើរកំសាន្ត លោកអ្នកអាចស្វែងរកក្រុមហ៊ុនទេសចរណ៍ណាផ្សេងល្អជាង។"
+        },
+        "items": [
+          {
+            "icon": "cpu",
+            "title": {
+              "en": "Smart city and tech importers",
+              "kh": "អ្នកនាំចូលផលិតផល Smart City និងបច្ចេកវិទ្យា"
+            },
+            "text": {
+              "en": "Source IoT, smart-home, smart-lighting and security equipment directly from certified manufacturers.",
+              "kh": "សម្ភារៈបច្ចេកវិទ្យាឆ្លាតវ៉ៃ  និងឧបករណ៍សុវត្ថិភាព ផ្ទាល់ពីរោងចក្រដែលមានវិញ្ញាបនបត្រ"
+            },
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhtabi0-283840f5-shutterstock-1420383206.webp"
+          },
+          {
+            "icon": "coffee",
+            "title": {
+              "en": "Cafe and tea brand owners",
+              "kh": "ម្ចាស់ម៉ាកកាហ្វេ និង តែ"
+            },
+            "text": {
+              "en": "Vietnamese tea and coffee beans, syrups, packaging, commercial espresso machines and brewing equipment at factory prices.",
+              "kh": "តែ និងកាហ្វេនៅវៀតណាម ស៊ីរ៉ូ ការវេចខ្ចប់ ម៉ាស៊ីនកាហ្វេពាណិជ្ជកម្ម និងឧបករណ៍ឆុង ក្នុងតម្លៃរោងចក្រ។"
+            },
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhtbn1q-78c4fa95-images-3.jpg"
+          },
+          {
+            "icon": "truck",
+            "title": {
+              "en": "Wholesalers and distributors",
+              "kh": "អ្នកលក់ដុំ និងអ្នកចែកចាយ"
+            },
+            "text": {
+              "en": "Exclusive distribution rights, factory-direct wholesale pricing and OEM/ODM partnerships.",
+              "kh": "សិទ្ធិចែកចាយផ្តាច់មុខ តម្លៃបោះដុំផ្ទាល់ពីរោងចក្រ និងភាពជាដៃគូ OEM/ODM។"
+            },
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhtdrin-af9a48e3-images-4.jpg"
+          },
+          {
+            "icon": "users",
+            "title": {
+              "en": "F&B entrepreneurs and investors",
+              "kh": "សហគ្រិន និងអ្នកវិនិយោគលើវិស័យ F&B"
+            },
+            "text": {
+              "en": "Vietnamese and international franchise brands, new beverage concepts and retail models worth bringing to Cambodia.",
+              "kh": "ម៉ាកហ្វ្រេនឆាយវៀតណាម និងអន្តរជាតិ គំនិតភេសជ្ជៃថ្មី និងម៉ូដែលលក់រាយដែលគួរនាំមកកម្ពុជា។"
+            },
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhtf3lw-5378f161-images-5.jpg"
+          },
+          {
+            "icon": "users",
+            "title": {
+              "en": "Anyone exploring IoT, coffee or tea businesses",
+              "kh": "អ្នកដែលស្វែងរកអាជីវកម្ម IoT កាហ្វេ ឬតែ"
+            },
+            "text": {
+              "en": "Looking for your next business idea in smart-city tech, coffee or tea? Four days inside the market beats four months of research.",
+              "kh": "កំពុងរកគំនិតអាជីវកម្មបន្ទាប់ក្នុងបច្ចេកវិទ្យា Smart City កាហ្វេ ឬតែ? បួនថ្ងៃក្នុងទីផ្សារ ល្អជាងបួនខែស្រាវជ្រាវ។"
+            },
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhtfp2s-c966063e-tea-brands-1.webp"
+          }
+        ]
+      },
+      {
+        "id": "cv-included",
+        "style": {
+          "theme": "light",
+          "align": "left",
+          "spacing": "normal",
+          "animation": "rise"
+        },
+        "type": "inclusions",
+        "variant": "columns",
+        "title": {
+          "en": "9 things include in this package",
+          "kh": "សេវាកម្មចំនួន៩ ត្រូវបានរួមបញ្ចូលក្នុងកញ្ចប់នេះ"
+        },
+        "sub": {
+          "en": "Everything below is in your seat price. Book each piece yourself and the same trip costs more money and weeks of your time.",
+          "kh": "អ្វីៗខាងក្រោមរួមក្នុងតម្លៃកៅអីរបស់លោកអ្នក។ បើកក់ដោយខ្លួនឯងម្តងមួយៗ ដំណើរដូចគ្នាអស់ប្រាក់ច្រើនជាង និងពេលវេលារាប់សប្តាហ៍។"
+        },
+        "includedTitle": {
+          "en": "Included in your seat",
+          "kh": "រួមក្នុងតម្លៃកៅអី"
+        },
+        "included": [
+          {
+            "en": "Round-trip flights: Phnom Penh to Hanoi and back.",
+            "kh": "ជើងហោះហើរទៅមក: ភ្នំពេញ ទៅ ហាណូយ និងត្រឡប់មកវិញ។"
+          },
+          {
+            "en": "Hotel, 3 nights: Twin or double sharing in Hanoi and Halong Bay.",
+            "kh": "សណ្ឋាគារ ៣ យប់: បន្ទប់ Twin ឬ Double នៅហាណូយ និងហាឡុងបេ។"
+          },
+          {
+            "en": "Breakfast every day: Hotel buffet each morning.",
+            "kh": "អាហារពេលព្រឹករាល់ថ្ងៃ: ប៉ូហ្វេនៅសណ្ឋាគាររាល់ព្រឹក។"
+          },
+          {
+            "en": "Private air-conditioned coach: Every expo, factory, tour and transfer in Vietnam.",
+            "kh": "ឡានក្រុងឯកជនម៉ាស៊ីនត្រជាក់: រាល់ពិព័រណ៍ រោងចក្រ ទស្សនា និងការដឹកជញ្ជូននៅវៀតណាម។"
+          },
+          {
+            "en": "Trilingual business guide: Khmer, English and Vietnamese, beside you in every meeting.",
+            "kh": "មគ្គុទ្ទេសក៍អាជីវកម្ម ៣ ភាសា: ខ្មែរ អង់គ្លេស វៀតណាម នៅក្បែរលោកអ្នករាល់កិច្ចប្រជុំ។"
+          },
+          {
+            "en": "Expo passes: Registration for Cafe Show Vietnam and Smart City Expo.",
+            "kh": "សំបុត្រពិព័រណ៍: ចុះឈ្មោះ Cafe Show Vietnam និង Smart City Expo។"
+          },
+          {
+            "en": "Border and customs help: Arrival paperwork and immigration handled for you.",
+            "kh": "ជំនួយច្រកព្រំដែន និងគយ: ឯកសារចូលប្រទេស និងអន្តោប្រវេសន៍ រៀបចំជូន។"
+          },
+          {
+            "en": "Factory and wholesale visits: Coffee and tea processing plants and wholesale hubs.",
+            "kh": "ទស្សនារោងចក្រ និងទីផ្សារបោះដុំ: រោងចក្រកែច្នៃកាហ្វេ តែ និងមជ្ឈមណ្ឌលលក់ដុំ។"
+          },
+          {
+            "en": "Halong Bay cruise and Hanoi tour: UNESCO bay cruise with seafood lunch on board.",
+            "kh": "កប៉ាល់ហាឡុងបេ និងទស្សនាហាណូយ: ជិះកប៉ាល់ឈូងសមុទ្រ UNESCO ជាមួយអាហារថ្ងៃត្រង់លើកប៉ាល់។"
+          }
+        ],
+        "excludedTitle": {
+          "en": "Not included",
+          "kh": "មិនរួមបញ្ចូល"
+        },
+        "excluded": [
+          {
+            "en": "Lunches and dinners outside the listed programme (the Halong Bay cruise lunch is included).",
+            "kh": "អាហារថ្ងៃត្រង់ និងពេលល្ងាចក្រៅកម្មវិធី (អាហារលើកប៉ាល់ហាឡុងបេរួមបញ្ចូល)។"
+          },
+          {
+            "en": "A Vietnam SIM card.",
+            "kh": "SIM វៀតណាម។"
+          },
+          {
+            "en": "Travel insurance.",
+            "kh": "ធានារ៉ាប់រងដំណើរ។"
+          },
+          {
+            "en": "Personal shopping.",
+            "kh": "ការទិញឥវ៉ាន់ផ្ទាល់ខ្លួន។"
+          },
+          {
+            "en": "Single room: +$25 per night (the price is twin or double sharing).",
+            "kh": "បន្ទប់តែម្នាក់៖ បន្ថែម $25 ក្នុងមួយយប់ (តម្លៃគឺបន្ទប់ពីរនាក់)។"
+          }
+        ],
+        "note": {
+          "en": "Total if arranged alone: $910+",
+          "kh": "សរុប បើរៀបចំដោយខ្លួនឯង: $910+"
+        }
+      },
+      {
+        "id": "cv-itinerary",
+        "style": {
+          "theme": "light",
+          "align": "left",
+          "spacing": "normal",
+          "animation": "rise"
+        },
+        "type": "steps",
+        "variant": "timeline",
+        "title": {
+          "en": "Four days, planned to the hour",
+          "kh": "បួនថ្ងៃ រៀបចំរហូតដល់ម៉ោង"
+        },
+        "items": [
+          {
+            "title": {
+              "en": "Day 1 · Oct 8, 2026 · Phnom Penh to Hanoi & Welcome Night",
+              "kh": "ថ្ងៃទី 1 · ៨ តុលា ២០២៦ · ភ្នំពេញ ទៅ ហាណូយ យប់ស្វាគមន៍"
+            },
+            "text": {
+              "en": "17:45 - 21:35  Flight from Phnom Penh to Hanoi (Noi Bai International Airport)\n22:30 - 23:00  Private bus transfer & Hotel Check-in in Hanoi\n23:00 - 24:00  Optional evening walk & explore Hanoi Night Life",
+              "kh": "17:45 - 21:35  ហោះហើរពីភ្នំពេញទៅហាណូយ (អាកាសយានដ្ឋាន Noi Bai)\n22:30 - 23:00  ឡានក្រុងឯកជនទៅសណ្ឋាគារ និង Check-in\n23:00 - 24:00  ដើរលេងពេលយប់នៅហាណូយ (ស្ម័គ្រចិត្ត)"
+            }
+          },
+          {
+            "title": {
+              "en": "Day 2 · Oct 9, 2026 · Cafe Show Expo & B2B Matchmaking",
+              "kh": "ថ្ងៃទី 2 · ៩ តុលា ២០២៦ · Cafe Show Vietnam និងជួបអ្នកផ្គត់ផ្គង់"
+            },
+            "text": {
+              "en": "08:00 - 09:00  Buffet breakfast at the hotel\n09:00 - 09:30  Transfer to Vietnam Exhibition Center by private coach\n10:00 - 12:00  Visit Cafe Show Vietnam Expo (Tea, Coffee, Machinery & Ingredients)\n12:00 - 13:00  Lunch break at the exhibition center\n13:00 - 16:00  Focused B2B Matchmaking & brand negotiations with suppliers\n16:00 - 17:00  Return to hotel and refresh\n18:00 - 22:00  Hanoi Old Quarter cultural walk, dining & famous attraction sites",
+              "kh": "08:00 - 09:00  អាហារពេលព្រឹកនៅសណ្ឋាគារ\n09:00 - 09:30  ឡានក្រុងទៅ Vietnam Exhibition Center\n10:00 - 12:00  Cafe Show Vietnam៖ តែ កាហ្វេ ម៉ាស៊ីន និងគ្រឿងផ្សំ\n12:00 - 13:00  អាហារថ្ងៃត្រង់នៅមជ្ឈមណ្ឌលពិព័រណ៍\n13:00 - 16:00  កិច្ចប្រជុំ B2B ដែលផ្គូផ្គង និងចរចាតម្លៃជាមួយអ្នកផ្គត់ផ្គង់\n16:00 - 17:00  ត្រឡប់ទៅសណ្ឋាគារ\n18:00 - 22:00  ដើរទីក្រុងចាស់ហាណូយ អាហារពេលល្ងាច និងទីតាំងល្បី"
+            }
+          },
+          {
+            "title": {
+              "en": "Day 3 · Oct 10, 2026 · Smart City Expo, Factory Visit & Journey to Halong Bay",
+              "kh": "ថ្ងៃទី 3 · ១០ តុលា ២០២៦ · Smart City Expo ទស្សនារោងចក្រ ទៅហាឡុងបេ"
+            },
+            "text": {
+              "en": "08:00 - 09:00  Breakfast at the hotel\n09:00 - 09:30  Coach departure to Vietnam Exhibition Center\n10:00 - 12:00  Explore Smart City Expo (IoT, Smart Lighting, Infrastructure & Tech)\n12:00 - 13:00  Lunch break at Exhibition Center\n13:00 - 15:30  On-site visit to wholesale coffee/tea roasting factory and showroom\n15:30 - 18:30  Scenic highway transfer to picturesque Halong Bay\n18:30 - 22:00  Hotel check-in & explore Halong Bay Night Market and coastal promenade",
+              "kh": "08:00 - 09:00  អាហារពេលព្រឹកនៅសណ្ឋាគារ\n09:00 - 09:30  ឡានក្រុងទៅ Vietnam Exhibition Center\n10:00 - 12:00  Smart City Expo៖ IoT ភ្លើងឆ្លាត ហេដ្ឋារចនាសម្ព័ន្ធ និងបច្ចេកវិទ្យា\n12:00 - 13:00  អាហារថ្ងៃត្រង់នៅមជ្ឈមណ្ឌលពិព័រណ៍\n13:00 - 15:30  ទស្សនារោងចក្រលីងកាហ្វេ តែ បោះដុំ និងបន្ទប់តាំងបង្ហាញ\n15:30 - 18:30  ធ្វើដំណើរតាមផ្លូវហាយវេទៅហាឡុងបេ\n18:30 - 22:00  Check-in សណ្ឋាគារ ផ្សារយប់ និងឆ្នេរហាឡុង"
+            }
+          },
+          {
+            "title": {
+              "en": "Day 4 · Oct 11, 2026 · UNESCO Halong Bay Cruise & Return to Phnom Penh",
+              "kh": "ថ្ងៃទី 4 · ១១ តុលា ២០២៦ · កប៉ាល់ហាឡុងបេ និងហោះត្រឡប់មកផ្ទះ"
+            },
+            "text": {
+              "en": "06:00 - 07:00  Breakfast at hotel and express check-out\n07:00 - 07:30  Transfer to Halong Bay International Tourist Harbour\n07:30 - 11:30  Deluxe Cruise along Halong Bay UNESCO World Heritage Site with fresh seafood lunch\n11:30 - 15:00  Private expressway transfer directly to Hanoi Noi Bai Airport\n15:00 - 17:00  Check-in and international customs clearance\n18:00 - 20:30  Flight back to Phnom Penh International Airport",
+              "kh": "06:00 - 07:00  អាហារពេលព្រឹក និង Check-out រហ័ស\n07:00 - 07:30  ទៅកំពង់ផែទេសចរណ៍អន្តរជាតិហាឡុងបេ\n07:30 - 11:30  ជិះកប៉ាល់ឈូងសមុទ្រ UNESCO ជាមួយអាហារថ្ងៃត្រង់សមុទ្រ\n11:30 - 15:00  ផ្លូវល្បឿនលឿនទៅអាកាសយានដ្ឋាន Noi Bai ហាណូយ\n15:00 - 17:00  Check-in និងអន្តោប្រវេសន៍\n18:00 - 20:30  ហោះហើរត្រឡប់មកភ្នំពេញ"
+            }
+          }
+        ]
+      },
+      {
+        "id": "cv-gallery",
+        "style": {
+          "theme": "dark",
+          "align": "center",
+          "spacing": "normal",
+          "animation": "rise"
+        },
+        "type": "gallery",
+        "variant": "carousel",
+        "title": {
+          "en": "Photos",
+          "kh": "រូបភាព"
+        },
+        "items": [
+          {
+            "image": "/photos/photo_2026-09-16_22-01-09 (4).jpg"
+          },
+          {
+            "image": "/photos/photo_2026-09-16_22-01-09 (6).jpg"
+          },
+          {
+            "image": "/photos/photo_2026-09-16_22-01-09 (2).jpg"
+          },
+          {
+            "image": "/photos/photo_2026-09-16_22-01-09 (11).jpg"
+          },
+          {
+            "image": "/photos/photo_2026-09-16_22-01-09 (9).jpg"
+          },
+          {
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhueeiw-8dfe58a1-191-1-ha-long-bay-cat-ba-archipelago-102.webp"
+          },
+          {
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhueew4-34723d90-6666768253-29ae60b48f-b.webp"
+          },
+          {
+            "image": "/photos/photo_2026-09-16_22-01-09 (7).jpg"
+          },
+          {
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhuefa9-9c325129-images-1.jpg"
+          },
+          {
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhuefhg-bb3bb45e-images-2.jpg"
+          },
+          {
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhughe0-8ce597a7-images-6.webp"
+          },
+          {
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhugiau-50fd1424-tea-brands-1.jpg"
+          },
+          {
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhugj62-bc76b47f-the-top-tea-region-in-vn.webp"
+          }
+        ]
+      },
+      {
+        "id": "cv-offer",
+        "style": {
+          "theme": "light",
+          "align": "center",
+          "spacing": "normal",
+          "animation": "rise"
+        },
+        "type": "offer",
+        "variant": "card",
+        "title": {
+          "en": "One clear price",
+          "kh": "តម្លៃច្បាស់តែមួយ"
+        },
+        "features": [
+          {
+            "en": "Round-trip flights Phnom Penh to Hanoi",
+            "kh": "ជើងហោះហើរទៅមក ភ្នំពេញ ហាណូយ"
+          },
+          {
+            "en": "Hotel, 3 nights, twin sharing",
+            "kh": "សណ្ឋាគារ ៣ យប់ បន្ទប់ Twin"
+          },
+          {
+            "en": "Passes to both international expos",
+            "kh": "សំបុត្រពិព័រណ៍អន្តរជាតិទាំង ២"
+          },
+          {
+            "en": "Factory and wholesale visits",
+            "kh": "ទស្សនារោងចក្រ និងទីផ្សារបោះដុំ"
+          },
+          {
+            "en": "Halong Bay cruise with lunch",
+            "kh": "កប៉ាល់ហាឡុងបេ ជាមួយអាហារថ្ងៃត្រង់"
+          },
+          {
+            "en": "Trilingual guide (Khmer / English / Vietnamese)",
+            "kh": "មគ្គុទ្ទេសក៍ ៣ ភាសា (ខ្មែរ / អង់គ្លេស / វៀតណាម)"
+          }
+        ],
+        "ctaLabel": {
+          "en": "Chat with us on Telegram",
+          "kh": "ជជែកជាមួយយើងតាម Telegram"
+        },
+        "note": {
+          "en": "No payment today · Pay after your confirmation call",
+          "kh": "មិនបង់ប្រាក់ថ្ងៃនេះ · បង់ក្រោយការហៅបញ្ជាក់"
+        }
+      },
+      {
+        "id": "cv-guarantee",
+        "style": {
+          "theme": "brand",
+          "align": "left",
+          "spacing": "normal",
+          "animation": "rise"
+        },
+        "type": "included",
+        "variant": "checklist",
+        "title": {
+          "en": "Your reservation is risk-free",
+          "kh": "ការកក់របស់លោកអ្នកគ្មានហានិភ័យ"
+        },
+        "sub": {
+          "en": "You pay nothing until you have spoken with our team and decided this trip is right for your business. If KHB Events cancels the delegation, every delegate is refunded in full.",
+          "kh": "លោកអ្នកមិនបង់អ្វីទាំងអស់ រហូតដល់បាននិយាយជាមួយក្រុមការងារ និងសម្រេចថាដំណើរនេះសមនឹងអាជីវកម្មលោកអ្នក។ បើ KHB Events លុបចោលដំណើរ ប្រតិភូទាំងអស់ទទួលប្រាក់វិញពេញ។"
+        },
+        "items": [
+          {
+            "en": "No payment today: reserve with your name and phone only",
+            "kh": "មិនបង់ប្រាក់ថ្ងៃនេះ៖ កក់ដោយឈ្មោះ និងលេខទូរស័ព្ទប៉ុណ្ណោះ"
+          },
+          {
+            "en": "Official tax invoice and full itinerary sent on Telegram",
+            "kh": "វិក្កយបត្រពន្ធផ្លូវការ និងកាលវិភាគពេញលេញ ផ្ញើតាម Telegram"
+          },
+          {
+            "en": "Full refund if the organiser cancels the trip",
+            "kh": "សងប្រាក់វិញពេញ បើអ្នករៃបចំលុបចោលដំណើរ"
+          }
+        ]
+      },
+      {
+        "id": "cv-steps",
+        "style": {
+          "theme": "light",
+          "align": "center",
+          "spacing": "normal",
+          "animation": "rise"
+        },
+        "type": "steps",
+        "variant": "numbered",
+        "title": {
+          "en": "Reserve in 3 steps. No payment today.",
+          "kh": "កក់ក្នុង ៣ ជំហាន។ មិនបង់ប្រាក់ថ្ងៃនេះ។"
+        },
+        "items": [
+          {
+            "title": {
+              "en": "Reserve your seat",
+              "kh": "កក់កៅអីលោកអ្នក"
+            },
+            "text": {
+              "en": "Enter your name and phone below. Your seat is held at once. Nothing to pay today.",
+              "kh": "បំពេញឈ្មោះ និងលេខទូរស័ព្ទខាងក្រោម។ កៅអីរក្សាទុកភ្លាម។ មិនបង់ប្រាក់ថ្ងៃនេះ។"
+            }
+          },
+          {
+            "title": {
+              "en": "Talk to Sovann Meas",
+              "kh": "និយាយជាមួយ Sovann Meas"
+            },
+            "text": {
+              "en": "Sovann Meas calls within 15 minutes, answers every question and sends your invoice and itinerary on Telegram.",
+              "kh": "Sovann Meas ទូរស័ព្ទមកក្នុង ១៥ នាទី ឆ្លើយរាល់សំណួរ និងផ្ញើវិក្កយបត្រ និងកាលវិភាគតាម Telegram។"
+            }
+          },
+          {
+            "title": {
+              "en": "Pack your passport",
+              "kh": "រៀបចំលិខិតឆ្លងដែន"
+            },
+            "text": {
+              "en": "On Oct 8, 2026 you bring your passport. Flights, hotel, coach, expo passes and factory visits are already arranged.",
+              "kh": "ថ្ងៃ 8 តុលា 2026 លោកអ្នកគ្រាន់តៃយកលិខិតឆ្លងដែនមក។ ជើងហោះហើរ សណ្ឋាគារ ឡានក្រុង សំបុត្រពិព័រណ៍ និងរោងចក្រ រៀបចំរួចរាល់។"
+            }
+          }
+        ]
+      },
+      {
+        "id": "cv-form",
+        "style": {
+          "theme": "dark",
+          "align": "left",
+          "spacing": "normal",
+          "animation": "rise"
+        },
+        "type": "form",
+        "variant": "split",
+        "title": {
+          "en": "Reserve your seat",
+          "kh": "កក់កៅអីរបស់លោកអ្នក"
+        },
+        "sub": {
+          "en": "Sovann Meas calls you within 15 minutes. Nothing to pay today."
+        },
+        "askEmail": true,
+        "askMessage": false,
+        "interestLabel": {
+          "en": "Your business",
+          "kh": "អាជីវកម្មលោកអ្នក"
+        },
+        "interestOptions": [
+          {
+            "en": "Cafe or tea brand",
+            "kh": "ម៉ាកកាហ្វេ ឬតែ"
+          },
+          {
+            "en": "Smart city / tech",
+            "kh": "Smart City / បច្ចេកវិទ្យា"
+          },
+          {
+            "en": "Wholesaler / importer",
+            "kh": "អ្នកលក់ដុំ / អ្នកនាំចូល"
+          },
+          {
+            "en": "F&B investor",
+            "kh": "អ្នកវិនិយោគ F&B"
+          }
+        ],
+        "submitLabel": {
+          "en": "Reserve my seat, no payment today",
+          "kh": "កក់កៅអីខ្ញុំ មិនបង់ប្រាក់ថ្ងៃនេះ"
+        },
+        "successTitle": {
+          "en": "Your seat is held",
+          "kh": "កៅអីលោកអ្នកបានរក្សាទុក"
+        },
+        "successText": {
+          "en": "Thank you. Sovann Meas from KHB Events will call or message you within 15 minutes to confirm the details.",
+          "kh": "សូមអរគុណ។ Sovann Meas ពី KHB Events នឹងទូរស័ព្ទ ឬផ្ញើសារមកក្នុង ១៥ នាទី ដើម្បីបញ្ជាក់ព័ត៍មាន។"
+        },
+        "requireTerms": false
+      },
+      {
+        "id": "cv-faq",
+        "style": {
+          "theme": "light",
+          "align": "left",
+          "spacing": "normal",
+          "animation": "rise"
+        },
+        "type": "faq",
+        "variant": "accordion",
+        "title": {
+          "en": "Questions owners ask before reserving",
+          "kh": "សំណួរដែលម្ចាស់អាជីវកម្មសួរមុនកក់"
+        },
+        "items": [
+          {
+            "q": {
+              "en": "Do I need a visa for Vietnam?",
+              "kh": "តើខ្ញុំត្រូវការវីសាទៅវៀតណាមទេ?"
+            },
+            "a": {
+              "en": "Cambodian passport holders enter Vietnam visa-free for up to 30 days. Our team handles the arrival paperwork and customs facilitation so you walk straight through.",
+              "kh": "អ្នកកាន់លិខិតឆ្លងដែនកម្ពុជា ចូលវៀតណាមដោយគ្មានវីសារហូតដល់ ៣០ ថ្ងៃ។ ក្រុមការងារយើងរៃបចំឯកសារចូលប្រទេស និងគយជូន។"
+            }
+          },
+          {
+            "q": {
+              "en": "Do I have to pay today?",
+              "kh": "តើខ្ញុំត្រូវបង់ប្រាក់ថ្ងៃនេះទេ?"
+            },
+            "a": {
+              "en": "No. You reserve with your name and phone number. Sovann Meas calls you within 15 minutes, and you pay only after your flights, hotel and factory schedule are confirmed.",
+              "kh": "ទេ។ លោកអ្នកកក់ដោយឈ្មោះ និងលេខទូរស័ព្ទ។ Sovann Meas ទូរស័ព្ទមកក្នុង ១៥ នាទី ហើយលោកអ្នកបង់តៃក្រោយជើងហោះហើរ សណ្ឋាគារ និងកាលវិភាគរោងចក្របានបញ្ជាក់។"
+            }
+          },
+          {
+            "q": {
+              "en": "Can my company get an official invoice?",
+              "kh": "តើក្រុមហ៊ុនខ្ញុំអាចទទួលវិក្កយបត្រផ្លូវការទេ?"
+            },
+            "a": {
+              "en": "Yes. We issue corporate billing and official tax invoices. Ask on Telegram or during your confirmation call.",
+              "kh": "បាន។ យើងចេញវិក្កយបត្រពន្ធផ្លូវការសម្រាប់ក្រុមហ៊ុន។ សូមស្នើតាម Telegram ឬក្នុងការហៅបញ្ជាក់។"
+            }
+          },
+          {
+            "q": {
+              "en": "Is the hotel room private?",
+              "kh": "តើបន្ទប់សណ្ឋាគារជាបន្ទប់ឯកជនទេ?"
+            },
+            "a": {
+              "en": "The price includes twin or double sharing. If you prefer a single room, tell your coordinator and we arrange it for a small supplement.",
+              "kh": "តម្លៃរួមបញ្ចូលបន្ទប់ Twin ឬ Double រួមគ្នា។ បើចង់បានបន្ទប់តៃម្នាក់ សូមប្រាប់អ្នកសម្របសម្រួល យើងរៃបចំជូនក្នុងថ្លៃបន្ថែមតិចតួច។"
+            }
+          },
+          {
+            "q": {
+              "en": "What if the seats sell out before I decide?",
+              "kh": "បើកៅអីអស់មុនខ្ញុំសម្រេចចិត្ត?"
+            },
+            "a": {
+              "en": "The 30 seats are first come, first served. A reserved seat is held for that delegate. Latecomers join a waitlist, and a seat may not open.",
+              "kh": "កៅអី 30 អ្នកមកមុនបានមុន។ កៅអីដែលបានកក់ រក្សាទុកសម្រាប់ប្រតិភូនោះ។ អ្នកមកក្រោយចូលបញ្ជីរង់ចាំ ហើយកៅអីអាចមិនទំនេរឡើងវិញ។"
+            }
+          },
+          {
+            "q": {
+              "en": "What is not included in the price?",
+              "kh": "តើអ្វីមិនរួមបញ្ចូលក្នុងតម្លៃ?"
+            },
+            "a": {
+              "en": "Lunches and dinners outside the listed programme (the Halong Bay cruise lunch is included), a Vietnam SIM card, travel insurance and personal shopping. All logistics are covered.",
+              "kh": "អាហារថ្ងៃត្រង់ និងពេលល្ងាចក្រៅកម្មវិធី (អាហារលើកប៉ាល់ហាឡុងបេរួមបញ្ចូល) SIM វៀតណាម ធានារ៉ាប់រងដំណើរ និងការទិញឥវ៉ាន់ផ្ទាល់ខ្លួន។ ការរៃបចំដំណើរទាំងអស់រួមបញ្ចូល។"
+            }
+          },
+          {
+            "q": {
+              "en": "Can I get a refund after paying?",
+              "kh": "តើអាចដកប្រាក់វិញក្រោយបង់ទេ?"
+            },
+            "a": {
+              "en": "No. In the event that client ask for cancellation after deposit at any date of the event, is not refunded. ",
+              "kh": "មិនមានទេ។ ប្រសិនបើការស្នើរសុំលុបចោលការចុះឈ្មោះ បណ្តាលមកពីបញ្ហារបស់អតិថិជនខ្លួនឯង មិនមានការទូទាត់ថវិកាត្រលប់មកវិញទេ។"
+            }
+          },
+          {
+            "q": {
+              "en": "Do I need to speak English or Vietnamese?",
+              "kh": "តើខ្ញុំត្រូវចេះអង់គ្លេស ឬវៀតណាមទេ?"
+            },
+            "a": {
+              "en": "No. A guide fluent in Khmer, English and Vietnamese sits beside you in every meeting and negotiation.",
+              "kh": "ទេ។ មគ្គុទ្ទេសក៍ចេះខ្មែរ អង់គ្លេស និងវៀតណាម អង្គុយក្បែរលោកអ្នករាល់កិច្ចប្រជុំ និងការចរចា។"
+            }
+          },
+          {
+            "q": {
+              "en": "Can I bring a partner or a staff member?",
+              "kh": "តើអាចនាំដៃគូ ឬបុគ្គលិកមកជាមួយទេ?"
+            },
+            "a": {
+              "en": "Yes. Each person takes one seat at the same price. Tell your coordinator so you are seated and roomed together.",
+              "kh": "បាន។ ម្នាក់យកកៅអីមួយក្នុងតម្លៃដូចគ្នា។ សូមប្រាប់អ្នកសម្របសម្រួល ដើម្បីរៃបចំកៅអី និងបន្ទប់ជិតគ្នា។"
+            }
+          },
+          {
+            "q": {
+              "en": "Is my passport valid enough?",
+              "kh": "តើលិខិតឆ្លងដែនខ្ញុំនៅមានសុពលភាពគ្រប់គ្រាន់ទេ?"
+            },
+            "a": {
+              "en": "Vietnam asks for at least six months of validity from your entry date. Check the expiry date before you reserve.",
+              "kh": "វៀតណាមតម្រូវសុពលភាពយ៉ាងតិច ៦ ខៃពីថ្ងៃចូលប្រទេស។ សូមពិនិត្យថ្ងៃផុតកំណត់មុនកក់។"
+            }
+          }
+        ]
+      },
+      {
+        "id": "b-muh2ouop-sox0t",
+        "style": {
+          "theme": "light",
+          "align": "center",
+          "spacing": "normal",
+          "animation": "rise"
+        },
+        "type": "benefits",
+        "variant": "cards",
+        "title": {
+          "en": "Why people choose this",
+          "kh": "ហេតុអ្វីមានអតិថិជនជាច្រើនចូលរួម"
+        },
+        "items": [
+          {
+            "icon": "sparkles",
+            "title": {
+              "en": "Explore Vietnam's leading industries",
+              "kh": "ស្វែងយល់ពីវិស័យនាំំមុខគេរបស់វៀតណាម"
+            },
+            "text": {
+              "en": "Smart Technologies, Cafe and Tea industries have been pioneering in Vietnam's economy. ",
+              "kh": "បច្ចេកវិទ្យា IoT និង កាហ្វេ តែ គឺជាវិស័យនាំមុខគេដ៏សំខាន់សម្រាប់សេដ្ឋកិច្ចវៀតណាម។"
+            },
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhtpakj-66a7dbda-the-top-tea-region-in-vn.webp"
+          },
+          {
+            "icon": "shield",
+            "title": {
+              "en": "Directly connect with suppliers",
+              "kh": "ទាក់ទងផ្ទាល់ជាមួយអ្នកបោះដុំ"
+            },
+            "text": {
+              "en": "Meet face-to-face with factories and key wholesalers that save much cost on product price. ",
+              "kh": "ជួបផ្ទាល់ជាមួយ រោងចក្រ និង អ្នកបោះដុំ ដែលអាចជួយកាត់បន្ថយការចំណាយថ្លៃដើមនាំចូលផលិតផលបានច្រើន។"
+            },
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhtwdko-056283e3-vietnam-coffee-suppliers.webp"
+          },
+          {
+            "icon": "clock",
+            "title": {
+              "en": "Visit Vietnam's unique tourist sites ",
+              "kh": "ទស្សនាតំបន់ទេសចរណ៍ពិសេសៗនៅវៀតណាម"
+            },
+            "text": {
+              "en": "Besides getting business deals, you will also don't miss the leisure time to visit best tourist site at Hanoi and Halong Bay. ",
+              "kh": "ក្រៅពីទទួលបានឳកាសអាជីវកម្ម លោកអ្នកក៏នៅមានពេលដើរកំសាន្តបន្ថូរអារម្មណ៍ជាមួយតំបន់ទេសចរណ៍ទាក់ទាញនៅទីក្រុង ហាណូយ និង​ ហាឡុង បេ ផងដែរ។"
+            },
+            "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muhu0sk0-11df6715-191-1-ha-long-bay-cat-ba-archipelago-102.webp"
+          }
+        ]
+      },
+      {
+        "id": "b-muh3nvax-0x2ot",
+        "style": {
+          "theme": "dark",
+          "align": "left",
+          "spacing": "normal",
+          "animation": "rise"
+        },
+        "type": "hero",
+        "variant": "split",
+        "badge": {
+          "en": "New",
+          "kh": "ថ្មី"
+        },
+        "headline": {
+          "en": "Come Home with Suppliers, not just photos. ",
+          "kh": "ត្រលប់មកផ្ទះវិញជាមួយអ្នកផ្គត់ផ្គង់ មិនមែនគ្រា់ន់តែរូបថត។"
+        },
+        "sub": {
+          "en": "This unique business trips is for anyone seeking for businesses related to smart technology, cafe and tea from Vietnam. ",
+          "kh": "កម្មវិធីដ៏ពិសេសនេះ ត្រូវបានឌីហ្សាញឡើងសម្រាប់លោកអ្នកដែលមានបំណងចង់ស្វែងរកឳកាសអាជីវកម្ម ទាក់ទងនឹងវិស័យ បច្ចេកវិទ្យាទីក្រុងឆ្លាតវ៉ៃ កាហ្វេ និង តែមកពីប្រទេសវៀតណាម។"
+        },
+        "image": "https://sjjsfpcvlkohdavzqfay.supabase.co/storage/v1/object/public/page-images/muh3qjsz-7d6eede9-683e7ad134ad5.webp",
+        "ctaLabel": {
+          "en": "Chat with us on Telegram",
+          "kh": "ជជែកតាម Telegram"
+        },
+        "riskNote": {
+          "en": "No payment today",
+          "kh": "មិនបង់ប្រាក់ថ្ងៃនេះ"
+        }
+      },
+      {
+        "id": "b-muhup9e4-g3ywe",
+        "style": {
+          "theme": "light",
+          "align": "left",
+          "spacing": "normal",
+          "animation": "rise"
+        },
+        "type": "terms",
+        "variant": "accordion",
+        "title": {
+          "en": "Terms & Conditions",
+          "kh": "លក្ខខណ្ឌ និង ការអនុវត្តន៍ទូទៅ"
+        },
+        "sub": {
+          "en": "Please read before you register.",
+          "kh": "សូមអានមុនពេលចុះឈ្មោះ។"
+        },
+        "updated": "2026-09-20",
+        "items": [
+          {
+            "title": {
+              "en": "Booking and payment",
+              "kh": "ការកក់ និង ការបង់ប្រាក់"
+            },
+            "text": {
+              "en": "To secure booking and guarantee participation, a deposit of at least 70% of the total price is required upon registration.\n\nFull payment of 100% must be made at least 10 days before the departure date.\n",
+              "kh": "ការកក់នឹងមានសុពលភាពនៅពេលបានបង់ប្រាក់កក់យ៉ាងតិច 50% ដល់ ១០០%។\n\nការបង់ប្រាក់១០០% ត្រូវតែទូទាត់នូវរយៈពេលមិនតិចជាង១០ថ្ងៃ នៃថ្ងៃចេញដំណើរ។"
+            }
+          },
+          {
+            "title": {
+              "en": "Cancellation and refunds",
+              "kh": "ការ លុបចោល និងការសងប្រាក់វិញ"
+            },
+            "text": {
+              "en": "If client request for cancellation due to personal issue, no any refunded amount can be settled back to client.\n\nHowever, in the event that organizer doesn't release the air-ticket yet, client can request to change to other client with same price. \n\n",
+              "kh": "ប្រសិនបើអតិថិជន ស្នើរសុំលុបចោលការចុះឈ្មោះ ដោយសារហេតុផលផ្ទាល់ខ្លួន ខណៈបានទូទាត់ប្រាក់រួចហើយ នោះអ្នករៀបចំកម្មវិធីរក្សាសិទិ្ធមិនសងប្រាក់ត្រលប់ទៅវិញនោះទេ។\n\nប៉ុន្តែប្រសិនបើអ្នករៀបចំមិនទាន់់បានកក់សំបុត្រយន្តហោះនោះទេ អតិថិជនអាចស្នើរប្តូរអ្នកចូលរួមជំនួសបាន ជាមួយនឹងថ្លៃចុះឈ្មោះដដែល។"
+            }
+          },
+          {
+            "title": {
+              "en": "Changes to the programme",
+              "kh": "ការផ្លាស់ប្តូរកម្មវិធី"
+            },
+            "text": {
+              "en": "Participants must adhere to the schedule and instructions provided by the tour guide and mission coordinators.\n\nHowever, the organizer reserves the right to modify the schedule, itinerary, or hotels to an equivalent standard in the event of force measure or unforeseen circumstances.",
+              "kh": "អតិថិជនត្រូវតែគោរពតាម កម្មវិធី កាលវិភាគ ដែលរៀបចំដោយ ក្រុមហ៊ុន និង មគ្គុទេសន៍ទេសចរណ៍ សម្រាប់កម្មវិធីទាំងមូល។\n\nប៉ុន្តែក្រុមហ៊ុនសូមរក្សាសិទ្ធិក្នុងការផ្លាស់ប្តូរកាលវិភាគ និង កម្មវិធីមួយចំនួនអាស្រ័យលើអាកាសធាតុ ជើងហោះហើរ និង ស្ថានភាពផ្សេងៗដែលកើតឡើង។"
+            }
+          },
+          {
+            "title": {
+              "en": "Travel documents",
+              "kh": "ឯកសារធ្វើដំណើរ"
+            },
+            "text": {
+              "en": "Passport must be valid for at least 6 months from the date of departure.\n\nThe organizer reserves the right to collect the $7 airport tax in Cambodia from the customer.\n\n",
+              "kh": "លិខិតឆ្លងដែនរបស់អតថិជន ត្រូវតែមានសុពលភាពយ៉ាងតិច៦ខែ រាប់ចាប់ពីថ្ងៃធ្វើដំណើរទៅ។\n\nក្រុមហ៊ុនសូមរក្សាសិទ្ធិប្រមូលពន្ថបង់លើព្រលានយន្តហោះនៅកម្ពុជាចំនួន $7 ពីអតិថិជន។"
+            }
+          },
+          {
+            "title": {
+              "en": "Other conditions ",
+              "kh": "ល័ក្ខខណ្ឌផ្សេងៗទៀត"
+            },
+            "text": {
+              "en": "For a single room occupancy, customers must pay an additional $25/night.\n\n",
+              "kh": "សម្រាប់ការស្នើរគេងបន្ទប់ម្នាក់ឯង ឫ អតិថិជនត្រូវគេងម្នាក់ឯង ដោយមានអតិថិជនផ្សេងទៀតអាចគេងជាមួយបាន ត្រូវបន្ថែមចំណាយ $25/យប់។"
+            }
+          }
+        ]
+      },
+      {
+        "id": "cv-final",
+        "style": {
+          "theme": "brand",
+          "align": "left",
+          "spacing": "normal",
+          "animation": "rise"
+        },
+        "type": "finalCta",
+        "variant": "split",
+        "headline": {
+          "en": "Prefer to talk first?",
+          "kh": "ចង់និយាយមុនមែនទេ?"
+        },
+        "sub": {
+          "en": "Replies within 15 minutes in business hours.",
+          "kh": "ឆ្លើយតបក្នុង ១៥ នាទី ក្នុងម៉ោងធ្វើការ។"
+        },
+        "ctaLabel": {
+          "en": "Chat with us on Telegram",
+          "kh": "ជជែកជាមួយយើងតាម Telegram"
+        },
+        "riskNote": {
+          "en": "No payment today · Seat held instantly · Coordinator replies within 15 minutes",
+          "kh": "មិនបង់ប្រាក់ថ្ងៃនេះ · កៅអីរក្សាទុកភ្លាម · អ្នកសម្របសម្រួលឆ្លើយក្នុង ១៥ នាទី"
+        }
+      }
+    ]
+  }
 }

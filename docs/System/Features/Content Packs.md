@@ -97,6 +97,10 @@ A pack can swap single builder sections with `"replaceBuilderBlocks": [ { "id": 
 
 Since 2026-09-26 the Vietnam pack uses it once: section `cv-included` became an **Included & not included** section (the nine included items, plus the four not-included items from the FAQ answer). Any change the admin had made to that section's text is replaced; the page as it was before is saved as the pack backup (see below).
 
+## The Vietnam restore pack (2026-09-26)
+
+After a code update overwrote the owner's edits, the Vietnam pack was rewritten as the whole builder document taken from the owner's saved copy of the live page (`"convertToBuilder": true` plus `"builder": { … }`), including the owner's seats and deadlines from that copy. It applies once; the next edits happen in the builder. This is a one-time restore, not the normal way to change the page.
+
 ## Undo a pack
 
 The page as it was before the last applied pack is kept in the `content_pack_backup:<slug>` row of `system_settings` in Supabase. At the time of writing there is no admin button to restore it; a developer copies it back.

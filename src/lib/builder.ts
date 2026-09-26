@@ -874,6 +874,23 @@ export function duplicateBlock(block: BuilderBlock): BuilderBlock {
 
 // ─── Offer facts shown by blocks ───────────────────────────────────────────
 
+const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTHS_KH = ['មករា', 'កុម្ភះ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
+
+/**
+ * "YYYY-MM-DD" -> "20 September 2026" / "20 កញ្ញា 2026".
+ * Fixed month names so the server and the browser print the same text (toLocaleDateString('km-KH')
+ * differs between Node's ICU and Chrome and caused hydration errors).
+ */
+export function formatDay(day: string, lang: Lang): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(day || '');
+  if (!m) return '';
+  const month = Number(m[2]) - 1;
+  if (month < 0 || month > 11) return '';
+  const names = lang === 'kh' ? MONTHS_KH : MONTHS_EN;
+  return `${Number(m[3])} ${names[month]} ${m[1]}`;
+}
+
 export function formatPrice(amount: number | null, currency: BuilderOffer['currency']): string {
   if (amount === null) return '';
   if (currency === 'KHR') return `${Math.round(amount).toLocaleString('en-US')}៛`;
