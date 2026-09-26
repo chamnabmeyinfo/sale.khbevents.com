@@ -52,6 +52,15 @@ Also in that group (since 2026-09-26):
 
 A Contact & company section may sit after the Final call to action; **+** adds it at the very bottom and the Page map treats it as the footer.
 
+## Versions and protection against lost work (since 2026-09-26)
+
+- **Versions** (top bar): every save keeps the version it replaces (last 15 per page), plus the copy kept before an automatic content update. **Load into editor** puts a version in the editor as unsaved changes; check it, then **Save** (Undo also works). The live page does not change until you save.
+- **Conflict guard:** each editor sends the version it opened. If the page was saved elsewhere since (another tab, or Landing Pages → the page → Dedicated settings), the save is refused with a message and a **Reload the latest version** button. Nothing is overwritten.
+- The old page settings screen no longer sends a builder page's sections, so it cannot put back an older copy of them.
+- A failed database read never writes the bundled sample page into the database any more (it used to, and that could wipe the owner's edits and photos). A save always merges over the latest stored page, and a failed database write shows "not saved".
+
+Source: `src/lib/storage.ts` (`savePage`, `getPageHistory`, `PageConflictError`), `src/components/admin/BuilderVersions.tsx`, `src/app/api/pages/[id]/history/route.ts`.
+
 ## Full preview and Page map
 
 - **Full preview** (top bar, next to the phone and computer buttons) shows the whole page over the full screen at a real computer width: **Laptop** 1280, **Desktop** 1440 or **Large screen** 1920 pixels. When the screen is narrower, the page is scaled down, so it keeps the computer layout. EN/ខ្មែរ switch inside. Close with the button or Esc. Buttons and the form do nothing in the preview.

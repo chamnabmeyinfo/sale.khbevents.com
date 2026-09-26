@@ -199,11 +199,10 @@ export async function supabaseGetPages(): Promise<LandingPage[]> {
     .from('landing_pages')
     .select('*')
     .order('created_at', { ascending: false });
-  if (error || !data) {
-    console.error('Supabase getPages error:', error);
-    return [];
-  }
-  return data.map(rowToLandingPage);
+  // A failed read must never look like "no pages": callers used to write the bundled
+  // sample pages over the live ones when this returned [].
+  if (error) throw new Error(`Supabase getPages failed: ${error.message}`);
+  return (data || []).map(rowToLandingPage);
 }
 
 export async function supabaseGetPageBySlug(slug: string): Promise<LandingPage | null> {
@@ -213,9 +212,10 @@ export async function supabaseGetPageBySlug(slug: string): Promise<LandingPage |
     .from('landing_pages')
     .select('*')
     .eq('slug', slug)
-    .single();
-  if (error || !data) return null;
-  return rowToLandingPage(data);
+    .maybeSingle();
+  // Only "no such row" is null; any other failure is thrown, never read as "missing".
+  if (error) throw new Error(`Supabase getPageBySlug failed: ${error.message}`);
+  return data ? rowToLandingPage(data) : null;
 }
 
 export async function supabaseGetPageById(id: string): Promise<LandingPage | null> {
@@ -225,9 +225,9 @@ export async function supabaseGetPageById(id: string): Promise<LandingPage | nul
     .from('landing_pages')
     .select('*')
     .eq('id', id)
-    .single();
-  if (error || !data) return null;
-  return rowToLandingPage(data);
+    .maybeSingle();
+  if (error) throw new Error(`Supabase getPageById failed: ${error.message}`);
+  return data ? rowToLandingPage(data) : null;
 }
 
 export async function supabaseSavePage(page: LandingPage): Promise<LandingPage> {

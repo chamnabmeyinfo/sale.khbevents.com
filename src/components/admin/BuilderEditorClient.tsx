@@ -14,6 +14,7 @@ import {
   LayoutTemplate,
   MapIcon,
   Maximize2,
+  History,
   Monitor,
   Plus,
   Redo2,
@@ -45,6 +46,7 @@ import {
 import { BenefitIconSvg, BlockView, BuilderRoot, useNow } from '@/components/builder/BuilderBlocks';
 import BuilderFullPreview from './BuilderFullPreview';
 import BuilderPageMap from './BuilderPageMap';
+import BuilderVersions from './BuilderVersions';
 import ImageField from './ImageField';
 import VideoField from './VideoField';
 import ImageManager from './ImageManager';
@@ -216,6 +218,8 @@ export default function BuilderEditorClient({ initialPage, initialDoc, companySe
   const [dragOver, setDragOver] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
+  const [conflict, setConflict] = useState(false);
+  const [versionsOpen, setVersionsOpen] = useState(false);
   const nowMs = useNow();
   const lastTyping = useRef(0);
 
@@ -410,9 +414,14 @@ export default function BuilderEditorClient({ initialPage, initialDoc, companySe
       const res = await fetch(`/api/pages/${page.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...page, title: meta.title.trim() || t('builder.untitled'), slug: meta.slug, status, ogImage: meta.ogImage.trim(), template: 'builder', builder: doc, isolatedSettings: { ...page.isolatedSettings, ...brandToSettings(meta.brand) } }),
+        // expectedUpdatedAt: the version this editor opened; a page saved elsewhere since is not overwritten.
+        body: JSON.stringify({ ...page, title: meta.title.trim() || t('builder.untitled'), slug: meta.slug, status, ogImage: meta.ogImage.trim(), template: 'builder', builder: doc, isolatedSettings: { ...page.isolatedSettings, ...brandToSettings(meta.brand) }, expectedUpdatedAt: page.updatedAt }),
       });
       const data = await res.json().catch(() => ({}));
+      if (res.status === 409 && data.conflict) {
+        setConflict(true);
+        throw new Error(t('builder.conflict'));
+      }
       if (!res.ok || !data.page) throw new Error(data.error || t('common.errorSaving'));
       const saved: LandingPage = data.page;
       const savedDoc = normalizeBuilderDoc(saved.builder);
@@ -850,6 +859,15 @@ export default function BuilderEditorClient({ initialPage, initialDoc, companySe
     );
   };
 
+  /** Puts an earlier version in the editor as unsaved changes (Undo reverts it; Save makes it live). */
+  const loadVersion = (v: LandingPage, label: string) => {
+    if (!v.builder) return;
+    setDoc(() => normalizeBuilderDoc(v.builder));
+    setMeta((m) => ({ ...m, title: v.title || m.title, ogImage: v.ogImage || '', brand: brandOf(v) }));
+    setVersionsOpen(false);
+    setSelectedId(null);
+    setNotice({ kind: 'ok', text: t('builder.versions.loaded', { label }) });
+  };
   const setBrand = (patch: Partial<PageBrand>) => setMeta((m) => ({ ...m, brand: { ...m.brand, ...patch } }));
   const pagePanel = () => {
     const o = doc.offer;
@@ -1090,6 +1108,9 @@ export default function BuilderEditorClient({ initialPage, initialDoc, companySe
           <button type="button" onClick={() => setView((v) => (v === 'map' ? 'page' : 'map'))} aria-pressed={view === 'map'} className={`inline-flex items-center gap-1 px-3 py-2 rounded-xl text-[11px] font-bold cursor-pointer ${view === 'map' ? 'bg-amber-400 text-black shadow' : 'bg-slate-100 dark:bg-emerald-950/60 text-slate-700 dark:text-gray-200 hover:bg-slate-200 dark:hover:bg-emerald-900/60'}`} title={t('builder.mapHint')}>
             <MapIcon className="w-3.5 h-3.5" />{t('builder.map')}
           </button>
+          <button type="button" onClick={() => setVersionsOpen(true)} className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-[11px] font-bold cursor-pointer bg-slate-100 dark:bg-emerald-950/60 text-slate-700 dark:text-gray-200 hover:bg-slate-200 dark:hover:bg-emerald-900/60" title={t('builder.versions.hint')}>
+            <History className="w-3.5 h-3.5" />{t('builder.versions')}
+          </button>
           <div className="flex gap-1 p-1 rounded-xl bg-slate-100 dark:bg-emerald-950/60">
             {(['en', 'kh'] as const).map((l) => (
               <button key={l} type="button" onClick={() => setPreviewLang(l)} className={`px-2 py-1 rounded-lg text-[11px] font-bold cursor-pointer ${previewLang === l ? 'bg-white dark:bg-[#0A1610] shadow text-slate-900 dark:text-white' : 'text-slate-500'}`}>{l === 'en' ? 'EN' : 'ខ្មែរ'}</button>
@@ -1114,6 +1135,13 @@ export default function BuilderEditorClient({ initialPage, initialDoc, companySe
         </div>
       </div>
 
+      {conflict && (
+        <div className="p-3 rounded-xl text-xs flex flex-wrap items-center justify-between gap-2 border bg-rose-50 dark:bg-rose-950/80 border-rose-300 dark:border-rose-800/60 text-rose-800 dark:text-rose-200" data-conflict="">
+          <span>{t('builder.conflict')}</span>
+          <button type="button" onClick={() => window.location.reload()} className="px-3 py-1.5 rounded-lg bg-rose-600 text-[#fff] on-dark font-extrabold cursor-pointer">{t('builder.conflictReload')}</button>
+        </div>
+      )}
+      {versionsOpen && <BuilderVersions pageId={page.id} onClose={() => setVersionsOpen(false)} onLoad={loadVersion} />}
       {notice && (
         <div className={`p-3 rounded-xl text-xs flex items-center gap-2 border ${notice.kind === 'ok' ? 'bg-emerald-50 dark:bg-emerald-950/80 border-emerald-300 dark:border-emerald-500/60 text-emerald-800 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/80 border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-200'}`}>
           {notice.kind === 'ok' && <CheckCircle2 className="w-4 h-4 shrink-0" />}

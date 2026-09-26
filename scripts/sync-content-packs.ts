@@ -72,7 +72,11 @@ async function main(): Promise<void> {
       continue;
     }
 
-    const page = await supabaseGetPageBySlug(parsed.slug);
+    const page = await supabaseGetPageBySlug(parsed.slug).catch((err) => {
+      log(`${file}: could not read /${parsed.slug} (${err instanceof Error ? err.message : err}), skipped; it will be tried on the next build.`);
+      return undefined;
+    });
+    if (page === undefined) continue;
     if (!page) {
       log(`${file}: no page with slug "${parsed.slug}" in the CMS, skipped.`);
       continue;
@@ -108,7 +112,7 @@ async function applyFeatureImages(): Promise<void> {
   }
   for (const [slug, image] of Object.entries(suggestions)) {
     const markerId = `feature_image:${slug}`;
-    const page = await supabaseGetPageBySlug(slug);
+    const page = await supabaseGetPageBySlug(slug).catch(() => null);
     if (!page) {
       log(`feature image: no page /${slug}, skipped.`);
       continue;

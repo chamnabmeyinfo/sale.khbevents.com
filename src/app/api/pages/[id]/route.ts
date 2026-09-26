@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { getPageById, savePage, deletePage, PageSlugError } from '@/lib/storage';
+import { getPageById, savePage, deletePage, PageConflictError, PageSlugError } from '@/lib/storage';
 import { isAuthenticated, requireAdmin } from '@/lib/auth';
 
 interface RouteContext {
@@ -27,15 +27,20 @@ export async function PUT(req: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Title and Slug are required' }, { status: 400 });
   }
 
+  // The version the editor opened; a page saved elsewhere since is not overwritten.
+  const { expectedUpdatedAt, ...pageData } = body;
   let saved;
   try {
-    saved = await savePage({ ...body, id });
+    saved = await savePage({ ...pageData, id }, { expectedUpdatedAt: typeof expectedUpdatedAt === 'string' ? expectedUpdatedAt : undefined });
   } catch (error) {
     if (error instanceof PageSlugError) {
       return NextResponse.json({ error: error.message }, { status: 409 });
     }
+    if (error instanceof PageConflictError) {
+      return NextResponse.json({ error: error.message, conflict: true, currentUpdatedAt: error.currentUpdatedAt }, { status: 409 });
+    }
     console.error('Update page error:', error);
-    return NextResponse.json({ error: 'Failed to save landing page' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not save: the database did not answer. Nothing was changed; try again.' }, { status: 500 });
   }
 
   try {

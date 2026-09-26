@@ -463,43 +463,15 @@ export async function getPages(): Promise<LandingPage[]> {
   const db = await getDatabase();
   const allLocalPages = db.pages || [];
 
+  // Supabase is the source of truth. Bundled pages are NEVER written into it here: that
+  // used to overwrite the owner's live pages with the repo's sample copies whenever a
+  // read failed for a moment (the failure looked like "no pages").
   if (isSupabaseConfigured()) {
     try {
       const remotePages = await cachedSupabasePages();
-      if (remotePages && remotePages.length > 0) {
-        // Check if any local/bundled pages are missing in Supabase
-        const remoteSlugs = new Set(remotePages.map((p) => p.slug.toLowerCase().trim()));
-        const missingPages = await withoutDeleted(
-          allLocalPages.filter((lp) => !remoteSlugs.has(lp.slug.toLowerCase().trim()))
-        );
-
-        if (missingPages.length > 0) {
-          for (const page of missingPages) {
-            try {
-              await supabaseSavePage(page);
-              remotePages.push(page);
-            } catch (syncErr) {
-              console.error(`Failed to auto-sync page ${page.slug} to Supabase:`, syncErr);
-              remotePages.push(page); // Still include in returned list
-            }
-          }
-        }
-        return remotePages;
-      }
-      const localPages = await withoutDeleted(allLocalPages);
-      if (localPages.length > 0) {
-        // If Supabase is empty, seed all local pages to Supabase
-        for (const page of localPages) {
-          try {
-            await supabaseSavePage(page);
-          } catch (syncErr) {
-            console.error(`Failed to seed page ${page.slug} to Supabase:`, syncErr);
-          }
-        }
-        return localPages;
-      }
+      if (remotePages.length > 0) return remotePages;
     } catch (err) {
-      console.error('Supabase getPages error:', err);
+      console.error('Supabase getPages error (showing the bundled copy, nothing written):', err);
     }
   }
   return withoutDeleted(allLocalPages);
@@ -515,45 +487,28 @@ export async function getPageBySlug(slug: string): Promise<LandingPage | null> {
     try {
       const page = await cachedSupabasePageBySlug(cleanSlug);
       if (page) return page;
-
-      // Auto-sync to Supabase if present locally but missing in Supabase
-      if (localPage) {
-        try {
-          await supabaseSavePage(localPage);
-        } catch (syncErr) {
-          console.error(`Failed to auto-sync page ${cleanSlug} to Supabase:`, syncErr);
-        }
-        return localPage;
-      }
     } catch (err) {
-      console.error('Supabase getPageBySlug error:', err);
+      // Read-only fallback for visitors; never saved back to Supabase.
+      console.error('Supabase getPageBySlug error (showing the bundled copy, nothing written):', err);
     }
   }
 
   return localPage;
 }
 
+/**
+ * One page for editing. With Supabase, a failed read is thrown (the editor shows an
+ * error) instead of handing the editor the bundled sample copy, which a Save would
+ * then have written over the live page.
+ */
 export async function getPageById(id: string): Promise<LandingPage | null> {
   const db = await getDatabase();
   const localMatch = db.pages.find((p) => p.id === id);
   const [localPage = null] = await withoutDeleted(localMatch ? [localMatch] : []);
 
   if (isSupabaseConfigured()) {
-    try {
-      const page = await supabaseGetPageById(id);
-      if (page) return page;
-
-      if (localPage) {
-        try {
-          await supabaseSavePage(localPage);
-        } catch (syncErr) {
-          console.error(`Failed to auto-sync page ${id} to Supabase:`, syncErr);
-        }
-        return localPage;
-      }
-    } catch (err) {
-      console.error('Supabase getPageById error:', err);
-    }
+    const page = await supabaseGetPageById(id);
+    if (page) return page;
   }
 
   return localPage;
@@ -565,7 +520,57 @@ const RESERVED_SLUGS = new Set(['admin', 'api', 'auth', 'login', 'images', 'phot
 /** Thrown when a page cannot be saved under the requested slug (API maps it to 409). */
 export class PageSlugError extends Error {}
 
-export async function savePage(pageData: Partial<LandingPage> & { title: string; slug: string }): Promise<LandingPage> {
+/** Thrown when the page changed after the editor loaded it (API maps it to 409). */
+export class PageConflictError extends Error {
+  constructor(public currentUpdatedAt: string) {
+    super('This page was changed somewhere else after you opened it.');
+  }
+}
+
+/** Earlier versions of a page, newest first (kept on every save; see savePage). */
+export interface PageVersion { savedAt: string; page: LandingPage }
+const PAGE_HISTORY_LIMIT = 15;
+const historyId = (pageId: string) => `page_history:${pageId}`;
+
+export async function getPageHistory(pageId: string): Promise<PageVersion[]> {
+  try {
+    const raw = await getMarker(historyId(pageId));
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list.filter((v) => v && v.page && typeof v.savedAt === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+async function rememberPageVersion(page: LandingPage): Promise<void> {
+  const list = await getPageHistory(page.id);
+  // Consecutive saves of an identical page add nothing.
+  if (list[0] && JSON.stringify(list[0].page) === JSON.stringify(page)) return;
+  const next = [{ savedAt: page.updatedAt || new Date().toISOString(), page }, ...list].slice(0, PAGE_HISTORY_LIMIT);
+  await setMarker(historyId(page.id), JSON.stringify(next));
+}
+
+/** The page as it was before the last content pack (content/pages/<slug>.json) was applied. */
+export async function getPackBackup(slug: string): Promise<LandingPage | null> {
+  try {
+    const raw = await getMarker(`content_pack_backup:${slug}`);
+    return raw ? (JSON.parse(raw) as LandingPage) : null;
+  } catch {
+    return null;
+  }
+}
+
+const sameTime = (a?: string, b?: string) => Boolean(a && b && Date.parse(a) === Date.parse(b));
+
+/**
+ * Saves a page. Protection against lost work:
+ *  - the page is merged over the latest stored copy (Supabase), never over a stale local one;
+ *  - with `expectedUpdatedAt` (the version the editor opened), a page saved elsewhere since
+ *    is not overwritten: PageConflictError;
+ *  - the version being replaced is kept in the page history (last 15), for Restore;
+ *  - a failed database write is an error, not a silent "saved".
+ */
+export async function savePage(pageData: Partial<LandingPage> & { title: string; slug: string }, opts: { expectedUpdatedAt?: string } = {}): Promise<LandingPage> {
   // Builder documents come straight from the editor: clean them before they are stored.
   if (pageData.builder !== undefined) pageData = { ...pageData, builder: normalizeBuilderDoc(pageData.builder) };
   const slug = pageData.slug.toLowerCase().trim().replace(/[^a-z0-9-_]/g, '-');
@@ -578,21 +583,29 @@ export async function savePage(pageData: Partial<LandingPage> & { title: string;
   const db = await getDatabase();
   let existingIndex = pageData.id ? db.pages.findIndex((p) => p.id === pageData.id) : -1;
 
-  // A page created on another server instance may exist only in Supabase; merge
-  // into it rather than rebuilding it from defaults (which drops fields and counters).
-  if (existingIndex < 0 && pageData.id && isSupabaseConfigured()) {
-    const remote = await supabaseGetPageById(pageData.id).catch(() => null);
+  // Merge into the latest stored copy. The local copy can be stale (on Vercel it starts as
+  // the bundled sample), so with Supabase the stored page always wins as the base.
+  // A failed read throws: nothing is saved rather than saving over an unknown state.
+  if (pageData.id && isSupabaseConfigured()) {
+    const remote = await supabaseGetPageById(pageData.id);
     if (remote) {
-      db.pages.unshift(remote);
-      existingIndex = 0;
+      if (existingIndex >= 0) db.pages[existingIndex] = remote;
+      else {
+        db.pages.unshift(remote);
+        existingIndex = 0;
+      }
     }
+  }
+  const previous = existingIndex >= 0 ? db.pages[existingIndex] : null;
+  if (previous && opts.expectedUpdatedAt && previous.updatedAt && !sameTime(previous.updatedAt, opts.expectedUpdatedAt)) {
+    throw new PageConflictError(previous.updatedAt);
   }
 
   // Slugs must be unique: saving over another page's slug used to overwrite that page.
   const ownId = existingIndex >= 0 ? db.pages[existingIndex].id : pageData.id;
   const localClash = db.pages.find((p) => p.slug === slug && p.id !== ownId);
   const remoteClash = !localClash && isSupabaseConfigured()
-    ? await supabaseGetPageBySlug(slug).catch(() => null)
+    ? await supabaseGetPageBySlug(slug)
     : null;
   const clash = localClash || (remoteClash && remoteClash.id !== ownId ? remoteClash : null);
   if (clash) {
@@ -668,17 +681,14 @@ export async function savePage(pageData: Partial<LandingPage> & { title: string;
     db.pages.unshift(targetPage);
   }
 
+  if (previous) await rememberPageVersion(previous).catch((err) => console.error('Page history error:', err));
+  if (isSupabaseConfigured()) {
+    // Throws on failure: the editor must say "not saved", never pretend it worked.
+    await supabaseSavePage(targetPage);
+  }
   await saveDatabase(db);
   // Re-creating a page with a previously deleted id or slug brings it back.
   await updateDeletedPageKeys([], [`id:${targetPage.id}`, `slug:${targetPage.slug}`]);
-
-  if (isSupabaseConfigured()) {
-    try {
-      await supabaseSavePage(targetPage);
-    } catch (err) {
-      console.error('Supabase savePage error:', err);
-    }
-  }
   invalidateCache('pages');
 
   return targetPage;
@@ -2043,7 +2053,8 @@ export async function clearDemoData(req: ClearDemoRequest): Promise<ClearDemoRes
     for (const page of await getPages()) {
       const leadsCount = remaining.filter((l) => l.landingPageSlug === page.slug).length;
       if ((page.viewsCount || 0) !== 0 || (page.leadsCount || 0) !== leadsCount) {
-        await savePage({ ...page, viewsCount: 0, leadsCount });
+        // Only the counters: the rest comes from the stored page, never from this (possibly stale) copy.
+        await savePage({ id: page.id, title: page.title, slug: page.slug, viewsCount: 0, leadsCount });
       }
     }
     result.statsReset = true;

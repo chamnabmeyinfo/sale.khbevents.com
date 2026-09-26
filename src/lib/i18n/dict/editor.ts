@@ -18,6 +18,7 @@ export const editor: Dictionary = {
     // Errors
     'editor.err.required': 'Title and Slug are required to publish the landing page.',
     'editor.err.saveFailed': 'Failed to save page',
+    'editor.err.conflict': 'Not saved: this page was changed somewhere else after you opened it (another tab, or the page builder). Nothing was overwritten. Copy what you typed, reload this screen, then make your change again.',
     'editor.err.saveError': 'Error occurred while saving',
 
     // Tabs
@@ -339,6 +340,7 @@ export const editor: Dictionary = {
     // Errors
     'editor.err.required': 'ត្រូវការចំណងជើង និង Slug ដើម្បីបោះផ្សាយទំព័រ។',
     'editor.err.saveFailed': 'រក្សាទុកទំព័រមិនបាន',
+    'editor.err.conflict': 'មិនបានរក្សាទុក៖ ទំព័រនេះត្រូវបានកែនៅកន្លែងផ្សេង ក្រោយពេលអ្នកបើក (ផ្ទាំងផ្សេង ឬកម្មវិធីបង្កើតទំព័រ)។ គ្មានអ្វីត្រូវបានសរសេរជាន់ទេ។ ចម្លងអ្វីដែលអ្នកបានវាយ ផ្ទុកអេក្រង់នេះឡើងវិញ រួចកែម្តងទៀត។',
     'editor.err.saveError': 'មានបញ្ហាពេលរក្សាទុក',
 
     // Tabs

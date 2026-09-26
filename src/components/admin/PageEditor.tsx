@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -260,6 +260,8 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
   const router = useRouter();
   const { t } = useLanguage();
 
+  // The stored version this screen opened: sent with Save so a newer save elsewhere is never overwritten.
+  const openedVersion = useRef<string | undefined>(initialData?.updatedAt);
   const [formData, setFormData] = useState<Partial<LandingPage>>({
     id: initialData?.id,
     title: initialData?.title || '',
@@ -484,16 +486,23 @@ export default function PageEditor({ initialData, isNew = false }: PageEditorPro
       const endpoint = isNew ? '/api/pages' : `/api/pages/${formData.id}`;
       const method = isNew ? 'POST' : 'PUT';
 
+      // Builder pages keep their sections in the page builder: this screen never sends
+      // them, so it cannot put back an older copy. The version this screen opened goes
+      // along, and a page saved elsewhere since is not overwritten (409).
+      const { builder: _builder, ...rest } = formData;
+      void _builder;
+      const payload = isBuilderPage ? rest : formData;
       const res = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(isNew ? payload : { ...payload, expectedUpdatedAt: openedVersion.current })
       });
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || t('editor.err.saveFailed'));
+        throw new Error(data.conflict ? t('editor.err.conflict') : (data.error || t('editor.err.saveFailed')));
       }
+      if (data.page?.updatedAt) openedVersion.current = data.page.updatedAt;
 
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3500);

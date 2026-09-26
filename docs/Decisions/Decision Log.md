@@ -26,6 +26,15 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-26 — Never write the bundled pages into the database; guard every page save
+
+- **Decision:**
+  - Page reads that fail are errors, never "page missing", and never trigger a write of the bundled sample pages (`data/db.json`) into Supabase.
+  - Every page save merges over the latest stored copy, refuses to overwrite a newer version (409), and keeps the replaced version (last 15) for restore.
+- **Why:** The owner's manual edits and photos on the Vietnam page disappeared. The code wrote the bundled sample copy of a page (or of every page) into Supabase whenever a read failed or came back empty. Two editors (page builder and Dedicated settings) also saved whole-page copies over each other.
+- **Who decided:** Claude with owner approval (the owner asked for protection against accidental overwrites).
+- **Affects:** [[Page Builder]], [[Landing Pages CMS]].
+
 ## 2026-09-26 — Company logo in its own settings row; pages override company details field by field
 
 - **Decision:** The company logo is stored as the `brand_logo` row of `system_settings`, not as a new column. A page's logo, name, phone, Telegram, WhatsApp, email and address each override the company value only when filled (`companyFor`).
