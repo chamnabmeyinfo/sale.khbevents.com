@@ -43,6 +43,15 @@ The admin holds our customers' phone numbers, the sales team's Telegram details 
 | Theme & Display | Light, dark or automatic theme; portal language ([[Languages]]) |
 | Roles & Security | Role cards and **Update Portal Admin Password** |
 
+## Side menu
+
+- On a computer the admin side menu can be collapsed to a slim bar of icons, giving the page more width (useful in the page builder). Use the small round **«** button on the menu's edge, or **Collapse menu** at the bottom of the menu. **»** (edge or bottom of the bar) or **Expand menu** opens it again.
+- In the icon bar, pointing at an icon (or tabbing to it) shows that feature's sub-menu beside it; the tooltip gives the name.
+- The choice is remembered in this browser (`khb_admin_nav` in local storage), per computer. Phones keep the slide-in menu from the ☰ button.
+- Each feature's sub-menu can still be opened and closed with its arrow in the full menu.
+
+Source: `src/components/admin/AdminSidebar.tsx`, `src/components/admin/AdminShell.tsx`.
+
 ## Logging in
 
 - Admins log in at `/admin/login` with an email and the admin password.

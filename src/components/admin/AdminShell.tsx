@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { useLanguage } from '@/context/LanguageContext';
+import { useStoredChoice } from '@/lib/use-browser-state';
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -16,6 +17,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const isLoginPage = pathname === '/admin/login';
 
   const { t } = useLanguage();
+  const [navMode, setNavMode] = useStoredChoice('khb_admin_nav', ['open', 'collapsed'] as const, 'open');
+  const collapsed = navMode === 'collapsed';
 
   if (isLoginPage) {
     return <>{children}</>;
@@ -45,10 +48,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   return (
     <div className="admin-shell min-h-screen bg-[#F8FAFC] dark:bg-[#070E0A] text-slate-900 dark:text-gray-100 selection:bg-[#FBBF24] selection:text-black transition-colors duration-200">
       {/* Left Aside Navigation (Fixed on desktop, sliding drawer on mobile) */}
-      <AdminSidebar />
+      <AdminSidebar collapsed={collapsed} onToggleCollapsed={() => setNavMode(collapsed ? 'open' : 'collapsed')} />
 
       {/* Main Content Area (Offset by sidebar width on desktop) */}
-      <div className="lg:pl-72 flex flex-col min-h-screen">
+      <div className={`${collapsed ? 'lg:pl-[76px]' : 'lg:pl-72'} flex flex-col min-h-screen transition-[padding] duration-200`}>
         {/* Desktop Top Header Bar */}
         <header className="hidden lg:flex items-center justify-between px-8 py-3.5 bg-white/95 dark:bg-[#050D09]/95 backdrop-blur-md border-b border-slate-200 dark:border-emerald-900/30 sticky top-0 z-20 shadow-sm transition-colors duration-200">
           <div className="flex items-center gap-3">

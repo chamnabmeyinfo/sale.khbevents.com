@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -13,6 +13,8 @@ import {
   LogOut, 
   ChevronDown, 
   ChevronRight, 
+  ChevronsLeft,
+  ChevronsRight,
   PlusCircle, 
   Layers, 
   Sparkles,
@@ -57,12 +59,23 @@ interface NavGroup {
   subItems: SubItem[];
 }
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ collapsed = false, onToggleCollapsed }: { collapsed?: boolean; onToggleCollapsed?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  // Collapsed rail: the sub-menu of the hovered icon floats beside it.
+  const [fly, setFly] = useState<{ id: string; top: number; path: string } | null>(null);
+  const flyTimer = useRef<number | undefined>(undefined);
+  const openFly = (id: string, el: HTMLElement) => {
+    window.clearTimeout(flyTimer.current);
+    setFly({ id, top: Math.max(8, Math.min(el.getBoundingClientRect().top, window.innerHeight - 300)), path: pathname });
+  };
+  const closeFlySoon = () => {
+    window.clearTimeout(flyTimer.current);
+    flyTimer.current = window.setTimeout(() => setFly(null), 150);
+  };
 
   // Expanded sub-menus state (default: all expanded or auto-expanded based on pathname)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
@@ -371,6 +384,18 @@ export default function AdminSidebar() {
           <ThemeSwitcher compact={true} />
         </div>
 
+        {onToggleCollapsed && (
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            aria-expanded={true}
+            className="hidden lg:flex w-full items-center gap-2 px-2 py-1.5 rounded-lg text-[11px] font-bold text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-emerald-950/40 cursor-pointer transition-colors"
+          >
+            <ChevronsLeft className="w-4 h-4" />
+            <span>{t('nav.collapse')}</span>
+          </button>
+        )}
+
         <div className="flex items-center justify-between gap-3 pt-2 border-t border-slate-200 dark:border-emerald-950/60">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 text-zinc-950 flex items-center justify-center font-extrabold text-xs shrink-0 shadow-md">
@@ -394,11 +419,123 @@ export default function AdminSidebar() {
     </div>
   );
 
+  // A floating sub-menu belongs to the page it was opened on; navigating closes it.
+  const flyGroup = fly && fly.path === pathname ? navGroups.find((g) => g.id === fly.id) : undefined;
+
+  const railContent = (
+    <div className="flex flex-col h-full bg-white dark:bg-[#050D09] border-r border-slate-200 dark:border-emerald-900/30 text-slate-800 dark:text-gray-200 transition-colors duration-200">
+      <div className="p-3 flex justify-center border-b border-slate-200 dark:border-emerald-950/80 bg-gradient-to-b from-slate-50 to-white dark:from-[#08170F] dark:to-[#050D09]">
+        <Link href="/admin" title="KHB Portal" aria-label="KHB Portal" className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-950 to-emerald-900 border border-emerald-700/50 p-2 flex items-center justify-center shadow-lg shadow-emerald-950/80 hover:border-amber-400/60 transition-all">
+          <Image src="/images/khb-logo.png" alt="KHB" width={30} height={30} className="object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+        </Link>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2 space-y-1.5" aria-label={t('nav.mainFeatures')}>
+        {navGroups.map((group) => {
+          const GroupIcon = group.icon;
+          return (
+            <Link
+              key={group.id}
+              href={group.href}
+              aria-label={group.label}
+              data-rail-item={group.id}
+              onMouseEnter={(e) => openFly(group.id, e.currentTarget)}
+              onMouseLeave={closeFlySoon}
+              onFocus={(e) => { if (e.currentTarget.matches(':focus-visible')) openFly(group.id, e.currentTarget); }}
+              onBlur={closeFlySoon}
+              className={`flex items-center justify-center h-11 rounded-xl transition-all ${
+                group.isActive
+                  ? 'bg-emerald-50 dark:bg-gradient-to-r dark:from-emerald-950 dark:to-emerald-900/60 border border-emerald-200 dark:border-emerald-800/60 shadow-sm'
+                  : fly?.id === group.id
+                  ? 'bg-slate-100 dark:bg-emerald-950/40'
+                  : 'hover:bg-slate-100 dark:hover:bg-emerald-950/30'
+              }`}
+            >
+              <GroupIcon className={`w-5 h-5 ${group.isActive ? 'text-amber-500 dark:text-amber-400' : 'text-slate-500 dark:text-zinc-400'}`} />
+            </Link>
+          );
+        })}
+        <div className="pt-3 mt-3 border-t border-slate-200 dark:border-emerald-950/80">
+          <Link href="/" target="_blank" title={t('nav.liveSite')} aria-label={t('nav.liveSite')} className="flex items-center justify-center h-10 rounded-xl hover:bg-slate-100 dark:hover:bg-emerald-950/30">
+            <ExternalLink className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+          </Link>
+        </div>
+      </nav>
+
+      <div className="p-2 border-t border-slate-200 dark:border-emerald-950 bg-slate-50 dark:bg-[#06120B] flex flex-col items-center gap-2">
+        <div title={`${displayName} · ${userDisplayEmail}`} className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 text-zinc-950 flex items-center justify-center font-extrabold text-xs shadow-md">CM</div>
+        <button type="button" onClick={handleLogout} title={t('nav.signOut')} aria-label={t('nav.signOut')} className="p-2 rounded-xl text-slate-400 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all cursor-pointer">
+          <LogOut className="w-4 h-4" />
+        </button>
+        <button type="button" onClick={onToggleCollapsed} aria-expanded={false} title={t('nav.expand')} aria-label={t('nav.expand')} className="p-2 rounded-xl text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-emerald-950/40 cursor-pointer">
+          <ChevronsRight className="w-4 h-4" />
+        </button>
+      </div>
+
+      {flyGroup && fly && (
+        <div
+          role="menu"
+          aria-label={flyGroup.label}
+          data-rail-flyout={flyGroup.id}
+          onMouseEnter={() => window.clearTimeout(flyTimer.current)}
+          onMouseLeave={closeFlySoon}
+          className="fixed left-[76px] z-50 w-60 p-2 rounded-xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/60 shadow-2xl"
+          style={{ top: fly.top }}
+        >
+          <Link
+            href={flyGroup.href}
+            onClick={() => setFly(null)}
+            className="block px-2.5 py-1.5 text-xs font-extrabold text-slate-900 dark:text-white hover:text-amber-700 dark:hover:text-amber-300"
+          >
+            {flyGroup.label}
+          </Link>
+          <div className="mt-1 space-y-0.5">
+            {flyGroup.subItems.map((sub, i) => {
+              const SubIcon = sub.icon;
+              const isSubActive = pathname === sub.href;
+              return (
+                <Link
+                  key={i}
+                  href={sub.href}
+                  role="menuitem"
+                  onClick={() => setFly(null)}
+                  onFocus={() => window.clearTimeout(flyTimer.current)}
+                  onBlur={closeFlySoon}
+                  className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-[11px] font-medium ${
+                    isSubActive ? 'bg-amber-100 dark:bg-amber-400/15 text-amber-900 dark:text-amber-300 font-bold' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-emerald-950/30'
+                  }`}
+                >
+                  <span className="flex items-center gap-2 min-w-0">
+                    <SubIcon className="w-3.5 h-3.5 shrink-0 text-slate-400 dark:text-zinc-500" />
+                    <span className="truncate">{sub.label}</span>
+                  </span>
+                  {sub.badge && <span className="px-1.5 rounded text-[9px] font-extrabold bg-amber-400 text-black">{sub.badge}</span>}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <>
       {/* Desktop Left Aside (Fixed on Left, 280px) */}
-      <aside className="hidden lg:flex w-72 flex-col fixed inset-y-0 left-0 z-30 shadow-2xl">
-        {sidebarContent}
+      <aside className={`hidden lg:flex ${collapsed ? 'w-[76px]' : 'w-72'} flex-col fixed inset-y-0 left-0 z-30 shadow-2xl transition-[width] duration-200`} data-admin-aside={collapsed ? 'collapsed' : 'open'}>
+        {collapsed ? railContent : sidebarContent}
+        {onToggleCollapsed && (
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? t('nav.expand') : t('nav.collapse')}
+            title={collapsed ? t('nav.expand') : t('nav.collapse')}
+            className="absolute -right-3 top-20 z-40 w-6 h-6 rounded-full flex items-center justify-center bg-white dark:bg-[#0A1610] border border-slate-300 dark:border-emerald-800 text-slate-600 dark:text-emerald-300 shadow-md hover:bg-amber-400 hover:text-black hover:border-amber-400 cursor-pointer transition-colors"
+          >
+            {collapsed ? <ChevronsRight className="w-3.5 h-3.5" /> : <ChevronsLeft className="w-3.5 h-3.5" />}
+          </button>
+        )}
       </aside>
 
       {/* Mobile Top Header with Hamburger */}
