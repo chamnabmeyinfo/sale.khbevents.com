@@ -212,19 +212,74 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
     syncHistory();
   }, []);
 
+  // Keyboard: Ctrl/Cmd+S saves (also while typing); undo/redo, Esc and Alt+arrows work outside text fields.
+  const keyActions = useRef({ save: () => {}, deselect: () => {}, moveSelected: (_dir: -1 | 1) => {} });
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      const key = e.key.toLowerCase();
+      if (mod && key === 's') {
+        e.preventDefault();
+        keyActions.current.save();
+        return;
+      }
       const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) return;
+      if (mod && key === 'z') {
         e.preventDefault();
         if (e.shiftKey) redo();
         else undo();
+      } else if (mod && key === 'y') {
+        e.preventDefault();
+        redo();
+      } else if (e.key === 'Escape') {
+        keyActions.current.deselect();
+      } else if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+        e.preventDefault();
+        keyActions.current.moveSelected(e.key === 'ArrowUp' ? -1 : 1);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [undo, redo]);
+
+  // Sticky top bar: its height and the admin header's height feed the side panels' offsets.
+  // Below the desktop layout it slides away while scrolling down and returns on scrolling up.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  const [barHidden, setBarHidden] = useState(false);
+  const [barStuck, setBarStuck] = useState(false);
+  useEffect(() => {
+    const root = rootRef.current;
+    const bar = barRef.current;
+    if (!root || !bar) return;
+    const tops = Array.from(document.querySelectorAll<HTMLElement>('[data-admin-topbar]'));
+    const measure = () => {
+      root.style.setProperty('--kb-top', `${tops.reduce((h, el) => Math.max(h, el.offsetHeight), 0)}px`);
+      root.style.setProperty('--kb-bar', `${bar.offsetHeight}px`);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    [bar, ...tops].forEach((el) => ro.observe(el));
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setBarStuck(y > 8);
+      if (window.innerWidth >= 1024 || y < 160) {
+        setBarHidden(false);
+        last = y;
+        return;
+      }
+      if (y > last + 6) setBarHidden(true);
+      else if (y < last - 6) setBarHidden(false);
+      if (Math.abs(y - last) > 6) last = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
 
   useEffect(() => {
     if (!dirty) return;
@@ -315,6 +370,17 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
       setSaving(false);
     }
   };
+
+  useEffect(() => {
+    keyActions.current = {
+      save: () => { if (!saving) void save(); },
+      deselect: () => { if (!fullPreview) setSelectedId(null); },
+      moveSelected: (dir) => {
+        const to = selectedIndex + dir;
+        if (selectedIndex >= 0 && to >= 0 && to < doc.blocks.length) move(selectedIndex, to);
+      },
+    };
+  });
 
   const termsBlock = doc.blocks.find((b): b is TermsBlock => b.type === 'terms');
   const termsRef = termsBlock ? `terms-${termsBlock.id}|${termsBlock.updated || ''}` : '';
@@ -840,10 +906,14 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
   };
 
   return (
-    <div className="space-y-4">
+    <div ref={rootRef} className="space-y-4" style={{ '--kb-top': '0px', '--kb-bar': '0px' } as React.CSSProperties}>
       {fullPreview && <BuilderFullPreview doc={doc} ctx={ctx} lang={previewLang} onLang={setPreviewLang} onClose={closeFullPreview} slug={meta.slug} />}
       {/* Top bar */}
-      <div className={`${PANEL} p-3 flex flex-wrap items-center gap-2 justify-between`}>
+      <div
+        ref={barRef}
+        data-editor-bar={barHidden ? 'hidden' : 'shown'}
+        className={`${PANEL} p-3 flex flex-wrap items-center gap-2 justify-between sticky top-[var(--kb-top)] z-[15] transition-[transform,box-shadow] duration-200 ${barStuck ? 'shadow-lg' : ''} ${barHidden ? 'max-lg:-translate-y-[calc(100%+var(--kb-top))]' : ''}`}
+      >
         <div className="flex items-center gap-2 min-w-0">
           <Link href="/admin/pages" className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-emerald-950/60 text-slate-600 dark:text-gray-300" aria-label={t('builder.back')}>
             <ArrowLeft className="w-4 h-4" />
@@ -884,7 +954,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
           ) : (
             <button type="button" disabled={saving} onClick={() => save('draft')} className="px-3 py-2 rounded-xl text-[11px] font-bold bg-slate-100 dark:bg-emerald-950 text-slate-700 dark:text-emerald-300 cursor-pointer disabled:opacity-50">{t('builder.unpublish')}</button>
           )}
-          <button type="button" disabled={saving} onClick={() => save()} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs shadow-md cursor-pointer disabled:opacity-50">
+          <button type="button" disabled={saving} onClick={() => save()} title={t('builder.saveShortcut')} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs shadow-md cursor-pointer disabled:opacity-50">
             <Save className="w-4 h-4" />
             <span>{saving ? t('common.saving') : t('common.save')}</span>
             {dirty && !saving && <span className="w-2 h-2 rounded-full bg-rose-500" title={t('common.unsavedChanges')} />}
@@ -901,7 +971,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
 
       <div className="grid gap-4 lg:grid-cols-[230px_minmax(0,1fr)_320px] items-start">
         {/* Library */}
-        <aside className={`${PANEL} p-3 space-y-2 lg:sticky lg:top-20 lg:max-h-[calc(100vh-110px)] lg:overflow-y-auto`}>
+        <aside className={`${PANEL} p-3 space-y-2 lg:sticky lg:top-[calc(var(--kb-top)+var(--kb-bar)+12px)] lg:max-h-[calc(100vh-var(--kb-top)-var(--kb-bar)-88px)] lg:overflow-y-auto`}>
           <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-emerald-500/80 px-1">{t('builder.library')}</h3>
           <p className="text-[10px] text-slate-500 dark:text-gray-400 px-1">{t('builder.libraryHint')}</p>
           {BLOCK_TYPES.map((type) => {
@@ -930,7 +1000,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
         {/* Canvas */}
         <div className={`${PANEL} p-3 overflow-hidden`}>
           {view === 'map' ? (
-          <div className="bg-slate-100 dark:bg-black/40 rounded-xl p-2 sm:p-4 overflow-auto max-h-[calc(100vh-190px)]">
+          <div className="bg-slate-100 dark:bg-black/40 rounded-xl p-2 sm:p-4 overflow-auto max-h-[calc(100vh-190px)] lg:max-h-[calc(100vh-var(--kb-top)-var(--kb-bar)-112px)]">
             <BuilderPageMap
               doc={doc}
               ctx={ctx}
@@ -942,7 +1012,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
             />
           </div>
           ) : (
-          <div className="bg-slate-100 dark:bg-black/40 rounded-xl p-2 sm:p-4 overflow-auto max-h-[calc(100vh-190px)]" onClick={() => setSelectedId(null)}>
+          <div className="bg-slate-100 dark:bg-black/40 rounded-xl p-2 sm:p-4 overflow-auto max-h-[calc(100vh-190px)] lg:max-h-[calc(100vh-var(--kb-top)-var(--kb-bar)-112px)]" onClick={() => setSelectedId(null)}>
             <div className={`mx-auto transition-all duration-300 ${device === 'phone' ? 'w-[390px] max-w-full rounded-[28px] ring-8 ring-slate-800 dark:ring-black overflow-hidden' : 'w-full'}`}>
               <BuilderRoot brand={doc.brand} lang={previewLang}>
                 {doc.blocks.length === 0 ? (
@@ -1007,7 +1077,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
         </div>
 
         {/* Inspector */}
-        <aside className={`${PANEL} p-4 space-y-4 lg:sticky lg:top-20 max-h-[calc(100vh-110px)] overflow-y-auto`}>
+        <aside className={`${PANEL} p-4 space-y-4 lg:sticky lg:top-[calc(var(--kb-top)+var(--kb-bar)+12px)] max-h-[calc(100vh-110px)] lg:max-h-[calc(100vh-var(--kb-top)-var(--kb-bar)-88px)] overflow-y-auto`}>
           {selected ? (
             <>
               <div className="flex items-start justify-between gap-2">

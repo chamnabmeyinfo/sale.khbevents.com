@@ -539,7 +539,7 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapsed }: {
       </aside>
 
       {/* Mobile Top Header with Hamburger */}
-      <div className="lg:hidden sticky top-0 z-40 bg-white dark:bg-[#06120B] border-b border-slate-200 dark:border-emerald-900/40 px-4 py-3 flex items-center justify-between transition-colors">
+      <div data-admin-topbar="" className="lg:hidden sticky top-0 z-40 bg-white dark:bg-[#06120B] border-b border-slate-200 dark:border-emerald-900/40 px-4 py-3 flex items-center justify-between transition-colors">
         <button
           onClick={() => setMobileDrawerOpen(true)}
           className="p-2 rounded-xl bg-slate-100 dark:bg-emerald-950 border border-slate-200 dark:border-emerald-800/60 text-slate-800 dark:text-white"

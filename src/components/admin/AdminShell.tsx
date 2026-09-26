@@ -53,7 +53,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       {/* Main Content Area (Offset by sidebar width on desktop) */}
       <div className={`${collapsed ? 'lg:pl-[76px]' : 'lg:pl-72'} flex flex-col min-h-screen transition-[padding] duration-200`}>
         {/* Desktop Top Header Bar */}
-        <header className="hidden lg:flex items-center justify-between px-8 py-3.5 bg-white/95 dark:bg-[#050D09]/95 backdrop-blur-md border-b border-slate-200 dark:border-emerald-900/30 sticky top-0 z-20 shadow-sm transition-colors duration-200">
+        <header data-admin-topbar="" className="hidden lg:flex items-center justify-between px-8 py-3.5 bg-white/95 dark:bg-[#050D09]/95 backdrop-blur-md border-b border-slate-200 dark:border-emerald-900/30 sticky top-0 z-20 shadow-sm transition-colors duration-200">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 text-xs font-medium">
               <span className="text-slate-400 dark:text-zinc-500 font-mono">PORTAL</span>

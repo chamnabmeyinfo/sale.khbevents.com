@@ -35,6 +35,10 @@ This started as the pilot of Phase 2 in [[Landing Page Builder Roadmap]]. Since 
 
 Undo and redo cover the last 60 changes. The browser warns before leaving with unsaved changes.
 
+**Top bar and screen fit** (since 2026-09-26): the bar with Save, Publish, Full preview and Page map stays at the top. On a computer the editor fits the screen height and each column (components, page, settings) scrolls on its own, so Save is always in view. On a phone or tablet the bar slides away while scrolling down and comes back on scrolling up.
+
+**Keyboard shortcuts:** Ctrl+S (⌘S on Mac) saves, also while typing in a field. Outside text fields: Ctrl+Z undo, Ctrl+Shift+Z or Ctrl+Y redo, Esc deselects the section, Alt+↑ / Alt+↓ moves the selected section. The Save button's tooltip lists them.
+
 ## Full preview and Page map
 
 - **Full preview** (top bar, next to the phone and computer buttons) shows the whole page over the full screen at a real computer width: **Laptop** 1280, **Desktop** 1440 or **Large screen** 1920 pixels. When the screen is narrower, the page is scaled down, so it keeps the computer layout. EN/ខ្មែរ switch inside. Close with the button or Esc. Buttons and the form do nothing in the preview.
