@@ -125,6 +125,8 @@ The price includes nine things. The page shows what each would cost if arranged 
 
 **Not included** (FAQ copy): lunches and dinners outside the listed programme (the cruise lunch is included), a Vietnam SIM card, travel insurance, personal shopping.
 
+On the page (since 2026-09-26) both lists sit side by side in the **Included & not included** section: "Included in your seat" (the nine items) and "Not included" (these four). The FAQ answer says the same; change both together. See [[Page Builder]].
+
 **Single room:** the price is twin or double sharing. A single room is possible for "a small supplement". The amount is not in the repo.
 
 **Payment:** nothing to pay on the first step. The buyer pays after the confirmation call, once flights, hotel and factory schedule are confirmed. An official tax invoice and the full itinerary are sent on Telegram. Payment details (bank, Bakong KHQR) are set per page in Admin → Landing Pages CMS → the page → Dedicated Landing Page Settings → Invoicing & KHQR.

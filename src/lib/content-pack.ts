@@ -1,5 +1,6 @@
 import type { LandingPage } from '@/lib/types';
 import { convertPageToBuilder } from './classic-to-builder';
+import { normalizeBuilderDoc } from './builder';
 
 /**
  * A content pack is a JSON file in `content/pages/<slug>.json` holding the copy of one
@@ -19,7 +20,30 @@ export type ContentPack = Partial<LandingPage> & {
    * already are builder pages are left as they are.
    */
   convertToBuilder?: boolean;
+  /**
+   * Builder sections to swap in, matched by id. Each replaces the live section with the
+   * same id (its type may change); every other section, the order and the offer
+   * (price, deadlines, seats) stay as the admin left them. Ids not on the page are skipped.
+   */
+  replaceBuilderBlocks?: unknown[];
 };
+
+const PACK_ONLY_KEYS = ['convertToBuilder', 'replaceBuilderBlocks'];
+
+function replaceBlocks(page: LandingPage, blocks: unknown[]): LandingPage {
+  if (!page.builder) return page;
+  const doc = normalizeBuilderDoc(page.builder);
+  let changed = false;
+  const next = doc.blocks.map((live) => {
+    const raw = blocks.find((b) => isPlainObject(b) && b.id === live.id);
+    if (!raw) return live;
+    const [block] = normalizeBuilderDoc({ ...doc, blocks: [raw] }).blocks;
+    if (!block || block.id !== live.id) return live;
+    changed = true;
+    return block;
+  });
+  return changed ? { ...page, builder: { ...doc, blocks: next } } : page;
+}
 
 /** Fields a pack can never carry into a page: they identify or count the page itself. */
 const IDENTITY_FIELDS = ['id', 'viewsCount', 'leadsCount', 'createdAt', 'updatedAt'] as const;
@@ -38,15 +62,16 @@ export function isContentPack(value: unknown): value is ContentPack {
  * `urgency.regularPrice` leaves the deadlines the admin typed. Arrays and scalars are
  * replaced whole: a list in the pack is the whole list. Identity fields are ignored.
  */
-export function mergeContentPack(base: LandingPage, pack: Partial<LandingPage> & { convertToBuilder?: boolean }): LandingPage {
+export function mergeContentPack(base: LandingPage, pack: Partial<LandingPage> & { convertToBuilder?: boolean; replaceBuilderBlocks?: unknown[] }): LandingPage {
   const out: Record<string, unknown> = { ...base };
   for (const [key, value] of Object.entries(pack)) {
-    if ((IDENTITY_FIELDS as readonly string[]).includes(key) || key === 'convertToBuilder') continue;
+    if ((IDENTITY_FIELDS as readonly string[]).includes(key) || PACK_ONLY_KEYS.includes(key)) continue;
     const current = out[key];
     out[key] = isPlainObject(value) && isPlainObject(current) ? { ...current, ...value } : value;
   }
   const merged = out as unknown as LandingPage;
-  return pack.convertToBuilder === true ? convertPageToBuilder(merged) : merged;
+  const converted = pack.convertToBuilder === true ? convertPageToBuilder(merged) : merged;
+  return Array.isArray(pack.replaceBuilderBlocks) ? replaceBlocks(converted, pack.replaceBuilderBlocks) : converted;
 }
 
 /**

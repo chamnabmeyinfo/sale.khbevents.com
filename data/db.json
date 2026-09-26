@@ -1192,8 +1192,8 @@
               "spacing": "normal",
               "animation": "rise"
             },
-            "type": "included",
-            "variant": "checklist",
+            "type": "inclusions",
+            "variant": "columns",
             "title": {
               "en": "One price. Nine things handled.",
               "kh": "តម្លៃតែមួយ។ រៀបចំជូន ៩ យ៉ាង។"
@@ -1202,7 +1202,11 @@
               "en": "Everything below is in your seat price. Book each piece yourself and the same trip costs more money and weeks of your time.",
               "kh": "អ្វីៗខាងក្រោមរួមក្នុងតម្លៃកៅអីរបស់លោកអ្នក។ បើកក់ដោយខ្លួនឯងម្តងមួយៗ ដំណើរដូចគ្នាអស់ប្រាក់ច្រើនជាង និងពេលវេលារាប់សប្តាហ៍។"
             },
-            "items": [
+            "includedTitle": {
+              "en": "Included in your seat",
+              "kh": "រួមក្នុងតម្លៃកៅអី"
+            },
+            "included": [
               {
                 "en": "Round-trip flights: Phnom Penh to Hanoi and back.",
                 "kh": "ជើងហោះហើរទៅមក: ភ្នំពេញ ទៅ ហាណូយ និងត្រឡប់មកវិញ។"
@@ -1238,6 +1242,28 @@
               {
                 "en": "Halong Bay cruise and Hanoi tour: UNESCO bay cruise with seafood lunch on board.",
                 "kh": "កប៉ាល់ហាឡុងបេ និងទស្សនាហាណូយ: ជិះកប៉ាល់ឈូងសមុទ្រ UNESCO ជាមួយអាហារថ្ងៃត្រង់លើកប៉ាល់។"
+              }
+            ],
+            "excludedTitle": {
+              "en": "Not included",
+              "kh": "មិនរួមបញ្ចូល"
+            },
+            "excluded": [
+              {
+                "en": "Lunches and dinners outside the listed programme (the Halong Bay cruise lunch is included).",
+                "kh": "អាហារថ្ងៃត្រង់ និងពេលល្ងាចក្រៅកម្មវិធី (អាហារលើកប៉ាល់ហាឡុងបេរួមបញ្ចូល)។"
+              },
+              {
+                "en": "A Vietnam SIM card.",
+                "kh": "SIM វៀតណាម។"
+              },
+              {
+                "en": "Travel insurance.",
+                "kh": "ធានារ៉ាប់រងដំណើរ។"
+              },
+              {
+                "en": "Personal shopping.",
+                "kh": "ការទិញឥវ៉ាន់ផ្ទាល់ខ្លួន។"
               }
             ],
             "note": {
@@ -1518,7 +1544,8 @@
             "successText": {
               "en": "Thank you. Sovann Meas from KHB Events will call or message you within 15 minutes to confirm the details.",
               "kh": "សូមអរគុណ។ Sovann Meas ពី KHB Events នឹងទូរស័ព្ទ ឬផ្ញើសារមកក្នុង ១៥ នាទី ដើម្បីបញ្ជាក់ព័ត៍មាន។"
-            }
+            },
+            "requireTerms": false
           },
           {
             "id": "cv-faq",

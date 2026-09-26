@@ -43,7 +43,7 @@ Suggested order: lock the database first, then change the token and the password
 - [ ] Send real testimonials and outcome photos when they exist. Until then the testimonials stay hidden; they were placeholders. → [[Smart City Tea and Cafe Vietnam 2026]], [[Image Uploads]] #owner
 - [ ] Choose the **Remember a visitor for** period in Admin → Staff Round Robin → Advanced Routing Engine Rules & Fallbacks. Choices: Off, 1, 2, 3 or 6 months. The default in the repo is 1 month. → [[Round Robin]] #owner
 - [ ] Terms & Conditions (new builder component): write the real terms (payment, cancellation, refunds, changes, travel documents), have them checked, then add them to each page and set **Last updated**. Optionally tick **Ask visitors to agree** on the lead form. → [[Page Builder]] #owner
-- [ ] Add an **Included & not included** section to each trip page with the real items (for example flights, hotel, meals, visa, insurance). The starter items are placeholders. → [[Page Builder]] #owner
+- [ ] Add an **Included & not included** section to each trip page with the real items (for example flights, hotel, meals, visa, insurance). The starter items are placeholders. Vietnam: done (2026-09-26); check it on the live page, and add the single-room supplement to "Not included" if you want it listed. Korea: still to do. → [[Page Builder]] #owner
 - [ ] Decide whether to run a popup, and create the first one if wanted. → [[Create a Popup]], [[Ads and Popups]] #owner
 
 ### Korea trip

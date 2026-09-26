@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { featureImageDecision, isContentPack, mergeContentPack, parseFeatureImages } from '@/lib/content-pack';
 import type { LandingPage } from '@/lib/types';
 
@@ -80,5 +82,46 @@ describe('suggested feature images', () => {
       x: 'https://cdn.example.com/b.jpg',
     });
     expect(parseFeatureImages(null)).toEqual({});
+  });
+});
+
+describe('pack: replace builder sections by id', () => {
+  const live = JSON.parse(readFileSync(join(process.cwd(), 'data/db.json'), 'utf8')).pages
+    .find((p: LandingPage) => p.slug === 'smart-city-tea-cafe') as LandingPage;
+  const pack = JSON.parse(readFileSync(join(process.cwd(), 'content/pages/smart-city-tea-cafe.json'), 'utf8'));
+
+  it('the Vietnam pack shows the nine included items and the four not included from the FAQ', () => {
+    const merged = mergeContentPack(live, pack);
+    const block = merged.builder!.blocks.find((b) => b.id === 'cv-included');
+    expect(block?.type).toBe('inclusions');
+    if (block?.type !== 'inclusions') return;
+    expect(block.included).toHaveLength(9);
+    expect(block.excluded.map((x) => x.en)).toEqual([
+      'Lunches and dinners outside the listed programme (the Halong Bay cruise lunch is included).',
+      'A Vietnam SIM card.',
+      'Travel insurance.',
+      'Personal shopping.',
+    ]);
+    expect(block.excluded.every((x) => x.kh)).toBe(true);
+  });
+
+  it('changes only that section: order, other sections and the offer stay the admin\'s', () => {
+    const owner = structuredClone(live);
+    owner.builder!.offer.deadline = '2026-12-01T00:00:00.000Z';
+    owner.builder!.blocks = [...owner.builder!.blocks].reverse();
+    const merged = mergeContentPack(owner, pack);
+    expect(merged.builder!.offer.deadline).toBe('2026-12-01T00:00:00.000Z');
+    expect(merged.builder!.blocks.map((b) => b.id)).toEqual(owner.builder!.blocks.map((b) => b.id));
+    const others = (p: LandingPage) => JSON.stringify(p.builder!.blocks.filter((b) => b.id !== 'cv-included'));
+    expect(others(merged)).toBe(others(owner));
+    expect(merged.title).toBe(owner.title);
+  });
+
+  it('skips ids that are not on the page and pages without a builder', () => {
+    const merged = mergeContentPack(live, { slug: live.slug, replaceBuilderBlocks: [{ id: 'nope', type: 'faq', items: [] }] });
+    expect(merged.builder!.blocks.map((b) => b.id)).toEqual(live.builder!.blocks.map((b) => b.id));
+    const classicPage = { ...structuredClone(live), builder: undefined };
+    expect(mergeContentPack(classicPage, { slug: live.slug, replaceBuilderBlocks: [{ id: 'cv-included', type: 'faq' }] }).builder).toBeUndefined();
+    expect('replaceBuilderBlocks' in merged).toBe(false);
   });
 });

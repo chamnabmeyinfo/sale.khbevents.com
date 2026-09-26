@@ -26,6 +26,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-26 — Packs can replace one builder section by id
+
+- **Decision:** A content pack can carry `replaceBuilderBlocks` to swap single builder sections (matched by id), instead of replacing the whole builder page. First use: the Vietnam page's "What's included" became "Included & not included".
+- **Why:** Builder pages are edited in the admin; a whole-page pack would wipe the owner's edits (deadlines, seats, order). Swapping one section keeps them.
+- **Who decided:** Claude with owner approval.
+- **Affects:** [[Content Packs]], [[Smart City Tea and Cafe Vietnam 2026]].
+
 ## 2026-09-26 — Page map suggests an order; it never reorders on its own
 
 - **Decision:** The builder's Page map advises on section order along a buyer's journey (Attention → Why/Details → Price → Sign up → Questions → Terms → Final push). It only changes the order when the owner presses **Use this order**, which can be undone. Sections in the same step keep the owner's order.

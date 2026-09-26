@@ -91,6 +91,12 @@ A pack with `"convertToBuilder": true` turns an old fixed-layout page into a bui
 
 The Vietnam pack is now only `{ "slug": "smart-city-tea-cafe", "convertToBuilder": true }` (2026-09-25). Its copy is edited in the builder, not in git. `npm run content:pack` was removed because it would have brought the old layout back.
 
+## Replacing one builder section
+
+A pack can swap single builder sections with `"replaceBuilderBlocks": [ { "id": "…", "type": "…", … } ]`. Each block replaces the live section with the same id (its type may change). Every other section, the section order and the offer (price, deadlines, seats) stay as the admin left them. Ids not on the page, and pages that are not builder pages, are skipped. Keeping the id keeps the section's visitor statistics together.
+
+Since 2026-09-26 the Vietnam pack uses it once: section `cv-included` became an **Included & not included** section (the nine included items, plus the four not-included items from the FAQ answer). Any change the admin had made to that section's text is replaced; the page as it was before is saved as the pack backup (see below).
+
 ## Undo a pack
 
 The page as it was before the last applied pack is kept in the `content_pack_backup:<slug>` row of `system_settings` in Supabase. At the time of writing there is no admin button to restore it; a developer copies it back.
