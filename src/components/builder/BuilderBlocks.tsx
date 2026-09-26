@@ -18,6 +18,7 @@ import type {
   GalleryBlock,
   HeroBlock,
   IncludedBlock,
+  InclusionsBlock,
   Lang,
   OfferBlock,
   StepsBlock,
@@ -75,6 +76,10 @@ const UI = {
 
 const CheckMark = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+);
+
+const CrossMark = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
 );
 
 const fill = (s: string, v: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (m, k: string) => (k in v ? String(v[k]) : m));
@@ -477,6 +482,37 @@ function Included({ block, ctx }: { block: IncludedBlock; ctx: RenderContext }) 
   );
 }
 
+function Inclusions({ block, ctx }: { block: InclusionsBlock; ctx: RenderContext }) {
+  const { lang } = ctx;
+  const yes = block.included.map((f) => pick(f, lang)).filter(Boolean);
+  const no = block.excluded.map((f) => pick(f, lang)).filter(Boolean);
+  const group = (kind: 'yes' | 'no', title: string, items: string[]) =>
+    items.length > 0 && (
+      <div className={`kb-incl__group kb-incl__group--${kind}`}>
+        <h3 className="kb-incl__head">{kind === 'yes' ? <CheckMark /> : <CrossMark />}<span>{title}</span></h3>
+        <ul className={`kb-checklist${kind === 'no' ? ' kb-checklist--no' : ''}`}>
+          {items.map((f, i) => (
+            <li key={i} style={nth(i)}>{kind === 'yes' ? <CheckMark /> : <CrossMark />}<span>{f}</span></li>
+          ))}
+        </ul>
+      </div>
+    );
+  return (
+    <section className={sectionClass(block)} data-anim={block.style.animation || 'rise'}>
+      <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
+      <div className="kb-container">
+        <h2 className="kb-section-title">{pick(block.title, lang)}</h2>
+        {block.sub && <p className="kb-section-sub">{pick(block.sub, lang)}</p>}
+        <div className={`kb-incl kb-incl--${block.variant}${yes.length && no.length ? '' : ' kb-incl--single'}`}>
+          {group('yes', pick(block.includedTitle, lang), yes)}
+          {group('no', pick(block.excludedTitle, lang), no)}
+        </div>
+        {block.note && <p className="kb-note kb-incl__note">{pick(block.note, lang)}</p>}
+      </div>
+    </section>
+  );
+}
+
 function Steps({ block, ctx }: { block: StepsBlock; ctx: RenderContext }) {
   const { lang } = ctx;
   const items = block.items.filter((i) => pick(i.title, lang));
@@ -793,6 +829,8 @@ export function BlockView({ block, ctx }: { block: BuilderBlock; ctx: RenderCont
       return <Benefits block={block} ctx={ctx} />;
     case 'included':
       return <Included block={block} ctx={ctx} />;
+    case 'inclusions':
+      return <Inclusions block={block} ctx={ctx} />;
     case 'steps':
       return <Steps block={block} ctx={ctx} />;
     case 'form':

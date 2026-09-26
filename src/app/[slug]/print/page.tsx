@@ -55,6 +55,7 @@ const Svg = ({ children }: { children: React.ReactNode }) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
 );
 const Check = () => <Svg><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></Svg>;
+const Cross = () => <Svg><circle cx="12" cy="12" r="9" /><path d="m9 9 6 6m0-6-6 6" /></Svg>;
 
 function Qr({ url, caption }: { url: string; caption: string }) {
   const qr = qrPath(url);
@@ -151,6 +152,27 @@ function Section({ s, photos, moreQ, footer, updatedLabel }: { s: PrintSection; 
         <section className={`pp-sec${s.tone === 'accent' ? ' pp-box' : ''}`}>
           {head(s.title, s.sub)}
           <ul className="pp-check">{s.items.map((c, i) => <li key={i}><Check />{c}</li>)}</ul>
+          {s.note && <p className="pp-note">{s.note}</p>}
+        </section>
+      );
+    case 'inclusions':
+      return (
+        <section className="pp-sec">
+          {head(s.title, s.sub)}
+          <div className="pp-incl">
+            {s.included.items.length > 0 && (
+              <div className="pp-incl__col">
+                <h3 className="pp-incl__head"><Check />{s.included.title}</h3>
+                <ul className="pp-check pp-check--one">{s.included.items.map((c, i) => <li key={i}><Check />{c}</li>)}</ul>
+              </div>
+            )}
+            {s.excluded.items.length > 0 && (
+              <div className="pp-incl__col pp-incl__col--no">
+                <h3 className="pp-incl__head"><Cross />{s.excluded.title}</h3>
+                <ul className="pp-check pp-check--one">{s.excluded.items.map((c, i) => <li key={i}><Cross />{c}</li>)}</ul>
+              </div>
+            )}
+          </div>
           {s.note && <p className="pp-note">{s.note}</p>}
         </section>
       );

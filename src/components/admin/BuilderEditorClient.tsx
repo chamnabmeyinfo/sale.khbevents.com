@@ -24,7 +24,7 @@ import {
   X,
 } from 'lucide-react';
 import type { LandingPage } from '@/lib/types';
-import type { BenefitsBlock, Bi, BlockType, BuilderBlock, BuilderDoc, FaqBlock, FinalCtaBlock, FormBlock, GalleryBlock, HeroBlock, IncludedBlock, Lang, OfferBlock, StepsBlock, TermsBlock } from '@/lib/builder';
+import type { BenefitsBlock, Bi, BlockType, BuilderBlock, BuilderDoc, FaqBlock, FinalCtaBlock, FormBlock, GalleryBlock, HeroBlock, IncludedBlock, InclusionsBlock, Lang, OfferBlock, StepsBlock, TermsBlock } from '@/lib/builder';
 import {
   BENEFIT_ICONS,
   BLOCK_ANIMATIONS,
@@ -557,6 +557,41 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
     );
   };
 
+  const inclusionsContent = (b: InclusionsBlock) => {
+    const list = (key: 'included' | 'excluded', titleKey: 'includedTitle' | 'excludedTitle') => {
+      const items = b[key];
+      const setItems = (next: Bi[], typing = true) => updateBlock(b.id, { [key]: next }, typing);
+      return (
+        <div className="space-y-2">
+          <div className={`text-xs font-black ${key === 'included' ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}`}>
+            {key === 'included' ? '✓ ' : '✕ '}{t(key === 'included' ? 'builder.inclusions.included' : 'builder.inclusions.excluded')}
+          </div>
+          <BiInput label={t('builder.inclusions.groupTitle')} value={b[titleKey]} onChange={(v) => updateBlock(b.id, { [titleKey]: v })} />
+          {items.map((it, i) => (
+            <div key={i} className={ROW}>
+              <div className={ROW_HEAD}>
+                <span className={ROW_LABEL}>{t('builder.list.item', { n: i + 1 })}</span>
+                <RowTools index={i} count={items.length} onMove={(to) => setItems(moveBlock(items, i, to), false)} onRemove={() => setItems(items.filter((_, j) => j !== i), false)} />
+              </div>
+              <BiInput label="" value={it} onChange={(v) => setItems(items.map((x, j) => (j === i ? v : x)))} />
+            </div>
+          ))}
+          {items.length < 30 && <AddRow label={t(key === 'included' ? 'builder.inclusions.addIncluded' : 'builder.inclusions.addExcluded')} onClick={() => setItems([...items, { en: '' }], false)} />}
+        </div>
+      );
+    };
+    return (
+      <Section title={t('builder.content')}>
+        <BiInput label={t('builder.sectionTitle')} value={b.title} onChange={(v) => updateBlock(b.id, { title: v })} />
+        <BiInput label={t('builder.sectionSub')} value={b.sub} onChange={(v) => updateBlock(b.id, { sub: v })} multiline />
+        <p className={HINT}>{t('builder.inclusions.hint')}</p>
+        {list('included', 'includedTitle')}
+        {list('excluded', 'excludedTitle')}
+        <BiInput label={t('builder.inclusions.note')} value={b.note} onChange={(v) => updateBlock(b.id, { note: v })} />
+      </Section>
+    );
+  };
+
   const stepsContent = (b: StepsBlock) => {
     const setItems = (items: StepsBlock['items'], typing = true) => updateBlock(b.id, { items }, typing);
     return (
@@ -976,6 +1011,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
               {selected.type === 'finalCta' && finalContent(selected)}
               {selected.type === 'gallery' && galleryContent(selected)}
               {selected.type === 'terms' && termsContent(selected)}
+              {selected.type === 'inclusions' && inclusionsContent(selected)}
             </>
           ) : (
             <>

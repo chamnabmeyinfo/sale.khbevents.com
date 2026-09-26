@@ -115,6 +115,19 @@ export interface IncludedBlock extends BlockBase {
   note?: Bi;
 }
 
+/** Included and not included, side by side, so buyers know exactly what the price covers. */
+export interface InclusionsBlock extends BlockBase {
+  type: 'inclusions';
+  variant: 'columns' | 'stacked';
+  title: Bi;
+  sub?: Bi;
+  includedTitle: Bi;
+  included: Bi[];
+  excludedTitle: Bi;
+  excluded: Bi[];
+  note?: Bi;
+}
+
 export interface StepItem {
   title: Bi;
   text?: Bi;
@@ -192,7 +205,7 @@ export interface GalleryBlock extends BlockBase {
   items: GalleryItem[];
 }
 
-export type BuilderBlock = HeroBlock | OfferBlock | FaqBlock | BenefitsBlock | IncludedBlock | StepsBlock | FormBlock | FinalCtaBlock | GalleryBlock | TermsBlock;
+export type BuilderBlock = HeroBlock | OfferBlock | FaqBlock | BenefitsBlock | IncludedBlock | InclusionsBlock | StepsBlock | FormBlock | FinalCtaBlock | GalleryBlock | TermsBlock;
 export type BlockType = BuilderBlock['type'];
 
 export interface BuilderOffer {
@@ -425,6 +438,33 @@ export const BLOCK_DEFINITIONS: Record<BlockType, BlockDefinition> = {
       ],
     }),
   },
+  inclusions: {
+    type: 'inclusions',
+    name: { en: 'Included & not included', kh: 'រួមបញ្ចូល និងមិនរួមបញ្ចូល' },
+    coreValue: { en: 'Show what the price covers and what it does not, so buyers can compare fairly and nobody is surprised after paying.', kh: 'បង្ហាញអ្វីដែលតម្លៃរួមបញ្ចូល និងមិនរួមបញ្ចូល ដើម្បីឲ្យអ្នកទិញប្រៀបធៀបបានត្រឹមត្រូវ និងគ្មានការភ្ញាក់ផ្អើលក្រោយបង់ប្រាក់។' },
+    variants: [
+      { id: 'columns', name: { en: 'Two columns', kh: 'ពីរជួរ' }, detail: { en: 'Included and not included side by side; one under the other on a phone.', kh: 'រួមបញ្ចូល និងមិនរួមបញ្ចូល នៅក្បែរគ្នា ហើយមួយក្រោមមួយលើទូរស័ព្ទ។' } },
+      { id: 'stacked', name: { en: 'One card', kh: 'កាតតែមួយ' }, detail: { en: 'One card: included first, then not included.', kh: 'កាតតែមួយ៖ រួមបញ្ចូលមុន បន្ទាប់មកមិនរួមបញ្ចូល។' } },
+    ],
+    create: () => ({
+      id: newBlockId(),
+      type: 'inclusions',
+      variant: 'columns',
+      style: baseStyle('light', 'left'),
+      title: { en: 'What the price covers', kh: 'អ្វីដែលតម្លៃរួមបញ្ចូល' },
+      includedTitle: { en: 'Included', kh: 'រួមបញ្ចូល' },
+      included: [
+        { en: 'Replace this with the first included item', kh: 'ជំនួសដោយធាតុរួមបញ្ចូលទីមួយ' },
+        { en: 'Replace this with the second included item', kh: 'ជំនួសដោយធាតុរួមបញ្ចូលទីពីរ' },
+        { en: 'Replace this with the third included item', kh: 'ជំនួសដោយធាតុរួមបញ្ចូលទីបី' },
+      ],
+      excludedTitle: { en: 'Not included', kh: 'មិនរួមបញ្ចូល' },
+      excluded: [
+        { en: 'Replace this with the first item not included', kh: 'ជំនួសដោយធាតុមិនរួមបញ្ចូលទីមួយ' },
+        { en: 'Replace this with the second item not included', kh: 'ជំនួសដោយធាតុមិនរួមបញ្ចូលទីពីរ' },
+      ],
+    }),
+  },
   gallery: {
     type: 'gallery',
     name: { en: 'Photo gallery', kh: 'វិចិត្រសាលរូបភាព' },
@@ -626,6 +666,21 @@ function normalizeBlock(v: unknown): BuilderBlock | null {
       items: Array.isArray(o.items) ? o.items.slice(0, 30).map((f) => bi(f, 200)).filter(hasText) : [],
       image: url(o.image),
       note: optBi(o.note, 200),
+    };
+  }
+  if (type === 'inclusions') {
+    const b = blank as InclusionsBlock;
+    const list = (v: unknown) => (Array.isArray(v) ? v.slice(0, 30).map((f) => bi(f, 200)).filter(hasText) : []);
+    return {
+      id, style, type,
+      variant: oneOf(o.variant, ['columns', 'stacked'] as const, b.variant),
+      title: bi(o.title, 120, { en: '' }),
+      sub: optBi(o.sub, 300),
+      includedTitle: bi(o.includedTitle, 60, b.includedTitle),
+      included: list(o.included),
+      excludedTitle: bi(o.excludedTitle, 60, b.excludedTitle),
+      excluded: list(o.excluded),
+      note: optBi(o.note, 300),
     };
   }
   if (type === 'steps') {
@@ -903,6 +958,9 @@ export function blockHints(block: BuilderBlock): HintKey[] {
   } else if (block.type === 'included') {
     if (!block.items.length) hints.push('noItems');
     texts.push(block.title, ...block.items);
+  } else if (block.type === 'inclusions') {
+    if (!block.included.length && !block.excluded.length) hints.push('noItems');
+    texts.push(block.title, block.includedTitle, block.excludedTitle, ...block.included, ...block.excluded);
   } else if (block.type === 'steps') {
     if (!block.items.length) hints.push('noItems');
     texts.push(block.title, ...block.items.flatMap((i) => (i.text ? [i.title, i.text] : [i.title])));

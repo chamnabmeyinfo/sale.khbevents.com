@@ -133,6 +133,14 @@
 .pp-faq dd { margin: 1mm 0 0; font-size: 9pt; }
 
 /* Terms & Conditions: numbered clauses, small print that stays readable */
+.pp-incl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4mm; }
+.pp-incl__col { padding: 3mm 4mm; border: 1px solid var(--pp-line); border-top: 3px solid #1E8E5A; border-radius: 3mm; break-inside: avoid; }
+.pp-incl__col--no { border-top-color: #B4474A; }
+.pp-incl__head { display: flex; gap: 2mm; align-items: center; margin: 0 0 2.5mm; font-size: 10.5pt; font-weight: 800; color: var(--pp-ink); }
+.pp-incl__head svg { width: 18px; height: 18px; color: #1E8E5A; }
+.pp-incl__col--no .pp-incl__head svg, .pp-incl__col--no .pp-check svg { color: #B4474A; }
+.pp-incl .pp-check svg { color: #1E8E5A; }
+.pp-check.pp-check--one { grid-template-columns: 1fr; }
 .pp-terms__list { margin: 0; padding: 0 0 0 5mm; font-size: 8.8pt; }
 .pp-terms__list li { margin-bottom: 2mm; break-inside: avoid; }
 .pp-terms__list li::marker { font-weight: 800; color: var(--pp-deep); }
@@ -164,7 +172,7 @@
   .pp h1 { font-size: 1.5rem; }
   .pp-keyrow { flex-direction: column; }
   .pp-keyrow > .pp-qr { width: 130px; align-self: center; }
-  .pp-facts, .pp-cards, .pp-cards--compact, .pp-check, .pp-faq { grid-template-columns: 1fr; }
+  .pp-facts, .pp-cards, .pp-cards--compact, .pp-check, .pp-faq, .pp-incl { grid-template-columns: 1fr; }
   .pp-gallery { grid-template-columns: 1fr 1fr; }
   .pp-day__rows li { grid-template-columns: 24mm 4mm 1fr; }
   .pp-contact { flex-direction: column; align-items: flex-start; }
@@ -190,7 +198,8 @@
   .pp-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pp-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pp-cards--compact { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .pp-check, .pp-faq { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pp-check, .pp-faq, .pp-incl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pp-check.pp-check--one { grid-template-columns: 1fr; }
   .pp-gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .pp-contact { flex-direction: row; align-items: center; }
 }

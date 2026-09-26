@@ -38,6 +38,8 @@ The page reads what the page sells (`classifyNature` in `src/lib/print-plan.ts`)
 | **Event** | a deadline or a seat counter, no programme | The main benefits (6 at most), places to visit (benefits with website links, such as trade fairs), what's included, how to join, who it's for, 4 questions |
 | **Product** | anything else | Benefits, what's included (or the price card list), how to buy, 4 questions |
 
+The **Included & not included** section prints on both the agenda and the entire page, as two boxes (green ticks, red crosses).
+
 Left out of the agenda: problem sections, long "why" lists, photos, Terms & Conditions and the rest of the FAQ. The screen shows which sections were printed and which were left out, so staff can switch to **Entire page** when needed.
 
 ## Design

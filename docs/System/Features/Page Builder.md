@@ -47,6 +47,7 @@ Undo and redo cover the last 60 changes. The browser warns before leaving with u
 | How it works | Show buying is easy, in up to 8 steps (up to 1,000 characters each, line breaks kept, so a day of an itinerary fits); optional button | Numbered cards, Timeline |
 | Lead form | Catch buyers who will not chat first | Form card, Offer and form |
 | Final call to action | Close the page with the offer, countdown and button again | Centered, Split box |
+| Included & not included | Show what the price covers and what it does not (flights, visa, personal spending…), so buyers compare fairly and nobody is surprised after paying; up to 30 items per list, each list's heading can be renamed, an empty list is hidden | Two columns (one under the other on a phone), One card |
 | Terms & Conditions | State payment, cancellation and refund rules up front, so there are no surprises after booking; up to 30 clauses, a **Last updated** date and a short note | Accordion, Full document |
 
 The saving (for example "Save 25%") shows only when the previous price is higher than the price. The countdown hides itself when the date passes. Only use a real previous price and real stock: see [[Copy Rules]].

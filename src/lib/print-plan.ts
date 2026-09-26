@@ -32,6 +32,7 @@ export type PrintSection =
   | { kind: 'places'; id: string; title: string; sub?: string; items: Array<{ icon: BenefitIcon; title: string; text?: string; link?: string }> }
   | { kind: 'chips'; id: string; title: string; items: string[] }
   | { kind: 'checklist'; id: string; title: string; sub?: string; items: string[]; note?: string; tone?: 'accent' | 'plain' }
+  | { kind: 'inclusions'; id: string; title: string; sub?: string; included: { title: string; items: string[] }; excluded: { title: string; items: string[] }; note?: string }
   | { kind: 'steps'; id: string; title: string; items: Array<{ title: string; text?: string }> }
   | { kind: 'faq'; id: string; title: string; items: Array<{ q: string; a: string }>; more?: number }
   | { kind: 'terms'; id: string; title: string; sub?: string; updated?: string; items: Array<{ title: string; text: string }>; note?: string }
@@ -162,7 +163,7 @@ export function buildPrintPlan(doc: BuilderDoc, opts: { lang: Lang; mode: PrintM
   let heroSeen = false;
   type Tagged = { section: PrintSection; role: 'schedule' | 'places' | 'who' | 'why' | 'included' | 'offer' | 'howto' | 'faq' | 'gallery' | 'final' | 'terms' };
   const all: Tagged[] = [];
-  const hasIncluded = doc.blocks.some((b) => b.type === 'included' && b.items.length);
+  const hasIncluded = doc.blocks.some((b) => (b.type === 'included' && b.items.length) || (b.type === 'inclusions' && b.included.length));
 
   for (const block of doc.blocks) {
     if (block.type === 'hero') {
@@ -190,6 +191,8 @@ export function buildPrintPlan(doc: BuilderDoc, opts: { lang: Lang; mode: PrintM
       }
     } else if (block.type === 'included') {
       all.push({ role: 'included', section: { kind: 'checklist', id: block.id, title: txt(block.title), sub: txt(block.sub) || undefined, items: block.items.map((i) => txt(i)), note: txt(block.note) || undefined, tone: block.style.theme === 'brand' ? 'accent' : 'plain' } });
+    } else if (block.type === 'inclusions') {
+      all.push({ role: 'included', section: { kind: 'inclusions', id: block.id, title: txt(block.title), sub: txt(block.sub) || undefined, included: { title: txt(block.includedTitle), items: block.included.map((i) => txt(i)) }, excluded: { title: txt(block.excludedTitle), items: block.excluded.map((i) => txt(i)) }, note: txt(block.note) || undefined } });
     } else if (block.type === 'offer') {
       all.push({ role: 'offer', section: { kind: 'offer', id: block.id, title: txt(block.title), features: block.features.map((f) => txt(f)), note: txt(block.note) || undefined } });
     } else if (block.type === 'terms') {
@@ -209,6 +212,11 @@ export function buildPrintPlan(doc: BuilderDoc, opts: { lang: Lang; mode: PrintM
       case 'schedule': return s.days.length ? s : null;
       case 'cards': case 'places': { const items = s.items.filter((i) => i.title); return items.length ? { ...s, items } as PrintSection : null; }
       case 'checklist': { const items = s.items.filter(Boolean); return items.length ? { ...s, items } : null; }
+      case 'inclusions': {
+        const included = { ...s.included, items: s.included.items.filter(Boolean) };
+        const excluded = { ...s.excluded, items: s.excluded.items.filter(Boolean) };
+        return included.items.length || excluded.items.length ? { ...s, included, excluded } : null;
+      }
       case 'steps': { const items = s.items.filter((i) => i.title); return items.length ? { ...s, items } : null; }
       case 'faq': return s.items.length ? s : null;
       case 'terms': return s.items.length ? s : null;
