@@ -54,6 +54,11 @@ A Contact & company section may sit after the Final call to action; **+** adds i
 
 ## Versions and protection against lost work (since 2026-09-26)
 
+- **Autosave**, 4 seconds after the last change (the line under the top bar shows its state):
+  - a **live** page gets a **backup copy** on the server; the live page changes only on **Save** or **Publish**;
+  - a **draft** page is saved directly.
+  - Backups are kept one per 2 minutes, the last 20 per page, and appear in **Versions** as "Auto-saved backup".
+  - A copy also goes to this browser 1 second after each change. Reopening the editor with unsaved work offers **Restore / Discard**. Saving clears it.
 - **Versions** (top bar): every save keeps the version it replaces (last 15 per page), plus the copy kept before an automatic content update. **Load into editor** puts a version in the editor as unsaved changes; check it, then **Save** (Undo also works). The live page does not change until you save.
 - **Conflict guard:** each editor sends the version it opened. If the page was saved elsewhere since (another tab, or Landing Pages → the page → Dedicated settings), the save is refused with a message and a **Reload the latest version** button. Nothing is overwritten.
 - The old page settings screen no longer sends a builder page's sections, so it cannot put back an older copy of them.

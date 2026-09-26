@@ -28,10 +28,10 @@ export async function PUT(req: NextRequest, context: RouteContext) {
   }
 
   // The version the editor opened; a page saved elsewhere since is not overwritten.
-  const { expectedUpdatedAt, ...pageData } = body;
+  const { expectedUpdatedAt, autosave, ...pageData } = body;
   let saved;
   try {
-    saved = await savePage({ ...pageData, id }, { expectedUpdatedAt: typeof expectedUpdatedAt === 'string' ? expectedUpdatedAt : undefined });
+    saved = await savePage({ ...pageData, id }, { expectedUpdatedAt: typeof expectedUpdatedAt === 'string' ? expectedUpdatedAt : undefined, autosave: autosave === true });
   } catch (error) {
     if (error instanceof PageSlugError) {
       return NextResponse.json({ error: error.message }, { status: 409 });

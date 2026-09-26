@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPackBackup, getPageById, getPageHistory } from '@/lib/storage';
+import { getPackBackup, getPageAutosaves, getPageById, getPageHistory } from '@/lib/storage';
 import { requireAdmin } from '@/lib/auth';
 
 interface RouteContext {
@@ -17,6 +17,6 @@ export async function GET(_req: NextRequest, context: RouteContext) {
   const { id } = await context.params;
   const page = await getPageById(id);
   if (!page) return NextResponse.json({ error: 'Page not found' }, { status: 404 });
-  const [versions, packBackup] = await Promise.all([getPageHistory(id), getPackBackup(page.slug)]);
-  return NextResponse.json({ versions, packBackup });
+  const [versions, autosaves, packBackup] = await Promise.all([getPageHistory(id), getPageAutosaves(id), getPackBackup(page.slug)]);
+  return NextResponse.json({ versions, autosaves, packBackup, updatedAt: page.updatedAt });
 }

@@ -219,6 +219,11 @@ export default function BuilderEditorClient({ initialPage, initialDoc, companySe
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [conflict, setConflict] = useState(false);
+  // Autosave: a live page gets a backup copy on the server (the live page itself only changes
+  // on Save); a draft is saved directly. A copy also goes to this browser, offered back on reopen.
+  const [autosave, setAutosave] = useState<{ state: 'idle' | 'saving' | 'saved' | 'error'; at?: string }>({ state: 'idle' });
+  const [restoreOffer, setRestoreOffer] = useState<{ savedAt: string; doc: BuilderDoc; meta: ReturnType<typeof metaOf> } | null>(null);
+  const draftKey = `khb_builder_draft:${initialPage.id}`;
   const [versionsOpen, setVersionsOpen] = useState(false);
   const nowMs = useNow();
   const lastTyping = useRef(0);
@@ -406,16 +411,22 @@ export default function BuilderEditorClient({ initialPage, initialDoc, companySe
     }
   };
 
-  const save = async (statusOverride?: LandingPage['status']) => {
-    setSaving(true);
-    setNotice(null);
+  /** The page as this editor would save it now. */
+  const payload = (status: LandingPage['status']): LandingPage =>
+    ({ ...page, title: meta.title.trim() || t('builder.untitled'), slug: meta.slug, status, ogImage: meta.ogImage.trim(), template: 'builder', builder: doc, isolatedSettings: { ...page.isolatedSettings, ...brandToSettings(meta.brand) } }) as LandingPage;
+
+  const save = async (statusOverride?: LandingPage['status'], opts: { auto?: boolean } = {}) => {
+    if (!opts.auto) {
+      setSaving(true);
+      setNotice(null);
+    }
     const status = statusOverride || meta.status;
     try {
       const res = await fetch(`/api/pages/${page.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         // expectedUpdatedAt: the version this editor opened; a page saved elsewhere since is not overwritten.
-        body: JSON.stringify({ ...page, title: meta.title.trim() || t('builder.untitled'), slug: meta.slug, status, ogImage: meta.ogImage.trim(), template: 'builder', builder: doc, isolatedSettings: { ...page.isolatedSettings, ...brandToSettings(meta.brand) }, expectedUpdatedAt: page.updatedAt }),
+        body: JSON.stringify({ ...payload(status), expectedUpdatedAt: page.updatedAt, autosave: opts.auto === true }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 409 && data.conflict) {
@@ -431,13 +442,88 @@ export default function BuilderEditorClient({ initialPage, initialDoc, companySe
       docRef.current = savedDoc;
       setDocState(savedDoc);
       setSavedJson(JSON.stringify({ doc: savedDoc, meta: savedMeta }));
-      setNotice({ kind: 'ok', text: status === 'published' ? t('builder.savedLive') : t('builder.savedDraft') });
-      window.setTimeout(() => setNotice(null), 4000);
+      try { localStorage.removeItem(draftKey); } catch {}
+      if (opts.auto) {
+        setAutosave({ state: 'saved', at: saved.updatedAt });
+      } else {
+        setNotice({ kind: 'ok', text: status === 'published' ? t('builder.savedLive') : t('builder.savedDraft') });
+        window.setTimeout(() => setNotice(null), 4000);
+      }
     } catch (err) {
-      setNotice({ kind: 'error', text: errorMessage(err, t('common.errorSaving')) });
+      if (opts.auto) setAutosave({ state: 'error' });
+      else setNotice({ kind: 'error', text: errorMessage(err, t('common.errorSaving')) });
     } finally {
-      setSaving(false);
+      if (!opts.auto) setSaving(false);
     }
+  };
+
+  /** A backup of the current editor state on the server; the live page is untouched. */
+  const backup = async () => {
+    setAutosave((a) => ({ ...a, state: 'saving' }));
+    try {
+      const res = await fetch(`/api/pages/${page.id}/autosave`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ page: payload(meta.status) }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'backup failed');
+      setAutosave({ state: 'saved', at: data.savedAt });
+    } catch {
+      setAutosave({ state: 'error' });
+    }
+  };
+
+  // Autosave 4 s after the last change: drafts are saved, live pages get a backup copy.
+  const autoRef = useRef({ run: () => {} });
+  useEffect(() => {
+    autoRef.current.run = () => {
+      if (!dirty || saving || conflict) return;
+      if (meta.status === 'published') void backup();
+      else void save(undefined, { auto: true });
+    };
+  });
+  useEffect(() => {
+    if (!dirty) return;
+    const timer = window.setTimeout(() => autoRef.current.run(), 4000);
+    return () => window.clearTimeout(timer);
+  }, [dirty, doc, meta]);
+
+  // Browser copy of unsaved work (in case the connection drops), 1 s after the last change.
+  useEffect(() => {
+    if (!dirty) return;
+    const timer = window.setTimeout(() => {
+      try { localStorage.setItem(draftKey, JSON.stringify({ savedAt: new Date().toISOString(), base: page.updatedAt, doc, meta })); } catch {}
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [dirty, doc, meta, draftKey, page.updatedAt]);
+
+  // On opening: offer unsaved work this browser kept, if it differs from the saved page.
+  useEffect(() => {
+    // After the first paint, so the server HTML and the first browser render match.
+    const timer = window.setTimeout(() => {
+      try {
+        const raw = localStorage.getItem(draftKey);
+        if (!raw) return;
+        const d = JSON.parse(raw) as { savedAt: string; doc: unknown; meta: ReturnType<typeof metaOf> };
+        const doc = normalizeBuilderDoc(d.doc);
+        if (JSON.stringify({ doc, meta: d.meta }) === savedJson) {
+          localStorage.removeItem(draftKey);
+          return;
+        }
+        setRestoreOffer({ savedAt: d.savedAt, doc, meta: d.meta });
+      } catch {}
+    }, 0);
+    return () => window.clearTimeout(timer);
+    // Only when the editor opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const restoreDraft = () => {
+    if (!restoreOffer) return;
+    setDoc(() => restoreOffer.doc);
+    setMeta(restoreOffer.meta);
+    setRestoreOffer(null);
+  };
+  const discardDraft = () => {
+    try { localStorage.removeItem(draftKey); } catch {}
+    setRestoreOffer(null);
   };
 
   useEffect(() => {
@@ -1133,12 +1219,30 @@ export default function BuilderEditorClient({ initialPage, initialDoc, companySe
             {dirty && !saving && <span className="w-2 h-2 rounded-full bg-rose-500" title={t('common.unsavedChanges')} />}
           </button>
         </div>
+        <div className="w-full text-[10px] text-slate-500 dark:text-gray-400 -mt-1 flex items-center gap-1.5" data-autosave={autosave.state}>
+          <span className={`w-1.5 h-1.5 rounded-full ${autosave.state === 'error' ? 'bg-rose-500' : autosave.state === 'saving' ? 'bg-amber-400 animate-pulse' : autosave.state === 'saved' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
+          <span>
+            {autosave.state === 'saving' && t('builder.autosave.saving')}
+            {autosave.state === 'saved' && t(meta.status === 'published' ? 'builder.autosave.backedUp' : 'builder.autosave.saved', { time: autosave.at ? new Date(autosave.at).toLocaleTimeString(uiLang === 'kh' ? 'km-KH' : 'en-GB', { hour: '2-digit', minute: '2-digit' }) : '' })}
+            {autosave.state === 'error' && t('builder.autosave.failed')}
+            {autosave.state === 'idle' && t(meta.status === 'published' ? 'builder.autosave.idleLive' : 'builder.autosave.idleDraft')}
+          </span>
+        </div>
       </div>
 
       {conflict && (
         <div className="p-3 rounded-xl text-xs flex flex-wrap items-center justify-between gap-2 border bg-rose-50 dark:bg-rose-950/80 border-rose-300 dark:border-rose-800/60 text-rose-800 dark:text-rose-200" data-conflict="">
           <span>{t('builder.conflict')}</span>
           <button type="button" onClick={() => window.location.reload()} className="px-3 py-1.5 rounded-lg bg-rose-600 text-[#fff] on-dark font-extrabold cursor-pointer">{t('builder.conflictReload')}</button>
+        </div>
+      )}
+      {restoreOffer && (
+        <div className="p-3 rounded-xl text-xs flex flex-wrap items-center justify-between gap-2 border bg-amber-50 dark:bg-amber-400/10 border-amber-300 dark:border-amber-400/40 text-slate-900 dark:text-white" data-restore-offer="">
+          <span>{t('builder.restore.found', { time: new Date(restoreOffer.savedAt).toLocaleString(uiLang === 'kh' ? 'km-KH' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) })}</span>
+          <span className="flex gap-2">
+            <button type="button" onClick={restoreDraft} className="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-black font-extrabold cursor-pointer">{t('builder.restore.restore')}</button>
+            <button type="button" onClick={discardDraft} className="px-3 py-1.5 rounded-lg bg-white dark:bg-black/30 border border-slate-300 dark:border-emerald-800 font-bold cursor-pointer">{t('builder.restore.discard')}</button>
+          </span>
         </div>
       )}
       {versionsOpen && <BuilderVersions pageId={page.id} onClose={() => setVersionsOpen(false)} onLoad={loadVersion} />}

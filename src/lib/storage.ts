@@ -43,6 +43,7 @@ import { normalizeBuilderDoc } from './builder';
 import { dayKeys, parseVisitRow, upsertVisit, visitRowId, VISIT_RETENTION_DAYS, type VisitRecord } from './visits';
 import { normalizeMediaMeta, type MediaMeta } from './media-library';
 import { computePageStats, type PageStats } from './page-stats';
+import { withSnapshot, type PageVersion } from './page-backups';
 import { findDemoLeads, isDemoLead, type ClearDemoRequest, type ClearDemoResult, type DemoScan } from './demo-data';
 import {
   supabaseGetPages,
@@ -528,7 +529,7 @@ export class PageConflictError extends Error {
 }
 
 /** Earlier versions of a page, newest first (kept on every save; see savePage). */
-export interface PageVersion { savedAt: string; page: LandingPage }
+export type { PageVersion } from './page-backups';
 const PAGE_HISTORY_LIMIT = 15;
 const historyId = (pageId: string) => `page_history:${pageId}`;
 
@@ -542,11 +543,14 @@ export async function getPageHistory(pageId: string): Promise<PageVersion[]> {
   }
 }
 
-async function rememberPageVersion(page: LandingPage): Promise<void> {
+async function rememberPageVersion(page: LandingPage, opts: { autosave?: boolean } = {}): Promise<void> {
   const list = await getPageHistory(page.id);
   // Consecutive saves of an identical page add nothing.
   if (list[0] && JSON.stringify(list[0].page) === JSON.stringify(page)) return;
-  const next = [{ savedAt: page.updatedAt || new Date().toISOString(), page }, ...list].slice(0, PAGE_HISTORY_LIMIT);
+  // Draft autosaves arrive every few seconds: within two minutes they replace the newest
+  // version instead of filling the history with near-identical copies.
+  const entry = { savedAt: page.updatedAt || new Date().toISOString(), page };
+  const next = opts.autosave ? withSnapshot(list, entry, Date.now(), { limit: PAGE_HISTORY_LIMIT }) : [entry, ...list].slice(0, PAGE_HISTORY_LIMIT);
   await setMarker(historyId(page.id), JSON.stringify(next));
 }
 
@@ -560,6 +564,32 @@ export async function getPackBackup(slug: string): Promise<LandingPage | null> {
   }
 }
 
+/** Auto-saved editor states (not live), newest first: one per couple of minutes, last 20. */
+const autosaveId = (pageId: string) => `page_autosave:${pageId}`;
+
+export async function getPageAutosaves(pageId: string): Promise<PageVersion[]> {
+  try {
+    const raw = await getMarker(autosaveId(pageId));
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list.filter((v) => v && v.page && typeof v.savedAt === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Keeps an editor state as a backup (never touches the live page). Within two minutes of
+ * the last backup the newest one is replaced, so a long session leaves a trail of
+ * snapshots rather than hundreds of near-identical copies.
+ */
+export async function saveAutosave(pageId: string, page: LandingPage, nowMs: number = Date.now()): Promise<string> {
+  const savedAt = new Date(nowMs).toISOString();
+  const list = await getPageAutosaves(pageId);
+  const entry = { savedAt, page: { ...page, id: pageId, builder: page.builder ? normalizeBuilderDoc(page.builder) : undefined } };
+  await setMarker(autosaveId(pageId), JSON.stringify(withSnapshot(list, entry, nowMs)));
+  return savedAt;
+}
+
 const sameTime = (a?: string, b?: string) => Boolean(a && b && Date.parse(a) === Date.parse(b));
 
 /**
@@ -570,7 +600,7 @@ const sameTime = (a?: string, b?: string) => Boolean(a && b && Date.parse(a) ===
  *  - the version being replaced is kept in the page history (last 15), for Restore;
  *  - a failed database write is an error, not a silent "saved".
  */
-export async function savePage(pageData: Partial<LandingPage> & { title: string; slug: string }, opts: { expectedUpdatedAt?: string } = {}): Promise<LandingPage> {
+export async function savePage(pageData: Partial<LandingPage> & { title: string; slug: string }, opts: { expectedUpdatedAt?: string; autosave?: boolean } = {}): Promise<LandingPage> {
   // Builder documents come straight from the editor: clean them before they are stored.
   if (pageData.builder !== undefined) pageData = { ...pageData, builder: normalizeBuilderDoc(pageData.builder) };
   const slug = pageData.slug.toLowerCase().trim().replace(/[^a-z0-9-_]/g, '-');
@@ -681,7 +711,7 @@ export async function savePage(pageData: Partial<LandingPage> & { title: string;
     db.pages.unshift(targetPage);
   }
 
-  if (previous) await rememberPageVersion(previous).catch((err) => console.error('Page history error:', err));
+  if (previous) await rememberPageVersion(previous, { autosave: opts.autosave }).catch((err) => console.error('Page history error:', err));
   if (isSupabaseConfigured()) {
     // Throws on failure: the editor must say "not saved", never pretend it worked.
     await supabaseSavePage(targetPage);

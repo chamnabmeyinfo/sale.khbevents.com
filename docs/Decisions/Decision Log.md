@@ -26,6 +26,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-26 — Autosave backs up live pages, saves drafts
+
+- **Decision:** Autosave never publishes. On a live page it stores a backup copy (server + browser); only Save or Publish changes what visitors see. On a draft it saves the page. Backups are thinned to one per 2 minutes, last 20.
+- **Why:** The owner asked for autosave after losing edits. Half-finished edits must not reach visitors, and a long session must leave useful snapshots, not hundreds of near-identical copies.
+- **Who decided:** Claude with owner approval.
+- **Affects:** [[Page Builder]].
+
 ## 2026-09-26 — Never write the bundled pages into the database; guard every page save
 
 - **Decision:**

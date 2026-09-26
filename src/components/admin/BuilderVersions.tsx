@@ -10,7 +10,7 @@ import { useLanguage } from '@/context/LanguageContext';
 interface Version {
   savedAt: string;
   page: LandingPage;
-  kind: 'save' | 'pack';
+  kind: 'save' | 'pack' | 'auto';
 }
 
 /** Photos and videos a version holds (uploads and site images), to tell versions apart. */
@@ -34,9 +34,12 @@ export default function BuilderVersions({ pageId, onLoad, onClose }: { pageId: s
     let alive = true;
     fetch(`/api/pages/${pageId}/history`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((data: { versions?: Array<{ savedAt: string; page: LandingPage }>; packBackup?: LandingPage | null }) => {
+      .then((data: { versions?: Array<{ savedAt: string; page: LandingPage }>; autosaves?: Array<{ savedAt: string; page: LandingPage }>; packBackup?: LandingPage | null }) => {
         if (!alive) return;
-        const list: Version[] = (data.versions || []).map((v) => ({ ...v, kind: 'save' as const }));
+        const list: Version[] = [
+          ...(data.versions || []).map((v) => ({ ...v, kind: 'save' as const })),
+          ...(data.autosaves || []).map((v) => ({ ...v, kind: 'auto' as const })),
+        ];
         if (data.packBackup) list.push({ savedAt: data.packBackup.updatedAt || '', page: data.packBackup, kind: 'pack' });
         list.sort((a, b) => Date.parse(b.savedAt || '0') - Date.parse(a.savedAt || '0'));
         setVersions(list);
@@ -74,7 +77,7 @@ export default function BuilderVersions({ pageId, onLoad, onClose }: { pageId: s
         <ul className="space-y-2">
           {versions?.map((v, i) => {
             const doc = v.page.builder ? normalizeBuilderDoc(v.page.builder) : null;
-            const label = v.kind === 'pack' ? t('builder.versions.pack') : t('builder.versions.saved');
+            const label = v.kind === 'pack' ? t('builder.versions.pack') : v.kind === 'auto' ? t('builder.versions.auto') : t('builder.versions.saved');
             return (
               <li key={`${v.kind}-${v.savedAt}-${i}`} className="p-3 rounded-xl border border-slate-200 dark:border-emerald-900/60 flex items-center justify-between gap-3" data-version={v.kind}>
                 <div className="min-w-0">
