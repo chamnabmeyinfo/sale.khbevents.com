@@ -42,6 +42,7 @@ import { applyPopupEvent, phnomPenhDay, type PopupEventDetail } from './popup-an
 import { normalizeBuilderDoc } from './builder';
 import { dayKeys, parseVisitRow, upsertVisit, visitRowId, VISIT_RETENTION_DAYS, type VisitRecord } from './visits';
 import { normalizeMediaMeta, type MediaMeta } from './media-library';
+import { computePageStats, type PageStats } from './page-stats';
 import { findDemoLeads, isDemoLead, type ClearDemoRequest, type ClearDemoResult, type DemoScan } from './demo-data';
 import {
   supabaseGetPages,
@@ -2065,6 +2066,12 @@ export function markDemoLeads(leads: Lead[]): Lead[] {
 export async function getRealLeads(filter?: { pageSlug?: string; status?: string; search?: string }): Promise<Lead[]> {
   const samples = sampleLeadIds();
   return (await getLeads(filter)).filter((l) => !isDemoLead(l, samples));
+}
+
+/** Real leads and recorded visits per page (see page-stats.ts), for the page list and the dashboard. */
+export async function getPageStats(days = 30, nowMs: number = Date.now()): Promise<PageStats> {
+  const [leads, visits] = await Promise.all([getRealLeads(), getVisits(days, undefined, nowMs)]);
+  return computePageStats(leads, visits, nowMs, days);
 }
 
 /** The routing log with demo entries marked (tagged demo, or belonging to a demo lead). */

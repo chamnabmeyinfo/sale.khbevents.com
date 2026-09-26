@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth';
-import { getPages } from '@/lib/storage';
+import { getPages, getPageStats } from '@/lib/storage';
 import PagesManagerClient from '@/components/admin/PagesManagerClient';
 
 export const dynamic = 'force-dynamic';
@@ -9,7 +9,8 @@ export default async function AdminPagesListPage() {
   const authed = await isAuthenticated();
   if (!authed) redirect('/admin/login');
 
-  const pages = await getPages();
+  // Real leads and recorded visits, not the old per-page counters.
+  const [pages, stats] = await Promise.all([getPages(), getPageStats()]);
 
-  return <PagesManagerClient initialPages={pages} />;
+  return <PagesManagerClient initialPages={pages} stats={stats} />;
 }

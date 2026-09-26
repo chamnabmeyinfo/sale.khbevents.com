@@ -1,5 +1,7 @@
 'use client';
 
+import { EMPTY_PAGE_STAT, type PageStats } from '@/lib/page-stats';
+import { statsWindowLabel } from '@/lib/page-stats-label';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import {
@@ -25,12 +27,15 @@ import { useLanguage } from '@/context/LanguageContext';
 interface DashboardOverviewClientProps {
   pages: LandingPage[];
   leads: Lead[];
+  /** Real leads and recorded visits per page (see page-stats.ts). */
+  stats: PageStats;
 }
 
 type DashboardTab = 'all' | 'kpis' | 'campaigns' | 'inquiries';
 
-export default function DashboardOverviewClient({ pages, leads }: DashboardOverviewClientProps) {
+export default function DashboardOverviewClient({ pages, leads, stats }: DashboardOverviewClientProps) {
   const { t, lang } = useLanguage();
+  const statsWindow = statsWindowLabel(stats, lang, t);
   const locale = lang === 'kh' ? 'km-KH' : 'en-GB';
   const [activeTab, setActiveTab] = useState<DashboardTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,8 +57,9 @@ export default function DashboardOverviewClient({ pages, leads }: DashboardOverv
   const newLeads = leads.filter((l) => l.status === 'NEW').length;
   const wonLeads = leads.filter((l) => l.status === 'WON').length;
   const publishedPages = pages.filter((p) => p.status === 'published').length;
-  const totalViews = pages.reduce((acc, p) => acc + (p.viewsCount || 0), 0);
-  const conversionRate = totalViews > 0 ? ((totalLeads / totalViews) * 100).toFixed(1) : '0.0';
+  // Recorded visits and the leads of the same period (see page-stats.ts).
+  const totalViews = stats.total.visits;
+  const conversionRate = stats.total.conversion === null ? '–' : `${stats.total.conversion.toFixed(1)}%`;
 
   const recentLeads = leads.slice(0, 8);
 
@@ -194,7 +200,7 @@ export default function DashboardOverviewClient({ pages, leads }: DashboardOverv
             </div>
             <div className="text-3xl font-black text-slate-900 dark:text-white">{totalViews.toLocaleString(locale)}</div>
             <div className="text-[11px] text-slate-500 dark:text-gray-400 font-semibold">
-              {t('dashboard.kpi.acrossAllLive')}
+              {t('dashboard.kpi.visitsWindow', { window: statsWindow })}
             </div>
           </div>
 
@@ -205,7 +211,7 @@ export default function DashboardOverviewClient({ pages, leads }: DashboardOverv
                 <TrendingUp className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-3xl font-black text-amber-600 dark:text-amber-400">{conversionRate}%</div>
+            <div className="text-3xl font-black text-amber-600 dark:text-amber-400">{conversionRate}</div>
             <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
               {t('dashboard.kpi.dealsWon', { n: wonLeads })}
             </div>
@@ -235,7 +241,8 @@ export default function DashboardOverviewClient({ pages, leads }: DashboardOverv
                   <div className="p-8 text-center text-xs text-slate-500 dark:text-gray-400">{t('dashboard.noCampaigns')}</div>
                 ) : (
                   filteredPages.map((page) => {
-                    const conv = page.viewsCount > 0 ? ((page.leadsCount / page.viewsCount) * 100).toFixed(1) : '0.0';
+                    const st = stats.bySlug[page.slug] || EMPTY_PAGE_STAT;
+                    const conv = st.conversion === null ? '–' : `${st.conversion.toFixed(1)}%`;
                     return (
                       <div key={page.id} className="p-4 sm:p-5 hover:bg-slate-50 dark:hover:bg-emerald-950/30 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="space-y-1 min-w-0">
@@ -254,8 +261,8 @@ export default function DashboardOverviewClient({ pages, leads }: DashboardOverv
 
                         <div className="flex items-center gap-4 text-xs shrink-0">
                           <div className="text-right">
-                            <div className="font-bold text-slate-900 dark:text-white">{t('dashboard.leadsCount', { n: page.leadsCount })}</div>
-                            <div className="text-[11px] text-slate-500 dark:text-gray-400">{t('dashboard.viewsCount', { n: page.viewsCount, rate: conv })}</div>
+                            <div className="font-bold text-slate-900 dark:text-white">{t('dashboard.leadsCount', { n: st.leads })}</div>
+                            <div className="text-[11px] text-slate-500 dark:text-gray-400">{t('dashboard.viewsCount', { n: st.visits, rate: conv })}</div>
                           </div>
 
                           <div className="flex items-center gap-2">

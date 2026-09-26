@@ -40,8 +40,8 @@ Use it to decide where to spend on ads. Treat the portal's own numbers as a guid
 
 | Screen | Path | What you see |
 |---|---|---|
-| Dashboard | `/admin` | Total Inquiries, Active Pages, Tracked Views, Conversion Rate; views and conversion per page |
-| Page cards | `/admin/pages` | Leads, and views with conversion % per page |
+| Dashboard | `/admin` | Total Inquiries, Active Pages, Visits, Conversion Rate; leads, visits and conversion per page |
+| Page cards | `/admin/pages` | Leads, and visits with conversion % per page |
 | Page Tracking & Analytics | `/admin/pages/<id>/analytics` | Total Page Views, Unique Visitors, Leads Captured, Conversion Rate; the funnel; traffic sources; devices; language; the last 30 events |
 | Ads & Popups | `/admin/ads` | Popup views, clicks, click rate. See [[Ads and Popups]] |
 | Staff Round Robin | `/admin/round-robin` | Leads routed, Telegram clicks, delivery success rate. See [[Round Robin]] |
@@ -104,12 +104,18 @@ Pixel IDs are not secret. Custom scripts run on the live page, so paste only cod
 3. `recordTrackingEvent` in `src/lib/storage.ts` stores the event. Popup events also bump the popup counters after the response.
 4. `getPageAnalytics` builds the analytics screen from the stored views and events.
 
+**Dashboard and page cards (since 2026-09-26):** computed from real data, not from stored counters (`src/lib/page-stats.ts`).
+- **Leads:** real leads of the page, all time. Demo, test and sample leads are not counted.
+- **Visits:** visitor sessions from the durable visit records (one per session and page), over the last 30 days, or since tracking began when that is later (visit records exist from 2026-09-25).
+- **Conversion:** leads created in that same period ÷ visits. It shows "–" when there are no visits.
+- The old per-page counters (`viewsCount`, `leadsCount`) are still stored but no screen shows them. They had counted every page load, test visits and sample data.
+
 ## Limits: how durable are the numbers?
 
 - **On Vercel, most tracking data is not durable.** Events and the per-page view list are kept in the server's local copy of the database, which on Vercel lives in memory and the temporary folder of one server instance. They reset when that instance stops (for example after a deploy or a quiet period), and two instances do not see each other's events. The page analytics screen reads only this local copy.
-- **View counters.** The view counter per page (Dashboard, page cards) is increased only in that local copy. In the repo at the time of writing it is not written to Supabase when a view happens, so on production it can stay far below the real number.
+- **Old view counters.** The stored view counter per page is increased only in that local copy and is no longer shown (see above).
 - **Page views are also saved to Supabase**, in the `page_views` table (page and referrer only). At the time of writing, no admin screen reads that table.
-- **Leads are durable.** Leads live in Supabase, and the CRM and the Dashboard's **Total Inquiries** read them from there. The per-page lead numbers are not reliable: the page cards (and the per-page conversion on the Dashboard) show a stored counter that a new lead does not update in Supabase, and **Leads Captured** on the page analytics screen counts leads in the server's local copy. To count leads per page, use the campaign filter in [[Leads CRM]]. (Read from the code, not checked against live data.)
+- **Leads are durable.** Leads live in Supabase, and the CRM and the Dashboard's **Total Inquiries** read them from there. The page cards and the Dashboard now count real leads per page from Supabase. **Leads Captured** on the page analytics screen still counts leads in the server's local copy. (Read from the code, not checked against live data.)
 - **Popup counters are durable but approximate.** They live in the `popup_ad_stats` row; simultaneous updates can lose a count.
 - The local copy keeps at most the latest 5,000 views and 5,000 events.
 - Ad blockers can stop both the beacons and the pixels.

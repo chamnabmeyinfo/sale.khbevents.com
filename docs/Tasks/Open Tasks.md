@@ -80,6 +80,8 @@ Suggested order: lock the database first, then change the token and the password
 
 ## Claude
 
+- [ ] Move the page analytics screen (`/admin/pages/<id>/analytics`) to the durable visit records and real leads, like the page cards (2026-09-26). → [[Tracking and Analytics]]
+
 - [ ] When the owner sends real testimonials and outcome photos, add them to the page and show the section again. Never invent any. → [[Landing Pages CMS]], [[Copy Rules]] #for-claude
 - [ ] After each security task above, check the live site still works (landing page, test lead, Telegram alert, admin) and log it in a session note. → [[Deploy to Production]], [[Verify Changes Locally]] #for-claude
 - [ ] Apply the Khmer wording fixes from the native review. → [[Languages]] #for-claude

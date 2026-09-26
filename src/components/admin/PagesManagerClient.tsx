@@ -1,5 +1,7 @@
 'use client';
 
+import { EMPTY_PAGE_STAT, type PageStats } from '@/lib/page-stats';
+import { statsWindowLabel } from '@/lib/page-stats-label';
 import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -29,11 +31,14 @@ import { useLanguage } from '@/context/LanguageContext';
 
 interface PagesManagerClientProps {
   initialPages: LandingPage[];
+  /** Real leads and recorded visits per page (see page-stats.ts). */
+  stats: PageStats;
 }
 
 
-export default function PagesManagerClient({ initialPages }: PagesManagerClientProps) {
-  const { t } = useLanguage();
+export default function PagesManagerClient({ initialPages, stats }: PagesManagerClientProps) {
+  const { t, lang } = useLanguage();
+  const statsWindow = statsWindowLabel(stats, lang, t);
   const [pages, setPages] = useState<LandingPage[]>(initialPages);
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -281,10 +286,12 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
         </div>
       </div>
 
+      <p className="text-[11px] text-slate-500 dark:text-gray-400" data-stats-note="">{t('pages.statsNote', { window: statsWindow })}</p>
+
       {/* Grid of Pages */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredPages.map((page) => {
-          const conv = page.viewsCount > 0 ? ((page.leadsCount / page.viewsCount) * 100).toFixed(1) : '0.0';
+          const st = stats.bySlug[page.slug] || EMPTY_PAGE_STAT;
           const isCopied = copiedId === page.id;
 
           return (
@@ -338,11 +345,11 @@ export default function PagesManagerClient({ initialPages }: PagesManagerClientP
                   <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-emerald-950/40 border border-slate-200 dark:border-emerald-900/40 text-xs">
                     <div className="flex items-center gap-1.5 text-slate-700 dark:text-gray-300">
                       <Users className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-                      <span><strong>{page.leadsCount}</strong> {t('pages.card.leads')}</span>
+                      <span><strong>{st.leads}</strong> {t('pages.card.leads')}</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-slate-700 dark:text-gray-300">
                       <Eye className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
-                      <span><strong>{page.viewsCount}</strong> {t('pages.card.views', { conv })}</span>
+                      <span><strong>{st.visits}</strong> {t('pages.card.visits', { conv: st.conversion === null ? '–' : `${st.conversion}%` })}</span>
                     </div>
                   </div>
                 </div>
