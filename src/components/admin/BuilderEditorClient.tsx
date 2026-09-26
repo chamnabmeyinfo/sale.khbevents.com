@@ -24,7 +24,7 @@ import {
   X,
 } from 'lucide-react';
 import type { LandingPage } from '@/lib/types';
-import type { BenefitsBlock, Bi, BlockType, BuilderBlock, BuilderDoc, FaqBlock, FinalCtaBlock, FormBlock, GalleryBlock, HeroBlock, IncludedBlock, Lang, OfferBlock, StepsBlock } from '@/lib/builder';
+import type { BenefitsBlock, Bi, BlockType, BuilderBlock, BuilderDoc, FaqBlock, FinalCtaBlock, FormBlock, GalleryBlock, HeroBlock, IncludedBlock, Lang, OfferBlock, StepsBlock, TermsBlock } from '@/lib/builder';
 import {
   BENEFIT_ICONS,
   BLOCK_ANIMATIONS,
@@ -309,9 +309,14 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
     }
   };
 
+  const termsBlock = doc.blocks.find((b): b is TermsBlock => b.type === 'terms');
+  const termsRef = termsBlock ? `terms-${termsBlock.id}|${termsBlock.updated || ''}` : '';
   const ctx = useMemo(
-    () => ({ offer: doc.offer, brand: doc.brand, lang: previewLang, slug: meta.slug, nowMs, editing: true }),
-    [doc.offer, doc.brand, previewLang, meta.slug, nowMs],
+    () => {
+      const [id, updated] = termsRef ? termsRef.split('|') : [];
+      return { offer: doc.offer, brand: doc.brand, lang: previewLang, slug: meta.slug, nowMs, editing: true, terms: id ? { id, updated: updated || undefined } : undefined };
+    },
+    [doc.offer, doc.brand, previewLang, meta.slug, nowMs, termsRef],
   );
 
   const hintsFor = (block: BuilderBlock) => blockHints(block).map((h) => t(`builder.hint.${h}`));
@@ -444,6 +449,36 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
       </div>
     </Section>
   );
+
+  const termsContent = (b: TermsBlock) => {
+    const setItems = (items: TermsBlock['items'], typing = true) => updateBlock(b.id, { items }, typing);
+    return (
+      <Section title={t('builder.content')}>
+        <BiInput label={t('builder.sectionTitle')} value={b.title} onChange={(v) => updateBlock(b.id, { title: v })} />
+        <BiInput label={t('builder.sectionSub')} value={b.sub} onChange={(v) => updateBlock(b.id, { sub: v })} multiline />
+        <div>
+          <label className={LABEL}>{t('builder.terms.updated')}</label>
+          <input type="date" className={INPUT} value={b.updated || ''} onChange={(e) => updateBlock(b.id, { updated: e.target.value || undefined }, false)} />
+          <p className={HINT}>{t('builder.terms.updatedHint')}</p>
+        </div>
+        <div className="space-y-3">
+          {b.items.map((it, i) => (
+            <div key={i} className={ROW}>
+              <div className={ROW_HEAD}>
+                <span className={ROW_LABEL}>{t('builder.terms.clause', { n: i + 1 })}</span>
+                <RowTools index={i} count={b.items.length} onMove={(to) => setItems(moveBlock(b.items, i, to), false)} onRemove={() => setItems(b.items.filter((_, j) => j !== i), false)} />
+              </div>
+              <BiInput label={t('builder.terms.heading')} value={it.title} onChange={(v) => setItems(b.items.map((x, j) => (j === i ? { ...x, title: v } : x)))} />
+              <BiInput label={t('builder.terms.text')} value={it.text} multiline onChange={(v) => setItems(b.items.map((x, j) => (j === i ? { ...x, text: v } : x)))} />
+            </div>
+          ))}
+          {b.items.length < 30 && <AddRow label={t('builder.terms.add')} onClick={() => setItems([...b.items, { title: { en: '' }, text: { en: '' } }], false)} />}
+        </div>
+        <BiInput label={t('builder.terms.note')} value={b.note} onChange={(v) => updateBlock(b.id, { note: v })} multiline hint={t('builder.terms.noteHint')} />
+        <p className={HINT}>{t('builder.terms.legalHint')}</p>
+      </Section>
+    );
+  };
 
   const titleFields = (b: BenefitsBlock | IncludedBlock) => (
     <>
@@ -584,6 +619,14 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
       <BiInput label={t('builder.form.successTitle')} value={b.successTitle} onChange={(v) => updateBlock(b.id, { successTitle: v })} />
       <BiInput label={t('builder.form.successText')} value={b.successText} onChange={(v) => updateBlock(b.id, { successText: v })} multiline />
       <BiInput label={t('builder.form.privacy')} value={b.privacyNote} onChange={(v) => updateBlock(b.id, { privacyNote: v })} />
+      <div>
+        <label className="flex items-center gap-2 text-xs text-slate-800 dark:text-gray-200 cursor-pointer">
+          <input type="checkbox" checked={Boolean(b.requireTerms)} onChange={(e) => updateBlock(b.id, { requireTerms: e.target.checked }, false)} className="accent-amber-500" />
+          {t('builder.form.requireTerms')}
+        </label>
+        <p className={HINT}>{t('builder.form.requireTermsHint')}</p>
+        {b.requireTerms && <BiInput label={t('builder.form.termsLabel')} value={b.termsLabel} onChange={(v) => updateBlock(b.id, { termsLabel: v })} hint={t('builder.form.termsLabelHint')} />}
+      </div>
     </Section>
   );
 
@@ -932,6 +975,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
               {selected.type === 'form' && formContent(selected)}
               {selected.type === 'finalCta' && finalContent(selected)}
               {selected.type === 'gallery' && galleryContent(selected)}
+              {selected.type === 'terms' && termsContent(selected)}
             </>
           ) : (
             <>

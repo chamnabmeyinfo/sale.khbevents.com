@@ -147,6 +147,27 @@ export interface FormBlock extends BlockBase {
   successTitle: Bi;
   successText?: Bi;
   privacyNote?: Bi;
+  /** Ask the visitor to tick "I agree to the Terms & Conditions" before sending. */
+  requireTerms?: boolean;
+  termsLabel?: Bi;
+}
+
+export interface TermsItem {
+  title: Bi;
+  text: Bi;
+}
+
+/** Terms & Conditions: payment, cancellation, refunds, travel documents and so on. */
+export interface TermsBlock extends BlockBase {
+  type: 'terms';
+  variant: 'accordion' | 'document';
+  title: Bi;
+  sub?: Bi;
+  /** "Last updated" date, YYYY-MM-DD; also recorded with each lead that accepts. */
+  updated?: string;
+  items: TermsItem[];
+  /** Closing line, e.g. who to contact with questions. */
+  note?: Bi;
 }
 
 export interface FinalCtaBlock extends BlockBase {
@@ -171,7 +192,7 @@ export interface GalleryBlock extends BlockBase {
   items: GalleryItem[];
 }
 
-export type BuilderBlock = HeroBlock | OfferBlock | FaqBlock | BenefitsBlock | IncludedBlock | StepsBlock | FormBlock | FinalCtaBlock | GalleryBlock;
+export type BuilderBlock = HeroBlock | OfferBlock | FaqBlock | BenefitsBlock | IncludedBlock | StepsBlock | FormBlock | FinalCtaBlock | GalleryBlock | TermsBlock;
 export type BlockType = BuilderBlock['type'];
 
 export interface BuilderOffer {
@@ -335,6 +356,29 @@ export const BLOCK_DEFINITIONS: Record<BlockType, BlockDefinition> = {
       items: [
         { q: { en: 'Do I have to pay today?', kh: 'តើត្រូវបង់ប្រាក់ថ្ងៃនេះទេ?' }, a: { en: 'Write your real answer here.', kh: 'សរសេរចម្លើយពិតរបស់លោកអ្នកនៅទីនេះ។' } },
         { q: { en: 'How do I get it?', kh: 'តើទទួលបានដោយរបៀបណា?' }, a: { en: 'Write your real answer here.', kh: 'សរសេរចម្លើយពិតរបស់លោកអ្នកនៅទីនេះ។' } },
+      ],
+    }),
+  },
+  terms: {
+    type: 'terms',
+    name: { en: 'Terms & Conditions', kh: 'លក្ខខណ្ឌ' },
+    coreValue: { en: 'Say plainly how payment, cancellation and refunds work, so buyers trust you and disputes are avoided.', kh: 'ប្រាប់ឲ្យច្បាស់ពីការបង់ប្រាក់ ការលុបចោល និងការសងប្រាក់វិញ ដើម្បីឲ្យអ្នកទិញទុកចិត្ត និងជៀសវាងជម្លោះ។' },
+    variants: [
+      { id: 'accordion', name: { en: 'Accordion', kh: 'បើក/បិទ' }, detail: { en: 'Each topic opens on tap. Short on a phone.', kh: 'ប្រធានបទនីមួយៗបើកពេលចុច។ ខ្លីលើទូរស័ព្ទ។' } },
+      { id: 'document', name: { en: 'Full document', kh: 'ឯកសារពេញ' }, detail: { en: 'Numbered clauses, all visible, like a contract.', kh: 'ប្រការមានលេខ បង្ហាញទាំងអស់ ដូចកិច្ចសន្យា។' } },
+    ],
+    create: () => ({
+      id: newBlockId(),
+      type: 'terms',
+      variant: 'accordion',
+      style: baseStyle('light', 'left'),
+      title: { en: 'Terms & Conditions', kh: 'លក្ខខណ្ឌ' },
+      sub: { en: 'Please read before you register.', kh: 'សូមអានមុនពេលចុះឈ្មោះ។' },
+      items: [
+        { title: { en: 'Booking and payment', kh: 'ការកក់ និងការបង់ប្រាក់' }, text: { en: 'Write your real terms here: deposit, when the balance is due, how to pay.', kh: 'សរសេរលក្ខខណ្ឌពិតរបស់លោកអ្នកនៅទីនេះ៖ ប្រាក់កក់ ពេលបង់ប្រាក់នៅសល់ និងរបៀបបង់។' } },
+        { title: { en: 'Cancellation and refunds', kh: 'ការលុបចោល និងការសងប្រាក់វិញ' }, text: { en: 'Write your real terms here: what is refunded, until when.', kh: 'សរសេរលក្ខខណ្ឌពិតរបស់លោកអ្នកនៅទីនេះ៖ អ្វីដែលសងវិញ និងរហូតដល់ពេលណា។' } },
+        { title: { en: 'Changes to the programme', kh: 'ការផ្លាស់ប្តូរកម្មវិធី' }, text: { en: 'Write your real terms here.', kh: 'សរសេរលក្ខខណ្ឌពិតរបស់លោកអ្នកនៅទីនេះ។' } },
+        { title: { en: 'Travel documents', kh: 'ឯកសារធ្វើដំណើរ' }, text: { en: 'Write your real terms here: passport, visa, who is responsible.', kh: 'សរសេរលក្ខខណ្ឌពិតរបស់លោកអ្នកនៅទីនេះ៖ លិខិតឆ្លងដែន ទិដ្ឋាការ អ្នកណាទទួលខុសត្រូវ។' } },
       ],
     }),
   },
@@ -600,6 +644,25 @@ function normalizeBlock(v: unknown): BuilderBlock | null {
       ctaLabel: optBi(o.ctaLabel, 60),
     };
   }
+  if (type === 'terms') {
+    const b = blank as TermsBlock;
+    const items = Array.isArray(o.items)
+      ? o.items.slice(0, 30).map((it) => {
+          const r = obj(it);
+          return { title: bi(r.title, 160), text: bi(r.text, 4000) };
+        }).filter((it) => hasText(it.title))
+      : [];
+    const updated = typeof o.updated === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(o.updated) ? o.updated : undefined;
+    return {
+      id, style, type,
+      variant: oneOf(o.variant, ['accordion', 'document'] as const, b.variant),
+      title: bi(o.title, 120, { en: '' }),
+      sub: optBi(o.sub, 300),
+      updated,
+      items,
+      note: optBi(o.note, 400),
+    };
+  }
   if (type === 'gallery') {
     const b = blank as GalleryBlock;
     const items = Array.isArray(o.items)
@@ -633,6 +696,8 @@ function normalizeBlock(v: unknown): BuilderBlock | null {
       successTitle: bi(o.successTitle, 120, b.successTitle),
       successText: optBi(o.successText, 300),
       privacyNote: optBi(o.privacyNote, 200),
+      requireTerms: o.requireTerms === true,
+      termsLabel: optBi(o.termsLabel, 200),
     };
   }
   const b = blank as FinalCtaBlock;
@@ -826,6 +891,9 @@ export function blockHints(block: BuilderBlock): HintKey[] {
     if (!block.features.length) hints.push('noFeatures');
     if (!block.ctaLabel.en.trim()) hints.push('missingCta');
     texts.push(block.title, block.ctaLabel, ...block.features);
+  } else if (block.type === 'terms') {
+    if (!block.items.length) hints.push('noItems');
+    texts.push(block.title, ...block.items.flatMap((i) => [i.title, i.text]));
   } else if (block.type === 'faq') {
     if (!block.items.length) hints.push('noQuestions');
     texts.push(block.title, ...block.items.flatMap((i) => [i.q, i.a]));
@@ -850,6 +918,6 @@ export function blockHints(block: BuilderBlock): HintKey[] {
     if (block.sub) texts.push(block.sub);
   }
   if (texts.some((t) => t.en.trim() && !t.kh?.trim())) hints.push('missingKhmer');
-  if (texts.some((t) => /write your real answer|say the result your buyer wants|thing included|^replace this|(first|second|third) benefit/i.test(t.en))) hints.push('placeholderText');
+  if (texts.some((t) => /write your real (answer|terms)|say the result your buyer wants|thing included|^replace this|(first|second|third) benefit/i.test(t.en))) hints.push('placeholderText');
   return hints;
 }

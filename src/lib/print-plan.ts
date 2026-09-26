@@ -34,6 +34,7 @@ export type PrintSection =
   | { kind: 'checklist'; id: string; title: string; sub?: string; items: string[]; note?: string; tone?: 'accent' | 'plain' }
   | { kind: 'steps'; id: string; title: string; items: Array<{ title: string; text?: string }> }
   | { kind: 'faq'; id: string; title: string; items: Array<{ q: string; a: string }>; more?: number }
+  | { kind: 'terms'; id: string; title: string; sub?: string; updated?: string; items: Array<{ title: string; text: string }>; note?: string }
   | { kind: 'gallery'; id: string; title: string; images: string[] }
   | { kind: 'offer'; id: string; title: string; features: string[]; note?: string }
   | { kind: 'callout'; id: string; title: string; text?: string };
@@ -159,7 +160,7 @@ export function buildPrintPlan(doc: BuilderDoc, opts: { lang: Lang; mode: PrintM
   let intro: string | undefined;
   let heroImage: string | undefined;
   let heroSeen = false;
-  type Tagged = { section: PrintSection; role: 'schedule' | 'places' | 'who' | 'why' | 'included' | 'offer' | 'howto' | 'faq' | 'gallery' | 'final' };
+  type Tagged = { section: PrintSection; role: 'schedule' | 'places' | 'who' | 'why' | 'included' | 'offer' | 'howto' | 'faq' | 'gallery' | 'final' | 'terms' };
   const all: Tagged[] = [];
   const hasIncluded = doc.blocks.some((b) => b.type === 'included' && b.items.length);
 
@@ -191,6 +192,8 @@ export function buildPrintPlan(doc: BuilderDoc, opts: { lang: Lang; mode: PrintM
       all.push({ role: 'included', section: { kind: 'checklist', id: block.id, title: txt(block.title), sub: txt(block.sub) || undefined, items: block.items.map((i) => txt(i)), note: txt(block.note) || undefined, tone: block.style.theme === 'brand' ? 'accent' : 'plain' } });
     } else if (block.type === 'offer') {
       all.push({ role: 'offer', section: { kind: 'offer', id: block.id, title: txt(block.title), features: block.features.map((f) => txt(f)), note: txt(block.note) || undefined } });
+    } else if (block.type === 'terms') {
+      all.push({ role: 'terms', section: { kind: 'terms', id: block.id, title: txt(block.title), sub: txt(block.sub) || undefined, updated: block.updated ? printDate(`${block.updated}T12:00:00Z`, lang) : undefined, items: block.items.map((it) => ({ title: txt(it.title), text: txt(it.text) })).filter((x) => x.title), note: txt(block.note) || undefined } });
     } else if (block.type === 'faq') {
       all.push({ role: 'faq', section: { kind: 'faq', id: block.id, title: txt(block.title), items: block.items.map((it) => ({ q: txt(it.q), a: txt(it.a) })).filter((x) => x.q && x.a) } });
     } else if (block.type === 'gallery') {
@@ -208,6 +211,7 @@ export function buildPrintPlan(doc: BuilderDoc, opts: { lang: Lang; mode: PrintM
       case 'checklist': { const items = s.items.filter(Boolean); return items.length ? { ...s, items } : null; }
       case 'steps': { const items = s.items.filter((i) => i.title); return items.length ? { ...s, items } : null; }
       case 'faq': return s.items.length ? s : null;
+      case 'terms': return s.items.length ? s : null;
       case 'gallery': return s.images.length ? s : null;
       case 'offer': { const features = s.features.filter(Boolean); return features.length ? { ...s, features } : null; }
       case 'chips': return s.items.length ? s : null;

@@ -72,6 +72,8 @@ export const leads: Dictionary = {
     'leads.utmSource': 'UTM Source:',
     'leads.directTraffic': 'Direct Traffic',
     'leads.campaignName': 'Campaign Name:',
+    'leads.termsAccepted': 'Agreed to the Terms & Conditions:',
+    'leads.termsVersion': 'version of {v}',
     'leads.autoTags': 'Automated CRM Tags ({n})',
 
     'leads.roundRobin': 'Round Robin Staff Assignment',
@@ -196,6 +198,8 @@ export const leads: Dictionary = {
     'leads.utmSource': 'ប្រភព UTM៖',
     'leads.directTraffic': 'ចូលផ្ទាល់',
     'leads.campaignName': 'ឈ្មោះយុទ្ធនាការ៖',
+    'leads.termsAccepted': 'បានយល់ព្រមតាមលក្ខខណ្ឌ៖',
+    'leads.termsVersion': 'កំណែ {v}',
     'leads.autoTags': 'ស្លាក CRM ស្វ័យប្រវត្តិ ({n})',
 
     'leads.roundRobin': 'ការចាត់តាំងបុគ្គលិក Round Robin',

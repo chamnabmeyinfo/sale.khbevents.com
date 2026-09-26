@@ -27,6 +27,8 @@ export default function BuilderPageView({ page, initialLang = 'en', serverNowMs,
   const nowMs = useNow();
 
   const priceNow = effectiveOffer(doc.offer, nowMs ?? serverNowMs ?? null).price;
+  const termsBlock = doc.blocks.find((b) => b.type === 'terms');
+  const terms = termsBlock && termsBlock.type === 'terms' ? { id: `terms-${termsBlock.id}`, updated: termsBlock.updated } : undefined;
   const leadValue = doc.offer.currency === 'USD' && priceNow ? priceNow : undefined;
 
   const switchLang = (next: Lang) => {
@@ -67,6 +69,7 @@ export default function BuilderPageView({ page, initialLang = 'en', serverNowMs,
               brand: doc.brand,
               lang,
               slug: page.slug,
+              terms,
               nowMs,
               serverNowMs,
               onCta: (b) => trackLandingEvent(page, ctaOpensTelegram(doc.offer) ? 'telegram_click' : 'cta_click', { placement: `builder_${b.type}` }, lang),

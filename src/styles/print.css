@@ -132,6 +132,13 @@
 .pp-faq dt { font-weight: 800; color: var(--pp-ink); }
 .pp-faq dd { margin: 1mm 0 0; font-size: 9pt; }
 
+/* Terms & Conditions: numbered clauses, small print that stays readable */
+.pp-terms__list { margin: 0; padding: 0 0 0 5mm; font-size: 8.8pt; }
+.pp-terms__list li { margin-bottom: 2mm; break-inside: avoid; }
+.pp-terms__list li::marker { font-weight: 800; color: var(--pp-deep); }
+.pp-terms__list strong { color: var(--pp-ink); }
+.pp-terms__list p { margin: 0.5mm 0 0; white-space: pre-line; }
+
 /* Gallery */
 .pp-gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2.5mm; }
 .pp-gallery img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; display: block; break-inside: avoid; }

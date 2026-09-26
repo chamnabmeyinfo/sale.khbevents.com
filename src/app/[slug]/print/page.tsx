@@ -69,7 +69,7 @@ function Qr({ url, caption }: { url: string; caption: string }) {
   );
 }
 
-function Section({ s, photos, moreQ, footer }: { s: PrintSection; photos: boolean; moreQ: string; footer: React.ReactNode }) {
+function Section({ s, photos, moreQ, footer, updatedLabel }: { s: PrintSection; photos: boolean; moreQ: string; footer: React.ReactNode; updatedLabel: string }) {
   const head = (title: string, sub?: string) => (
     <div className="pp-sec__head">
       <h2>{title}</h2>
@@ -182,6 +182,22 @@ function Section({ s, photos, moreQ, footer }: { s: PrintSection; photos: boolea
             ))}
           </dl>
           {s.more ? <p className="pp-note">{moreQ.replace('{n}', String(s.more))}</p> : null}
+        </section>
+      );
+    case 'terms':
+      return (
+        <section className="pp-sec pp-terms">
+          {head(s.title, s.sub)}
+          {s.updated && <p className="pp-note">{updatedLabel}: {s.updated}</p>}
+          <ol className="pp-terms__list">
+            {s.items.map((it, i) => (
+              <li key={i}>
+                <strong>{it.title}</strong>
+                {it.text && <p>{it.text}</p>}
+              </li>
+            ))}
+          </ol>
+          {s.note && <p className="pp-note">{s.note}</p>}
         </section>
       );
     case 'gallery':
@@ -333,7 +349,7 @@ export default async function PrintPage({ params, searchParams }: PageProps) {
           <Qr url={pageUrl} caption={ui.scan} />
         </div>
 
-        {plan.sections.map((s) => <Section key={s.id} s={s} photos={photos} moreQ={ui.moreQ} footer={contactBlock} />)}
+        {plan.sections.map((s) => <Section key={s.id} s={s} photos={photos} moreQ={ui.moreQ} footer={contactBlock} updatedLabel={ui.updated} />)}
 
         <div className="pp-foot">
           <span>{ui.updated}: {printDateTime(page.updatedAt, lang)}</span>

@@ -295,6 +295,21 @@
 .kb-leadform .kb-btn:disabled { opacity: 0.7; cursor: progress; transform: none; }
 .kb-theme-brand .kb-leadform .kb-btn { background: linear-gradient(135deg, var(--kb-accent), var(--kb-accent-dark)); color: var(--kb-on-accent); }
 .kb-leadform__error { margin: 0; padding: 10px 12px; border-radius: 10px; background: #FDECEC; color: #9B1C1C; font-size: 0.9rem; font-weight: 600; }
+.kb-agree { display: flex; gap: 10px; align-items: flex-start; font-size: 0.9rem; line-height: 1.45; color: #33443A; cursor: pointer; }
+.kb-agree input { flex: none; width: 20px; height: 20px; margin-top: 1px; accent-color: var(--kb-accent); }
+.kb-agree a { color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.kb-terms__updated { margin: -4px 0 18px; font-size: 0.85rem; color: var(--kb-muted); }
+.kb-align-center .kb-terms__updated { text-align: center; }
+.kb-terms-list .kb-faq-item p { white-space: pre-line; }
+.kb-terms__n { color: var(--kb-accent); font-weight: 800; margin-right: 2px; }
+.kb-terms-doc { max-width: 820px; margin: 0; padding: 0; list-style: none; counter-reset: kbterms; display: grid; gap: 18px; }
+.kb-align-center .kb-terms-doc { margin: 0 auto; text-align: left; }
+.kb-terms-doc li { counter-increment: kbterms; position: relative; padding-left: 44px; }
+.kb-terms-doc li::before { content: counter(kbterms); position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 9999px; display: grid; place-items: center; background: var(--kb-chip); color: var(--kb-accent); font-weight: 800; font-size: 0.9rem; }
+.kb-terms-doc h3 { margin: 3px 0 6px; font-size: 1.05rem; font-weight: 800; }
+.kb-terms-doc p { margin: 0; color: var(--kb-muted); white-space: pre-line; }
+.kb-terms__note { max-width: 820px; margin: 22px 0 0; font-size: 0.9rem; color: var(--kb-muted); }
+.kb-align-center .kb-terms__note { margin-left: auto; margin-right: auto; }
 .kb-leadform__privacy { margin: 0; font-size: 0.82rem; color: #5B6B61; text-align: center; }
 .kb-leadform--done { text-align: center; justify-items: center; }
 .kb-leadform__done-icon { display: inline-flex; width: 56px; height: 56px; align-items: center; justify-content: center; border-radius: 9999px; background: #1E8E5A; color: #FFFFFF; }

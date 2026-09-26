@@ -639,6 +639,15 @@ export default function LeadsCrmClient({ initialLeads, pages, initialStatus, ini
                 <div>{t('leads.sourceCampaign')} <strong className="text-slate-900 dark:text-white">{selectedLead.landingPageTitle}</strong></div>
                 <div>{t('leads.utmSource')} <strong className="text-slate-900 dark:text-white">{selectedLead.utmSource || t('leads.directTraffic')}</strong></div>
                 {selectedLead.utmCampaign && <div>{t('leads.campaignName')} <strong className="text-slate-900 dark:text-white">{selectedLead.utmCampaign}</strong></div>}
+                {selectedLead.customFields?.termsAccepted && (
+                  <div>
+                    {t('leads.termsAccepted')}{' '}
+                    <strong className="text-slate-900 dark:text-white">
+                      {new Date(selectedLead.customFields.termsAccepted).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Phnom_Penh' })}
+                    </strong>
+                    {selectedLead.customFields.termsVersion ? ` · ${t('leads.termsVersion', { v: selectedLead.customFields.termsVersion })}` : ''}
+                  </div>
+                )}
               </div>
 
               {getLeadTags(selectedLead).length > 0 && (

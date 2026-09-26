@@ -47,6 +47,7 @@ Undo and redo cover the last 60 changes. The browser warns before leaving with u
 | How it works | Show buying is easy, in up to 8 steps (up to 1,000 characters each, line breaks kept, so a day of an itinerary fits); optional button | Numbered cards, Timeline |
 | Lead form | Catch buyers who will not chat first | Form card, Offer and form |
 | Final call to action | Close the page with the offer, countdown and button again | Centered, Split box |
+| Terms & Conditions | State payment, cancellation and refund rules up front, so there are no surprises after booking; up to 30 clauses, a **Last updated** date and a short note | Accordion, Full document |
 
 The saving (for example "Save 25%") shows only when the previous price is higher than the price. The countdown hides itself when the date passes. Only use a real previous price and real stock: see [[Copy Rules]].
 
@@ -124,6 +125,15 @@ Source: `src/lib/video-embed.ts` (accepted sources), `src/components/builder/Bac
 - Sends to the same place as other page forms: the lead appears in Leads & CRM Pipeline and goes to the next salesperson in [[Round Robin]] (a returning visitor stays with the same salesperson).
 - After sending: a thank-you message and, when the page button is Telegram, a "Continue on Telegram" button. Popups set to hide after a lead stop showing.
 - Tracking records `form_submit` with the placement only, never the name or phone. See [[Leads CRM]].
+- **Ask visitors to agree to the Terms & Conditions** (form content panel, since 2026-09-26): adds a tick box that must be ticked before sending. Its label can be changed in EN and KH, and it links to the page's Terms & Conditions section when there is one. The lead records when the visitor agreed and the terms' **Last updated** date (the version), shown in the lead's details in Leads & CRM Pipeline.
+
+## Terms & Conditions
+
+- Add it from the component library. The starter clauses (booking and payment, cancellation and refunds, programme changes, travel documents) are placeholders only: the editor flags "sample text left" until they are replaced. Write the real terms and have them checked before publishing; never copy terms from another company.
+- Change the **Last updated** date whenever the terms change: leads keep the date they agreed to.
+- Printing: **Entire page** includes the terms; the **Agenda** leaves them out.
+
+Source: `src/lib/builder.ts` (`TermsBlock`), `src/components/builder/BuilderBlocks.tsx` (`Terms`, `LeadFormBlock`).
 
 ## Pages made from a content pack
 

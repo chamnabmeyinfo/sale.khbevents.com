@@ -42,6 +42,7 @@ Suggested order: lock the database first, then change the token and the password
 - [ ] Set the real registration and early-bird deadlines in the admin. Only the owner sets them; code and content packs never overwrite them. The page editor has no date field for them yet (see the question below). → [[Landing Pages CMS]], [[Smart City Tea and Cafe Vietnam 2026]] #owner
 - [ ] Send real testimonials and outcome photos when they exist. Until then the testimonials stay hidden; they were placeholders. → [[Smart City Tea and Cafe Vietnam 2026]], [[Image Uploads]] #owner
 - [ ] Choose the **Remember a visitor for** period in Admin → Staff Round Robin → Advanced Routing Engine Rules & Fallbacks. Choices: Off, 1, 2, 3 or 6 months. The default in the repo is 1 month. → [[Round Robin]] #owner
+- [ ] Terms & Conditions (new builder component): write the real terms (payment, cancellation, refunds, changes, travel documents), have them checked, then add them to each page and set **Last updated**. Optionally tick **Ask visitors to agree** on the lead form. → [[Page Builder]] #owner
 - [ ] Decide whether to run a popup, and create the first one if wanted. → [[Create a Popup]], [[Ads and Popups]] #owner
 
 ### Korea trip

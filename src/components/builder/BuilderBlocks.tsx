@@ -12,6 +12,7 @@ import type {
   BuilderBrand,
   BuilderOffer,
   FaqBlock,
+  TermsBlock,
   FinalCtaBlock,
   FormBlock,
   GalleryBlock,
@@ -46,6 +47,8 @@ export interface RenderContext {
   /** Called after a form was accepted by the server. */
   /** A lead was sent; eventId is shared with the server's Conversions API call. */
   onLead?: (block: FormBlock, eventId?: string) => void;
+  /** The page's Terms & Conditions section, for the form's "I agree" link and the accepted version. */
+  terms?: { id: string; updated?: string };
 }
 
 const UI = {
@@ -54,6 +57,7 @@ const UI = {
     name: 'Your name', phone: 'Phone or Telegram', email: 'Email (optional)', message: 'Message (optional)',
     sending: 'Sending…', required: 'Please write your name and phone number.', failed: 'Sending failed. Please try again, or use the Telegram button.',
     continueTelegram: 'Continue on Telegram',
+    agree: 'I have read and agree to the Terms & Conditions.', mustAgree: 'Please tick the box to agree to the Terms & Conditions.', readTerms: 'Read the terms', updated: 'Last updated: {date}',
     earlyEndsIn: 'Early-bird price ends in', website: 'Official website', choose: 'Choose one',
     addPhotos: 'Add photos in the panel on the right.', openPhoto: 'Open photo', previous: 'Previous', next: 'Next', close: 'Close',
   },
@@ -62,6 +66,7 @@ const UI = {
     name: 'ឈ្មោះរបស់អ្នក', phone: 'លេខទូរស័ព្ទ ឬ Telegram', email: 'អ៊ីមែល (មិនចាំបាច់)', message: 'សារ (មិនចាំបាច់)',
     sending: 'កំពុងផ្ញើ…', required: 'សូមសរសេរឈ្មោះ និងលេខទូរស័ព្ទរបស់អ្នក។', failed: 'ការផ្ញើមិនបានសម្រេច។ សូមព្យាយាមម្តងទៀត ឬប្រើប៊ូតុង Telegram។',
     continueTelegram: 'បន្តតាម Telegram',
+    agree: 'ខ្ញុំបានអាន និងយល់ព្រមតាមលក្ខខណ្ឌ។', mustAgree: 'សូមធីកប្រអប់ ដើម្បីយល់ព្រមតាមលក្ខខណ្ឌ។', readTerms: 'អានលក្ខខណ្ឌ', updated: 'កែប្រែចុងក្រោយ៖ {date}',
     earlyEndsIn: 'តម្លៃពិសេសបញ្ចប់ក្នុងរយៈពេល', website: 'គេហទំព័រផ្លូវការ', choose: 'សូមជ្រើសរើស',
     addPhotos: 'បន្ថែមរូបភាពនៅផ្ទាំងខាងស្តាំ។', openPhoto: 'បើករូបភាព', previous: 'មុន', next: 'បន្ទាប់', close: 'បិទ',
   },
@@ -355,6 +360,48 @@ function Faq({ block, ctx }: { block: FaqBlock; ctx: RenderContext }) {
   );
 }
 
+function Terms({ block, ctx }: { block: TermsBlock; ctx: RenderContext }) {
+  const { lang } = ctx;
+  const t = UI[lang];
+  const items = block.items.filter((i) => pick(i.title, lang));
+  const date = block.updated
+    ? new Date(`${block.updated}T12:00:00Z`).toLocaleDateString(lang === 'kh' ? 'km-KH' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+    : '';
+  return (
+    <section id={`terms-${block.id}`} className={sectionClass(block)} data-anim={block.style.animation || 'rise'}>
+      <SectionBackground image={block.style.bgImage} video={block.style.bgVideo} />
+      <div className="kb-container">
+        <h2 className="kb-section-title">{pick(block.title, lang)}</h2>
+        {block.sub && <p className="kb-section-sub">{pick(block.sub, lang)}</p>}
+        {date && <p className="kb-terms__updated">{fill(t.updated, { date })}</p>}
+        {block.variant === 'document' ? (
+          <ol className="kb-terms-doc">
+            {items.map((it, i) => (
+              <li key={i} style={nth(i)}>
+                <h3>{pick(it.title, lang)}</h3>
+                <p>{pick(it.text, lang)}</p>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <div className="kb-faq-list kb-terms-list">
+            {items.map((it, i) => (
+              <details className="kb-faq-item" key={i} style={nth(i)} open={ctx.editing && i === 0 ? true : undefined}>
+                <summary>
+                  <span><span className="kb-terms__n">{i + 1}.</span> {pick(it.title, lang)}</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                </summary>
+                <p>{pick(it.text, lang)}</p>
+              </details>
+            ))}
+          </div>
+        )}
+        {block.note && <p className="kb-terms__note">{pick(block.note, lang)}</p>}
+      </div>
+    </section>
+  );
+}
+
 function Benefits({ block, ctx }: { block: BenefitsBlock; ctx: RenderContext }) {
   const { lang } = ctx;
   const items = block.items.filter((i) => pick(i.title, lang));
@@ -462,6 +509,7 @@ function LeadFormBlock({ block, ctx }: { block: FormBlock; ctx: RenderContext })
   const { lang, offer } = ctx;
   const t = UI[lang];
   const [values, setValues] = useState({ fullName: '', phone: '', email: '', message: '', interest: '' });
+  const [agreed, setAgreed] = useState(false);
   const options = (block.interestOptions || []).filter((o) => pick(o, lang));
   const [state, setState] = useState<'idle' | 'sending' | 'done'>('idle');
   const [error, setError] = useState('');
@@ -474,6 +522,10 @@ function LeadFormBlock({ block, ctx }: { block: FormBlock; ctx: RenderContext })
     if (ctx.editing || state === 'sending') return;
     if (!values.fullName.trim() || !values.phone.trim()) {
       setError(t.required);
+      return;
+    }
+    if (block.requireTerms && !agreed) {
+      setError(t.mustAgree);
       return;
     }
     setState('sending');
@@ -509,7 +561,12 @@ function LeadFormBlock({ block, ctx }: { block: FormBlock; ctx: RenderContext })
             pageUrl: window.location.href.split('#')[0],
             firstCampaign: attr.firstTouch?.utmCampaign,
           },
-          customFields: { language: lang, ...(interestChoice ? { interest: pick(interestChoice, 'en') } : {}) },
+          customFields: {
+            language: lang,
+            ...(interestChoice ? { interest: pick(interestChoice, 'en') } : {}),
+            // When and which version of the terms the visitor agreed to.
+            ...(block.requireTerms && agreed ? { termsAccepted: new Date().toISOString(), ...(ctx.terms?.updated ? { termsVersion: ctx.terms.updated } : {}) } : {}),
+          },
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -559,6 +616,15 @@ function LeadFormBlock({ block, ctx }: { block: FormBlock; ctx: RenderContext })
           <label className="kb-field">
             <span>{t.message}</span>
             <textarea name="message" rows={3} value={values.message} onChange={set('message')} disabled={ctx.editing} />
+          </label>
+        )}
+        {block.requireTerms && (
+          <label className="kb-agree">
+            <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} disabled={ctx.editing} required />
+            <span>
+              {pick(block.termsLabel, lang) || t.agree}
+              {ctx.terms && <> <a href={`#${ctx.terms.id}`} onClick={(e) => { if (ctx.editing) e.preventDefault(); }}>{t.readTerms}</a></>}
+            </span>
           </label>
         )}
         {error && <p className="kb-leadform__error" role="alert">{error}</p>}
@@ -735,6 +801,8 @@ export function BlockView({ block, ctx }: { block: BuilderBlock; ctx: RenderCont
       return <FinalCta block={block} ctx={ctx} />;
     case 'gallery':
       return <Gallery block={block} ctx={ctx} />;
+    case 'terms':
+      return <Terms block={block} ctx={ctx} />;
     default:
       return null;
   }
