@@ -12,6 +12,8 @@ import {
   GripVertical,
   Printer,
   LayoutTemplate,
+  MapIcon,
+  Maximize2,
   Monitor,
   Plus,
   Redo2,
@@ -40,6 +42,8 @@ import {
   pick,
 } from '@/lib/builder';
 import { BenefitIconSvg, BlockView, BuilderRoot, useNow } from '@/components/builder/BuilderBlocks';
+import BuilderFullPreview from './BuilderFullPreview';
+import BuilderPageMap from './BuilderPageMap';
 import ImageField from './ImageField';
 import VideoField from './VideoField';
 import ImageManager from './ImageManager';
@@ -150,6 +154,9 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [device, setDevice] = useState<Device>('desktop');
   const [previewLang, setPreviewLang] = useState<Lang>('en');
+  const [view, setView] = useState<'page' | 'map'>('page');
+  const [fullPreview, setFullPreview] = useState(false);
+  const closeFullPreview = useCallback(() => setFullPreview(false), []);
   const [dragOver, setDragOver] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
@@ -834,6 +841,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
 
   return (
     <div className="space-y-4">
+      {fullPreview && <BuilderFullPreview doc={doc} ctx={ctx} lang={previewLang} onLang={setPreviewLang} onClose={closeFullPreview} slug={meta.slug} />}
       {/* Top bar */}
       <div className={`${PANEL} p-3 flex flex-wrap items-center gap-2 justify-between`}>
         <div className="flex items-center gap-2 min-w-0">
@@ -855,7 +863,11 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
           <div className="flex gap-1 p-1 rounded-xl bg-slate-100 dark:bg-emerald-950/60 mx-1">
             <button type="button" onClick={() => setDevice('phone')} className={`p-1.5 rounded-lg cursor-pointer ${device === 'phone' ? 'bg-white dark:bg-[#0A1610] shadow text-slate-900 dark:text-white' : 'text-slate-500'}`} aria-label={t('builder.phone')} title={t('builder.phone')}><Smartphone className="w-4 h-4" /></button>
             <button type="button" onClick={() => setDevice('desktop')} className={`p-1.5 rounded-lg cursor-pointer ${device === 'desktop' ? 'bg-white dark:bg-[#0A1610] shadow text-slate-900 dark:text-white' : 'text-slate-500'}`} aria-label={t('builder.desktop')} title={t('builder.desktop')}><Monitor className="w-4 h-4" /></button>
+            <button type="button" onClick={() => setFullPreview(true)} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold text-slate-600 dark:text-gray-300 hover:bg-white dark:hover:bg-[#0A1610] hover:text-slate-900 dark:hover:text-white cursor-pointer" title={t('builder.fullPreviewHint')}><Maximize2 className="w-3.5 h-3.5" />{t('builder.fullPreview')}</button>
           </div>
+          <button type="button" onClick={() => setView((v) => (v === 'map' ? 'page' : 'map'))} aria-pressed={view === 'map'} className={`inline-flex items-center gap-1 px-3 py-2 rounded-xl text-[11px] font-bold cursor-pointer ${view === 'map' ? 'bg-amber-400 text-black shadow' : 'bg-slate-100 dark:bg-emerald-950/60 text-slate-700 dark:text-gray-200 hover:bg-slate-200 dark:hover:bg-emerald-900/60'}`} title={t('builder.mapHint')}>
+            <MapIcon className="w-3.5 h-3.5" />{t('builder.map')}
+          </button>
           <div className="flex gap-1 p-1 rounded-xl bg-slate-100 dark:bg-emerald-950/60">
             {(['en', 'kh'] as const).map((l) => (
               <button key={l} type="button" onClick={() => setPreviewLang(l)} className={`px-2 py-1 rounded-lg text-[11px] font-bold cursor-pointer ${previewLang === l ? 'bg-white dark:bg-[#0A1610] shadow text-slate-900 dark:text-white' : 'text-slate-500'}`}>{l === 'en' ? 'EN' : 'ខ្មែរ'}</button>
@@ -917,6 +929,19 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
 
         {/* Canvas */}
         <div className={`${PANEL} p-3 overflow-hidden`}>
+          {view === 'map' ? (
+          <div className="bg-slate-100 dark:bg-black/40 rounded-xl p-2 sm:p-4 overflow-auto max-h-[calc(100vh-190px)]">
+            <BuilderPageMap
+              doc={doc}
+              ctx={ctx}
+              lang={previewLang}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              onMove={move}
+              onApply={(blocks) => setDoc((d) => ({ ...d, blocks }))}
+            />
+          </div>
+          ) : (
           <div className="bg-slate-100 dark:bg-black/40 rounded-xl p-2 sm:p-4 overflow-auto max-h-[calc(100vh-190px)]" onClick={() => setSelectedId(null)}>
             <div className={`mx-auto transition-all duration-300 ${device === 'phone' ? 'w-[390px] max-w-full rounded-[28px] ring-8 ring-slate-800 dark:ring-black overflow-hidden' : 'w-full'}`}>
               <BuilderRoot brand={doc.brand} lang={previewLang}>
@@ -978,6 +1003,7 @@ export default function BuilderEditorClient({ initialPage, initialDoc }: Builder
               </BuilderRoot>
             </div>
           </div>
+          )}
         </div>
 
         {/* Inspector */}

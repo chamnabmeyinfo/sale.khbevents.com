@@ -35,6 +35,16 @@ This started as the pilot of Phase 2 in [[Landing Page Builder Roadmap]]. Since 
 
 Undo and redo cover the last 60 changes. The browser warns before leaving with unsaved changes.
 
+## Full preview and Page map
+
+- **Full preview** (top bar, next to the phone and computer buttons) shows the whole page over the full screen at a real computer width: **Laptop** 1280, **Desktop** 1440 or **Large screen** 1920 pixels. When the screen is narrower, the page is scaled down, so it keeps the computer layout. EN/ខ្មែរ switch inside. Close with the button or Esc. Buttons and the form do nothing in the preview.
+- **Page map** (top bar) swaps the page for a list of small pictures of each section, in order. Drag a section or use the arrows to reorder; click one to edit it.
+  - The **buyer's journey** strip: Attention (Hero) → Why (Benefits) → Details (What's included, Included & not included, How it works, Photo gallery) → Price (Offer card) → Sign up (Lead form) → Questions (FAQ) → Terms → Final push (Final call to action). Steps not on the page are faded.
+  - Advice on each section: Hero not first, Final call to action not last, form or FAQ before the price, terms too early, explaining sections after the price (tip), no Hero or no form on the page.
+  - **Suggested order** with **Use this order**: moves sections into the journey order; sections in the same step keep their order (Why and Details count as one step). Undo reverses it. The advice is guidance, not a rule: the owner decides.
+
+Source: `src/lib/page-order.ts` (advice), `src/components/admin/BuilderPageMap.tsx`, `src/components/admin/BuilderFullPreview.tsx`.
+
 ## Components
 
 | Component | Core value | Designs |

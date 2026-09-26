@@ -26,6 +26,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-26 — Page map suggests an order; it never reorders on its own
+
+- **Decision:** The builder's Page map advises on section order along a buyer's journey (Attention → Why/Details → Price → Sign up → Questions → Terms → Final push). It only changes the order when the owner presses **Use this order**, which can be undone. Sections in the same step keep the owner's order.
+- **Why:** Order affects sales, but some pages have good reasons to differ (for example a programme placed after the price). Advice plus one click keeps the owner in control.
+- **Who decided:** Claude with owner approval.
+- **Affects:** [[Page Builder]].
+
 ## 2026-09-25 — Campaigns: measure and analyse, not buy ads; visits stored as daily JSON rows; AI analyst on Claude
 
 - **Decision:** The portal does not create or pay for ads. It measures them:
