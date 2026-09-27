@@ -3,7 +3,7 @@
  * response times, hand-overs, CRM status) and the daily Telegram click counts.
  * Pure functions, client-safe; used by Team performance and the daily summary.
  */
-import type { Lead, RoundRobinStaff, StaffClickStats } from './types';
+import type { ChatStats, Lead, RoundRobinStaff, StaffClickStats } from './types';
 import { dayRange, phnomPenhDay } from './popup-analytics';
 import { escapeHtml } from './round-robin';
 import { formatWait } from './lead-response';
@@ -189,3 +189,91 @@ export function dailySummaryText(leads: Lead[], clickStats: StaffClickStats, sta
   return lines.filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\n').replace(/\n{3,}/g, '\n\n');
 }
 
+
+// ─── Telegram chats: did we reply? ─────────────────────────────────────────
+
+export interface TelegramReplyRow {
+  staffId: string;
+  name: string;
+  /** Chat leads (customers who wrote after a click) in the period. */
+  chats: number;
+  /** Chats we have answered at least once. */
+  replied: number;
+  /** Average seconds from the customer's first message to our first reply. */
+  avgFirstReplySeconds: number | null;
+  /** Chats where the customer wrote last and nobody answered yet. */
+  waitingNow: number;
+  /** Chats with no message either way for 3 days or more. */
+  quiet: number;
+  won: number;
+  lost: number;
+}
+
+export interface TelegramReplyStats {
+  rows: TelegramReplyRow[];
+  totals: Omit<TelegramReplyRow, 'staffId' | 'name'>;
+  /** Chat leads waiting for our reply, the longest wait first. */
+  waiting: Lead[];
+  /** Chat leads never checked yet (no numbers). */
+  unknown: number;
+}
+
+export const QUIET_AFTER_MS = 3 * 86_400_000;
+
+const isChatLead = (l: Lead) => l.routing?.routeType === 'DIRECT_CONTACT_CLICK' && Boolean(l.customFields?.telegramUserId);
+
+/** Per salesperson: chats started, replied, first-reply time, waiting now, gone quiet, won and lost. */
+export function telegramReplyStats(leads: Lead[], staffList: RoundRobinStaff[], range: { from: string; to: string }, nowMs: number): TelegramReplyStats {
+  const rows = new Map<string, TelegramReplyRow>();
+  const secs = new Map<string, [number, number]>();
+  const empty = (staffId: string, name: string): TelegramReplyRow => ({ staffId, name, chats: 0, replied: 0, avgFirstReplySeconds: null, waitingNow: 0, quiet: 0, won: 0, lost: 0 });
+  for (const s of staffList) rows.set(s.id, empty(s.id, s.name));
+  const row = (id: string, name: string) => {
+    if (!rows.has(id)) rows.set(id, empty(id, name));
+    return rows.get(id)!;
+  };
+  const waiting: Lead[] = [];
+  let unknown = 0;
+  for (const lead of leads) {
+    const r = lead.routing;
+    if (!r || !isChatLead(lead)) continue;
+    const day = phnomPenhDay(Date.parse(lead.createdAt));
+    if (day < range.from || day > range.to) continue;
+    const x = row(r.staffId, r.staffName);
+    x.chats += 1;
+    if (lead.status === 'WON') x.won += 1;
+    if (lead.status === 'LOST') x.lost += 1;
+    const c: ChatStats | undefined = r.chat;
+    if (!c) {
+      unknown += 1;
+      continue;
+    }
+    if (c.fromUs > 0) x.replied += 1;
+    if (c.firstReplySeconds !== undefined) {
+      const pair = secs.get(x.staffId) || [0, 0];
+      secs.set(x.staffId, [pair[0] + c.firstReplySeconds, pair[1] + 1]);
+    }
+    const open = lead.status !== 'WON' && lead.status !== 'LOST';
+    if (open && c.lastFrom === 'customer') {
+      x.waitingNow += 1;
+      waiting.push(lead);
+    } else if (open && c.lastAt && nowMs - Date.parse(c.lastAt) >= QUIET_AFTER_MS) {
+      x.quiet += 1;
+    }
+  }
+  const list = Array.from(rows.values()).filter((r) => r.chats > 0 || staffList.some((s) => s.id === r.staffId && s.isActive));
+  for (const r of list) {
+    const pair = secs.get(r.staffId);
+    r.avgFirstReplySeconds = pair && pair[1] ? Math.round(pair[0] / pair[1]) : null;
+  }
+  list.sort((a, b) => b.chats - a.chats || a.name.localeCompare(b.name));
+  const sum = <K extends keyof TelegramReplyRow>(k: K) => list.reduce((acc, r) => acc + (r[k] as number), 0);
+  const all = Array.from(secs.values()).reduce((acc, [s, n]) => [acc[0] + s, acc[1] + n], [0, 0]);
+  waiting.sort((a, b) => (a.routing?.chat?.lastAt || '').localeCompare(b.routing?.chat?.lastAt || ''));
+  return {
+    rows: list,
+    totals: { chats: sum('chats'), replied: sum('replied'), avgFirstReplySeconds: all[1] ? Math.round(all[0] / all[1]) : null, waitingNow: sum('waitingNow'), quiet: sum('quiet'), won: sum('won'), lost: sum('lost') },
+    waiting,
+    unknown,
+  };
+}

@@ -26,6 +26,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-27 — Every confirmed Telegram chat is a CRM lead, phone or not; conversations are counted, never stored
+
+- **Decision:** A chat confirmed by the connected account creates a lead in the CRM at once, without a phone number (the salesperson asks for it in the chat), assigned to the salesperson of the click, one lead per Telegram user. The account also reads each open chat and keeps only numbers (messages each way, first reply time, last message and who sent it, unread), shown per salesperson on Team performance. No AI reads or answers chats.
+- **Why:** Most prospects arrive by Telegram click, so the pipeline saw a minority of the business (audit of 2026-09-27). The owner wants to know whether the team really replies and how fast; counts and times answer that without storing conversations. The owner chose to keep customer conversations human.
+- **Who decided:** Owner.
+- **Affects:** [[Round Robin]], [[Leads CRM]], [[Prospect Journey Audit]].
+
 ## 2026-09-27 — Verify real chats by reading the salesperson's own Telegram account
 
 - **Decision:** A salesperson may connect their own Telegram account (official user API, read only). Each click puts a short code in the prefilled first message; the portal matches new chats to clicks by that code, or by timing within 30 minutes, and alerts the salesperson with the customer's name and message. Only new chats and the first 200 characters of their first message are kept; the portal never sends from the account. The session is stored with the settings, so the RLS lockdown matters more.

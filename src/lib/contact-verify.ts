@@ -6,7 +6,7 @@
  * match. The salesperson's own Telegram account (see telegram-account.ts) tells us
  * which chats began. Pure helpers here, client-safe.
  */
-import type { ContactConfirmation, RoundRobinLog } from './types';
+import type { ChatStats, ContactConfirmation, RoundRobinLog } from './types';
 
 /** Letters and digits that are hard to confuse when read back. */
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -115,4 +115,47 @@ export function matchContactsToLogs(
     if (pick) take(pick, c, 'time');
   }
   return out;
+}
+
+// ─── Conversation counts ───────────────────────────────────────────────────
+
+export interface ChatMessagePeek {
+  /** True for a message we sent. */
+  out: boolean;
+  atMs: number;
+}
+
+/** Counts and times from a chat's messages (newest or oldest first, any order). */
+export function chatStatsFrom(messages: ChatMessagePeek[], unread?: number, nowIso: string = new Date().toISOString()): ChatStats {
+  const sorted = [...messages].filter((m) => Number.isFinite(m.atMs) && m.atMs > 0).sort((a, b) => a.atMs - b.atMs);
+  const stats: ChatStats = { fromCustomer: 0, fromUs: 0, updatedAt: nowIso };
+  if (unread !== undefined) stats.unread = unread;
+  for (const m of sorted) {
+    if (m.out) {
+      stats.fromUs += 1;
+      if (stats.firstCustomerAt && !stats.firstReplyAt) {
+        stats.firstReplyAt = new Date(m.atMs).toISOString();
+        stats.firstReplySeconds = Math.max(0, Math.round((m.atMs - Date.parse(stats.firstCustomerAt)) / 1000));
+      }
+    } else {
+      stats.fromCustomer += 1;
+      if (!stats.firstCustomerAt) stats.firstCustomerAt = new Date(m.atMs).toISOString();
+    }
+  }
+  const last = sorted[sorted.length - 1];
+  if (last) {
+    stats.lastAt = new Date(last.atMs).toISOString();
+    stats.lastFrom = last.out ? 'us' : 'customer';
+  }
+  return stats;
+}
+
+/** True when the customer wrote last and nobody has answered. */
+export function awaitingOurReply(stats: ChatStats | undefined): boolean {
+  return Boolean(stats && stats.lastFrom === 'customer');
+}
+
+/** A name for the CRM when the customer has not given one. */
+export function telegramDisplayName(c: { name?: string; username?: string; userId: string }): string {
+  return c.name?.trim() || (c.username ? `@${c.username}` : `Telegram ${c.userId}`);
 }

@@ -33,6 +33,7 @@ export default async function TeamPerformancePage() {
   ]);
   // Every click and form lead in the period, with the landing-page visit it came from when the ids match.
   const visitBySession = new Map(visits.map((v) => [v.s, v]));
+  const chatByLogId = new Map(leads.filter((l) => l.customFields?.clickLogId && l.routing?.chat).map((l) => [l.customFields!.clickLogId, l.routing!.chat!]));
   const contacts: ContactEntry[] = logs
     .filter((l) => l.timestamp >= since)
     .map((l) => {
@@ -42,20 +43,27 @@ export default async function TeamPerformancePage() {
         staffId: l.staffId, staffName: l.staffName, status: l.status, assignmentReason: l.assignmentReason, demo: l.demo,
         visitorIp: l.visitorIp, userAgent: l.userAgent, visitor: l.visitor, leadId: l.leadId, clientName: l.clientName,
         targetTelegramUrl: l.targetTelegramUrl, deliveryError: l.deliveryError, refCode: l.refCode, contact: l.contact,
+        chat: chatByLogId.get(l.id) || l.contact?.leadId && leads.find((x) => x.id === l.contact!.leadId)?.routing?.chat || undefined,
         visit: l.visitor?.sessionId ? (v ? { sec: v.sec, sc: v.sc, ret: v.ret, cta: v.cta, tg: v.tg, src: v.src, cmp: v.cmp, ref: v.ref, dev: v.dev, app: v.app, lang: v.lang, t0: v.t0, fs: v.fs, lead: v.lead } : null) : undefined,
       };
     });
-  // Only what the page needs; the customer's name only for leads still waiting for a reply.
+  // Only what the page needs; the customer's name only for leads still waiting for a reply
+  // (form leads with no button tap; Telegram chats where the customer spoke last).
   const slim: PerfLead[] = leads
-    .filter((l) => l.createdAt >= since && l.routing?.routeType === 'FORM_SUBMISSION')
-    .map((l) => ({
-      id: l.id,
-      createdAt: l.createdAt,
-      status: l.status,
-      landingPageTitle: l.landingPageTitle,
-      fullName: l.status === 'NEW' && !l.routing?.claim ? l.fullName : '',
-      routing: l.routing,
-    }));
+    .filter((l) => l.createdAt >= since && l.routing && (l.routing.routeType === 'FORM_SUBMISSION' || l.customFields?.telegramUserId))
+    .map((l) => {
+      const isChat = l.routing?.routeType === 'DIRECT_CONTACT_CLICK';
+      const waiting = isChat ? l.routing?.chat?.lastFrom === 'customer' : l.status === 'NEW' && !l.routing?.claim;
+      return {
+        id: l.id,
+        createdAt: l.createdAt,
+        status: l.status,
+        landingPageTitle: l.landingPageTitle,
+        fullName: waiting ? l.fullName : '',
+        routing: l.routing,
+        customFields: isChat ? { telegramUserId: 'yes' } : undefined,
+      };
+    });
   const staff = rr.staffList.map((s) => ({ ...s, telegramChatId: '', phone: undefined, email: undefined }));
 
   return <TeamPerformanceClient leads={slim} clickStats={clickStats} staffList={staff} nowMs={serverNowMs()} contacts={contacts} chatCheck={chatCheck} />;

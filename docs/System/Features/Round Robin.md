@@ -154,7 +154,11 @@ A click only opens the salesperson's Telegram chat; Telegram tells the website n
 
 What is kept: the customer's name, @username, user id, the time of the first message and its first 200 characters. The portal never sends from the account and never reads older history. A visitor who clicks but never writes stays "No chat yet"; there is no way to see an opened chat that was never used. A customer with no @username shows by name and id. **Disconnect** logs the portal out on Telegram's side.
 
-The check runs when Team performance opens or on Check now; it is not yet run by the routing tick or the daily cron.
+**Every confirmed chat is a lead** (since 2026-09-27, later the same day): the check makes a CRM lead for the customer (name and @username from Telegram, no phone until the salesperson asks for it; event type "Telegram chat"; tag `telegram`; assigned to the salesperson of the click; the first message as the lead's message; campaign, location and visit ids from the click). One lead per Telegram user: a second click by the same person adds a note "Clicked again" instead. The "customer messaged you" alert ends with the CRM link. Chat leads do not count as form leads on Team performance.
+
+**Did we reply?** For open chat leads of the last 30 days (at most 15 per check, the oldest numbers first), the check reads the last 60 messages of the chat and keeps only numbers on the lead (`routing.chat`): messages from the customer and from us, the customer's first message, our first reply and the seconds between, the last message and who sent it, Telegram's unread count. No message text. Team performance shows a card **Telegram chats: did we reply?**: chats started, answered at least once, average first reply, waiting for our reply now, quiet for 3+ days, won and lost, per salesperson; and the list of customers waiting for a reply (the longest wait first) with CRM links. The visitor list shows the same numbers per click.
+
+The check runs after normal site traffic together with the lead follow-up check (page tracking, the bot, the admin Leads and Round Robin pages), when Team performance opens, and on **Check now**; at most every 2 minutes per account.
 
 ## Who can receive what (eligibility)
 

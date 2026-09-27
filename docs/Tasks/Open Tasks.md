@@ -25,9 +25,11 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 
 ### Prospect journey (audit 2026-09-27)
 
-- [ ] Read [[Prospect Journey Audit]] and answer its "To confirm" list: check-in timings, whether a Telegram chat without a phone may be a CRM lead, whether the manager gets the morning list, and the budget for the AI phase. Then tell Claude which phase to start. #owner
-- [ ] Phase 1 (once approved): Telegram chat → CRM lead, prospect timeline, conversation counts, automatic account check, behaviour chips and heat score. #for-claude
-- [ ] Phase 2 (once approved): bot check-ins with status buttons, text replies as notes, escalation, morning list, weekly pipeline summary. #for-claude
+- [x] Owner answered the audit's questions (2026-09-27): check-in timings customisable with minimums; a Telegram chat may be a lead without a phone (the team asks for it); the manager gets the morning list too; AI later, if at all, only to read chats faster, never to answer customers.
+- [x] Phase 1a (2026-09-27): Telegram chat → CRM lead, conversation counts and reply times, "Did we reply?" card, automatic account check after site traffic.
+- [ ] Phase 1b: prospect timeline in the lead drawer, behaviour chips and a hot / warm / cold score. #for-claude
+- [ ] Phase 2: bot check-ins to the salesperson with status buttons (timings set by the owner, minimum 15 minutes for the first and 1 hour between repeats, at most 3 a day per prospect, paused outside working hours), text replies saved as notes, escalation to the manager, morning list to each salesperson and the manager, weekly pipeline summary. #for-claude
+- [ ] Owner: after a few real chats, open Team Performance → Telegram chats: did we reply? and check the numbers against what the team sees in Telegram. In the CRM, chat leads have no phone until the team adds it. → [[Round Robin]] #owner
 
 ### Telegram account check (new, 2026-09-27)
 
@@ -35,7 +37,7 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [ ] After a few real customers write, check Team Performance → Who reached the team: the **Chat** column should say "Messaged us" for them, and the salesperson should have received the "អតិថិជនបានផ្ញើសារមកអ្នកហើយ" alert. Tell Claude if the wording of the three messages should change. → [[Round Robin]] #owner
 - [ ] Telegram → Settings → Devices → "Terminate old sessions if inactive for": set 6 months, so a quiet period does not log the portal out. #owner
 - [ ] Other salespeople: connect their own accounts the same way (each needs their own api_id/api_hash from my.telegram.org). → [[Round Robin]] #owner
-- [ ] Run the account check from the routing tick and the daily cron, so chats are matched without opening Team performance. #for-claude
+- [x] The account check runs after normal site traffic with the lead follow-up check (2026-09-27).
 
 ### Visitor details (new, 2026-09-27)
 

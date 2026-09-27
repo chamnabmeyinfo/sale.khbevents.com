@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import type { Lead, RoundRobinStaff, StaffClickStats } from '@/lib/types';
 import { lastDays, phnomPenhDay } from '@/lib/popup-analytics';
-import { teamPerformance, waitingLeads } from '@/lib/staff-performance';
+import { teamPerformance, telegramReplyStats, waitingLeads } from '@/lib/staff-performance';
 import { formatWait } from '@/lib/lead-response';
 import { useLanguage } from '@/context/LanguageContext';
 import StaffAvatar from './StaffAvatar';
 import VisitorContacts, { type ContactEntry } from './VisitorContacts';
 
-export type PerfLead = Pick<Lead, 'id' | 'createdAt' | 'status' | 'landingPageTitle' | 'fullName' | 'routing'>;
+export type PerfLead = Pick<Lead, 'id' | 'createdAt' | 'status' | 'landingPageTitle' | 'fullName' | 'routing'> & { customFields?: Record<string, string> };
 
 const CARD = 'rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 shadow-xs';
 const SUB = 'text-[11px] text-slate-500 dark:text-gray-400';
@@ -71,7 +71,15 @@ export default function TeamPerformanceClient({ leads, clickStats, staffList, no
     for (let i = 0; i < Math.min(days, 7); i += 1) out.push(...waitingLeads(leads as Lead[], phnomPenhDay(nowMs - i * 86400000)));
     return out.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   }, [leads, days, nowMs]);
+  const tg = useMemo(() => telegramReplyStats(leads as Lead[], staffList, range, nowMs), [leads, staffList, range, nowMs]);
   const avatarOf = (id: string) => staffList.find((s) => s.id === id)?.avatar;
+  const ago = (iso?: string) => {
+    if (!iso) return '';
+    const mins = Math.max(0, Math.round((nowMs - Date.parse(iso)) / 60000));
+    if (mins < 60) return t('rr.tg.minAgo', { n: mins });
+    if (mins < 48 * 60) return t('rr.tg.hoursAgo', { n: Math.round(mins / 60) });
+    return t('rr.tg.daysAgo', { n: Math.round(mins / 1440) });
+  };
   const maxContacts = Math.max(1, ...perf.rows.map((r) => r.formLeads + r.clicks));
   const tt = perf.totals;
 
@@ -162,6 +170,74 @@ export default function TeamPerformanceClient({ leads, clickStats, staffList, no
         )}
         <p className={`${SUB} mt-2`}>{t('rr.perf.legend')}</p>
       </div>
+
+      {chatCheck && (
+        <div className={`${CARD} p-4`} data-telegram-replies="">
+          <div className="text-sm font-extrabold text-slate-900 dark:text-white">{t('rr.tg.title')}</div>
+          <p className={SUB}>{t('rr.tg.hint')}</p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
+            <Tile label={t('rr.tg.kpi.chats')} value={nf.format(tg.totals.chats)} note={t('rr.tg.kpi.chatsNote', { n: tg.totals.replied })} />
+            <Tile label={t('rr.tg.kpi.time')} value={tg.totals.avgFirstReplySeconds !== null ? formatWait(tg.totals.avgFirstReplySeconds) : '–'} note={t('rr.tg.kpi.timeNote')} />
+            <Tile label={t('rr.tg.kpi.waiting')} value={nf.format(tg.totals.waitingNow)} note={t('rr.tg.kpi.quiet', { n: tg.totals.quiet })} />
+            <Tile label={t('rr.tg.kpi.won')} value={nf.format(tg.totals.won)} note={t('rr.perf.kpi.lost', { n: tg.totals.lost })} />
+          </div>
+          {tg.rows.length > 0 && (
+            <div className="overflow-x-auto mt-3">
+              <table className="w-full text-xs min-w-[640px]">
+                <thead>
+                  <tr className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-gray-400 text-right">
+                    <th className="text-left pb-2">{t('rr.perf.col.person')}</th>
+                    <th className="pb-2">{t('rr.tg.col.chats')}</th>
+                    <th className="pb-2">{t('rr.tg.col.replied')}</th>
+                    <th className="pb-2">{t('rr.tg.col.time')}</th>
+                    <th className="pb-2">{t('rr.tg.col.waiting')}</th>
+                    <th className="pb-2">{t('rr.tg.col.quiet')}</th>
+                    <th className="pb-2">{t('rr.perf.col.won')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-emerald-950/60 text-right pa-num text-slate-700 dark:text-gray-300">
+                  {tg.rows.map((r) => (
+                    <tr key={r.staffId}>
+                      <td className="py-2 text-left">
+                        <div className="flex items-center gap-2">
+                          <StaffAvatar name={r.name} src={avatarOf(r.staffId)} size={24} />
+                          <span className="font-bold text-slate-900 dark:text-white">{r.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-2 font-bold text-slate-900 dark:text-white">{r.chats}</td>
+                      <td className="py-2">{r.chats ? `${r.replied} (${Math.round((r.replied / r.chats) * 100)}%)` : '–'}</td>
+                      <td className="py-2">{r.avgFirstReplySeconds !== null ? formatWait(r.avgFirstReplySeconds) : '–'}</td>
+                      <td className={`py-2 ${r.waitingNow ? 'font-bold text-amber-700 dark:text-amber-400' : ''}`}>{r.waitingNow}</td>
+                      <td className="py-2">{r.quiet}</td>
+                      <td className="py-2">{r.won}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div className="mt-3">
+            <div className="text-xs font-extrabold text-slate-900 dark:text-white">{t('rr.tg.waiting', { n: tg.waiting.length })}</div>
+            {tg.waiting.length === 0 ? <p className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold mt-1">{t('rr.tg.noneWaiting')}</p> : (
+              <ul className="divide-y divide-slate-100 dark:divide-emerald-950/60 text-xs mt-1">
+                {tg.waiting.slice(0, 12).map((l) => (
+                  <li key={l.id} className="py-2 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <Link href={`/admin/leads?id=${encodeURIComponent(l.id)}`} className="font-bold text-slate-900 dark:text-white hover:underline truncate block">{l.fullName || l.id}</Link>
+                      <div className="text-[10px] text-slate-500 dark:text-gray-400 truncate">{l.landingPageTitle} · {t('rr.tg.msgs', { c: l.routing?.chat?.fromCustomer || 0, u: l.routing?.chat?.fromUs || 0 })}</div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="font-semibold text-slate-700 dark:text-gray-300">{l.routing?.staffName}</div>
+                      <div className="text-[10px] text-amber-700 dark:text-amber-400 font-bold pa-num">{t('rr.tg.waitingSince', { ago: ago(l.routing?.chat?.lastAt) })}</div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <p className={`${SUB} mt-2`}>{tg.unknown ? t('rr.tg.unknown', { n: tg.unknown }) + ' ' : ''}{t('rr.tg.footnote')}</p>
+        </div>
+      )}
 
       <VisitorContacts entries={contacts} staffList={staffList} range={range} chatCheck={chatCheck} />
 

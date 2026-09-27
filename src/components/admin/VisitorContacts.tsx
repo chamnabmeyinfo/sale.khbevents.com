@@ -3,10 +3,11 @@
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Bot, ChevronDown, ChevronUp, ExternalLink, MessageCircle, Monitor, Search, ShieldAlert, ShieldCheck, ShieldX, Smartphone, Tablet, HelpCircle } from 'lucide-react';
-import type { RoundRobinLog, RoundRobinStaff } from '@/lib/types';
+import type { ChatStats, RoundRobinLog, RoundRobinStaff } from '@/lib/types';
 import type { VisitRecord } from '@/lib/visits';
 import { phnomPenhDay } from '@/lib/popup-analytics';
 import { clickCheck, countryFlag, countryName, parseUserAgent, secondsOnPageBeforeClick, sourceLabel, type ClickVerdict, type DeviceKind } from '@/lib/visitor-detail';
+import { formatWait } from '@/lib/lead-response';
 import { useLanguage } from '@/context/LanguageContext';
 import StaffAvatar from './StaffAvatar';
 
@@ -14,6 +15,8 @@ import StaffAvatar from './StaffAvatar';
 export type ContactEntry = Pick<RoundRobinLog, 'id' | 'timestamp' | 'routeType' | 'pageSlug' | 'pageTitle' | 'staffId' | 'staffName' | 'status' | 'assignmentReason' | 'demo' | 'visitorIp' | 'userAgent' | 'visitor' | 'leadId' | 'clientName' | 'targetTelegramUrl' | 'deliveryError' | 'refCode' | 'contact'> & {
   /** The landing-page visit with the same session id, when tracked. */
   visit?: Pick<VisitRecord, 'sec' | 'sc' | 'ret' | 'cta' | 'tg' | 'src' | 'cmp' | 'ref' | 'dev' | 'app' | 'lang' | 't0' | 'fs' | 'lead'> | null;
+  /** The conversation so far, for a confirmed chat with a CRM lead. */
+  chat?: ChatStats;
 };
 
 const CARD = 'rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 shadow-xs';
@@ -269,6 +272,11 @@ export default function VisitorContacts({ entries, staffList, range, chatCheck =
                         ) : (
                           <span className={SUB}>–</span>
                         )}
+                        {e.chat && (
+                          <div className={`text-[10px] mt-0.5 pa-num ${e.chat.lastFrom === 'customer' ? 'text-amber-700 dark:text-amber-400 font-bold' : 'text-slate-500 dark:text-gray-400'}`}>
+                            {t('rr.vis.chatStats', { c: e.chat.fromCustomer, u: e.chat.fromUs })}{e.chat.firstReplySeconds !== undefined ? ` · ${t('rr.vis.chatReply', { t: formatWait(e.chat.firstReplySeconds) })}` : e.chat.lastFrom === 'customer' ? ` · ${t('rr.vis.chatWaiting')}` : ''}
+                          </div>
+                        )}
                       </td>
                       <td className="py-2 text-right">
                         <button type="button" onClick={() => setOpen(isOpen ? null : e.id)} aria-expanded={isOpen} aria-label={t('rr.log.th.details')} className="p-1 rounded-lg border border-slate-200 dark:border-emerald-800 text-slate-600 dark:text-emerald-300 hover:bg-slate-100 dark:hover:bg-emerald-950 cursor-pointer">
@@ -302,6 +310,8 @@ export default function VisitorContacts({ entries, staffList, range, chatCheck =
                             <Detail label={t('rr.vis.d.refCode')} value={e.refCode} mono />
                             {e.contact && <Detail label={t('rr.vis.d.chat')} value={t('rr.vis.d.chatValue', { who: [e.contact.name, e.contact.username ? `@${e.contact.username}` : ''].filter(Boolean).join(' ') || e.contact.userId, at: ppFull(e.contact.at), how: e.contact.match === 'ref' ? t('rr.vis.chat.sure') : t('rr.vis.chat.probable') })} />}
                             {e.contact?.text && <Detail label={t('rr.vis.d.chatText')} value={`“${e.contact.text}”`} />}
+                            {e.chat && <Detail label={t('rr.vis.d.chatStats')} value={t('rr.vis.d.chatStatsValue', { c: e.chat.fromCustomer, u: e.chat.fromUs, first: e.chat.firstReplySeconds !== undefined ? formatWait(e.chat.firstReplySeconds) : '–', last: e.chat.lastFrom === 'customer' ? t('rr.vis.chatLastCustomer') : t('rr.vis.chatLastUs'), at: e.chat.lastAt ? ppFull(e.chat.lastAt) : '' })} />}
+                            {e.contact?.leadId && <Detail label={t('rr.vis.d.lead')} value={<Link href={`/admin/leads?id=${encodeURIComponent(e.contact.leadId)}`} className="underline">{t('rr.log.viewLead')}</Link>} />}
                             <Detail label={t('rr.vis.d.delivery')} value={`${e.status}${e.deliveryError ? ` · ${e.deliveryError}` : ''}`} />
                             <Detail label={t('rr.vis.d.log')} value={e.id} mono />
                           </div>

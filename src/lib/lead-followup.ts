@@ -301,6 +301,13 @@ export function scheduleLeadResponseCheck(canTake?: (s: RoundRobinStaff, lead: L
     } catch (err) {
       console.error('Daily summary error:', err);
     }
+    // Connected Telegram accounts: new chats and reply numbers (at most every 2 minutes per account).
+    try {
+      const { checkAllAccounts } = await import('./telegram-account');
+      await checkAllAccounts();
+    } catch (err) {
+      console.error('Telegram account check error:', err);
+    }
   });
 }
 

@@ -21,8 +21,10 @@
  */
 import { getMarker, getRoundRobinLogs, getRoundRobinSettings, getSettings, phnomPenhStamp, setMarker, updateRoundRobinLogs } from './storage';
 import { escapeHtml, readTelegramResponse } from './round-robin';
-import type { RoundRobinLog } from './types';
-import { matchContactsToLogs, refCodeIn, type RecentContact } from './contact-verify';
+import type { RoundRobinLog, RoundRobinStaff } from './types';
+import { chatStatsFrom, matchContactsToLogs, refCodeIn, type ChatMessagePeek, type RecentContact } from './contact-verify';
+import { createLeadFromTelegramChat, findLeadByTelegramUserId, getRealLeads, addLeadNote } from './storage';
+import { saveLeadChanges } from './lead-followup';
 
 export const CHECK_EVERY_MS = 2 * 60 * 1000;
 const RECENT_DIALOGS = 40;
@@ -140,6 +142,8 @@ export interface DialogPeek {
   lastIncoming: boolean;
   lastAtMs: number;
   lastText: string;
+  /** Unread messages from this person. */
+  unread?: number;
 }
 
 export interface AccountClient {
@@ -152,6 +156,8 @@ export interface AccountClient {
   checkPassword(password: string): Promise<void>;
   getMe(): Promise<{ id: string; username?: string; name?: string }>;
   recentDialogs(limit: number): Promise<DialogPeek[]>;
+  /** The latest messages of one private chat (after recentDialogs), newest first. Only who sent it and when. */
+  history(userId: string, limit: number): Promise<ChatMessagePeek[]>;
   logOut(): Promise<void>;
 }
 
@@ -172,6 +178,7 @@ async function realClient(apiId: number, apiHash: string, session: string): Prom
   const client = new TelegramClient(new sessions.StringSession(session), apiId, apiHash, { connectionRetries: 2, useWSS: false });
   client.setLogLevel('none' as Parameters<typeof client.setLogLevel>[0]);
   const fullName = (u: { firstName?: string; lastName?: string }) => [u.firstName, u.lastName].filter(Boolean).join(' ').trim() || undefined;
+  const peers = new Map<string, unknown>();
   return {
     connect: () => client.connect().then(() => undefined),
     disconnect: () => client.disconnect().catch(() => undefined),
@@ -205,6 +212,7 @@ async function realClient(apiId: number, apiHash: string, session: string): Prom
         const u = d.entity;
         if (u.deleted) continue;
         const m = d.message;
+        peers.set(u.id.toString(), d.inputEntity);
         out.push({
           userId: u.id.toString(),
           username: u.username || undefined,
@@ -214,9 +222,16 @@ async function realClient(apiId: number, apiHash: string, session: string): Prom
           lastIncoming: Boolean(m) && !m!.out,
           lastAtMs: m ? Number(m.date) * 1000 : 0,
           lastText: m?.message || '',
+          unread: d.unreadCount,
         });
       }
       return out;
+    },
+    history: async (userId, limit) => {
+      const peer = peers.get(userId);
+      if (!peer) return [];
+      const msgs = await client.getMessages(peer as Parameters<typeof client.getMessages>[0], { limit });
+      return msgs.map((m) => ({ out: Boolean(m.out), atMs: Number(m.date) * 1000 }));
     },
     logOut: async () => {
       await client.invoke(new Api.auth.LogOut());
@@ -231,7 +246,7 @@ async function realClient(apiId: number, apiHash: string, session: string): Prom
 async function mockClient(session: string): Promise<AccountClient> {
   const fs = await import('node:fs/promises');
   const file = process.env.TELEGRAM_ACCOUNT_MOCK_FILE || '';
-  const read = async (): Promise<{ me?: { id: string; username?: string; name?: string }; dialogs?: DialogPeek[] }> => {
+  const read = async (): Promise<{ me?: { id: string; username?: string; name?: string }; dialogs?: DialogPeek[]; history?: Record<string, ChatMessagePeek[]> }> => {
     try {
       return JSON.parse(await fs.readFile(file, 'utf8'));
     } catch {
@@ -256,6 +271,7 @@ async function mockClient(session: string): Promise<AccountClient> {
     },
     getMe: async () => (await read()).me || { id: '1', username: 'mockowner', name: 'Mock Owner' },
     recentDialogs: async () => (await read()).dialogs || [],
+    history: async (userId) => (await read()).history?.[userId] || [],
     logOut: async () => undefined,
   };
 }
@@ -386,6 +402,8 @@ export interface CheckResult {
   skipped?: boolean;
   newContacts: number;
   matched: number;
+  /** Chat leads whose conversation numbers were refreshed. */
+  statsUpdated?: number;
   error?: string;
 }
 
@@ -407,12 +425,20 @@ export async function checkAccount(staffId: string, options: { force?: boolean; 
     dialogs = await client.recentDialogs(RECENT_DIALOGS);
     rec.session = client.saveSession();
   } catch (err) {
+    await client.disconnect();
     rec.lastError = errText(err);
     await saveAccountRecord(rec);
     return { staffId, newContacts: 0, matched: 0, error: rec.lastError };
+  }
+  try {
+    return await finishCheck(rec, client, dialogs, since, nowMs);
   } finally {
     await client.disconnect();
   }
+}
+
+async function finishCheck(rec: TelegramAccountRecord, client: AccountClient, dialogs: DialogPeek[], since: number, nowMs: number): Promise<CheckResult> {
+  const staffId = rec.staffId;
 
   const known = new Set(rec.knownUserIds || []);
   const contacts = [...(rec.contacts || [])];
@@ -442,24 +468,84 @@ export async function checkAccount(staffId: string, options: { force?: boolean; 
       if (c) c.logId = m.logId;
     }
     const logById = new Map(logs.map((l) => [l.id, l]));
-    await Promise.allSettled(matches.map((m) => {
+    const rr = await getRoundRobinSettings();
+    const staff = rr.staffList.find((s) => s.id === staffId) || null;
+    for (const m of matches) {
       const log = logById.get(m.logId);
-      return log ? alertChatStarted(log, m.confirmation) : Promise.resolve();
-    }));
+      if (!log || log.demo) continue;
+      // Every confirmed chat is a prospect in the CRM (one lead per Telegram user).
+      try {
+        const lead = await leadForChat(log, m.confirmation, staff);
+        m.confirmation.leadId = lead.id;
+        await updateRoundRobinLogs((all) => all.map((l) => (l.id === log.id && l.contact ? { ...l, contact: { ...l.contact, leadId: lead.id } } : l)));
+      } catch (err) {
+        console.error('Lead from Telegram chat error:', err);
+      }
+      await alertChatStarted(log, m.confirmation).catch(() => undefined);
+    }
+  }
+
+  // How the conversations are going: counts and reply times for this person's open chat leads.
+  let statsUpdated = 0;
+  try {
+    statsUpdated = await refreshChatStats(client, staffId, dialogs, nowMs);
+  } catch (err) {
+    console.error('Chat stats error:', err);
   }
 
   rec.knownUserIds = Array.from(known).slice(-KNOWN_USERS_KEPT);
   rec.contacts = contacts.slice(0, CONTACTS_KEPT);
   rec.lastError = undefined;
   await saveAccountRecord(rec);
-  return { staffId, newContacts: added, matched: matches.length };
+  return { staffId, newContacts: added, matched: matches.length, statsUpdated };
+}
+
+/** The CRM lead for a confirmed chat: found by Telegram user id, or made now. */
+async function leadForChat(log: RoundRobinLog, c: ContactInfo, staff: RoundRobinStaff | null) {
+  const existing = await findLeadByTelegramUserId(c.userId);
+  if (existing) {
+    await addLeadNote(existing.id, `Clicked again: ${log.pageTitle || log.pageSlug}${log.refCode ? ` (${log.refCode})` : ''}${c.text ? ` · “${c.text.slice(0, 120)}”` : ''}`, 'Telegram check').catch(() => null);
+    return existing;
+  }
+  return createLeadFromTelegramChat({ log, contact: c, staff });
+}
+
+type ContactInfo = { at: string; userId: string; username?: string; name?: string; text?: string; match: 'ref' | 'time'; leadId?: string };
+
+/** Open leads that began as Telegram chats: how many messages each way, first reply time, who spoke last. */
+export const CHAT_STATS_MAX_LEADS = 15;
+export const CHAT_STATS_MESSAGES = 60;
+export const CHAT_STATS_DAYS = 30;
+
+async function refreshChatStats(client: AccountClient, staffId: string, dialogs: DialogPeek[], nowMs: number): Promise<number> {
+  const since = nowMs - CHAT_STATS_DAYS * 86_400_000;
+  const unreadBy = new Map(dialogs.map((d) => [d.userId, d.unread]));
+  const leads = (await getRealLeads())
+    .filter((l) => l.routing?.routeType === 'DIRECT_CONTACT_CLICK' && l.routing.staffId === staffId && l.customFields?.telegramUserId)
+    .filter((l) => l.status !== 'WON' && l.status !== 'LOST' && Date.parse(l.createdAt) >= since)
+    // The ones with the oldest numbers first, so every open chat gets its turn.
+    .sort((a, b) => (a.routing?.chat?.updatedAt || '').localeCompare(b.routing?.chat?.updatedAt || ''))
+    .slice(0, CHAT_STATS_MAX_LEADS);
+  let n = 0;
+  for (const lead of leads) {
+    const userId = lead.customFields!.telegramUserId;
+    // Only chats in the recent list can be read (their peer is known); others keep their last numbers.
+    if (!unreadBy.has(userId)) continue;
+    const messages = await client.history(userId, CHAT_STATS_MESSAGES);
+    if (!messages.length) continue;
+    const stats = chatStatsFrom(messages, unreadBy.get(userId), new Date(nowMs).toISOString());
+    lead.routing = { ...lead.routing!, chat: stats };
+    await saveLeadChanges(lead);
+    n += 1;
+  }
+  return n;
 }
 
 /**
  * Tells the salesperson (and the manager, when CC is on) that the customer behind a
  * click has now written: who they are and what they asked. Short and in Khmer.
  */
-async function alertChatStarted(log: RoundRobinLog, c: { at: string; name?: string; username?: string; text?: string; match: 'ref' | 'time' }): Promise<void> {
+async function alertChatStarted(log: RoundRobinLog, c: { at: string; name?: string; username?: string; text?: string; match: 'ref' | 'time'; leadId?: string }): Promise<void> {
   if (log.demo) return;
   const [rr, settings] = await Promise.all([getRoundRobinSettings(), getSettings()]);
   const token = settings.telegramBotToken;
@@ -473,6 +559,7 @@ async function alertChatStarted(log: RoundRobinLog, c: { at: string; name?: stri
     c.text ? `💬 “${escapeHtml(c.text.slice(0, 120))}${c.text.length > 120 ? '…' : ''}”` : '',
     `⏰ ${phnomPenhStamp(Date.parse(c.at))}`,
     '👉 សូមឆ្លើយឥឡូវ!',
+    c.leadId ? `📋 CRM: https://sale.khbevents.com/admin/leads?id=${encodeURIComponent(c.leadId)}` : '',
   ].filter(Boolean).join('\n');
   const send = (chatId: string) =>
     fetch(`https://api.telegram.org/bot${token}/sendMessage`, {

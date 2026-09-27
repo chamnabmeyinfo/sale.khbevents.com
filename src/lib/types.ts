@@ -1104,6 +1104,24 @@ export interface RoundRobinSettings {
 
 export type RoutingDeliveryStatus = 'DELIVERED' | 'FAILED' | 'FALLBACK' | 'PENDING';
 
+/** Counts and times of the Telegram conversation with a prospect (no message text). */
+export interface ChatStats {
+  /** Messages from the customer and from the salesperson. */
+  fromCustomer: number;
+  fromUs: number;
+  /** First message from the customer and our first reply after it (ISO). */
+  firstCustomerAt?: string;
+  firstReplyAt?: string;
+  /** Seconds from the customer's first message to our first reply. */
+  firstReplySeconds?: number;
+  /** The latest message: when and who sent it. */
+  lastAt?: string;
+  lastFrom?: 'customer' | 'us';
+  /** Unread messages from the customer, as Telegram counts them. */
+  unread?: number;
+  updatedAt: string;
+}
+
 export interface RoutingDetail {
   staffId: string;
   staffName: string;
@@ -1127,6 +1145,8 @@ export interface RoutingDetail {
   handovers?: LeadHandover[];
   /** The manager was told that nobody else could take it. */
   managerAlerted?: boolean;
+  /** For a lead that began as a Telegram chat: the conversation so far, from the salesperson's connected account. */
+  chat?: ChatStats;
 }
 
 /** Who the visitor behind a click or form was, from the request that carried it (admin only). */
@@ -1161,6 +1181,8 @@ export interface ContactConfirmation {
   /** 'ref' = the reference code from the prefilled message matched; 'time' = the chat started shortly after the click. */
   match: 'ref' | 'time';
   checkedAt: string;
+  /** The CRM lead made (or found) for this chat. */
+  leadId?: string;
 }
 
 export interface RoundRobinLog {

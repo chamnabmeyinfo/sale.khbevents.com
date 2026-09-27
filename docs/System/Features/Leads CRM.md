@@ -1,7 +1,7 @@
 ---
 type: feature
 tags: [system, feature, crm, leads]
-updated: 2026-09-24
+updated: 2026-09-27
 admin_path: /admin/leads
 admin_menu: Leads & CRM Pipeline
 source:
@@ -61,6 +61,7 @@ A Telegram lead alert links to `/admin/leads?id=<lead id>`, which opens that lea
 | Marketing Attribution (UTM source, campaign) | The `utm_` parameters of the visitor's link. See [[Tracking and Analytics]] |
 | Visitor country, city, region | Location headers added by Vercel (country also from Cloudflare) |
 | Automated CRM Tags | The page's **Automatic CRM Lead Tags** in its Dedicated Settings. See [[Landing Pages CMS]] |
+| Telegram chat leads (since 2026-09-27) | A customer who wrote on Telegram after clicking a landing page, made by the account check in [[Round Robin]]: name and @username from Telegram, no phone until the team adds it, event type "Telegram chat", tag `telegram`, the first message as the message, and the conversation numbers (messages each way, first reply time) |
 | Round Robin Staff Assignment | Who got the lead, their share, Telegram delivery status, and "Returning customer" or "Returning visitor" when the lead was kept with an earlier salesperson. See [[Round Robin]] |
 | Internal Organizer Notes | Notes typed by the team, newest first, with time and author |
 

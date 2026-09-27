@@ -1128,6 +1128,90 @@ export async function createLead(leadData: {
   return newLead;
 }
 
+/** The lead already made for a Telegram customer, by their Telegram user id. */
+export async function findLeadByTelegramUserId(userId: string): Promise<Lead | null> {
+  if (!userId) return null;
+  const leads = await getLeads();
+  return leads.find((l) => l.customFields?.telegramUserId === userId) || null;
+}
+
+/**
+ * A CRM lead for a customer who started a Telegram chat after clicking a landing page.
+ * The salesperson is the one the click was routed to; no alert is sent here (the
+ * click alert and the "customer messaged you" alert already went out) and the
+ * rotation is not advanced (the click already counted).
+ */
+export async function createLeadFromTelegramChat(input: {
+  log: RoundRobinLog;
+  contact: { at: string; userId: string; username?: string; name?: string; text?: string; match: 'ref' | 'time' };
+  staff?: RoundRobinStaff | null;
+}): Promise<Lead> {
+  const { log, contact } = input;
+  const db = await getDatabase();
+  const page = (await getPageBySlug(log.pageSlug)) || db.pages.find((p) => p.slug === log.pageSlug);
+  const now = new Date().toISOString();
+  const v = log.visitor || {};
+  const customFields: Record<string, string> = { source: 'telegram_chat', telegramUserId: contact.userId, clickLogId: log.id, chatMatch: contact.match };
+  if (contact.username) customFields.telegramUsername = contact.username;
+  if (log.refCode) customFields.refCode = log.refCode;
+  if (v.sessionId) customFields.visitSession = v.sessionId;
+  if (v.visitorId) customFields.visitorId = v.visitorId;
+  if (v.country) customFields.visitorCountry = v.country;
+  if (v.city) customFields.visitorCity = v.city;
+  if (v.region) customFields.visitorRegion = v.region;
+  const tags = [...(page?.isolatedSettings?.leadTags || []), 'telegram'];
+  if (tags.length) customFields.campaignTags = tags.join(', ');
+  const name = contact.name?.trim() || (contact.username ? `@${contact.username}` : `Telegram ${contact.userId}`);
+  const lead: Lead = {
+    id: `lead-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    landingPageId: page?.id,
+    landingPageSlug: log.pageSlug,
+    landingPageTitle: page?.title || log.pageTitle || log.pageSlug,
+    fullName: name,
+    email: '',
+    phone: '',
+    eventType: 'Telegram chat',
+    message: contact.text?.slice(0, 500),
+    customFields,
+    tags,
+    status: 'NEW',
+    notes: [],
+    utmSource: v.utmSource,
+    utmMedium: v.utmMedium,
+    utmCampaign: v.utmCampaign,
+    utmContent: v.utmContent,
+    referrer: v.referrer,
+    ip: log.visitorIp,
+    userAgent: log.userAgent,
+    routing: {
+      staffId: log.staffId,
+      staffName: log.staffName,
+      staffTelegram: log.staffTelegram,
+      staffChatId: input.staff?.telegramChatId || log.staffChatId,
+      percentageWeight: log.percentageWeight,
+      status: 'DELIVERED',
+      routedAt: log.timestamp,
+      assignedAt: contact.at,
+      routeType: 'DIRECT_CONTACT_CLICK',
+      assignmentReason: log.assignmentReason,
+    },
+    createdAt: contact.at,
+    updatedAt: now,
+  };
+  if (page) page.leadsCount = (page.leadsCount || 0) + 1;
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseCreateLead(lead);
+    } catch (err) {
+      console.error('Supabase createLeadFromTelegramChat error:', err);
+      db.unsyncedLeadIds = [...(db.unsyncedLeadIds || []), lead.id];
+    }
+  }
+  db.leads.unshift(lead);
+  await saveDatabase(db);
+  return lead;
+}
+
 export async function updateLeadStatus(
   id: string,
   status: LeadStatus,
