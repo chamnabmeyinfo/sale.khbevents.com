@@ -20,6 +20,7 @@ import { errorMessage } from '@/lib/errors';
 import { toWhatsAppNumber } from '@/lib/phone';
 import { toCsv } from '@/lib/csv';
 import { useLanguage } from '@/context/LanguageContext';
+import TelegramChatView from './TelegramChatView';
 
 const STATUS_FILTERS = ['ALL', 'NEW', 'CONTACTED', 'PROPOSAL_SENT', 'NEGOTIATING', 'WON', 'LOST'];
 
@@ -457,6 +458,11 @@ export default function LeadsCrmClient({ initialLeads, pages, initialStatus, ini
                             <span className="font-semibold text-slate-700 dark:text-gray-300">
                               {t('leads.rep', { name: lead.routing.staffName })}
                             </span>
+                            {lead.customFields?.telegramUserId && (
+                              <span className={`px-1.5 rounded-full border text-[9px] font-black ${lead.routing.chat?.lastFrom === 'customer' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800' : 'bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800'}`} title={t('leads.chat.badgeTitle')}>
+                                💬 {lead.routing.chat ? `${lead.routing.chat.fromCustomer}/${lead.routing.chat.fromUs}` : t('leads.chat.badge')}
+                              </span>
+                            )}
                             {lead.routing.status === 'DELIVERED' ? (
                               <span className="text-emerald-700 dark:text-emerald-400 font-bold" title={t('leads.telegramDelivered')}>✓</span>
                             ) : lead.routing.status === 'FALLBACK' ? (
@@ -649,6 +655,10 @@ export default function LeadsCrmClient({ initialLeads, pages, initialStatus, ini
                   </div>
                 )}
               </div>
+
+              {selectedLead.customFields?.telegramUserId && (
+                <TelegramChatView key={selectedLead.id} leadId={selectedLead.id} staffName={selectedLead.routing?.staffName} />
+              )}
 
               {getLeadTags(selectedLead).length > 0 && (
                 <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-2">

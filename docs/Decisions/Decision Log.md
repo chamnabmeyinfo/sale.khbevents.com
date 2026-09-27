@@ -26,6 +26,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-27 — The owner and admins may read the team's customer chats live, read only, without storing them
+
+- **Decision:** For a lead that began as a Telegram chat, the CRM lead drawer shows the whole conversation between the salesperson and the customer, fetched live through the salesperson's connected account each time it opens. It is read only (no sending from the portal), the message text is not saved anywhere in the portal, and only the numbers stay on the lead. Salespeople know their work account is connected and can end the session in Telegram at any time.
+- **Why:** Counts and reply times were not enough: the owner wants to see how each conversation goes to coach the team and to judge prospects. Reading live instead of storing keeps the portal's data footprint small and the customer's words in one place, Telegram.
+- **Who decided:** Owner.
+- **Affects:** [[Leads CRM]], [[Round Robin]].
+
 ## 2026-09-27 — Every confirmed Telegram chat is a CRM lead, phone or not; conversations are counted, never stored
 
 - **Decision:** A chat confirmed by the connected account creates a lead in the CRM at once, without a phone number (the salesperson asks for it in the chat), assigned to the salesperson of the click, one lead per Telegram user. The account also reads each open chat and keeps only numbers (messages each way, first reply time, last message and who sent it, unread), shown per salesperson on Team performance. No AI reads or answers chats.

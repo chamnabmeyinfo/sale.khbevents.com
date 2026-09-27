@@ -17,7 +17,8 @@ tags: [session, round-robin, crm, telegram]
 - Team performance: new card **Telegram chats: did we reply?** (chats, answered, average first reply, waiting now, quiet 3+ days, won, lost per salesperson; the waiting list with CRM links) and the same numbers per click in the visitor list.
 - The account check now also runs with the lead follow-up check after normal site traffic, so matching and numbers no longer wait for someone to open the admin.
 - Later the same day: a per-salesperson option **Track every new chat** makes leads for customers who write directly, without a click (page "Telegram (direct)"); people already in the chat list, bots and groups are never included. Rehearsed with the test double: off → contact seen, no lead; on → lead with reply numbers; old friend and bot ignored.
-- See [[Round Robin]].
+- Later again: **live chat view** in the CRM lead drawer for chat leads (both sides, times, attachment kinds; read through the connected account on open and every 30 s; Read again; read only; nothing stored but the numbers) and a 💬 badge with the message counts in the lead list. Rehearsed with the test double: 4 messages incl. a photo shown as bubbles, numbers refreshed (3/1, first reply 3 min, waiting), a new reply appears on refresh and clears the waiting mark, disconnected account explained, form leads have no chat, no sideways scroll on a phone.
+- See [[Round Robin]] and [[Leads CRM]].
 
 ## Verified
 

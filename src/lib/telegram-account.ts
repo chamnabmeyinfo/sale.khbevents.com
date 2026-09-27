@@ -170,7 +170,19 @@ export interface AccountClient {
   recentDialogs(limit: number): Promise<DialogPeek[]>;
   /** The latest messages of one private chat (after recentDialogs), newest first. Only who sent it and when. */
   history(userId: string, limit: number): Promise<ChatMessagePeek[]>;
+  /** The latest messages with their text, for the chat view. Finds the chat by user id, then by @username. */
+  conversation(userId: string, username: string | undefined, limit: number): Promise<ChatMessage[]>;
   logOut(): Promise<void>;
+}
+
+/** One message as the chat view shows it. */
+export interface ChatMessage {
+  id: number;
+  out: boolean;
+  atMs: number;
+  text: string;
+  /** Attachment kind, when the message is not plain text. */
+  media?: 'photo' | 'video' | 'voice' | 'audio' | 'sticker' | 'file' | 'other';
 }
 
 export class NeedsPasswordError extends Error {
@@ -245,6 +257,37 @@ async function realClient(apiId: number, apiHash: string, session: string): Prom
       const msgs = await client.getMessages(peer as Parameters<typeof client.getMessages>[0], { limit });
       return msgs.map((m) => ({ out: Boolean(m.out), atMs: Number(m.date) * 1000 }));
     },
+    conversation: async (userId, username, limit) => {
+      let peer = peers.get(userId);
+      if (!peer) {
+        // Not among the recent chats: look further down the list, then by @username.
+        try {
+          for await (const d of client.iterDialogs({ limit: 300 })) {
+            if (d.isUser && d.entity && d.entity instanceof Api.User) peers.set(d.entity.id.toString(), d.inputEntity);
+            if (peers.has(userId)) break;
+          }
+        } catch {}
+        peer = peers.get(userId);
+        if (!peer && username) peer = await client.getInputEntity(username).catch(() => undefined);
+      }
+      if (!peer) return [];
+      const msgs = await client.getMessages(peer as Parameters<typeof client.getMessages>[0], { limit });
+      const kind = (m: { media?: unknown }): ChatMessage['media'] => {
+        const media = m.media as { className?: string; document?: { mimeType?: string; attributes?: Array<{ className?: string }> } } | undefined;
+        if (!media) return undefined;
+        if (media.className === 'MessageMediaPhoto') return 'photo';
+        if (media.className === 'MessageMediaDocument') {
+          const mime = media.document?.mimeType || '';
+          const attrs = (media.document?.attributes || []).map((a) => a.className || '');
+          if (attrs.includes('DocumentAttributeSticker')) return 'sticker';
+          if (attrs.some((a) => a === 'DocumentAttributeAudio')) return mime.startsWith('audio/ogg') ? 'voice' : 'audio';
+          if (mime.startsWith('video/')) return 'video';
+          return 'file';
+        }
+        return 'other';
+      };
+      return msgs.map((m) => ({ id: Number(m.id), out: Boolean(m.out), atMs: Number(m.date) * 1000, text: m.message || '', media: kind(m) }));
+    },
     logOut: async () => {
       await client.invoke(new Api.auth.LogOut());
     },
@@ -258,7 +301,7 @@ async function realClient(apiId: number, apiHash: string, session: string): Prom
 async function mockClient(session: string): Promise<AccountClient> {
   const fs = await import('node:fs/promises');
   const file = process.env.TELEGRAM_ACCOUNT_MOCK_FILE || '';
-  const read = async (): Promise<{ me?: { id: string; username?: string; name?: string }; dialogs?: DialogPeek[]; history?: Record<string, ChatMessagePeek[]> }> => {
+  const read = async (): Promise<{ me?: { id: string; username?: string; name?: string }; dialogs?: DialogPeek[]; history?: Record<string, Array<ChatMessagePeek & { text?: string; media?: ChatMessage['media'] }>> }> => {
     try {
       return JSON.parse(await fs.readFile(file, 'utf8'));
     } catch {
@@ -284,6 +327,7 @@ async function mockClient(session: string): Promise<AccountClient> {
     getMe: async () => (await read()).me || { id: '1', username: 'mockowner', name: 'Mock Owner' },
     recentDialogs: async () => (await read()).dialogs || [],
     history: async (userId) => (await read()).history?.[userId] || [],
+    conversation: async (userId) => ((await read()).history?.[userId] || []).map((m, i) => ({ id: i + 1, out: m.out, atMs: m.atMs, text: m.text || '', media: m.media })),
     logOut: async () => undefined,
   };
 }
@@ -501,7 +545,8 @@ async function finishCheck(rec: TelegramAccountRecord, client: AccountClient, di
   if (rec.trackAll) {
     const rr = await getRoundRobinSettings();
     const staff = rr.staffList.find((s) => s.id === staffId) || null;
-    for (const c of contacts.filter((x) => !x.logId && x.at >= new Date(since - 60_000).toISOString())) {
+    // New people whose message is recent (a week): older unmatched contacts stay as they are.
+    for (const c of contacts.filter((x) => !x.logId && Date.parse(x.at) >= nowMs - 7 * 86_400_000)) {
       try {
         const existing = await findLeadByTelegramUserId(c.userId);
         if (existing) continue;
@@ -629,4 +674,59 @@ export async function checkAllAccountsWithin(ms: number): Promise<CheckResult[]>
     checkAllAccounts(),
     new Promise<CheckResult[]>((resolve) => setTimeout(() => resolve([]), ms)),
   ]);
+}
+
+// ─── Chat view ─────────────────────────────────────────────────────────────
+
+export interface LeadConversation {
+  leadId: string;
+  staffId: string;
+  staffName: string;
+  customer: { userId: string; username?: string; name: string };
+  /** Oldest first. */
+  messages: ChatMessage[];
+  stats: import('./types').ChatStats;
+  readAt: string;
+  /** Why there are no messages, when the account could not be read. */
+  error?: string;
+}
+
+/**
+ * The live conversation between the salesperson and a Telegram customer, read
+ * through the salesperson's connected account when the admin opens the lead.
+ * Nothing is stored: the lead keeps only the numbers (routing.chat).
+ */
+export async function readLeadConversation(leadId: string, limit = 100): Promise<LeadConversation | null> {
+  const lead = (await getRealLeads()).find((l) => l.id === leadId);
+  const userId = lead?.customFields?.telegramUserId;
+  if (!lead || !userId || !lead.routing) return null;
+  const staffId = lead.routing.staffId;
+  const base: LeadConversation = {
+    leadId, staffId, staffName: lead.routing.staffName,
+    customer: { userId, username: lead.customFields?.telegramUsername, name: lead.fullName },
+    messages: [], stats: lead.routing.chat || { fromCustomer: 0, fromUs: 0, updatedAt: '' }, readAt: new Date().toISOString(),
+  };
+  const rec = await getAccountRecord(staffId);
+  if (!rec.session || !rec.user) return { ...base, error: 'not_connected' };
+  const client = await clientFor(rec, rec.session);
+  try {
+    await client.connect();
+    const dialogs = await client.recentDialogs(RECENT_DIALOGS);
+    const messages = (await client.conversation(userId, lead.customFields?.telegramUsername, limit)).sort((a, b) => a.atMs - b.atMs);
+    rec.session = client.saveSession();
+    // Fresh numbers for the lead while we are here.
+    if (messages.length) {
+      const unread = dialogs.find((d) => d.userId === userId)?.unread;
+      const stats = chatStatsFrom(messages, unread);
+      lead.routing = { ...lead.routing, chat: stats };
+      await saveLeadChanges(lead).catch(() => undefined);
+      base.stats = stats;
+    }
+    await saveAccountRecord(rec);
+    return { ...base, messages };
+  } catch (err) {
+    return { ...base, error: errText(err) };
+  } finally {
+    await client.disconnect();
+  }
 }

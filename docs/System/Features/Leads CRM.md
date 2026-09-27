@@ -14,6 +14,8 @@ source:
   - src/lib/csv.ts
   - src/lib/rate-limit.ts
   - src/lib/i18n/dict/leads.ts
+  - src/components/admin/TelegramChatView.tsx
+  - src/app/api/leads/[id]/chat/route.ts
 ---
 
 # Leads CRM
@@ -64,6 +66,10 @@ A Telegram lead alert links to `/admin/leads?id=<lead id>`, which opens that lea
 | Telegram chat leads (since 2026-09-27) | A customer who wrote on Telegram after clicking a landing page, made by the account check in [[Round Robin]]: name and @username from Telegram, no phone until the team adds it, event type "Telegram chat", tag `telegram`, the first message as the message, and the conversation numbers (messages each way, first reply time) |
 | Round Robin Staff Assignment | Who got the lead, their share, Telegram delivery status, and "Returning customer" or "Returning visitor" when the lead was kept with an earlier salesperson. See [[Round Robin]] |
 | Internal Organizer Notes | Notes typed by the team, newest first, with time and author |
+
+## Live Telegram chat in the lead (2026-09-27)
+
+A lead that began as a Telegram chat (💬 badge in the list, with "messages from the customer / from us"; amber when the customer wrote last) shows the **conversation itself** in the lead drawer: every message of both sides, oldest first, with the time and the kind of attachment (photo, voice message, file…), read live through the salesperson's connected Telegram account when the drawer opens and every 30 seconds while it stays open, or with **Read again**. It is read only: the salesperson answers from their own Telegram. The portal stores only the numbers (messages each way, first reply time, who spoke last); the text is fetched each time and never saved. If that salesperson's account is not connected, the drawer says so. Source: `src/components/admin/TelegramChatView.tsx`, `GET /api/leads/<id>/chat`, `readLeadConversation` in `src/lib/telegram-account.ts`. See [[Round Robin]].
 
 ## Key rules and defaults
 
