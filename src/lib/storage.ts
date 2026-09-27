@@ -1215,17 +1215,92 @@ export async function createLeadFromTelegramChat(input: {
     createdAt: contact.at,
     updatedAt: now,
   };
+  await insertNewLead(db, lead, page);
+  return lead;
+}
+
+/** Saves a lead made by the system (no routing run, no alerts): Supabase first, then the local copy. */
+async function insertNewLead(db: DatabaseSchema, lead: Lead, page?: LandingPage): Promise<void> {
   if (page) page.leadsCount = (page.leadsCount || 0) + 1;
   if (isSupabaseConfigured()) {
     try {
       await supabaseCreateLead(lead);
     } catch (err) {
-      console.error('Supabase createLeadFromTelegramChat error:', err);
+      console.error('Supabase insertNewLead error:', err);
       db.unsyncedLeadIds = [...(db.unsyncedLeadIds || []), lead.id];
     }
   }
   db.leads.unshift(lead);
   await saveDatabase(db);
+}
+
+/**
+ * A CRM lead for a visitor who started a live chat on the website. Assigned to
+ * the salesperson the chat went to; no alert here (the chat itself reaches them).
+ */
+export async function createLeadFromWebChat(input: {
+  chatId: string;
+  code: string;
+  pageSlug: string;
+  pageTitle: string;
+  name: string;
+  phone?: string;
+  firstMessage: string;
+  staff?: RoundRobinStaff | null;
+  visitor?: VisitorDetail;
+  visitorIp?: string;
+  userAgent?: string;
+  at: string;
+}): Promise<Lead> {
+  const db = await getDatabase();
+  const page = input.pageSlug === 'general' ? undefined : (await getPageBySlug(input.pageSlug)) || db.pages.find((p) => p.slug === input.pageSlug);
+  const v = input.visitor || {};
+  const customFields: Record<string, string> = { source: 'web_chat', webChatId: input.chatId, webChatCode: input.code };
+  if (v.sessionId) customFields.visitSession = v.sessionId;
+  if (v.visitorId) customFields.visitorId = v.visitorId;
+  if (v.country) customFields.visitorCountry = v.country;
+  if (v.city) customFields.visitorCity = v.city;
+  if (v.region) customFields.visitorRegion = v.region;
+  const tags = [...(page?.isolatedSettings?.leadTags || []), 'live-chat'];
+  customFields.campaignTags = tags.join(', ');
+  const staff = input.staff || null;
+  const lead: Lead = {
+    id: `lead-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    landingPageId: page?.id,
+    landingPageSlug: input.pageSlug,
+    landingPageTitle: page?.title || input.pageTitle || input.pageSlug,
+    fullName: input.name,
+    email: '',
+    phone: input.phone || '',
+    eventType: 'Live chat',
+    message: input.firstMessage.slice(0, 500),
+    customFields,
+    tags,
+    status: 'NEW',
+    notes: [],
+    utmSource: v.utmSource,
+    utmMedium: v.utmMedium,
+    utmCampaign: v.utmCampaign,
+    utmContent: v.utmContent,
+    referrer: v.referrer,
+    ip: input.visitorIp,
+    userAgent: input.userAgent,
+    routing: staff ? {
+      staffId: staff.id,
+      staffName: staff.name,
+      staffTelegram: staff.telegramUsername,
+      staffChatId: staff.telegramChatId,
+      percentageWeight: staff.percentage || 0,
+      status: 'DELIVERED',
+      routedAt: input.at,
+      assignedAt: input.at,
+      routeType: 'DIRECT_CONTACT_CLICK',
+      assignmentReason: 'rotation',
+    } : undefined,
+    createdAt: input.at,
+    updatedAt: new Date().toISOString(),
+  };
+  await insertNewLead(db, lead, page);
   return lead;
 }
 
@@ -1328,10 +1403,18 @@ export async function getSettings(): Promise<SystemSettings> {
  * rendered by a 'use client' component is serialized into the HTML, so bot
  * tokens, chat IDs, password hashes and staff routing data must never reach it.
  */
+/** Marker that switches the website live chat off ('off'); anything else means on. */
+export const LIVE_CHAT_MARKER = 'live_chat';
+
+export async function isLiveChatEnabled(): Promise<boolean> {
+  return (await getMarker(LIVE_CHAT_MARKER)) !== 'off';
+}
+
 export async function getPublicSettings(): Promise<SystemSettings> {
   const settings = await getSettings();
   return {
     ...settings,
+    liveChatEnabled: await isLiveChatEnabled(),
     telegramBotToken: undefined,
     telegramChatId: undefined,
     roundRobinSettings: undefined,

@@ -790,6 +790,9 @@ export interface SystemSettings {
   tiktokUrl?: string;
   linkedinUrl?: string;
   
+  /** Website live chat switch (computed from a marker, shown to public pages; not a stored column). */
+  liveChatEnabled?: boolean;
+
   // Notifications
   telegramBotToken?: string;
   telegramChatId?: string;

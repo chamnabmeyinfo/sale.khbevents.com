@@ -12,6 +12,7 @@ import TestimonialsSection from './TestimonialsSection';
 import FaqSection from './FaqSection';
 import LeadForm from './LeadForm';
 import FloatingContact from './FloatingContact';
+import LiveChatWidget from '@/components/common/LiveChatWidget';
 import Footer from './Footer';
 import { LandingPage, PopupAd, SystemSettings } from '@/lib/types';
 import PopupAdsHost from '@/components/common/PopupAds';
@@ -66,6 +67,7 @@ export default function MainSalesView({ pages, settings, popupAds, popupPreviewI
         phone={settings.phone}
         pageSlug="main-sales"
       />
+      <LiveChatWidget pageSlug="main-sales" pageTitle="KHB Events" enabled={settings.liveChatEnabled !== false} />
       <PopupAdsHost ads={popupAds} previewId={popupPreviewId} pageSlug="main-sales" />
 
       <Footer

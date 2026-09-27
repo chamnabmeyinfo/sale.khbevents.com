@@ -164,6 +164,10 @@ What is kept: the customer's name, @username, user id, the time of the first mes
 
 The check runs after normal site traffic together with the lead follow-up check (page tracking, the bot, the admin Leads and Round Robin pages), when Team performance opens, and on **Check now**; at most every 2 minutes per account.
 
+## Website live chat
+
+Visitors can also write in the chat window on the landing pages; the message goes to the salesperson's Telegram (reply to answer) and to the admin inbox, and the chat is a lead. Routing uses the same rules as a click. See [[Live Chat]].
+
 ## Who can receive what (eligibility)
 
 | Contact type | The person needs | If nobody qualifies |

@@ -171,7 +171,7 @@ export default function TeamPerformanceClient({ leads, clickStats, staffList, no
         <p className={`${SUB} mt-2`}>{t('rr.perf.legend')}</p>
       </div>
 
-      {chatCheck && (
+      {(chatCheck || tg.totals.chats > 0) && (
         <div className={`${CARD} p-4`} data-telegram-replies="">
           <div className="text-sm font-extrabold text-slate-900 dark:text-white">{t('rr.tg.title')}</div>
           <p className={SUB}>{t('rr.tg.hint')}</p>

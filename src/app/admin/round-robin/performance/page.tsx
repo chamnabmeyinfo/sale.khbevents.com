@@ -50,7 +50,7 @@ export default async function TeamPerformancePage() {
   // Only what the page needs; the customer's name only for leads still waiting for a reply
   // (form leads with no button tap; Telegram chats where the customer spoke last).
   const slim: PerfLead[] = leads
-    .filter((l) => l.createdAt >= since && l.routing && (l.routing.routeType === 'FORM_SUBMISSION' || l.customFields?.telegramUserId))
+    .filter((l) => l.createdAt >= since && l.routing && (l.routing.routeType === 'FORM_SUBMISSION' || l.customFields?.telegramUserId || l.customFields?.webChatId))
     .map((l) => {
       const isChat = l.routing?.routeType === 'DIRECT_CONTACT_CLICK';
       const waiting = isChat ? l.routing?.chat?.lastFrom === 'customer' : l.status === 'NEW' && !l.routing?.claim;

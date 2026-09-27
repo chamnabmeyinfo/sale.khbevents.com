@@ -23,6 +23,12 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [x] Restore the Vietnam page from the owner's saved copy of the live page (2026-09-26). The page as it was before the automatic update was applied as a content pack; photos, text, terms and seats are back. → [[Smart City Tea and Cafe Vietnam 2026]]
 - [ ] After this deploy, open `/smart-city-tea-cafe` and check: all photos load (23 uploaded pictures; a missing one means the file is gone from storage and needs re-uploading), the lead form and the final call to action are back, and the "Why people choose this" and second hero sections sit before the terms as they did. Then Save once in the builder so the copy is also in Versions. → [[Page Builder]] #owner
 
+### Live chat (new, 2026-09-27)
+
+- [ ] After this deploy, open a landing page on your phone, press **Chat with us**, send a message, then answer it from Telegram by **replying** to the bot's message. The answer should appear in the chat window within a few seconds. → [[Live Chat]] #owner
+- [ ] Tell the team: a live-chat message from the bot is answered by **Reply** in Telegram (not a new message), and `/close` as a reply closes the chat. The **Live chat inbox** in the admin shows everything. #owner
+- [ ] If the answer does not arrive: Settings & Security → **Register / secure bot webhook** once, so the bot receives replies. #owner
+
 ### Prospect journey (audit 2026-09-27)
 
 - [x] Owner answered the audit's questions (2026-09-27): check-in timings customisable with minimums; a Telegram chat may be a lead without a phone (the team asks for it); the manager gets the morning list too; AI later, if at all, only to read chats faster, never to answer customers.

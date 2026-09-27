@@ -26,6 +26,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-27 — Website live chat answered from Telegram, with an admin inbox, no outside chat service
+
+- **Decision:** The live chat runs inside the portal: the visitor's window on the page, one JSON row per chat in Supabase, delivery of each message to the salesperson's Telegram through the company bot, answers by Telegram reply (matched by a `#WC-XXXXXX` code) or from the admin inbox, and a CRM lead for every chat. Polling, not push. Off switch in the inbox.
+- **Why:** The team lives in Telegram and is not strong in English, so answering by replying to a bot message asks nothing new of them; a third-party chat widget would add a monthly fee, another login, another place where customer data lives, and would not create leads in our CRM by itself. Polling every few seconds is enough for a sales team of this size and works on Vercel without extra services.
+- **Who decided:** Owner asked for an official live chat; Claude chose the design with owner approval.
+- **Affects:** [[Live Chat]], [[Round Robin]], [[Leads CRM]].
+
 ## 2026-09-27 — The owner and admins may read the team's customer chats live, read only, without storing them
 
 - **Decision:** For a lead that began as a Telegram chat, the CRM lead drawer shows the whole conversation between the salesperson and the customer, fetched live through the salesperson's connected account each time it opens. It is read only (no sending from the portal), the message text is not saved anywhere in the portal, and only the numbers stay on the lead. Salespeople know their work account is connected and can end the session in Telegram at any time.

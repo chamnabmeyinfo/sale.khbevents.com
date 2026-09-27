@@ -458,6 +458,11 @@ export default function LeadsCrmClient({ initialLeads, pages, initialStatus, ini
                             <span className="font-semibold text-slate-700 dark:text-gray-300">
                               {t('leads.rep', { name: lead.routing.staffName })}
                             </span>
+                            {lead.customFields?.webChatId && (
+                              <span className={`px-1.5 rounded-full border text-[9px] font-black ${lead.routing.chat?.lastFrom === 'customer' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800' : 'bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800'}`} title={t('leads.webChat.badgeTitle')}>
+                                🌐 {lead.routing.chat ? `${lead.routing.chat.fromCustomer}/${lead.routing.chat.fromUs}` : t('leads.webChat.badge')}
+                              </span>
+                            )}
                             {lead.customFields?.telegramUserId && (
                               <span className={`px-1.5 rounded-full border text-[9px] font-black ${lead.routing.chat?.lastFrom === 'customer' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800' : 'bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800'}`} title={t('leads.chat.badgeTitle')}>
                                 💬 {lead.routing.chat ? `${lead.routing.chat.fromCustomer}/${lead.routing.chat.fromUs}` : t('leads.chat.badge')}
@@ -658,6 +663,12 @@ export default function LeadsCrmClient({ initialLeads, pages, initialStatus, ini
 
               {selectedLead.customFields?.telegramUserId && (
                 <TelegramChatView key={selectedLead.id} leadId={selectedLead.id} staffName={selectedLead.routing?.staffName} />
+              )}
+              {selectedLead.customFields?.webChatId && (
+                <a href={`/admin/chats?id=${encodeURIComponent(selectedLead.customFields.webChatId)}`} className="flex items-center justify-between gap-2 p-3 rounded-xl border border-sky-200 dark:border-sky-900/60 bg-sky-50/60 dark:bg-sky-950/20 text-xs font-bold text-sky-800 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-950/40">
+                  <span>💬 {t('leads.webChat.open')}</span>
+                  <span className="text-[10px] font-semibold text-slate-500 dark:text-gray-400">{selectedLead.routing?.chat ? `${selectedLead.routing.chat.fromCustomer} / ${selectedLead.routing.chat.fromUs}` : ''}</span>
+                </a>
               )}
 
               {getLeadTags(selectedLead).length > 0 && (

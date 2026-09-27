@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navbar from './Navbar';
 import FloatingContact from './FloatingContact';
+import LiveChatWidget from '@/components/common/LiveChatWidget';
 import Footer from './Footer';
 import LeadForm from './LeadForm';
 import { LandingPage, PopupAd, SystemSettings, DEFAULT_SECTION_ORDER } from '@/lib/types';
@@ -1296,6 +1297,7 @@ export default function DynamicLandingPageView({ page, settings, popupAds, popup
         phone={effPhone}
         pageSlug={page.slug}
       />
+      <LiveChatWidget pageSlug={page.slug} pageTitle={page.title} enabled={settings.liveChatEnabled !== false} />
 
       <Footer
         logo={pageLogo}

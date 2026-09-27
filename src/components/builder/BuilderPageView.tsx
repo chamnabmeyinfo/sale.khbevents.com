@@ -6,13 +6,14 @@ import type { Lang } from '@/lib/builder';
 import { ctaOpensTelegram, effectiveOffer, normalizeBuilderDoc } from '@/lib/builder';
 import LandingPageTracking, { trackLandingEvent } from '@/components/common/LandingPageTracking';
 import PopupAdsHost from '@/components/common/PopupAds';
+import LiveChatWidget from '@/components/common/LiveChatWidget';
 import { popupStorageKeys } from '@/lib/popup-ads';
 import { useStoredChoice, useUrlParam } from '@/lib/use-browser-state';
 import { BlockView, BuilderRoot, useNow } from './BuilderBlocks';
 import type { CompanyInfo } from '@/lib/company';
 
 /** Public view of a page made with the drag-and-drop builder. */
-export default function BuilderPageView({ page, company, initialLang = 'en', serverNowMs, popupAds, popupPreviewId }: {
+export default function BuilderPageView({ page, company, initialLang = 'en', serverNowMs, popupAds, popupPreviewId, liveChat = true }: {
   page: LandingPage;
   /** Logo and public contact details for the Contact & company section. */
   company?: CompanyInfo;
@@ -22,6 +23,8 @@ export default function BuilderPageView({ page, company, initialLang = 'en', ser
   serverNowMs?: number;
   popupAds?: PopupAd[];
   popupPreviewId?: string;
+  /** Website live chat (Admin → Live chat inbox switch). */
+  liveChat?: boolean;
 }) {
   const doc = normalizeBuilderDoc(page.builder);
   const urlLang = useUrlParam('lang');
@@ -47,6 +50,7 @@ export default function BuilderPageView({ page, company, initialLang = 'en', ser
     <BuilderRoot brand={doc.brand} lang={lang}>
       <LandingPageTracking page={page} lang={lang} sections={doc.blocks.map((b) => b.id)} />
       <PopupAdsHost ads={popupAds} previewId={popupPreviewId} pageSlug={page.slug} lang={lang} />
+      <LiveChatWidget pageSlug={page.slug} pageTitle={page.title} lang={lang} enabled={liveChat} />
       <div className="kb-langbar" role="group" aria-label="Language">
         <button type="button" aria-pressed={lang === 'en'} onClick={() => switchLang('en')}>EN</button>
         <button type="button" aria-pressed={lang === 'kh'} onClick={() => switchLang('kh')}>ខ្មែរ</button>
