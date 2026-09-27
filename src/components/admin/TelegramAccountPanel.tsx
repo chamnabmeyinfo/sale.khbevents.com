@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { CheckCircle2, Loader2, LogOut, MessageCircle, RefreshCw, ShieldAlert } from 'lucide-react';
-import type { TelegramAccountStatus } from '@/lib/telegram-account';
+import type { AccountDiagnosis, TelegramAccountStatus } from '@/lib/telegram-account';
 import { useLanguage } from '@/context/LanguageContext';
 
 const CARD = 'rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 p-5 sm:p-6 shadow-sm';
@@ -30,6 +30,7 @@ export default function TelegramAccountPanel() {
   const [form, setForm] = useState<Record<string, { apiId: string; apiHash: string; phone: string; code: string; password: string }>>({});
   /** "Check now" rests for 30 s after a click (the server enforces the same). */
   const [cooling, setCooling] = useState<Record<string, boolean>>({});
+  const [diag, setDiag] = useState<Record<string, AccountDiagnosis | 'loading'>>({});
 
   const field = (staffId: string) => form[staffId] || { apiId: '', apiHash: '', phone: '', code: '', password: '' };
   const setField = (staffId: string, k: string, v: string) => setForm((f) => ({ ...f, [staffId]: { ...field(staffId), [k]: v } }));
@@ -85,6 +86,19 @@ export default function TelegramAccountPanel() {
         setCooling((c) => ({ ...c, [staffId]: true }));
         window.setTimeout(() => setCooling((c) => ({ ...c, [staffId]: false })), 30_000);
       }
+    }
+  };
+
+  const diagnose = async (staffId: string) => {
+    setDiag((d) => ({ ...d, [staffId]: 'loading' }));
+    try {
+      const res = await fetch('/api/telegram-account', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ staffId, action: 'diag' }) });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || t('tga.err.action'));
+      setDiag((d) => ({ ...d, [staffId]: data.diagnosis }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setDiag((d) => { const n = { ...d }; delete n[staffId]; return n; });
     }
   };
 
@@ -155,6 +169,30 @@ export default function TelegramAccountPanel() {
                   <input type="checkbox" className="mt-0.5" checked={a.trackAll} disabled={Boolean(busy)} onChange={(e) => act(a.staffId, 'options', { trackAll: e.target.checked })} data-option="trackAll" />
                   <span><span className="font-bold text-slate-800 dark:text-gray-100">{t('tga.trackAll')}</span> <span className={SUB}>{t('tga.trackAllHint')}</span></span>
                 </label>
+                {a.lastCheckSummary && (
+                  <details className="col-span-full text-[11px] text-slate-600 dark:text-gray-300" data-check-summary="">
+                    <summary className="cursor-pointer font-bold text-slate-700 dark:text-gray-200">{t('tga.summary.title', { at: when(a.lastCheckSummary.at) })}</summary>
+                    <div className="mt-1 pa-num">{t('tga.summary.line', { d: a.lastCheckSummary.dialogs, i: a.lastCheckSummary.incoming, n: a.lastCheckSummary.newPeople, k: a.lastCheckSummary.knownRecent, m: a.lastCheckSummary.matched, l: a.lastCheckSummary.leadsMade })}</div>
+                    {a.lastCheckSummary.newest.length > 0 && (
+                      <ul className="mt-1 space-y-0.5">
+                        {a.lastCheckSummary.newest.map((n, i) => (
+                          <li key={i} className="pa-num">· {n.name}{n.username ? ` @${n.username}` : ''} · {when(new Date(n.atMs).toISOString())} · {n.known ? t('tga.summary.known') : t('tga.summary.new')}{n.leadId ? ` · ${t('tga.summary.lead')}` : ''}</li>
+                        ))}
+                      </ul>
+                    )}
+                    <p className={`${SUB} mt-1`}>{t('tga.summary.hint')}</p>
+                  </details>
+                )}
+                <div className="col-span-full flex flex-wrap items-center gap-2">
+                  <button type="button" className={`${BTN} border border-slate-200 dark:border-emerald-800 text-slate-600 dark:text-gray-300`} disabled={diag[a.staffId] === 'loading'} onClick={() => diagnose(a.staffId)} data-diagnose="">
+                    {diag[a.staffId] === 'loading' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldAlert className="w-3.5 h-3.5" />}{t('tga.diag.run')}
+                  </button>
+                  {diag[a.staffId] && diag[a.staffId] !== 'loading' && (() => { const d = diag[a.staffId] as AccountDiagnosis; return (
+                    <span className={`text-[11px] font-semibold ${d.lock === 'ok' ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}`} data-diag-lock={d.lock}>
+                      {t(`tga.diag.lock.${d.lock}`, { store: t(`tga.diag.store.${d.lockStore}`) })}{d.lockDetail ? ` · ${d.lockDetail}` : ''}{d.floodUntil ? ` · ${t('tga.floodWait', { at: when(d.floodUntil) })}` : ''} · {t('tga.diag.known', { n: d.knownPeople })}
+                    </span>
+                  ); })()}
+                </div>
                 <label className="col-span-full flex items-start gap-2 text-xs cursor-pointer">
                   <input type="checkbox" className="mt-0.5" checked={a.autoSeen} disabled={Boolean(busy)} onChange={(e) => act(a.staffId, 'options', { autoSeen: e.target.checked })} data-option="autoSeen" />
                   <span><span className="font-bold text-slate-800 dark:text-gray-100">{t('tga.autoSeen')}</span> <span className={SUB}>{t('tga.autoSeenHint')}</span></span>

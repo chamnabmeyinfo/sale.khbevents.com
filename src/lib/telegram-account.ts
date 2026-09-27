@@ -84,6 +84,21 @@ export interface TelegramAccountRecord {
   sendTimes?: string[];
   /** Access hashes of customer chats already opened, so a poll needs no dialog list. Useless without the session. */
   peers?: Record<string, string>;
+  /** What the last check saw, for the settings screen (names and times, no message text). */
+  lastCheckSummary?: CheckSummary;
+}
+
+export interface CheckSummary {
+  at: string;
+  /** Private chats read, how many had the customer speaking last, new people, known people who wrote since the last check. */
+  dialogs: number;
+  incoming: number;
+  newPeople: number;
+  knownRecent: number;
+  matched: number;
+  leadsMade: number;
+  /** The most recent incoming chats: who, when, whether the portal already knew them. */
+  newest: Array<{ name: string; username?: string; atMs: number; known: boolean; leadId?: string }>;
 }
 
 /** What the admin screen sees: no secrets. */
@@ -106,6 +121,7 @@ export interface TelegramAccountStatus {
   autoSeen: boolean;
   /** Set while Telegram has asked this account to wait. */
   floodUntil?: string;
+  lastCheckSummary?: CheckSummary;
 }
 
 const rowId = (staffId: string) => `tg_account:${staffId}`;
@@ -181,6 +197,7 @@ export function statusOf(rec: TelegramAccountRecord, staffName: string, nowMs = 
     trackAll: Boolean(rec.trackAll),
     autoSeen: Boolean(rec.autoSeen),
     floodUntil: floodActive(rec, nowMs),
+    lastCheckSummary: rec.lastCheckSummary,
   };
 }
 
@@ -773,6 +790,52 @@ export async function disconnectAccount(staffId: string): Promise<TelegramAccoun
   return statusOf(next, '');
 }
 
+// ─── Diagnosis ─────────────────────────────────────────────────────────────
+
+export interface AccountDiagnosis {
+  connected: boolean;
+  /** The per-account lock: could this server take and give back the lease right now? */
+  lock: 'ok' | 'busy' | 'error';
+  lockDetail?: string;
+  /** Where the lock lives: the shared database, or this server's memory (local file mode). */
+  lockStore: 'database' | 'memory';
+  floodUntil?: string;
+  lastCheckAt?: string;
+  lastError?: string;
+  lastCheckSummary?: CheckSummary;
+  knownPeople: number;
+  contactsFound: number;
+  trackAll: boolean;
+}
+
+/** Why a chat may not be showing: the lock, a wait, the last error and what the last check saw. Reads only. */
+export async function diagnoseAccount(staffId: string): Promise<AccountDiagnosis> {
+  const rec = await getAccountRecord(staffId);
+  const store = getLeaseStore();
+  const raw = await store.get(`tg_lease:${staffId}`).catch(() => null);
+  let lock: AccountDiagnosis['lock'] = 'ok';
+  let lockDetail: string | undefined;
+  try {
+    await withAccountLease(staffId, async () => undefined, { waitMs: 3_000, store });
+  } catch (err) {
+    lock = err instanceof AccountBusyError ? 'busy' : 'error';
+    lockDetail = `${errText(err)}${raw ? ` · row: ${raw.slice(0, 120)}` : ''}`;
+  }
+  return {
+    connected: Boolean(rec.session && rec.user),
+    lock,
+    lockDetail,
+    lockStore: 'rows' in store ? 'memory' : 'database',
+    floodUntil: floodActive(rec, Date.now()),
+    lastCheckAt: rec.lastCheckAt,
+    lastError: rec.lastError,
+    lastCheckSummary: rec.lastCheckSummary,
+    knownPeople: (rec.knownUserIds || []).length,
+    contactsFound: (rec.contacts || []).length,
+    trackAll: Boolean(rec.trackAll),
+  };
+}
+
 // ─── The check ─────────────────────────────────────────────────────────────
 
 export interface CheckResult {
@@ -842,23 +905,41 @@ async function finishCheck(rec: TelegramAccountRecord, client: AccountClient, di
   const known = new Set(rec.knownUserIds || []);
   const contacts = [...(rec.contacts || [])];
   const seenKey = new Set(contacts.map((c) => `${c.userId}:${c.at}`));
+  // Known people who wrote since the last check: they count only if a click explains the message.
+  const provisional = new Set<string>();
+  const summary: CheckSummary = { at: new Date(nowMs).toISOString(), dialogs: dialogs.length, incoming: 0, newPeople: 0, knownRecent: 0, matched: 0, leadsMade: 0, newest: [] };
   let added = 0;
   for (const d of dialogs) {
     if (d.isBot || d.isSelf || !d.lastIncoming || !d.lastAtMs) continue;
+    summary.incoming += 1;
     const isNew = !known.has(d.userId);
-    // A known customer sending a fresh reference code also counts: they clicked again.
-    const freshRef = !isNew && d.lastAtMs > since - 60_000 && Boolean(refCodeIn(d.lastText));
+    const recent = d.lastAtMs > since - 60_000;
+    if (summary.newest.length < 6) summary.newest.push({ name: d.name || d.username || d.userId, username: d.username, atMs: d.lastAtMs, known: !isNew });
+    if (isNew) summary.newPeople += 1;
+    else if (recent) summary.knownRecent += 1;
     known.add(d.userId);
-    if (!isNew && !freshRef) continue;
+    if (!isNew && !recent) continue;
     const at = new Date(d.lastAtMs).toISOString();
-    if (seenKey.has(`${d.userId}:${at}`)) continue;
+    const key = `${d.userId}:${at}`;
+    if (seenKey.has(key)) continue;
     contacts.unshift({ staffId, at, userId: d.userId, username: d.username, name: d.name, text: d.lastText.slice(0, 200) });
+    if (!isNew) provisional.add(key);
     added += 1;
   }
 
   // Match to clicks and leads.
   const logs = await getRoundRobinLogs(500);
   const matches = matchContactsToLogs(logs.filter((l) => l.staffId === staffId), contacts, new Date(nowMs).toISOString());
+  // A known person whose message no click explains is an old customer chatting on: not a new contact.
+  for (let i = contacts.length - 1; i >= 0; i -= 1) {
+    const c = contacts[i];
+    const key = `${c.userId}:${c.at}`;
+    if (provisional.has(key) && !matches.some((m) => m.contact.userId === c.userId && m.contact.at === c.at)) {
+      contacts.splice(i, 1);
+      added -= 1;
+    }
+  }
+  summary.matched = matches.length;
   if (matches.length) {
     const byLog = new Map(matches.map((m) => [m.logId, m.confirmation]));
     await updateRoundRobinLogs((all) => all.map((l) => (byLog.has(l.id) && !l.contact ? { ...l, contact: byLog.get(l.id) } : l)));
@@ -876,6 +957,9 @@ async function finishCheck(rec: TelegramAccountRecord, client: AccountClient, di
       try {
         const lead = await leadForChat(log, m.confirmation, staff);
         m.confirmation.leadId = lead.id;
+        summary.leadsMade += 1;
+        const row = summary.newest.find((n) => n.username === m.contact.username && n.atMs === Date.parse(m.contact.at));
+        if (row) row.leadId = lead.id;
         await updateRoundRobinLogs((all) => all.map((l) => (l.id === log.id && l.contact ? { ...l, contact: { ...l.contact, leadId: lead.id } } : l)));
       } catch (err) {
         console.error('Lead from Telegram chat error:', err);
@@ -895,6 +979,7 @@ async function finishCheck(rec: TelegramAccountRecord, client: AccountClient, di
         if (existing) continue;
         const lead = await createLeadFromTelegramChat({ contact: c, staff });
         c.logId = `direct:${lead.id}`;
+        summary.leadsMade += 1;
       } catch (err) {
         console.error('Lead from direct Telegram chat error:', err);
       }
@@ -913,8 +998,8 @@ async function finishCheck(rec: TelegramAccountRecord, client: AccountClient, di
 
   rec.knownUserIds = Array.from(known).slice(-KNOWN_USERS_KEPT);
   rec.contacts = contacts.slice(0, CONTACTS_KEPT);
-  await patchAccountRecord(staffId, { knownUserIds: rec.knownUserIds, contacts: rec.contacts, ...(statsError ? {} : { lastError: undefined }) });
-  return { staffId, newContacts: added, matched: matches.length, statsUpdated, error: statsError };
+  await patchAccountRecord(staffId, { knownUserIds: rec.knownUserIds, contacts: rec.contacts, lastCheckSummary: summary, ...(statsError ? {} : { lastError: undefined }) });
+  return { staffId, newContacts: Math.max(0, added), matched: matches.length, statsUpdated, error: statsError };
 }
 
 /** The CRM lead for a confirmed chat: found by Telegram user id, or made now. */
