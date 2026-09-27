@@ -22,7 +22,7 @@ export async function GET() {
 
 /**
  * Actions: start (send the code), verify (code and optional password), disconnect,
- * check (read the chats now). The secrets never leave the server.
+ * options (trackAll, autoSeen), check (read the chats now). The secrets never leave the server.
  */
 export async function POST(req: NextRequest) {
   const unauthorized = await requireAdmin();
@@ -52,7 +52,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, account: await named(await disconnectAccount(staffId)) });
     }
     if (action === 'options') {
-      return NextResponse.json({ success: true, account: await named(await updateAccountOptions(staffId, { trackAll: body.trackAll === true })) });
+      // Only the switches present in the body change; the others keep their value.
+      const options: { trackAll?: boolean; autoSeen?: boolean } = {};
+      if (typeof body.trackAll === 'boolean') options.trackAll = body.trackAll;
+      if (typeof body.autoSeen === 'boolean') options.autoSeen = body.autoSeen;
+      return NextResponse.json({ success: true, account: await named(await updateAccountOptions(staffId, options)) });
     }
     if (action === 'check') {
       const result = await checkAccount(staffId, { force: true });

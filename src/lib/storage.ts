@@ -68,6 +68,7 @@ import {
   supabaseSaveRoundRobinLog,
   supabaseGetDeletedPages,
   supabaseSaveDeletedPages,
+  supabaseCasMarker,
   supabaseGetMarker,
   supabaseGetMarkerRange,
   supabaseDeleteMarkerRange,
@@ -83,6 +84,7 @@ import {
   supabaseReplaceRoundRobinLogs,
   supabaseClearPageViews
 } from './supabase-store';
+import { memoryLeaseStore, type LeaseStore } from './telegram-lease';
 import bundledDbJson from '../../data/db.json';
 
 // ── Read caching ────────────────────────────────────────────────────────────
@@ -2146,6 +2148,22 @@ export async function setMarker(id: string, value: string): Promise<void> {
   const db = await getDatabase();
   db.markers = { ...(db.markers || {}), [id]: value };
   await saveDatabase(db);
+}
+
+/**
+ * Where the per-account Telegram lease lives (see telegram-lease.ts): the Supabase
+ * markers, shared by every server; or memory when the portal runs as one server on
+ * the local file. Reads that fail count as "someone else holds it" (fail closed).
+ */
+export function getLeaseStore(): LeaseStore {
+  if (isSupabaseConfigured()) {
+    return {
+      get: (id) => supabaseGetMarker(id).catch(() => null),
+      cas: (id, expected, next) => supabaseCasMarker(id, expected, next).catch(() => false),
+    };
+  }
+  const g = globalThis as { __khbLeaseStore?: LeaseStore };
+  return (g.__khbLeaseStore ||= memoryLeaseStore());
 }
 
 // ─── Visits (campaign analytics) ───────────────────────────────────────────

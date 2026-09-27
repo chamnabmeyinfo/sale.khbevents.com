@@ -654,6 +654,38 @@ export async function supabaseSetMarker(id: string, value: string): Promise<bool
   return !error;
 }
 
+/**
+ * Compare-and-swap on a marker row: writes `next` only when the row still holds
+ * `expected` (null = no row, or an empty one). The row's updated_at is the version:
+ * two writers that read the same value race on it and exactly one wins. Used for the
+ * per-account Telegram lease, so two servers never open the same session at once.
+ */
+export async function supabaseCasMarker(id: string, expected: string | null, next: string): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  const now = new Date().toISOString();
+  const { data: row, error: readError } = await supabase
+    .from('system_settings')
+    .select('brand_tagline, updated_at')
+    .eq('id', id)
+    .maybeSingle();
+  if (readError) return false;
+  if (!row) {
+    if (expected !== null) return false;
+    const { error } = await supabase.from('system_settings').insert({ id, brand_tagline: next, updated_at: now });
+    // A duplicate means another server inserted first: it holds the lease.
+    return !error;
+  }
+  const current = (row as { brand_tagline: string | null; updated_at: string | null }).brand_tagline || null;
+  const matches = expected === null ? current === null || current === '{}' : current === expected;
+  if (!matches) return false;
+  const version = (row as { updated_at: string | null }).updated_at;
+  let query = supabase.from('system_settings').update({ brand_tagline: next, updated_at: now }).eq('id', id);
+  query = version === null ? query.is('updated_at', null) : query.eq('updated_at', version);
+  const { data, error } = await query.select('id');
+  return !error && Array.isArray(data) && data.length > 0;
+}
+
 /** JSON rows with fromId <= id < beforeId, e.g. all `visits:<day>:*` rows of a date range. */
 export async function supabaseGetMarkerRange(fromId: string, beforeId: string): Promise<Array<{ id: string; value: string }> | null> {
   const supabase = getSupabase();

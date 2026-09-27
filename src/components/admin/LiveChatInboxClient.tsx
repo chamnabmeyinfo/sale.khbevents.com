@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Loader2, MessageCircle } from 'lucide-react';
-import type { InboxRow } from '@/lib/telegram-account';
+import type { InboxRow, LeadConversation } from '@/lib/telegram-account';
 import { useLanguage } from '@/context/LanguageContext';
 import TelegramChatView from './TelegramChatView';
 import StaffAvatar from './StaffAvatar';
@@ -15,8 +15,8 @@ const when = (iso?: string) => (iso ? new Date(iso).toLocaleString('en-GB', { ti
 
 /**
  * Admin → Telegram inbox: every Telegram customer (one lead each), the live
- * conversation read through the salesperson's connected account, and a reply box
- * that sends from that account.
+ * conversation read through the salesperson's connected account (TelegramChatView
+ * keeps it fresh while on screen), and a reply box that sends from that account.
  */
 export default function LiveChatInboxClient({ initialId }: { initialId?: string }) {
   const { t } = useLanguage();
@@ -42,8 +42,18 @@ export default function LiveChatInboxClient({ initialId }: { initialId?: string 
   useEffect(() => {
     const first = window.setTimeout(() => { void load(); }, 0);
     const timer = window.setInterval(() => { if (document.visibilityState === 'visible') void load(); }, POLL_MS);
-    return () => { window.clearTimeout(first); window.clearInterval(timer); };
+    // Back from another tab: refresh the list right away.
+    const onVisibility = () => { if (document.visibilityState === 'visible') void load(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => { window.clearTimeout(first); window.clearInterval(timer); document.removeEventListener('visibilitychange', onVisibility); };
   }, [load]);
+
+  /** The open chat just read fresh numbers: show them in its row now, not at the next list poll. */
+  const onChatChanged = useCallback((c: LeadConversation) => {
+    setRows((list) => list
+      .map((r) => (r.leadId === c.leadId ? { ...r, lastAt: c.stats.lastAt || r.lastAt, lastFrom: c.stats.lastFrom ?? r.lastFrom, fromCustomer: c.stats.fromCustomer, fromUs: c.stats.fromUs, unread: c.stats.unread } : r))
+      .sort((a, b) => (b.lastAt || '').localeCompare(a.lastAt || '')));
+  }, []);
 
   const select = (id: string) => {
     setSelected(id);
@@ -113,7 +123,7 @@ export default function LiveChatInboxClient({ initialId }: { initialId?: string 
                 </div>
                 <Link href={`/admin/leads?id=${encodeURIComponent(current.leadId)}`} className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-emerald-800 text-xs font-bold text-slate-700 dark:text-emerald-300 hover:bg-slate-100 dark:hover:bg-emerald-950">{t('chats.openLead')}</Link>
               </div>
-              <TelegramChatView key={current.leadId} leadId={current.leadId} staffName={current.staffName} canReply={current.connected} />
+              <TelegramChatView key={current.leadId} leadId={current.leadId} staffName={current.staffName} canReply={current.connected} onChanged={onChatChanged} />
             </div>
           )}
         </div>

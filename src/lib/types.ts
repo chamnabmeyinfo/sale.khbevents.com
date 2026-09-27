@@ -1119,6 +1119,10 @@ export interface ChatStats {
   lastFrom?: 'customer' | 'us';
   /** Unread messages from the customer, as Telegram counts them. */
   unread?: number;
+  /** Telegram's id of the latest message in the chat: the browser asks "anything after this?". */
+  lastMessageId?: number;
+  /** The last customer message the portal marked as read (Auto seen or a reply from the inbox). */
+  seenMaxId?: number;
   updatedAt: string;
 }
 

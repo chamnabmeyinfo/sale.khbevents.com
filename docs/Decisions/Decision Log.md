@@ -4,6 +4,8 @@ tags: [decision, log]
 updated: 2026-09-27
 source:
   - git log (commits befb78b to 6d1e831)
+  - src/lib/telegram-lease.ts
+  - src/lib/telegram-chat-rules.ts
   - vercel.json
   - scripts/vercel-ignore-build.sh
   - src/lib/round-robin.ts
@@ -25,6 +27,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 **Who decides:** "Owner" means the business owner decided it. "Claude with owner approval" means Claude proposed it during a working session and the owner accepted the result.
 
 ---
+
+## 2026-09-27 — Live Telegram chat by careful polling, one connection per account at a time, Auto seen off by default
+
+- **Decision:** The chat view keeps itself fresh while it is on screen (every 8 seconds around a fresh conversation, 20 or 60 seconds around an old one, paused in a background tab, one request at a time), so a customer's reply appears without a Refresh click. Every use of a salesperson's Telegram account takes a lease first, so two servers or two admins never open the same session at the same time; connections are short; Telegram's "wait N seconds" is honoured for the whole account; a session Telegram has ended disconnects the account until a person reconnects; portal replies keep a human pace (1.5 seconds apart, 20 a minute). **Auto seen** is a switch per salesperson, off unless they turn it on; on, the customer's messages are marked read only while a person is looking at the chat in a front tab, once per new message. A reply from the portal always marks the chat read first. No connection is held open between requests and no live update listener runs (deferred).
+- **Why:** The owner found clicking Refresh unlike a real live chat and asked for an on/off auto-seen, adding "make sure it is not risk my account". The two real dangers to a user account are the same session used from two connections at once (Telegram ends it, forcing a new login) and calling too often (flood waits). Careful polling with a lock and short connections removes both while giving "live" within a few seconds; a connection held open all day would be faster but cannot live on Vercel functions and would keep the session open on a server. Auto seen off by default because a "seen" the salesperson did not cause changes what the customer expects.
+- **Who decided:** Owner asked ("you can decide what best but make sure it is not risk my account"); Claude with owner approval on the safeguards and the default.
+- **Affects:** [[Telegram Inbox]], [[Round Robin]], [[Leads CRM]].
 
 ## 2026-09-27 — Telegram is the only live-chat channel; the portal answers through the salesperson's account
 

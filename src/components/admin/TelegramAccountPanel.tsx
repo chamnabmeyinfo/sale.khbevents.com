@@ -16,7 +16,8 @@ const when = (iso?: string) => (iso ? new Date(iso).toLocaleString('en-GB', { ti
  * Admin → Settings & Security → Telegram account check. Each salesperson connects
  * their own Telegram account once (API ID and hash from my.telegram.org, phone
  * number, login code, two-step password if any). The portal then reads the account's
- * new chats and matches them to the clicks on Team performance.
+ * new chats, matches them to the clicks on Team performance and shows the live
+ * conversations in the Telegram inbox. Per account: track every new chat, Auto seen.
  */
 export default function TelegramAccountPanel() {
   const { t } = useLanguage();
@@ -27,6 +28,8 @@ export default function TelegramAccountPanel() {
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState('');
   const [form, setForm] = useState<Record<string, { apiId: string; apiHash: string; phone: string; code: string; password: string }>>({});
+  /** "Check now" rests for 30 s after a click (the server enforces the same). */
+  const [cooling, setCooling] = useState<Record<string, boolean>>({});
 
   const field = (staffId: string) => form[staffId] || { apiId: '', apiHash: '', phone: '', code: '', password: '' };
   const setField = (staffId: string, k: string, v: string) => setForm((f) => ({ ...f, [staffId]: { ...field(staffId), [k]: v } }));
@@ -66,7 +69,7 @@ export default function TelegramAccountPanel() {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || t('tga.err.action'));
       if (data.account) setAccounts((list) => list.map((a) => (a.staffId === staffId ? { ...data.account, staffName: a.staffName } : a)));
-      if (action === 'check' && data.result) setNotice(t('tga.checked', { n: data.result.newContacts, m: data.result.matched }));
+      if (action === 'check' && data.result) setNotice(data.result.busy ? t('tga.busy') : t('tga.checked', { n: data.result.newContacts, m: data.result.matched }));
       if (action === 'verify' && data.account?.connected) {
         setNotice(t('tga.connectedNotice', { user: data.account.user?.username ? `@${data.account.user.username}` : data.account.user?.name || '' }));
         setField(staffId, 'code', '');
@@ -78,6 +81,10 @@ export default function TelegramAccountPanel() {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy('');
+      if (action === 'check') {
+        setCooling((c) => ({ ...c, [staffId]: true }));
+        window.setTimeout(() => setCooling((c) => ({ ...c, [staffId]: false })), 30_000);
+      }
     }
   };
 
@@ -126,7 +133,7 @@ export default function TelegramAccountPanel() {
               </div>
               {a.connected && (
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" className={`${BTN} bg-slate-100 dark:bg-emerald-950 border border-slate-200 dark:border-emerald-800 text-slate-700 dark:text-emerald-300`} disabled={Boolean(busy)} onClick={() => act(a.staffId, 'check')}>
+                  <button type="button" className={`${BTN} bg-slate-100 dark:bg-emerald-950 border border-slate-200 dark:border-emerald-800 text-slate-700 dark:text-emerald-300`} disabled={Boolean(busy) || Boolean(cooling[a.staffId])} onClick={() => act(a.staffId, 'check')} title={cooling[a.staffId] ? t('tga.checkCooldown') : undefined}>
                     {isBusy('check') ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}{t('tga.checkNow')}
                   </button>
                   <button type="button" className={`${BTN} border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300`} disabled={Boolean(busy)} onClick={() => { if (window.confirm(t('tga.disconnectConfirm'))) void act(a.staffId, 'disconnect'); }}>
@@ -142,10 +149,15 @@ export default function TelegramAccountPanel() {
                 <div><div className={SUB}>{t('tga.lastCheck')}</div><div className="font-semibold text-slate-900 dark:text-white pa-num">{when(a.lastCheckAt) || '–'}</div></div>
                 <div><div className={SUB}>{t('tga.newChats')}</div><div className="font-semibold text-slate-900 dark:text-white pa-num">{a.contactsFound}</div></div>
                 <div><div className={SUB}>{t('tga.matched')}</div><div className="font-semibold text-slate-900 dark:text-white pa-num">{a.matched}</div></div>
+                {a.floodUntil && <div className="col-span-full text-[11px] text-amber-800 dark:text-amber-300" data-flood-until={a.floodUntil}>{t('tga.floodWait', { at: when(a.floodUntil) })}</div>}
                 {a.lastError && <div className="col-span-full text-[11px] text-rose-700 dark:text-rose-300">{t('tga.lastError')}: {a.lastError}</div>}
                 <label className="col-span-full flex items-start gap-2 text-xs cursor-pointer mt-1">
-                  <input type="checkbox" className="mt-0.5" checked={a.trackAll} disabled={Boolean(busy)} onChange={(e) => act(a.staffId, 'options', { trackAll: e.target.checked })} />
+                  <input type="checkbox" className="mt-0.5" checked={a.trackAll} disabled={Boolean(busy)} onChange={(e) => act(a.staffId, 'options', { trackAll: e.target.checked })} data-option="trackAll" />
                   <span><span className="font-bold text-slate-800 dark:text-gray-100">{t('tga.trackAll')}</span> <span className={SUB}>{t('tga.trackAllHint')}</span></span>
+                </label>
+                <label className="col-span-full flex items-start gap-2 text-xs cursor-pointer">
+                  <input type="checkbox" className="mt-0.5" checked={a.autoSeen} disabled={Boolean(busy)} onChange={(e) => act(a.staffId, 'options', { autoSeen: e.target.checked })} data-option="autoSeen" />
+                  <span><span className="font-bold text-slate-800 dark:text-gray-100">{t('tga.autoSeen')}</span> <span className={SUB}>{t('tga.autoSeenHint')}</span></span>
                 </label>
               </div>
             ) : a.pending ? (

@@ -27,6 +27,11 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 
 - [ ] After this deploy, open **Leads & CRM Pipeline → Telegram inbox**, pick a customer, and send a short reply from the portal. It should appear in your Telegram chat with that customer as a message from you. → [[Telegram Inbox]] #owner
 - [ ] Tell the team: the manager may read and answer their Telegram customer chats from the portal; replies go out under the salesperson's name. #owner
+- [x] Live without Refresh (2026-09-27): the chat view keeps itself fresh while on screen, one short connection per account at a time, Telegram's waits honoured, Auto seen switch per salesperson. See [[Telegram Inbox]] → Keeping the salesperson's account safe.
+- [ ] After this deploy, open the Telegram inbox on a customer's chat and have them (or a test account) send a message: it should appear by itself within about 8 seconds, with the chip saying **Live**. → [[Telegram Inbox]] #owner
+- [ ] Decide per salesperson whether **Auto seen** should be on (Settings → Telegram account check, their row). Off means the customer sees "seen" only when the salesperson opens Telegram. #owner
+- [ ] If a row ever shows "Telegram ended the session", the salesperson connects again from the same tab (code from their Telegram app). Telegram may also show a new "khbportal" device after a reconnection; ending old ones there is fine. #owner
+- [ ] Later, if the team wants replies within a second instead of about eight: a live update connection per account (Telegram updates), which needs a server that stays up all day rather than Vercel functions. Decide only after the polling version has run a few weeks. #for-claude
 
 ### Prospect journey (audit 2026-09-27)
 
