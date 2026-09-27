@@ -1779,6 +1779,8 @@ export interface DirectContactRoute {
   staff: RoundRobinStaff;
   targetTelegramUrl: string;
   logId: string;
+  /** Title of the page the click came from (for the prefilled message). */
+  pageTitle: string;
   /** Same visitor again: sent to the same person, nobody re-alerted, nothing re-counted. */
   repeat: boolean;
   /** How long the visitor's browser should remember this person (0 = memory off). */
@@ -1796,6 +1798,8 @@ export async function recordDirectContactRoute(params: {
   userAgent?: string;
   /** Location, referrer, campaign and visit ids from the request (shown to the admin). */
   visitor?: VisitorDetail;
+  /** Reference code put in the prefilled message, so the chat that follows can be recognised. */
+  refCode?: string;
   /** Staff id from the visitor's cookie: keep them with the person they already met. */
   preferredStaffId?: string;
   /** False when the caller only wants a repeat match (rate limited): no new assignment is made. */
@@ -1838,6 +1842,7 @@ export async function recordDirectContactRoute(params: {
       visitorIp: params.visitorIp,
       userAgent: params.userAgent,
       ...(params.visitor ? { visitor: params.visitor } : {}),
+      ...(params.refCode ? { refCode: params.refCode } : {}),
       assignmentReason: 'returning_visitor',
       ...(params.demo ? { demo: true } : {})
     };
@@ -1853,6 +1858,7 @@ export async function recordDirectContactRoute(params: {
       staff: sticky,
       targetTelegramUrl: stickyUrl,
       logId: stickyLogId,
+      pageTitle: page?.title || params.pageSlug,
       repeat: true,
       rememberSeconds
     };
@@ -1946,6 +1952,7 @@ export async function recordDirectContactRoute(params: {
       visitorIp: params.visitorIp,
       userAgent: params.userAgent,
       ...(params.visitor ? { visitor: params.visitor } : {}),
+      ...(params.refCode ? { refCode: params.refCode } : {}),
       assignmentReason: 'rotation',
       ...(params.demo ? { demo: true } : {})
     };
@@ -1960,7 +1967,7 @@ export async function recordDirectContactRoute(params: {
     }
   });
 
-  return { staff, targetTelegramUrl, logId, repeat: false, rememberSeconds };
+  return { staff, targetTelegramUrl, logId, pageTitle, repeat: false, rememberSeconds };
 }
 
 
@@ -2188,6 +2195,21 @@ export async function getPageStats(days = 30, nowMs: number = Date.now()): Promi
 }
 
 /** The routing log with demo entries marked (tagged demo, or belonging to a demo lead). */
+/**
+ * Changes routing log entries in place (for example to attach the chat that
+ * followed a click). The mutator receives the newest entries and returns them.
+ */
+export async function updateRoundRobinLogs(mutate: (logs: RoundRobinLog[]) => RoundRobinLog[]): Promise<void> {
+  if (isSupabaseConfigured()) {
+    const current = await getRoundRobinLogs(MAX_ROUTING_LOGS);
+    await supabaseReplaceRoundRobinLogs(mutate(current).slice(0, MAX_ROUTING_LOGS));
+    return;
+  }
+  const db = await getDatabase();
+  db.roundRobinLogs = mutate(db.roundRobinLogs || []).slice(0, MAX_ROUTING_LOGS);
+  await saveDatabase(db);
+}
+
 export async function getRoundRobinLogsMarked(limit: number = 100): Promise<RoundRobinLog[]> {
   const [logs, leads] = await Promise.all([getRoundRobinLogs(limit), getLeads()]);
   const demoIds = new Set(markDemoLeads(leads).filter((l) => l.isDemo).map((l) => l.id));

@@ -4,6 +4,7 @@ import { isAuthenticated } from '@/lib/auth';
 import { scheduleLeadResponseCheck } from '@/lib/lead-followup';
 import { getRealLeads, getRoundRobinLogsMarked, getRoundRobinSettings, getStaffClickStats, getVisits } from '@/lib/storage';
 import type { ContactEntry } from '@/components/admin/VisitorContacts';
+import { checkAllAccountsWithin, contactCheckEnabled } from '@/lib/telegram-account';
 import { serverNowMs } from '@/lib/popup-ads';
 import TeamPerformanceClient, { type PerfLead } from '@/components/admin/TeamPerformanceClient';
 
@@ -17,6 +18,10 @@ export default async function TeamPerformancePage() {
   const authed = await isAuthenticated();
   if (!authed) redirect('/admin/login');
   scheduleLeadResponseCheck();
+
+  // Connected Telegram accounts: pick up new chats first, so the list below is current.
+  await checkAllAccountsWithin(8000);
+  const chatCheck = await contactCheckEnabled().catch(() => false);
 
   const since = new Date(serverNowMs() - 92 * 24 * 60 * 60 * 1000).toISOString();
   const [leads, clickStats, rr, logs, visits] = await Promise.all([
@@ -36,7 +41,7 @@ export default async function TeamPerformancePage() {
         id: l.id, timestamp: l.timestamp, routeType: l.routeType, pageSlug: l.pageSlug, pageTitle: l.pageTitle,
         staffId: l.staffId, staffName: l.staffName, status: l.status, assignmentReason: l.assignmentReason, demo: l.demo,
         visitorIp: l.visitorIp, userAgent: l.userAgent, visitor: l.visitor, leadId: l.leadId, clientName: l.clientName,
-        targetTelegramUrl: l.targetTelegramUrl, deliveryError: l.deliveryError,
+        targetTelegramUrl: l.targetTelegramUrl, deliveryError: l.deliveryError, refCode: l.refCode, contact: l.contact,
         visit: l.visitor?.sessionId ? (v ? { sec: v.sec, sc: v.sc, ret: v.ret, cta: v.cta, tg: v.tg, src: v.src, cmp: v.cmp, ref: v.ref, dev: v.dev, app: v.app, lang: v.lang, t0: v.t0, fs: v.fs, lead: v.lead } : null) : undefined,
       };
     });
@@ -53,5 +58,5 @@ export default async function TeamPerformancePage() {
     }));
   const staff = rr.staffList.map((s) => ({ ...s, telegramChatId: '', phone: undefined, email: undefined }));
 
-  return <TeamPerformanceClient leads={slim} clickStats={clickStats} staffList={staff} nowMs={serverNowMs()} contacts={contacts} />;
+  return <TeamPerformanceClient leads={slim} clickStats={clickStats} staffList={staff} nowMs={serverNowMs()} contacts={contacts} chatCheck={chatCheck} />;
 }

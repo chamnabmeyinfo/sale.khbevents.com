@@ -1148,6 +1148,21 @@ export interface VisitorDetail {
   visitorId?: string;
 }
 
+/** A real chat that followed a click or a lead, seen in the salesperson's own Telegram account. */
+export interface ContactConfirmation {
+  /** When the customer's first message arrived (ISO). */
+  at: string;
+  /** Telegram user id, username and display name of the customer. */
+  userId: string;
+  username?: string;
+  name?: string;
+  /** The first 200 characters of their first message. */
+  text?: string;
+  /** 'ref' = the reference code from the prefilled message matched; 'time' = the chat started shortly after the click. */
+  match: 'ref' | 'time';
+  checkedAt: string;
+}
+
 export interface RoundRobinLog {
   id: string;
   timestamp: string;
@@ -1171,6 +1186,10 @@ export interface RoundRobinLog {
   userAgent?: string;
   /** Location, referrer, campaign and visit ids (since 27 Sep 2026). */
   visitor?: VisitorDetail;
+  /** Reference code put in the prefilled Telegram message (#K7X2M), to recognise the chat that follows. */
+  refCode?: string;
+  /** The chat that followed, when the salesperson's Telegram account is connected and the check found it. */
+  contact?: ContactConfirmation;
   assignmentReason?: AssignmentReason;
   /** Made by Simulation Studio: not a real customer, not counted in any statistics. */
   demo?: boolean;

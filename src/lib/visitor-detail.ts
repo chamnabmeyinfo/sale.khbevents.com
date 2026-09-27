@@ -6,7 +6,7 @@
  * only reads headers and cookies; the check (`clickCheck`) only reads the log entry
  * and the matching visit record. Nothing here talks to the database.
  */
-import type { RoundRobinLog, VisitorDetail } from './types';
+import type { ContactConfirmation, RoundRobinLog, VisitorDetail } from './types';
 import type { VisitRecord } from './visits';
 import { inAppBrowserName } from './popup-ads';
 
@@ -152,6 +152,8 @@ export type ClickReason =
   | 'readPage'
   | 'returning'
   | 'sameSession'
+  | 'chatConfirmed'
+  | 'chatProbable'
   | 'demo';
 
 export interface ClickCheck {
@@ -168,6 +170,8 @@ export interface ClickContext {
   clickMs?: number;
   /** Our own host names, so a referrer from the landing page is recognised. */
   ownHosts?: string[];
+  /** The chat that followed, seen in the salesperson's Telegram account. */
+  contact?: Pick<ContactConfirmation, 'match'> | null;
 }
 
 export const DEFAULT_OWN_HOSTS = ['sale.khbevents.com', 'localhost', '127.0.0.1'];
@@ -215,11 +219,15 @@ export function clickCheck(entry: Pick<RoundRobinLog, 'userAgent' | 'visitor' | 
   }
   if (entry.assignmentReason === 'returning_visitor' || entry.assignmentReason === 'returning_customer' || v?.ret) reasons.push('returning');
 
+  if (ctx.contact) reasons.push(ctx.contact.match === 'ref' ? 'chatConfirmed' : 'chatProbable');
+
   let verdict: ClickVerdict = 'real';
   if (reasons.includes('botAgent')) verdict = 'bot';
   else if (reasons.some((r) => r === 'noAgent' || r === 'noReferrer' || r === 'outsideReferrer' || r === 'manyFromIp' || r === 'tooFast')) verdict = 'check';
   // A visit we can see, with real reading, outweighs a missing referrer.
   if (verdict === 'check' && reasons.includes('readPage') && !reasons.includes('manyFromIp') && !reasons.includes('noAgent')) verdict = 'real';
+  // A real chat in the salesperson's Telegram, carrying the code from the click, is the strongest proof there is.
+  if (reasons.includes('chatConfirmed') && verdict !== 'bot') verdict = 'real';
   return { verdict, reasons };
 }
 

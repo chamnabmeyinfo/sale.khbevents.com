@@ -4,6 +4,8 @@ import { rateLimitByIp, getClientIp } from '@/lib/rate-limit';
 import { resolveFallbackTelegramUrl } from '@/lib/round-robin';
 import { STAFF_COOKIE, rememberStaffCookie } from '@/lib/staff-cookie';
 import { visitorDetailFromRequest } from '@/lib/visitor-detail';
+import { langFromAcceptLanguage, newRefCode, prefilledMessage, withRefCode } from '@/lib/contact-verify';
+import { contactCheckEnabled } from '@/lib/telegram-account';
 
 /**
  * "Chat on Telegram" clicks from the landing pages.
@@ -42,6 +44,9 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean, text
   const userAgent = req.headers.get('user-agent') || undefined;
   const preferredStaffId = req.cookies.get(STAFF_COOKIE)?.value || undefined;
   const visitor = visitorDetailFromRequest(req.headers, req.cookies);
+  // With a salesperson's Telegram account connected, the first message carries a code
+  // so the chat that follows can be recognised.
+  const refCode = (await contactCheckEnabled().catch(() => false)) ? newRefCode() : undefined;
 
   // A returning visitor is sent to the same person without new alerts, so the
   // limit only caps how many *new* assignments one address can trigger.
@@ -51,13 +56,17 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean, text
     visitorIp,
     userAgent,
     visitor,
+    refCode,
     preferredStaffId,
     allowNewAssignment: limit.allowed
   });
 
   if (routeResult) {
+    const message = refCode
+      ? (text && text.trim() ? withRefCode(text, refCode) : prefilledMessage(routeResult.pageTitle, langFromAcceptLanguage(visitor.lang), refCode))
+      : text;
     const res = redirectMode
-      ? NextResponse.redirect(withPrefilledText(routeResult.targetTelegramUrl, text))
+      ? NextResponse.redirect(withPrefilledText(routeResult.targetTelegramUrl, message))
       : NextResponse.json({
           success: true,
           routed: true,
@@ -69,7 +78,8 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean, text
             username: routeResult.staff.telegramUsername,
             role: routeResult.staff.title
           },
-          logId: routeResult.logId
+          logId: routeResult.logId,
+          ...(refCode ? { refCode, prefilledText: message } : {})
         });
     rememberStaffCookie(res, routeResult.staff.id, routeResult.rememberSeconds);
     return res;

@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // GramJS (the Telegram account check) is loaded by Node at run time, not bundled.
+  serverExternalPackages: ['telegram'],
   async rewrites() {
     return [
       // public/photos was a duplicate of public/images/events. Saved pages
