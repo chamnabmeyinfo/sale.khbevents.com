@@ -23,6 +23,12 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [x] Restore the Vietnam page from the owner's saved copy of the live page (2026-09-26). The page as it was before the automatic update was applied as a content pack; photos, text, terms and seats are back. → [[Smart City Tea and Cafe Vietnam 2026]]
 - [ ] After this deploy, open `/smart-city-tea-cafe` and check: all photos load (23 uploaded pictures; a missing one means the file is gone from storage and needs re-uploading), the lead form and the final call to action are back, and the "Why people choose this" and second hero sections sit before the terms as they did. Then Save once in the builder so the copy is also in Versions. → [[Page Builder]] #owner
 
+### Prospect journey (audit 2026-09-27)
+
+- [ ] Read [[Prospect Journey Audit]] and answer its "To confirm" list: check-in timings, whether a Telegram chat without a phone may be a CRM lead, whether the manager gets the morning list, and the budget for the AI phase. Then tell Claude which phase to start. #owner
+- [ ] Phase 1 (once approved): Telegram chat → CRM lead, prospect timeline, conversation counts, automatic account check, behaviour chips and heat score. #for-claude
+- [ ] Phase 2 (once approved): bot check-ins with status buttons, text replies as notes, escalation, morning list, weekly pipeline summary. #for-claude
+
 ### Telegram account check (new, 2026-09-27)
 
 - [x] Connect the owner's Telegram account in Settings → Telegram account check (2026-09-27).
