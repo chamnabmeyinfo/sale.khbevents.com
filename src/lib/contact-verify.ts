@@ -25,13 +25,15 @@ export function refCodeIn(text: string | undefined | null): string | undefined {
   return m ? `#K${m[1]}` : undefined;
 }
 
-/** The first message typed into the visitor's Telegram chat, in their language, with the code. */
-export function prefilledMessage(pageTitle: string, lang: 'en' | 'kh', refCode: string): string {
-  const title = (pageTitle || '').trim().slice(0, 120);
-  // Three short lines: greeting, the service they ask about, the code. Easy for the
-  // sales team to read at a glance, easy for the customer to keep or edit.
-  if (lang === 'kh') return `សួស្តី KHB Events 👋\nខ្ញុំចង់សួរអំពី៖ ${title}\n${refCode}`;
-  return `Hello KHB Events 👋\nI want to ask about: ${title}\n${refCode}`;
+/**
+ * The first message typed into the visitor's Telegram chat: a greeting only, in Khmer
+ * for people in Cambodia or with a Khmer browser, in English otherwise (owner decision,
+ * 2026-09-27: no service line and no code; customers did not like a template). The
+ * chat is matched to the click by timing (30 minutes) and, since the same day, also
+ * when the person was already known to the account.
+ */
+export function prefilledMessage(lang: 'en' | 'kh', country?: string): string {
+  return lang === 'kh' || (country || '').toUpperCase() === 'KH' ? 'សួស្តី 👋' : 'Hello 👋';
 }
 
 /** Appends the code to a message the page already prefilled. */

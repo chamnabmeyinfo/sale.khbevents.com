@@ -28,6 +28,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-27 — The first Telegram message is a plain greeting, no template and no code
+
+- **Decision:** A click on "Chat on Telegram" opens the chat with only "សួស្តី 👋" (visitor in Cambodia or Khmer browser) or "Hello 👋". The three-line template (greeting, "I want to ask about: <trip>", a `#K…` code) is gone. Chats are matched to clicks by timing within 30 minutes, for new and known people alike.
+- **Why:** The owner saw the template as something customers do not like: it reads as a form, not a greeting. The code gave a sure match, but with the account check now also matching known people by timing, the plain greeting costs little certainty and feels human.
+- **Who decided:** Owner.
+- **Affects:** [[Round Robin]], [[Telegram Inbox]].
+
 ## 2026-09-27 — Store every Telegram conversation, turn voice into text, and let an AI coach read each customer's story
 
 - **Decision:** The portal keeps every message of every Telegram chat lead (both ways, newest 500 per customer), turns voice messages into text (Telegram's own transcription first, Gemini when a key is set), builds one Markdown story per customer (profile, clicks, conversation, notes, numbers) and runs an AI coach on it: summary, heat (hot / warm / cold), what the deal is stuck on, the next step, a suggested Khmer reply to edit, coaching for the salesperson. The coach runs on demand and, for a few changed open chats, after site traffic. The AI never writes to a customer. This replaces the same-day rule "conversations are counted, never stored".

@@ -4,7 +4,7 @@ import { rateLimitByIp, getClientIp } from '@/lib/rate-limit';
 import { resolveFallbackTelegramUrl } from '@/lib/round-robin';
 import { STAFF_COOKIE, rememberStaffCookie } from '@/lib/staff-cookie';
 import { visitorDetailFromRequest } from '@/lib/visitor-detail';
-import { langFromAcceptLanguage, newRefCode, prefilledMessage, withRefCode } from '@/lib/contact-verify';
+import { langFromAcceptLanguage, newRefCode, prefilledMessage } from '@/lib/contact-verify';
 import { contactCheckEnabled } from '@/lib/telegram-account';
 
 /**
@@ -62,9 +62,8 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean, text
   });
 
   if (routeResult) {
-    const message = refCode
-      ? (text && text.trim() ? withRefCode(text, refCode) : prefilledMessage(routeResult.pageTitle, langFromAcceptLanguage(visitor.lang), refCode))
-      : text;
+    // A page's own prefilled text wins; otherwise a plain greeting in the visitor's language. Never a code.
+    const message = text && text.trim() ? text : prefilledMessage(langFromAcceptLanguage(visitor.lang), visitor.country);
     const res = redirectMode
       ? NextResponse.redirect(withPrefilledText(routeResult.targetTelegramUrl, message))
       : NextResponse.json({

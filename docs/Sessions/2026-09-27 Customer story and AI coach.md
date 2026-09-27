@@ -22,6 +22,8 @@ tags: [session, ai, telegram, crm]
 
 - Second fix after the owner's test (a chat from their other account still did not show): a person the account already knew (in the chat list when it was connected) now also becomes a lead when they write within 30 minutes after a click; before, only brand-new people or a reference code counted. The settings row shows what the last check saw and a **Check the connection** button tests the account lock and reports where it lives.
 
+- Owner's request on the first message: the three-line template with the code is gone; the chat now opens with only "សួស្តី 👋" for visitors in Cambodia or with a Khmer browser, "Hello 👋" otherwise. Matching to the click is by timing (30 minutes), which the known-person rule above also uses.
+
 ## Verified
 
 - tsc, eslint (0 errors), 271 unit tests (new: chat merge keeps transcripts and caps, story markdown, insight normalising), production build, browser run with the Telegram test double: a voice message got its Telegram transcription once and shows in the bubble; the story markdown holds the conversation with the voice text and downloads as a .md file; without an AI key the coach answers 503 and the card says which key is missing; Hot first present; the CRM drawer shows the card.

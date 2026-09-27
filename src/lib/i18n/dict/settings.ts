@@ -22,7 +22,7 @@ export const settings: Dictionary = {
 
     // Telegram account check (TelegramAccountPanel)
     'tga.title': 'Telegram account check: did the visitor really message us?',
-    'tga.intro': 'Connect a salesperson\'s own Telegram account once. After that the portal looks at the account\'s new chats and shows on Team performance which clicks turned into a real conversation. The first message a visitor sends carries a small code (#K7X2M), so the chat is matched to the exact click; a chat that starts a few minutes after a click is a probable match.',
+    'tga.intro': 'Connect a salesperson\'s own Telegram account once. After that the portal looks at the account\'s new chats and shows on Team performance which clicks turned into a real conversation. The chat opens with a plain greeting (Khmer for Cambodia); a chat that starts within 30 minutes after a click to that salesperson is matched to the click.',
     'tga.step1': 'Log in with the salesperson\'s phone number at',
     'tga.step2': 'Create an app there (any name) and copy the App api_id and api_hash into the form below, with the phone number.',
     'tga.step3': 'Telegram sends a login code to that phone (in the Telegram app). Type it here, and the two-step password if the account has one.',
@@ -244,7 +244,7 @@ export const settings: Dictionary = {
 
     // Telegram account check
     'tga.title': 'ពិនិត្យគណនី Telegram៖ អ្នកទស្សនាបានផ្ញើសារមកយើងពិតមែនទេ?',
-    'tga.intro': 'ភ្ជាប់គណនី Telegram ផ្ទាល់ខ្លួនរបស់បុគ្គលិកម្តង។ បន្ទាប់មក ប្រព័ន្ធមើលការជជែកថ្មីក្នុងគណនី ហើយបង្ហាញលើលទ្ធផលក្រុមថាការចុចណាបានក្លាយជាការសន្ទនាពិត។ សារដំបូងដែលអ្នកទស្សនាផ្ញើមានលេខកូដតូចមួយ (#K7X2M) ដូច្នេះការជជែកផ្គូផ្គងនឹងការចុចជាក់លាក់; ការជជែកដែលចាប់ផ្តើមប៉ុន្មាននាទីបន្ទាប់ពីការចុចជាការផ្គូផ្គងដែលអាចទៅរួច។',
+    'tga.intro': 'ភ្ជាប់គណនី Telegram ផ្ទាល់ខ្លួនរបស់បុគ្គលិកម្តង។ បន្ទាប់មក ប្រព័ន្ធមើលការជជែកថ្មីក្នុងគណនី ហើយបង្ហាញលើលទ្ធផលក្រុមថាការចុចណាបានក្លាយជាការសន្ទនាពិត។ ការជជែកបើកជាមួយការស្វាគមន៍សាមញ្ញ (ខ្មែរសម្រាប់កម្ពុជា); ការជជែកដែលចាប់ផ្តើមក្នុង 30 នាទីបន្ទាប់ពីការចុចទៅបុគ្គលិកនោះ ត្រូវផ្គូផ្គងនឹងការចុច។',
     'tga.step1': 'ចូលដោយលេខទូរស័ព្ទរបស់បុគ្គលិកនៅ',
     'tga.step2': 'បង្កើត App នៅទីនោះ (ឈ្មោះអ្វីក៏បាន) ហើយចម្លង App api_id និង api_hash មកក្នុងទម្រង់ខាងក្រោម ជាមួយលេខទូរស័ព្ទ។',
     'tga.step3': 'Telegram ផ្ញើលេខកូដចូលទៅទូរស័ព្ទនោះ (ក្នុងកម្មវិធី Telegram)។ វាយវានៅទីនេះ និងពាក្យសម្ងាត់ពីរជំហានប្រសិនបើគណនីមាន។',
