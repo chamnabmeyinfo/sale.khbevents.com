@@ -143,6 +143,10 @@ export default function TelegramAccountPanel() {
                 <div><div className={SUB}>{t('tga.newChats')}</div><div className="font-semibold text-slate-900 dark:text-white pa-num">{a.contactsFound}</div></div>
                 <div><div className={SUB}>{t('tga.matched')}</div><div className="font-semibold text-slate-900 dark:text-white pa-num">{a.matched}</div></div>
                 {a.lastError && <div className="col-span-full text-[11px] text-rose-700 dark:text-rose-300">{t('tga.lastError')}: {a.lastError}</div>}
+                <label className="col-span-full flex items-start gap-2 text-xs cursor-pointer mt-1">
+                  <input type="checkbox" className="mt-0.5" checked={a.trackAll} disabled={Boolean(busy)} onChange={(e) => act(a.staffId, 'options', { trackAll: e.target.checked })} />
+                  <span><span className="font-bold text-slate-800 dark:text-gray-100">{t('tga.trackAll')}</span> <span className={SUB}>{t('tga.trackAllHint')}</span></span>
+                </label>
               </div>
             ) : a.pending ? (
               <form className="mt-3 grid sm:grid-cols-3 gap-3 items-end" onSubmit={(e) => { e.preventDefault(); void act(a.staffId, 'verify', { code: f.code, password: f.password || undefined }); }}>

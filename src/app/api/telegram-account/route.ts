@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
 import { getRoundRobinSettings } from '@/lib/storage';
-import { checkAccount, disconnectAccount, finishLogin, listAccountStatuses, startLogin, statusOf, getAccountRecord } from '@/lib/telegram-account';
+import { checkAccount, disconnectAccount, finishLogin, listAccountStatuses, startLogin, statusOf, getAccountRecord, updateAccountOptions } from '@/lib/telegram-account';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -50,6 +50,9 @@ export async function POST(req: NextRequest) {
     }
     if (action === 'disconnect') {
       return NextResponse.json({ success: true, account: await named(await disconnectAccount(staffId)) });
+    }
+    if (action === 'options') {
+      return NextResponse.json({ success: true, account: await named(await updateAccountOptions(staffId, { trackAll: body.trackAll === true })) });
     }
     if (action === 'check') {
       const result = await checkAccount(staffId, { force: true });

@@ -29,6 +29,7 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [x] Phase 1a (2026-09-27): Telegram chat → CRM lead, conversation counts and reply times, "Did we reply?" card, automatic account check after site traffic.
 - [ ] Phase 1b: prospect timeline in the lead drawer, behaviour chips and a hot / warm / cold score. #for-claude
 - [ ] Phase 2: bot check-ins to the salesperson with status buttons (timings set by the owner, minimum 15 minutes for the first and 1 hour between repeats, at most 3 a day per prospect, paused outside working hours), text replies saved as notes, escalation to the manager, morning list to each salesperson and the manager, weekly pipeline summary. #for-claude
+- [ ] Owner: if customers also write to the team directly (not from a page), tick **Track every new chat** on your row in Settings → Telegram account check. → [[Round Robin]] #owner
 - [ ] Owner: after a few real chats, open Team Performance → Telegram chats: did we reply? and check the numbers against what the team sees in Telegram. In the CRM, chat leads have no phone until the team adds it. → [[Round Robin]] #owner
 
 ### Telegram account check (new, 2026-09-27)

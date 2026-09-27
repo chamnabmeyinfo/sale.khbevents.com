@@ -1142,16 +1142,33 @@ export async function findLeadByTelegramUserId(userId: string): Promise<Lead | n
  * rotation is not advanced (the click already counted).
  */
 export async function createLeadFromTelegramChat(input: {
-  log: RoundRobinLog;
-  contact: { at: string; userId: string; username?: string; name?: string; text?: string; match: 'ref' | 'time' };
+  /** The click that led to the chat; missing for a customer who wrote directly. */
+  log?: RoundRobinLog;
+  contact: { at: string; userId: string; username?: string; name?: string; text?: string; match?: 'ref' | 'time' };
   staff?: RoundRobinStaff | null;
 }): Promise<Lead> {
-  const { log, contact } = input;
+  const { contact } = input;
   const db = await getDatabase();
-  const page = (await getPageBySlug(log.pageSlug)) || db.pages.find((p) => p.slug === log.pageSlug);
+  const staff = input.staff || null;
+  const log: RoundRobinLog = input.log || {
+    id: '',
+    timestamp: contact.at,
+    routeType: 'DIRECT_CONTACT_CLICK',
+    pageSlug: 'general',
+    pageTitle: 'Telegram (direct)',
+    staffId: staff?.id || '',
+    staffName: staff?.name || '',
+    staffTelegram: staff?.telegramUsername || '',
+    staffChatId: staff?.telegramChatId,
+    percentageWeight: staff?.percentage || 0,
+    status: 'DELIVERED',
+  };
+  const page = log.pageSlug === 'general' ? undefined : (await getPageBySlug(log.pageSlug)) || db.pages.find((p) => p.slug === log.pageSlug);
   const now = new Date().toISOString();
   const v = log.visitor || {};
-  const customFields: Record<string, string> = { source: 'telegram_chat', telegramUserId: contact.userId, clickLogId: log.id, chatMatch: contact.match };
+  const customFields: Record<string, string> = { source: input.log ? 'telegram_chat' : 'telegram_direct', telegramUserId: contact.userId };
+  if (input.log) customFields.clickLogId = log.id;
+  if (contact.match) customFields.chatMatch = contact.match;
   if (contact.username) customFields.telegramUsername = contact.username;
   if (log.refCode) customFields.refCode = log.refCode;
   if (v.sessionId) customFields.visitSession = v.sessionId;
@@ -1187,13 +1204,13 @@ export async function createLeadFromTelegramChat(input: {
       staffId: log.staffId,
       staffName: log.staffName,
       staffTelegram: log.staffTelegram,
-      staffChatId: input.staff?.telegramChatId || log.staffChatId,
+      staffChatId: staff?.telegramChatId || log.staffChatId,
       percentageWeight: log.percentageWeight,
       status: 'DELIVERED',
       routedAt: log.timestamp,
       assignedAt: contact.at,
       routeType: 'DIRECT_CONTACT_CLICK',
-      assignmentReason: log.assignmentReason,
+      assignmentReason: log.assignmentReason || 'rotation',
     },
     createdAt: contact.at,
     updatedAt: now,

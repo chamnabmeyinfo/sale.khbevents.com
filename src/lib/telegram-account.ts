@@ -49,6 +49,8 @@ export interface TelegramAccountRecord {
   lastCheckAt?: string;
   lastError?: string;
   connectedAt?: string;
+  /** Also make leads for customers who write directly, not only after a landing-page click. */
+  trackAll?: boolean;
 }
 
 /** What the admin screen sees: no secrets. */
@@ -67,6 +69,7 @@ export interface TelegramAccountStatus {
   lastError?: string;
   contactsFound: number;
   matched: number;
+  trackAll: boolean;
 }
 
 const rowId = (staffId: string) => `tg_account:${staffId}`;
@@ -110,7 +113,16 @@ export function statusOf(rec: TelegramAccountRecord, staffName: string): Telegra
     lastError: rec.lastError,
     contactsFound: contacts.length,
     matched: contacts.filter((c) => c.logId).length,
+    trackAll: Boolean(rec.trackAll),
   };
+}
+
+/** Per-account options the admin can change without reconnecting. */
+export async function updateAccountOptions(staffId: string, options: { trackAll?: boolean }): Promise<TelegramAccountStatus> {
+  const rec = await getAccountRecord(staffId);
+  if (options.trackAll !== undefined) rec.trackAll = Boolean(options.trackAll);
+  await saveAccountRecord(rec);
+  return statusOf(rec, '');
 }
 
 /** Status for every salesperson in the Round Robin team. */
@@ -482,6 +494,22 @@ async function finishCheck(rec: TelegramAccountRecord, client: AccountClient, di
         console.error('Lead from Telegram chat error:', err);
       }
       await alertChatStarted(log, m.confirmation).catch(() => undefined);
+    }
+  }
+
+  // Customers who wrote without clicking a page (when the salesperson chose to track every new chat).
+  if (rec.trackAll) {
+    const rr = await getRoundRobinSettings();
+    const staff = rr.staffList.find((s) => s.id === staffId) || null;
+    for (const c of contacts.filter((x) => !x.logId && x.at >= new Date(since - 60_000).toISOString())) {
+      try {
+        const existing = await findLeadByTelegramUserId(c.userId);
+        if (existing) continue;
+        const lead = await createLeadFromTelegramChat({ contact: c, staff });
+        c.logId = `direct:${lead.id}`;
+      } catch (err) {
+        console.error('Lead from direct Telegram chat error:', err);
+      }
     }
   }
 
