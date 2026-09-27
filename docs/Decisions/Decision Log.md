@@ -26,6 +26,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-27 — Verify real chats by reading the salesperson's own Telegram account
+
+- **Decision:** A salesperson may connect their own Telegram account (official user API, read only). Each click puts a short code in the prefilled first message; the portal matches new chats to clicks by that code, or by timing within 30 minutes, and alerts the salesperson with the customer's name and message. Only new chats and the first 200 characters of their first message are kept; the portal never sends from the account. The session is stored with the settings, so the RLS lockdown matters more.
+- **Why:** Telegram gives a website no signal when someone opens a chat; the only proof is the customer's message, and only the receiving account can see it. Routing customers through the bot would have proved contact but taken them away from the salesperson, which the owner did not want. The code makes the match exact; timing covers customers who delete the prefilled text.
+- **Who decided:** Owner asked; Claude with owner approval on the rules and the short Khmer templates.
+- **Affects:** [[Round Robin]].
+
 ## 2026-09-27 — Visitor detail on the routing log, judged by rules the admin can read
 
 - **Decision:** Each Round Robin contact (click or form) records the network address, the edge's country, region and city, the referrer and its campaign tags, the browser language and the visit ids. Team performance shows them per row with a Real person / Check / Bot verdict built from plain rules (bot browser strings, no referrer or an outside referrer, many contacts from one address, a click within 3 seconds of arriving). Returning visitors' clicks are logged as well. The campaign visit records stay anonymous.

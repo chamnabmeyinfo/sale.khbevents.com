@@ -11,6 +11,10 @@ source:
   - src/components/admin/TeamPerformanceClient.tsx
   - src/components/admin/VisitorContacts.tsx
   - src/lib/visitor-detail.ts
+  - src/lib/telegram-account.ts
+  - src/lib/contact-verify.ts
+  - src/components/admin/TelegramAccountPanel.tsx
+  - src/app/api/telegram-account/route.ts
   - src/app/api/round-robin/daily-summary/route.ts
   - vercel.json
   - src/components/admin/StaffAvailability.tsx
@@ -133,6 +137,24 @@ On **Team performance**, under the per-salesperson table: every Telegram click a
 **Real person / Check / Bot** is a rule of thumb, not a proof: Bot when the browser string is a known crawler, link-preview fetcher or script (Facebook and Telegram link previews, curl, headless browsers…); Check when no browser string was sent, the click did not come from one of our pages (no referrer, or another website), 5 or more contacts came from the same address in the period, or the click came within 3 seconds of arriving without scrolling; otherwise real. A visit that shows real reading outweighs a missing referrer. Open a row for the full detail (browser string, referrer address, campaign tags, visit and browser ids, Telegram alert result, log id) and the reasons behind the verdict.
 
 The landing pages set two cookies (`khb_sid` for the visit, `khb_vid` for the browser) so a click, a plain link, can be tied to the visit that the campaign report tracks. Returning visitors' clicks are logged too (marked "Returning visitor"; nobody is alerted and nothing is counted twice). The log keeps the last 500 entries; location, referrer and campaign are recorded from 27 Sep 2026, older entries show only the IP address and the browser. Only the admin sees this list; the campaign report stays anonymous.
+
+## Telegram account check: did the visitor really message us? (2026-09-27)
+
+A click only opens the salesperson's Telegram chat; Telegram tells the website nothing about the person. The only proof of a real customer is a message from them. So a salesperson can connect their **own Telegram account** (read only) and the portal watches for new chats.
+
+**Set-up** (Admin → Settings & Security → **💬 Telegram account check**): the salesperson gets an *App api_id* and *api_hash* at my.telegram.org/apps (log in with their phone, create an app with any name), enters them with the phone number, presses **Send login code**, types the code Telegram sends to their app (and the two-step password if they have one), presses **Connect**. Telegram then shows the portal under Settings → Devices as "khbportal"; it can be ended there any time. The login session is stored in the `tg_account:<staffId>` row of `system_settings`, next to the bot token, so the RLS lockdown matters.
+
+**How it works once connected** (`src/lib/telegram-account.ts`, matching rules in `src/lib/contact-verify.ts`):
+1. Every click gets a short code such as `#K7X2M`, saved on the log entry, and the chat opens with a three-line first message already typed: greeting, "I want to ask about: <page title>", the code (Khmer for Khmer browsers, English otherwise).
+2. The click alert to the salesperson is short and in Khmer: the service (page title), the code the customer will send, the time. The manager CC is the same with the salesperson's name.
+3. When Team performance opens (at most every 2 minutes), or with **Check now** on the settings tab, the portal reads the account's 40 most recent private chats. A person not seen before is a new contact; people already in the chat list at connection time are existing customers. Bots and the account's own messages are ignored.
+4. A message containing the code is a sure match to that click (**Messaged us**); otherwise a chat that started within 30 minutes of a click to the same person is a probable match (**Probably messaged**). Each click and each chat is used once.
+5. On a match the salesperson (and the manager, when CC is on) gets a second short alert: who wrote (name, @username), the service, their first message, the time.
+6. Team performance shows a **Chat** column and a "Became a real chat" box; a confirmed chat marks the click as a real person.
+
+What is kept: the customer's name, @username, user id, the time of the first message and its first 200 characters. The portal never sends from the account and never reads older history. A visitor who clicks but never writes stays "No chat yet"; there is no way to see an opened chat that was never used. A customer with no @username shows by name and id. **Disconnect** logs the portal out on Telegram's side.
+
+The check runs when Team performance opens or on Check now; it is not yet run by the routing tick or the daily cron.
 
 ## Who can receive what (eligibility)
 

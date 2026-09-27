@@ -28,8 +28,10 @@ export function refCodeIn(text: string | undefined | null): string | undefined {
 /** The first message typed into the visitor's Telegram chat, in their language, with the code. */
 export function prefilledMessage(pageTitle: string, lang: 'en' | 'kh', refCode: string): string {
   const title = (pageTitle || '').trim().slice(0, 120);
-  if (lang === 'kh') return `សួស្តី KHB Events! ខ្ញុំចង់ដឹងបន្ថែមអំពី «${title}» ${refCode}`;
-  return `Hello KHB Events! I'd like to know more about "${title}" ${refCode}`;
+  // Three short lines: greeting, the service they ask about, the code. Easy for the
+  // sales team to read at a glance, easy for the customer to keep or edit.
+  if (lang === 'kh') return `សួស្តី KHB Events 👋\nខ្ញុំចង់សួរអំពី៖ ${title}\n${refCode}`;
+  return `Hello KHB Events 👋\nI want to ask about: ${title}\n${refCode}`;
 }
 
 /** Appends the code to a message the page already prefilled. */

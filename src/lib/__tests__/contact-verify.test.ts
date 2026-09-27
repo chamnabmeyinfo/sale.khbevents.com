@@ -21,8 +21,9 @@ describe('reference codes', () => {
   });
 
   it('writes the first message in the visitor language and appends to a page message', () => {
-    expect(prefilledMessage('Smart City Trip', 'en', '#KAB23')).toBe('Hello KHB Events! I\'d like to know more about "Smart City Trip" #KAB23');
-    expect(prefilledMessage('Smart City Trip', 'kh', '#KAB23')).toContain('«Smart City Trip» #KAB23');
+    expect(prefilledMessage('Smart City Trip', 'en', '#KAB23')).toBe('Hello KHB Events 👋\nI want to ask about: Smart City Trip\n#KAB23');
+    expect(prefilledMessage('Smart City Trip', 'kh', '#KAB23')).toBe('សួស្តី KHB Events 👋\nខ្ញុំចង់សួរអំពី៖ Smart City Trip\n#KAB23');
+    expect(refCodeIn(prefilledMessage('Smart City Trip', 'kh', '#KAB23'))).toBe('#KAB23');
     expect(withRefCode('Hello, seat 3 please', '#KAB23')).toBe('Hello, seat 3 please #KAB23');
     expect(withRefCode('already #KAB23 here', '#KZZZZ')).toBe('already #KAB23 here');
     expect(langFromAcceptLanguage('km-KH,km;q=0.9')).toBe('kh');

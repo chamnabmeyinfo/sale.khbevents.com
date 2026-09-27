@@ -19,7 +19,9 @@
  * Server only. `TELEGRAM_ACCOUNT_MOCK=1` swaps Telegram for a file-backed double
  * so the flow can be tested where Telegram is unreachable.
  */
-import { getMarker, getRoundRobinLogs, getRoundRobinSettings, setMarker, updateRoundRobinLogs } from './storage';
+import { getMarker, getRoundRobinLogs, getRoundRobinSettings, getSettings, phnomPenhStamp, setMarker, updateRoundRobinLogs } from './storage';
+import { escapeHtml, readTelegramResponse } from './round-robin';
+import type { RoundRobinLog } from './types';
 import { matchContactsToLogs, refCodeIn, type RecentContact } from './contact-verify';
 
 export const CHECK_EVERY_MS = 2 * 60 * 1000;
@@ -439,6 +441,11 @@ export async function checkAccount(staffId: string, options: { force?: boolean; 
       const c = contacts.find((x) => x.userId === m.contact.userId && x.at === m.contact.at);
       if (c) c.logId = m.logId;
     }
+    const logById = new Map(logs.map((l) => [l.id, l]));
+    await Promise.allSettled(matches.map((m) => {
+      const log = logById.get(m.logId);
+      return log ? alertChatStarted(log, m.confirmation) : Promise.resolve();
+    }));
   }
 
   rec.knownUserIds = Array.from(known).slice(-KNOWN_USERS_KEPT);
@@ -446,6 +453,40 @@ export async function checkAccount(staffId: string, options: { force?: boolean; 
   rec.lastError = undefined;
   await saveAccountRecord(rec);
   return { staffId, newContacts: added, matched: matches.length };
+}
+
+/**
+ * Tells the salesperson (and the manager, when CC is on) that the customer behind a
+ * click has now written: who they are and what they asked. Short and in Khmer.
+ */
+async function alertChatStarted(log: RoundRobinLog, c: { at: string; name?: string; username?: string; text?: string; match: 'ref' | 'time' }): Promise<void> {
+  if (log.demo) return;
+  const [rr, settings] = await Promise.all([getRoundRobinSettings(), getSettings()]);
+  const token = settings.telegramBotToken;
+  if (!token) return;
+  const staff = rr.staffList.find((s) => s.id === log.staffId);
+  const who = [c.name, c.username ? `(@${c.username})` : ''].filter(Boolean).join(' ') || 'អតិថិជន';
+  const text = [
+    c.match === 'ref' ? '✅ <b>អតិថិជនបានផ្ញើសារមកអ្នកហើយ</b>' : '✅ <b>អតិថិជនបានផ្ញើសារមកអ្នកហើយ</b> (ប្រហែលពីការចុចនេះ)',
+    `👤 ${escapeHtml(who)}`,
+    `📌 សេវា៖ <b>${escapeHtml(log.pageTitle || log.pageSlug)}</b>`,
+    c.text ? `💬 “${escapeHtml(c.text.slice(0, 120))}${c.text.length > 120 ? '…' : ''}”` : '',
+    `⏰ ${phnomPenhStamp(Date.parse(c.at))}`,
+    '👉 សូមឆ្លើយឥឡូវ!',
+  ].filter(Boolean).join('\n');
+  const send = (chatId: string) =>
+    fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+    }).then(readTelegramResponse).catch(() => undefined);
+  const tasks: Promise<unknown>[] = [];
+  if (staff?.telegramChatId) tasks.push(send(staff.telegramChatId));
+  const manager = rr.managerChatId || settings.telegramChatId;
+  if (rr.enableManagerNotification && manager && String(manager) !== String(staff?.telegramChatId)) {
+    tasks.push(send(manager));
+  }
+  await Promise.allSettled(tasks);
 }
 
 /** Checks every connected account (throttled). Never throws. */

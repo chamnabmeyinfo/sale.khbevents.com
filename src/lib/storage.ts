@@ -1758,6 +1758,13 @@ export async function getRoundRobinLogs(limit: number = 100): Promise<RoundRobin
 /** Routing log entries kept (local file and the Supabase row). */
 export const MAX_ROUTING_LOGS = 500;
 
+/** "20:09 · 27/09/2026" in Phnom Penh time, for the short Telegram alerts. */
+export function phnomPenhStamp(ms: number): string {
+  const d = new Date(ms + 7 * 60 * 60 * 1000);
+  const two = (n: number) => String(n).padStart(2, '0');
+  return `${two(d.getUTCHours())}:${two(d.getUTCMinutes())} · ${two(d.getUTCDate())}/${two(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`;
+}
+
 /** The visitor detail of a form lead, from what the lead form and the edge already told us. */
 function leadVisitorDetail(lead: Lead): VisitorDetail {
   const cf = lead.customFields || {};
@@ -1888,7 +1895,7 @@ export async function recordDirectContactRoute(params: {
   runAfterResponse(async () => {
     const systemSettings = await getSettings();
     const botToken = systemSettings.telegramBotToken;
-    const stamp = new Date().toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' });
+    const stamp = phnomPenhStamp(Date.now());
     const send = (chatId: string, text: string) =>
       fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
@@ -1905,14 +1912,14 @@ export async function recordDirectContactRoute(params: {
 
     let alertNote: string | undefined;
     if (botToken && staff.telegramChatId) {
-      const staffAlertText = `⚡ <b>មានអតិថិជនថ្មីទាក់ទងមកអ្នកតាម TELEGRAM! (ROUND ROBIN ROUTING)</b>
-━━━━━━━━━━━━━━━━━━━━
-📌 <b>យុទ្ធនាការ/ទំព័រ៖</b> <b>${escapeHtml(pageTitle)}</b>
-👤 <b>បុគ្គលិកទទួលបន្ទុក៖</b> <b>${escapeHtml(staff.name)}</b> (@${cleanUsername})
-📊 <b>ចំណែកភាគរយ (Weight)៖</b> ${effectivePercentage}%
-⏰ <b>ពេលវេលា៖</b> ${stamp}
-━━━━━━━━━━━━━━━━━━━━
-<i>អតិថិជនទើបតែចុចប៊ូតុង Telegram នៅលើគេហទំព័រ ហើយត្រូវបានចាត់ចែងដោយស្វ័យប្រវត្តិតាមប្រព័ន្ធ Round Robin មកកាន់ Telegram របស់អ្នក (@${cleanUsername})។ សូមរៀបចំឆ្លើយតប!</i>`;
+      // Short and in Khmer: the service the customer asks about, the code they will send, when.
+      const staffAlertText = [
+        '🔔 <b>អតិថិជនថ្មីចុច Telegram មករកអ្នក</b>',
+        `📌 សេវា៖ <b>${escapeHtml(pageTitle)}</b>`,
+        params.refCode ? `🔑 កូដក្នុងសាររបស់អតិថិជន៖ <code>${escapeHtml(params.refCode)}</code>` : '',
+        `⏰ ${stamp}`,
+        '👉 អតិថិជននឹងផ្ញើសារមកភ្លាម។ សូមឆ្លើយឱ្យលឿន!',
+      ].filter(Boolean).join('\n');
       tasks.push(
         send(staff.telegramChatId, params.demo ? `🧪 <b>DEMO / សាកល្បង:</b> test click from Simulation Studio, not a real customer.\n\n${staffAlertText}` : staffAlertText).then((data) => {
           if (!data.ok) alertNote = `Staff alert failed: ${data.description || 'Telegram error'}`;
@@ -1924,12 +1931,12 @@ export async function recordDirectContactRoute(params: {
 
     const managerChatId = rrSettings.managerChatId || systemSettings.telegramChatId;
     if (botToken && rrSettings.enableManagerNotification && managerChatId && String(managerChatId) !== String(staff.telegramChatId)) {
-      const managerAlert = `🔔 <b>Round Robin: អតិថិជនចុច Telegram (CC សម្រាប់ Manager)</b>
-━━━━━━━━━━━━━━━━━━━━
-📌 <b>ទំព័រ៖</b> ${escapeHtml(pageTitle)}
-👤 <b>បុគ្គលិកទទួលបន្ទុក៖</b> <b>${escapeHtml(staff.name)}</b> (@${cleanUsername})
-📊 <b>ភាគរយ៖</b> ${effectivePercentage}%
-⏰ <b>ពេលវេលា៖</b> ${stamp}`;
+      const managerAlert = [
+        `🔔 <b>អតិថិជនចុច Telegram</b> → ${escapeHtml(staff.name)} (@${cleanUsername})`,
+        `📌 សេវា៖ ${escapeHtml(pageTitle)}`,
+        params.refCode ? `🔑 កូដ៖ <code>${escapeHtml(params.refCode)}</code>` : '',
+        `⏰ ${stamp}`,
+      ].filter(Boolean).join('\n');
       tasks.push(send(managerChatId, managerAlert));
     }
 

@@ -23,6 +23,14 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [x] Restore the Vietnam page from the owner's saved copy of the live page (2026-09-26). The page as it was before the automatic update was applied as a content pack; photos, text, terms and seats are back. → [[Smart City Tea and Cafe Vietnam 2026]]
 - [ ] After this deploy, open `/smart-city-tea-cafe` and check: all photos load (23 uploaded pictures; a missing one means the file is gone from storage and needs re-uploading), the lead form and the final call to action are back, and the "Why people choose this" and second hero sections sit before the terms as they did. Then Save once in the builder so the copy is also in Versions. → [[Page Builder]] #owner
 
+### Telegram account check (new, 2026-09-27)
+
+- [x] Connect the owner's Telegram account in Settings → Telegram account check (2026-09-27).
+- [ ] After a few real customers write, check Team Performance → Who reached the team: the **Chat** column should say "Messaged us" for them, and the salesperson should have received the "អតិថិជនបានផ្ញើសារមកអ្នកហើយ" alert. Tell Claude if the wording of the three messages should change. → [[Round Robin]] #owner
+- [ ] Telegram → Settings → Devices → "Terminate old sessions if inactive for": set 6 months, so a quiet period does not log the portal out. #owner
+- [ ] Other salespeople: connect their own accounts the same way (each needs their own api_id/api_hash from my.telegram.org). → [[Round Robin]] #owner
+- [ ] Run the account check from the routing tick and the daily cron, so chats are matched without opening Team performance. #for-claude
+
 ### Visitor details (new, 2026-09-27)
 
 - [ ] After a few real clicks, open **Staff Round Robin → Team Performance → Who reached the team** and check the rows: location, device and "Looks like". Clicks before 27 Sep show only the IP and browser. Tell Claude if real customers are marked **Check** or **Bot** so the rules can be tuned. → [[Round Robin]] #owner
