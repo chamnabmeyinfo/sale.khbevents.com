@@ -9,6 +9,7 @@ import { teamPerformance, waitingLeads } from '@/lib/staff-performance';
 import { formatWait } from '@/lib/lead-response';
 import { useLanguage } from '@/context/LanguageContext';
 import StaffAvatar from './StaffAvatar';
+import VisitorContacts, { type ContactEntry } from './VisitorContacts';
 
 export type PerfLead = Pick<Lead, 'id' | 'createdAt' | 'status' | 'landingPageTitle' | 'fullName' | 'routing'>;
 
@@ -60,7 +61,7 @@ function DaysChart({ days, t }: { days: Array<{ day: string; formLeads: number; 
   );
 }
 
-export default function TeamPerformanceClient({ leads, clickStats, staffList, nowMs }: { leads: PerfLead[]; clickStats: StaffClickStats; staffList: RoundRobinStaff[]; nowMs: number }) {
+export default function TeamPerformanceClient({ leads, clickStats, staffList, nowMs, contacts = [] }: { leads: PerfLead[]; clickStats: StaffClickStats; staffList: RoundRobinStaff[]; nowMs: number; contacts?: ContactEntry[] }) {
   const { t } = useLanguage();
   const [days, setDays] = useState<(typeof RANGES)[number]>(7);
   const range = useMemo(() => lastDays(days, nowMs), [days, nowMs]);
@@ -161,6 +162,8 @@ export default function TeamPerformanceClient({ leads, clickStats, staffList, no
         )}
         <p className={`${SUB} mt-2`}>{t('rr.perf.legend')}</p>
       </div>
+
+      <VisitorContacts entries={contacts} staffList={staffList} range={range} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         <div className={`${CARD} p-4`}>

@@ -13,6 +13,7 @@ import {
   RoundRobinStaff,
   RoundRobinSettings,
   RoundRobinLog,
+  VisitorDetail,
   RoutingDeliveryStatus,
   AssignmentReason,
   PopupAd,
@@ -1078,11 +1079,12 @@ export async function createLead(leadData: {
         deliveryError: dispatchResult.error,
         visitorIp: newLead.ip,
         userAgent: newLead.userAgent,
+        visitor: leadVisitorDetail(newLead),
         assignmentReason,
         ...(demo ? { demo: true } : {})
       };
       db.roundRobinLogs.unshift(auditLog);
-      if (db.roundRobinLogs.length > 500) db.roundRobinLogs.length = 500;
+      if (db.roundRobinLogs.length > MAX_ROUTING_LOGS) db.roundRobinLogs.length = MAX_ROUTING_LOGS;
 
       if (isSupabaseConfigured()) {
         try {
@@ -1753,6 +1755,26 @@ export async function getRoundRobinLogs(limit: number = 100): Promise<RoundRobin
     .slice(0, limit);
 }
 
+/** Routing log entries kept (local file and the Supabase row). */
+export const MAX_ROUTING_LOGS = 500;
+
+/** The visitor detail of a form lead, from what the lead form and the edge already told us. */
+function leadVisitorDetail(lead: Lead): VisitorDetail {
+  const cf = lead.customFields || {};
+  const out: VisitorDetail = {};
+  if (cf.visitorCountry) out.country = cf.visitorCountry;
+  if (cf.visitorRegion) out.region = cf.visitorRegion;
+  if (cf.visitorCity) out.city = cf.visitorCity;
+  if (lead.referrer) out.referrer = lead.referrer.slice(0, 1000);
+  if (lead.utmSource) out.utmSource = lead.utmSource.toLowerCase();
+  if (lead.utmMedium) out.utmMedium = lead.utmMedium.toLowerCase();
+  if (lead.utmCampaign) out.utmCampaign = lead.utmCampaign.toLowerCase();
+  if (lead.utmContent) out.utmContent = lead.utmContent.toLowerCase();
+  if (cf.visitSession) out.sessionId = cf.visitSession;
+  if (cf.visitorId) out.visitorId = cf.visitorId;
+  return out;
+}
+
 export interface DirectContactRoute {
   staff: RoundRobinStaff;
   targetTelegramUrl: string;
@@ -1772,6 +1794,8 @@ export async function recordDirectContactRoute(params: {
   pageSlug: string;
   visitorIp?: string;
   userAgent?: string;
+  /** Location, referrer, campaign and visit ids from the request (shown to the admin). */
+  visitor?: VisitorDetail;
   /** Staff id from the visitor's cookie: keep them with the person they already met. */
   preferredStaffId?: string;
   /** False when the caller only wants a repeat match (rate limited): no new assignment is made. */
@@ -1794,10 +1818,41 @@ export async function recordDirectContactRoute(params: {
   const rememberSeconds = Math.floor(visitorMemoryMs(rrSettings) / 1000);
   const sticky = rememberedStaff(rrSettings, params.preferredStaffId, 'username');
   if (sticky) {
+    // Nobody is alerted and nothing is counted again, but the click is still written to
+    // the log so the admin sees every visitor who reached the team.
+    const stickyUrl = `https://t.me/${cleanTelegramUsername(sticky.telegramUsername)}`;
+    const stickyLogId = `rr-click-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const stickyEntry: RoundRobinLog = {
+      id: stickyLogId,
+      timestamp: new Date().toISOString(),
+      routeType: 'DIRECT_CONTACT_CLICK',
+      pageSlug: params.pageSlug,
+      pageTitle: page?.title || params.pageSlug,
+      staffId: sticky.id,
+      staffName: sticky.name,
+      staffTelegram: sticky.telegramUsername,
+      staffChatId: sticky.telegramChatId,
+      percentageWeight: sticky.percentage,
+      status: 'DELIVERED',
+      targetTelegramUrl: stickyUrl,
+      visitorIp: params.visitorIp,
+      userAgent: params.userAgent,
+      ...(params.visitor ? { visitor: params.visitor } : {}),
+      assignmentReason: 'returning_visitor',
+      ...(params.demo ? { demo: true } : {})
+    };
+    runAfterResponse(async () => {
+      const current = await getDatabase();
+      if (!current.roundRobinLogs) current.roundRobinLogs = [];
+      current.roundRobinLogs.unshift(stickyEntry);
+      if (current.roundRobinLogs.length > MAX_ROUTING_LOGS) current.roundRobinLogs.length = MAX_ROUTING_LOGS;
+      await saveDatabase(current);
+      if (isSupabaseConfigured()) await supabaseSaveRoundRobinLog(stickyEntry);
+    });
     return {
       staff: sticky,
-      targetTelegramUrl: `https://t.me/${cleanTelegramUsername(sticky.telegramUsername)}`,
-      logId: '',
+      targetTelegramUrl: stickyUrl,
+      logId: stickyLogId,
       repeat: true,
       rememberSeconds
     };
@@ -1890,13 +1945,14 @@ export async function recordDirectContactRoute(params: {
       targetTelegramUrl,
       visitorIp: params.visitorIp,
       userAgent: params.userAgent,
+      ...(params.visitor ? { visitor: params.visitor } : {}),
       assignmentReason: 'rotation',
       ...(params.demo ? { demo: true } : {})
     };
 
     if (!db.roundRobinLogs) db.roundRobinLogs = [];
     db.roundRobinLogs.unshift(logEntry);
-    if (db.roundRobinLogs.length > 500) db.roundRobinLogs.length = 500;
+    if (db.roundRobinLogs.length > MAX_ROUTING_LOGS) db.roundRobinLogs.length = MAX_ROUTING_LOGS;
     await saveDatabase(db);
 
     if (isSupabaseConfigured()) {

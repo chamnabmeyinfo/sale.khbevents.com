@@ -1,7 +1,7 @@
 ---
 type: tasks
 tags: [tasks, index]
-updated: 2026-09-26
+updated: 2026-09-27
 source:
   - supabase/migrations/20260923_lock_down_rls.sql
   - src/lib/round-robin.ts
@@ -22,6 +22,10 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 
 - [x] Restore the Vietnam page from the owner's saved copy of the live page (2026-09-26). The page as it was before the automatic update was applied as a content pack; photos, text, terms and seats are back. → [[Smart City Tea and Cafe Vietnam 2026]]
 - [ ] After this deploy, open `/smart-city-tea-cafe` and check: all photos load (23 uploaded pictures; a missing one means the file is gone from storage and needs re-uploading), the lead form and the final call to action are back, and the "Why people choose this" and second hero sections sit before the terms as they did. Then Save once in the builder so the copy is also in Versions. → [[Page Builder]] #owner
+
+### Visitor details (new, 2026-09-27)
+
+- [ ] After a few real clicks, open **Staff Round Robin → Team Performance → Who reached the team** and check the rows: location, device and "Looks like". Clicks before 27 Sep show only the IP and browser. Tell Claude if real customers are marked **Check** or **Bot** so the rules can be tuned. → [[Round Robin]] #owner
 
 ### Backups (new, 2026-09-26)
 

@@ -1,7 +1,7 @@
 ---
 type: feature
 tags: [system, feature, round-robin, telegram, sales-team]
-updated: 2026-09-24
+updated: 2026-09-27
 admin_path: /admin/round-robin
 admin_menu: Staff Round Robin
 source:
@@ -9,6 +9,8 @@ source:
   - src/lib/lead-response.ts
   - src/lib/staff-performance.ts
   - src/components/admin/TeamPerformanceClient.tsx
+  - src/components/admin/VisitorContacts.tsx
+  - src/lib/visitor-detail.ts
   - src/app/api/round-robin/daily-summary/route.ts
   - vercel.json
   - src/components/admin/StaffAvailability.tsx
@@ -114,6 +116,23 @@ How they apply to a new form lead, a Telegram click and the bot:
 - **Daily limit** (staff card): most new contacts (form leads plus Telegram clicks) per Phnom Penh day; 0 means no limit. The card shows today's count. People at their limit are skipped while a colleague below it can take the contact; if everyone is at their limit, the rotation continues. Hand-overs also skip people at their limit.
 - **Team performance** (`/admin/round-robin/performance`, sidebar **Team Performance**, or the button on the Round Robin page): today, 7, 30 or 90 days. Tiles for form leads and clicks, replied (button tapped), average reply time, won and lost, still waiting. A row per salesperson with share of new contacts, leads, clicks, reply rate and time, the three button outcomes, won, waiting and hand-overs; new contacts per day; and the list of leads still waiting for a reply with links to the CRM. Built from the lead records (`src/lib/staff-performance.ts`); Telegram clicks per person per day are kept in the `staff_click_stats` row for 120 days. Replies start with the buttons (25 Sep 2026).
 - **Daily summary to the manager chat** (Advanced rules): Off, or every day at 17:00, 18:00, 19:00 or 20:00 Phnom Penh. One Telegram message with the day's leads and clicks per person, taps and reply times, and the leads still waiting. Sent to the Manager Chat ID (or Fallback, or the company chat) once per day, at or after the chosen time, on site traffic; a Vercel cron at 20:00 (`/api/round-robin/daily-summary`, once a day, allowed on the free plan) sends it if nothing did. If `CRON_SECRET` is set on the server, that address only accepts Vercel's call.
+
+## Who reached the team (visitor details)
+
+On **Team performance**, under the per-salesperson table: every Telegram click and form lead sent to a salesperson in the chosen period, one row each (`VisitorContacts.tsx`, rules in `src/lib/visitor-detail.ts`).
+
+| Column | Where it comes from |
+|---|---|
+| Time, CLICK / FORM, returning | The routing log |
+| Device & browser | The browser string (phone, tablet, computer, bot; Chrome, Safari…; the app it was opened in: Telegram, Facebook, TikTok…) |
+| Location & IP | The network address and Vercel's country, region and city headers (city level, roughly; a VPN or a mobile network can be off) |
+| Came from | The `utm_` tags of the page the visitor clicked from, else the app, else the referring site, else "direct". A tracked visit adds time on page and scroll depth |
+| Sent to | The salesperson |
+| Looks like | **Real person**, **Check** or **Bot** |
+
+**Real person / Check / Bot** is a rule of thumb, not a proof: Bot when the browser string is a known crawler, link-preview fetcher or script (Facebook and Telegram link previews, curl, headless browsers…); Check when no browser string was sent, the click did not come from one of our pages (no referrer, or another website), 5 or more contacts came from the same address in the period, or the click came within 3 seconds of arriving without scrolling; otherwise real. A visit that shows real reading outweighs a missing referrer. Open a row for the full detail (browser string, referrer address, campaign tags, visit and browser ids, Telegram alert result, log id) and the reasons behind the verdict.
+
+The landing pages set two cookies (`khb_sid` for the visit, `khb_vid` for the browser) so a click, a plain link, can be tied to the visit that the campaign report tracks. Returning visitors' clicks are logged too (marked "Returning visitor"; nobody is alerted and nothing is counted twice). The log keeps the last 500 entries; location, referrer and campaign are recorded from 27 Sep 2026, older entries show only the IP address and the browser. Only the admin sees this list; the campaign report stays anonymous.
 
 ## Who can receive what (eligibility)
 

@@ -1,7 +1,7 @@
 ---
 type: decision-log
 tags: [decision, log]
-updated: 2026-09-26
+updated: 2026-09-27
 source:
   - git log (commits befb78b to 6d1e831)
   - vercel.json
@@ -25,6 +25,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 **Who decides:** "Owner" means the business owner decided it. "Claude with owner approval" means Claude proposed it during a working session and the owner accepted the result.
 
 ---
+
+## 2026-09-27 — Visitor detail on the routing log, judged by rules the admin can read
+
+- **Decision:** Each Round Robin contact (click or form) records the network address, the edge's country, region and city, the referrer and its campaign tags, the browser language and the visit ids. Team performance shows them per row with a Real person / Check / Bot verdict built from plain rules (bot browser strings, no referrer or an outside referrer, many contacts from one address, a click within 3 seconds of arriving). Returning visitors' clicks are logged as well. The campaign visit records stay anonymous.
+- **Why:** The owner wants to see who reaches the team and whether the clicks are real. The routing log already held the IP and browser string and is admin-only, so it is the right place for the rest; the rules are shown with each verdict so the owner can judge them, and no outside service or paid lookup is needed.
+- **Who decided:** Owner asked; Claude with owner approval on the rules.
+- **Affects:** [[Round Robin]].
 
 ## 2026-09-26 — Restore the Vietnam page from the owner's saved HTML, as a one-time content pack
 

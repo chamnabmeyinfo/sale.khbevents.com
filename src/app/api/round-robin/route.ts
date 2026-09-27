@@ -3,6 +3,7 @@ import { getPageBySlug, getSettings, recordDirectContactRoute } from '@/lib/stor
 import { rateLimitByIp, getClientIp } from '@/lib/rate-limit';
 import { resolveFallbackTelegramUrl } from '@/lib/round-robin';
 import { STAFF_COOKIE, rememberStaffCookie } from '@/lib/staff-cookie';
+import { visitorDetailFromRequest } from '@/lib/visitor-detail';
 
 /**
  * "Chat on Telegram" clicks from the landing pages.
@@ -40,6 +41,7 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean, text
   const visitorIp = getClientIp(req.headers);
   const userAgent = req.headers.get('user-agent') || undefined;
   const preferredStaffId = req.cookies.get(STAFF_COOKIE)?.value || undefined;
+  const visitor = visitorDetailFromRequest(req.headers, req.cookies);
 
   // A returning visitor is sent to the same person without new alerts, so the
   // limit only caps how many *new* assignments one address can trigger.
@@ -48,6 +50,7 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean, text
     pageSlug: slug,
     visitorIp,
     userAgent,
+    visitor,
     preferredStaffId,
     allowNewAssignment: limit.allowed
   });

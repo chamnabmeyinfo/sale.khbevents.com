@@ -1129,6 +1129,25 @@ export interface RoutingDetail {
   managerAlerted?: boolean;
 }
 
+/** Who the visitor behind a click or form was, from the request that carried it (admin only). */
+export interface VisitorDetail {
+  /** ISO country code from the edge (KH, VN…). */
+  country?: string;
+  region?: string;
+  city?: string;
+  /** The page address the visitor clicked from (Referer). */
+  referrer?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmContent?: string;
+  /** First language of the browser (Accept-Language). */
+  lang?: string;
+  /** Visit and browser ids from the landing page's cookies, to tie the click to its visit. */
+  sessionId?: string;
+  visitorId?: string;
+}
+
 export interface RoundRobinLog {
   id: string;
   timestamp: string;
@@ -1150,6 +1169,8 @@ export interface RoundRobinLog {
   targetTelegramUrl?: string;
   visitorIp?: string;
   userAgent?: string;
+  /** Location, referrer, campaign and visit ids (since 27 Sep 2026). */
+  visitor?: VisitorDetail;
   assignmentReason?: AssignmentReason;
   /** Made by Simulation Studio: not a real customer, not counted in any statistics. */
   demo?: boolean;

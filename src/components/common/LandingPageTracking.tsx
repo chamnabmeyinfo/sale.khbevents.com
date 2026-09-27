@@ -21,6 +21,22 @@ export function getSessionId(): string {
   }
 }
 
+/**
+ * Copies the visit and browser ids into cookies, so the server can tie a
+ * "Chat on Telegram" click (a plain link, no JavaScript) to this visit.
+ */
+function syncIdCookies() {
+  if (typeof document === 'undefined') return;
+  try {
+    const secure = location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `khb_sid=${encodeURIComponent(getSessionId())}; Path=/; SameSite=Lax${secure}`;
+    const vid = getVisitor(getSessionId()).visitorId;
+    if (vid && vid !== 'server') document.cookie = `khb_vid=${encodeURIComponent(vid)}; Path=/; Max-Age=${180 * 86400}; SameSite=Lax${secure}`;
+  } catch {
+    // Cookies blocked: the click is still routed, just not tied to the visit.
+  }
+}
+
 // Helper: Detect device type
 export function getDeviceType(): 'mobile' | 'tablet' | 'desktop' {
   if (typeof window === 'undefined') return 'desktop';
@@ -312,6 +328,7 @@ export default function LandingPageTracking({ page, lang = 'en', sections }: Lan
     if (!page?.slug) return;
 
     // Record initial page view
+    syncIdCookies();
     trackClientEvent(page.slug, 'page_view', undefined, lang);
 
     // Scroll depth tracker

@@ -701,8 +701,8 @@ export async function supabaseSaveRoundRobinLog(log: RoundRobinLog): Promise<boo
   const supabase = getSupabase();
   if (!supabase) return false;
   try {
-    const existing = await supabaseGetRoundRobinLogs(200);
-    const updated = [log, ...(existing || [])].slice(0, 200);
+    const existing = await supabaseGetRoundRobinLogs(500);
+    const updated = [log, ...(existing || [])].slice(0, 500);
     const { error } = await supabase
       .from('system_settings')
       .upsert({
@@ -729,7 +729,7 @@ export async function supabaseSaveStaffClickStats(stats: StaffClickStats): Promi
 
 /** Replaces the stored routing log (used when clearing demo data). */
 export async function supabaseReplaceRoundRobinLogs(logs: RoundRobinLog[]): Promise<boolean> {
-  return writeJsonRow('round_robin_logs', logs.slice(0, 200));
+  return writeJsonRow('round_robin_logs', logs.slice(0, 500));
 }
 
 /** Deletes every row of the page_views table (used when resetting statistics). */
