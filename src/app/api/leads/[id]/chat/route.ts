@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
-import { AccountBusyError, FloodBlockedError, readLeadConversation, SendPaceError, sendLeadMessage } from '@/lib/telegram-account';
+import { AccountBusyError, ChatNotFoundError, FloodBlockedError, readLeadConversation, SendPaceError, sendLeadMessage } from '@/lib/telegram-account';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -60,6 +60,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!conversation) return NextResponse.json({ success: false, error: 'Not a Telegram chat lead' }, { status: 404 });
     return NextResponse.json({ success: true, conversation });
   } catch (error) {
+    if (error instanceof ChatNotFoundError) return NextResponse.json({ success: false, error: error.message }, { status: 404 });
     if (error instanceof AccountBusyError) return NextResponse.json({ success: false, error: error.message, retryInMs: error.retryInMs }, { status: 409 });
     if (error instanceof SendPaceError) return NextResponse.json({ success: false, error: error.message, retryInMs: error.retryInMs }, { status: 429 });
     if (error instanceof FloodBlockedError) return NextResponse.json({ success: false, error: error.message, retryInMs: error.retryInMs, floodUntil: error.floodUntil }, { status: 429 });

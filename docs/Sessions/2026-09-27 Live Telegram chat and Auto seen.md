@@ -18,6 +18,8 @@ tags: [session, telegram, live-chat, crm, security]
 - **Auto seen** switch per salesperson (Settings → Telegram account check), off by default; on, the customer's messages are marked read only while a person looks at the chat in a front tab, once per new message. A reply from the portal always marks read first, then sends, on the same connection.
 - New modules `src/lib/telegram-lease.ts` and `src/lib/telegram-chat-rules.ts` (pure rules, unit-tested); `telegram-account.ts` reworked (probe, mark read, field-level record writes, error classification); API `GET /api/leads/<id>/chat?since&unread&view` answers 200 with a live state; `POST` answers 409 busy / 429 too fast or flood.
 
+- Follow-up after a code review of the diff (same day): the lease renews itself every 8 seconds while a long check runs and abandons any use of the account past 55 seconds; record patches on one server take turns; chat numbers are written onto the lead as stored now (a note saved during the Telegram round trip is kept); same-second messages keep Telegram's order; the check re-checks the flood wait inside the lease and treats a flood or dead session during the stats pass like anywhere else; login reads the record inside the lease; "chat not found" is a 404, not an account error.
+
 ## Verified
 
 - tsc, eslint, 266 unit tests (15 new: error classification, mark-read rule, unchanged detection, send pace, poll cadence, lease: busy, wait, release on throw, stale takeover, fail closed), production build.

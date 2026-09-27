@@ -62,3 +62,12 @@ describe('withAccountLease', () => {
     await expect(withAccountLease('s7', async () => 1, { store })).rejects.toBeInstanceOf(AccountBusyError);
   });
 });
+
+describe('withAccountLease limits', () => {
+  it('abandons work that runs past the hold limit and frees the account', async () => {
+    const store = memoryLeaseStore();
+    const never = new Promise<void>(() => undefined);
+    await expect(withAccountLease('s8', () => never, { store, maxHoldMs: 50 })).rejects.toThrow('took too long');
+    expect(await withAccountLease('s8', async () => 'free', { store, waitMs: 0 })).toBe('free');
+  });
+});

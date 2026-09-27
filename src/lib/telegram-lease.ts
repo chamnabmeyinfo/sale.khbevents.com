@@ -17,6 +17,10 @@ export interface LeaseStore {
 }
 
 export const LEASE_TTL_MS = 25_000;
+/** While the work runs, the row is renewed this often so a long check keeps its lease. */
+const RENEW_EVERY_MS = 8_000;
+/** No single use of an account may run longer than this (Vercel functions end at 60 s). */
+export const MAX_HOLD_MS = 55_000;
 const RETRY_STEP_MS = 400;
 
 export class AccountBusyError extends Error {
@@ -70,7 +74,7 @@ async function tryTakeLease(store: LeaseStore, id: string, owner: string, nowMs:
 export async function withAccountLease<T>(
   staffId: string,
   fn: () => Promise<T>,
-  options: { waitMs?: number; store: LeaseStore; nowMs?: () => number }
+  options: { waitMs?: number; store: LeaseStore; nowMs?: () => number; maxHoldMs?: number }
 ): Promise<T> {
   const waitMs = options.waitMs ?? 0;
   const now = options.nowMs || Date.now;
@@ -99,9 +103,25 @@ export async function withAccountLease<T>(
       if (now() - start >= waitMs) throw new AccountBusyError();
       await new Promise((r) => setTimeout(r, RETRY_STEP_MS));
     }
+    // Keep the row ours while the work runs (a check with many chats can take a while).
+    const renew = setInterval(() => {
+      void (async () => {
+        const raw = await options.store.get(id).catch(() => null);
+        const row = parseRow(raw);
+        if (!row || row.owner !== owner || !raw) return;
+        const next = JSON.stringify({ owner, until: new Date(now() + LEASE_TTL_MS).toISOString() } satisfies LeaseRow);
+        await options.store.cas(id, raw, next).catch(() => false);
+      })();
+    }, RENEW_EVERY_MS);
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      return await fn();
+      const limit = new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('The Telegram call took too long and was abandoned')), options.maxHoldMs ?? MAX_HOLD_MS);
+      });
+      return await Promise.race([fn(), limit]);
     } finally {
+      clearInterval(renew);
+      if (timer) clearTimeout(timer);
       // Give the row back only if it is still ours.
       const raw = await options.store.get(id).catch(() => null);
       const row = parseRow(raw);

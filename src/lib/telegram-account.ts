@@ -123,12 +123,24 @@ async function saveAccountRecord(rec: TelegramAccountRecord): Promise<void> {
  * Writes only the given fields (undefined removes one) on top of the record as it is
  * stored now, so a slow Telegram call never overwrites what another request saved.
  */
+const patchQueues: Map<string, Promise<unknown>> = ((globalThis as { __khbTgPatches?: Map<string, Promise<unknown>> }).__khbTgPatches ||= new Map());
+
 async function patchAccountRecord(staffId: string, patch: Partial<TelegramAccountRecord>): Promise<TelegramAccountRecord> {
-  const current = await getAccountRecord(staffId);
-  const next: TelegramAccountRecord = { ...current, ...patch, staffId };
-  for (const k of Object.keys(next) as Array<keyof TelegramAccountRecord>) if (next[k] === undefined) delete next[k];
-  await saveAccountRecord(next);
-  return next;
+  // Patches on this server take turns, so two of them never read the same old copy.
+  const previous = patchQueues.get(staffId) || Promise.resolve();
+  const run = previous.catch(() => undefined).then(async () => {
+    const current = await getAccountRecord(staffId);
+    const next: TelegramAccountRecord = { ...current, ...patch, staffId };
+    for (const k of Object.keys(next) as Array<keyof TelegramAccountRecord>) if (next[k] === undefined) delete next[k];
+    await saveAccountRecord(next);
+    return next;
+  });
+  patchQueues.set(staffId, run);
+  try {
+    return await run;
+  } finally {
+    if (patchQueues.get(staffId) === run) patchQueues.delete(staffId);
+  }
 }
 
 /** The time Telegram asked us to wait until, when it is still ahead. */
@@ -261,6 +273,14 @@ export class NeedsPasswordError extends Error {
   constructor() {
     super('SESSION_PASSWORD_NEEDED');
     this.name = 'NeedsPasswordError';
+  }
+}
+
+/** The salesperson's account has no chat with this customer (never written, or deleted). Not an account problem. */
+export class ChatNotFoundError extends Error {
+  constructor() {
+    super('Chat not found on this account');
+    this.name = 'ChatNotFoundError';
   }
 }
 
@@ -590,15 +610,16 @@ export interface LoginInput {
 
 /** Step 1: Telegram sends a code to the phone. */
 export async function startLogin(staffId: string, input: LoginInput): Promise<TelegramAccountStatus> {
-  const rec = await getAccountRecord(staffId);
   const phone = input.phone.replace(/[^\d+]/g, '');
   if (!/^\+?\d{8,15}$/.test(phone)) throw new Error('Enter the phone number with the country code, for example +855 12 345 678');
   if (!Number.isInteger(input.apiId) || input.apiId <= 0) throw new Error('The API ID is a number from my.telegram.org');
-  // An empty hash keeps the one saved earlier (it is never sent back to the browser).
-  const apiHash = input.apiHash.trim() || rec.apiHash || '';
-  if (!/^[a-f0-9]{32}$/i.test(apiHash)) throw new Error('The API hash is 32 letters and digits from my.telegram.org');
-  const next: TelegramAccountRecord = { ...rec, apiId: input.apiId, apiHash, phone, pending: undefined, lastError: undefined };
   return withAccountLease(staffId, async () => {
+    // Read inside the lease: the copy is current when it is written back.
+    const rec = await getAccountRecord(staffId);
+    // An empty hash keeps the one saved earlier (it is never sent back to the browser).
+    const apiHash = input.apiHash.trim() || rec.apiHash || '';
+    if (!/^[a-f0-9]{32}$/i.test(apiHash)) throw new Error('The API hash is 32 letters and digits from my.telegram.org');
+    const next: TelegramAccountRecord = { ...rec, apiId: input.apiId, apiHash, phone, pending: undefined, lastError: undefined };
     const client = await clientFor(next, '');
     try {
       await client.connect();
@@ -618,14 +639,13 @@ export async function startLogin(staffId: string, input: LoginInput): Promise<Te
 
 /** Step 2: the code from the phone (and the two-step password when the account has one). */
 export async function finishLogin(staffId: string, code: string, password?: string): Promise<TelegramAccountStatus> {
-  const rec = await getAccountRecord(staffId);
-  if (!rec.pending || !rec.phone) throw new Error('Ask for a code first');
-  if (Date.now() - Date.parse(rec.pending.at) > 15 * 60 * 1000) {
-    rec.pending = undefined;
-    await saveAccountRecord(rec);
-    throw new Error('The code has expired. Ask for a new one.');
-  }
   return withAccountLease(staffId, async () => {
+    const rec = await getAccountRecord(staffId);
+    if (!rec.pending || !rec.phone) throw new Error('Ask for a code first');
+    if (Date.now() - Date.parse(rec.pending.at) > 15 * 60 * 1000) {
+      await patchAccountRecord(staffId, { pending: undefined });
+      throw new Error('The code has expired. Ask for a new one.');
+    }
     const client = await clientFor(rec, rec.pending!.session);
     try {
       await client.connect();
@@ -728,6 +748,8 @@ export async function checkAccount(staffId: string, options: { force?: boolean; 
       // Another server may have checked while we waited for the lease.
       const fresh = await getAccountRecord(staffId);
       if (!fresh.session || !fresh.user) return skipped;
+      const blocked = floodActive(fresh, nowMs);
+      if (blocked) return { ...skipped, floodUntil: blocked, error: `Telegram asked this account to wait until ${phnomPenhStamp(Date.parse(blocked))}` };
       if (!options.force && fresh.lastCheckAt && nowMs - Date.parse(fresh.lastCheckAt) < CHECK_EVERY_MS) return skipped;
       const since = fresh.lastCheckAt ? Date.parse(fresh.lastCheckAt) : nowMs - CHECK_EVERY_MS;
       const stamp = new Date(nowMs).toISOString();
@@ -823,17 +845,18 @@ async function finishCheck(rec: TelegramAccountRecord, client: AccountClient, di
 
   // How the conversations are going: counts and reply times for this person's open chat leads.
   let statsUpdated = 0;
+  let statsError: string | undefined;
   try {
     statsUpdated = await refreshChatStats(client, staffId, dialogs, nowMs);
   } catch (err) {
-    console.error('Chat stats error:', err);
+    // A flood wait or a dead session here counts like anywhere else.
+    statsError = (await noteTelegramError(staffId, err, nowMs)).message;
   }
 
   rec.knownUserIds = Array.from(known).slice(-KNOWN_USERS_KEPT);
   rec.contacts = contacts.slice(0, CONTACTS_KEPT);
-  rec.lastError = undefined;
-  await patchAccountRecord(staffId, { knownUserIds: rec.knownUserIds, contacts: rec.contacts, lastError: undefined });
-  return { staffId, newContacts: added, matched: matches.length, statsUpdated };
+  await patchAccountRecord(staffId, { knownUserIds: rec.knownUserIds, contacts: rec.contacts, ...(statsError ? {} : { lastError: undefined }) });
+  return { staffId, newContacts: added, matched: matches.length, statsUpdated, error: statsError };
 }
 
 /** The CRM lead for a confirmed chat: found by Telegram user id, or made now. */
@@ -873,11 +896,25 @@ async function refreshChatStats(client: AccountClient, staffId: string, dialogs:
     // Keep what the inbox learned about the chat's message ids; the counters here are fresh.
     const stats: ChatStats = { ...chatStatsFrom(messages, unreadBy.get(userId), new Date(nowMs).toISOString()), lastMessageId: prior?.lastMessageId, seenMaxId: prior?.seenMaxId };
     if (!statsDiffer(prior, stats)) continue;
-    lead.routing = { ...lead.routing!, chat: stats };
-    await saveLeadChanges(lead);
+    await saveChatStats(lead, stats);
     n += 1;
   }
   return n;
+}
+
+/** Oldest first; same-second messages by Telegram's id, so a quick exchange keeps its order. */
+const byTime = (a: ChatMessage, b: ChatMessage) => a.atMs - b.atMs || a.id - b.id;
+
+/**
+ * Writes the chat numbers onto the lead as it is stored now, so a note or status the
+ * admin saved during the Telegram round trip is not overwritten by our older copy.
+ */
+async function saveChatStats(lead: Lead, stats: ChatStats): Promise<void> {
+  const fresh = (await getLeadById(lead.id).catch(() => null)) || lead;
+  if (!fresh.routing) return;
+  fresh.routing = { ...fresh.routing, chat: stats };
+  lead.routing = fresh.routing;
+  await saveLeadChanges(fresh).catch(() => undefined);
 }
 
 /** True when anything but the timestamp differs, so unchanged chats cost no write. */
@@ -1066,16 +1103,13 @@ async function readWithClient(lead: Lead, rec: TelegramAccountRecord, base: Lead
     let stats: ChatStats;
     const stamp = new Date(nowMs).toISOString();
     if (changed) {
-      messages = (await client.messages(peer, options.limit ?? 100)).sort((a, b) => a.atMs - b.atMs);
+      messages = (await client.messages(peer, options.limit ?? 100)).sort(byTime);
       stats = { ...chatStatsFrom(messages, probe.unreadCount, stamp), lastMessageId: probe.topMessageId, seenMaxId };
     } else {
       stats = { ...(prior || { fromCustomer: 0, fromUs: 0, updatedAt: stamp }), unread: probe.unreadCount, lastMessageId: probe.topMessageId, seenMaxId };
     }
     for (const k of ['seenMaxId', 'lastMessageId'] as const) if (stats[k] === undefined) delete stats[k];
-    if (statsDiffer(prior, stats)) {
-      lead.routing = { ...lead.routing!, chat: stats };
-      await saveLeadChanges(lead).catch(() => undefined);
-    }
+    if (statsDiffer(prior, stats)) await saveChatStats(lead, stats);
     const session = client.saveSession();
     if (session !== rec.session) patch.session = session;
     if (rec.lastError) patch.lastError = undefined;
@@ -1134,7 +1168,7 @@ export async function sendLeadMessage(leadId: string, rawText: string, by: strin
     try {
       await client.connect();
       const found = await locateChat(client, rec, userId, username);
-      if (!found) throw new Error('Chat not found on this account');
+      if (!found) throw new ChatNotFoundError();
       const { peer, probe } = found;
       if (found.peers) patch.peers = found.peers;
       const prior = lead.routing!.chat;
@@ -1144,20 +1178,17 @@ export async function sendLeadMessage(leadId: string, rawText: string, by: strin
         seenMaxId = probe.topMessageId;
       }
       await client.sendTo(peer, text);
-      const messages = (await client.messages(peer, 100)).sort((a, b) => a.atMs - b.atMs);
+      const messages = (await client.messages(peer, 100)).sort(byTime);
       const top = messages.reduce((m, x) => Math.max(m, x.id), probe.topMessageId);
       const stats: ChatStats = { ...chatStatsFrom(messages, 0, new Date().toISOString()), lastMessageId: top };
       if (seenMaxId !== undefined) stats.seenMaxId = seenMaxId;
-      if (statsDiffer(prior, stats)) {
-        lead.routing = { ...lead.routing!, chat: stats };
-        await saveLeadChanges(lead).catch(() => undefined);
-      }
+      if (statsDiffer(prior, stats)) await saveChatStats(lead, stats);
       const session = client.saveSession();
       if (session !== rec.session) patch.session = session;
       if (rec.lastError) patch.lastError = undefined;
       return { ...base, messages, stats, lastMessageId: top, unread: 0, live: { state: 'ok' } } satisfies LeadConversation;
     } catch (err) {
-      if (err instanceof SendPaceError || err instanceof FloodBlockedError) throw err;
+      if (err instanceof SendPaceError || err instanceof FloodBlockedError || err instanceof ChatNotFoundError) throw err;
       const noted = await noteTelegramError(staffId, err, now);
       if (noted.kind === 'flood') throw new FloodBlockedError(noted.floodUntil!, now);
       if (noted.kind === 'terminal') throw new Error('Telegram ended the session. Connect the account again under Settings.');
