@@ -70,6 +70,7 @@ export async function PUT(req: NextRequest) {
     });
     const minutes = Number(settings.responseMinutes);
     settings.responseMinutes = (RESPONSE_MINUTE_CHOICES as readonly number[]).includes(minutes) ? minutes : 0;
+    settings.chatEntry = settings.chatEntry === 'bot' ? 'bot' : 'direct';
     const hour = Number(settings.dailySummaryHour);
     settings.dailySummaryHour = settings.dailySummaryHour !== undefined && settings.dailySummaryHour !== null && [17, 18, 19, 20].includes(hour) ? hour : undefined;
     if (autoNormalize) {

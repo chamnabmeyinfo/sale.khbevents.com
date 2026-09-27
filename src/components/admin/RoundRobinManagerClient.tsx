@@ -1466,6 +1466,22 @@ export default function RoundRobinManagerClient({
               </div>
             </div>
 
+            <div className="pt-2 border-t border-slate-100 dark:border-emerald-950/60">
+              <label className="block text-xs">
+                <span className="font-bold text-slate-800 dark:text-gray-200">{t('rr.adv.chatEntry')}</span>
+                <select
+                  value={settings.chatEntry === 'bot' ? 'bot' : 'direct'}
+                  onChange={(e) => setSettings({ ...settings, chatEntry: e.target.value === 'bot' ? 'bot' : 'direct' })}
+                  className="mt-1 w-full sm:w-auto px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-sm focus:border-amber-400 focus:outline-none"
+                  data-chat-entry=""
+                >
+                  <option value="direct">{t('rr.adv.chatEntry.direct')}</option>
+                  <option value="bot">{t('rr.adv.chatEntry.bot')}</option>
+                </select>
+                <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">{t('rr.adv.chatEntryHint')}</p>
+              </label>
+            </div>
+
             <div className="pt-2 border-t border-slate-100 dark:border-emerald-950/60 flex flex-wrap items-center gap-6">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input

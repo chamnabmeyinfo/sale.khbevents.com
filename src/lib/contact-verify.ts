@@ -19,6 +19,17 @@ export function newRefCode(random: () => number = Math.random): string {
   return out;
 }
 
+/** The bot deep-link payload for a click: `k_7X2M` for the code #K7X2M (short, letters and digits only). */
+export function botStartPayload(refCode: string): string {
+  return `k_${refCode.replace(/^#K/i, '').toUpperCase()}`;
+}
+
+/** The reference code behind a bot start payload, or undefined when it is not one of ours. */
+export function refCodeFromStartPayload(payload: string | undefined | null): string | undefined {
+  const m = /^k_([A-Z2-9]{4})$/i.exec((payload || '').trim());
+  return m ? `#K${m[1].toUpperCase()}` : undefined;
+}
+
 /** The reference code inside a message, or undefined. */
 export function refCodeIn(text: string | undefined | null): string | undefined {
   const m = REF_RE.exec((text || '').toUpperCase());

@@ -24,6 +24,8 @@ tags: [session, ai, telegram, crm]
 
 - Owner's request on the first message: the three-line template with the code is gone; the chat now opens with only "សួស្តី 👋" for visitors in Cambodia or with a Khmer browser, "Hello 👋" otherwise. Matching to the click is by timing (30 minutes), which the known-person rule above also uses.
 
+- **Bot first entry** (owner: "GO"): Round Robin setting; the click carries a short code in the bot link; on Start the bot makes the lead, marks the click, alerts the salesperson and shows one button to their chat; messages to the bot become notes and repeat the button; the account check never makes a second contact for a bot-entry customer. Rehearsed end to end against the bot API double.
+
 ## Verified
 
 - tsc, eslint (0 errors), 271 unit tests (new: chat merge keeps transcripts and caps, story markdown, insight normalising), production build, browser run with the Telegram test double: a voice message got its Telegram transcription once and shows in the bubble; the story markdown holds the conversation with the voice text and downloads as a .md file; without an AI key the coach answers 503 and the card says which key is missing; Hot first present; the CRM drawer shows the card.

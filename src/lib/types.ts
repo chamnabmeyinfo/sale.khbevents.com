@@ -1100,6 +1100,12 @@ export interface RoundRobinSettings {
   responseMinutes?: number;
   /** Hour (Phnom Penh, 0–23) for the daily summary to the manager chat. Missing = off. */
   dailySummaryHour?: number;
+  /**
+   * Where a "Chat on Telegram" click goes: straight to the salesperson's chat (default),
+   * or to the sales bot first, which identifies the visitor, makes the lead and hands
+   * over with one button (owner decision, 2026-09-27).
+   */
+  chatEntry?: 'direct' | 'bot';
 }
 
 export type RoutingDeliveryStatus = 'DELIVERED' | 'FAILED' | 'FALLBACK' | 'PENDING';

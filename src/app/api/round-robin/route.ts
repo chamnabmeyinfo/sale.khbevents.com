@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPageBySlug, getSettings, recordDirectContactRoute } from '@/lib/storage';
+import { getPageBySlug, getSettings, recordDirectContactRoute, getRoundRobinSettings } from '@/lib/storage';
 import { rateLimitByIp, getClientIp } from '@/lib/rate-limit';
-import { resolveFallbackTelegramUrl } from '@/lib/round-robin';
+import { resolveFallbackTelegramUrl, DEFAULT_BOT_USERNAME } from '@/lib/round-robin';
 import { STAFF_COOKIE, rememberStaffCookie } from '@/lib/staff-cookie';
 import { visitorDetailFromRequest } from '@/lib/visitor-detail';
-import { langFromAcceptLanguage, newRefCode, prefilledMessage } from '@/lib/contact-verify';
+import { botStartPayload, langFromAcceptLanguage, newRefCode, prefilledMessage } from '@/lib/contact-verify';
 import { contactCheckEnabled } from '@/lib/telegram-account';
 
 /**
@@ -44,9 +44,10 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean, text
   const userAgent = req.headers.get('user-agent') || undefined;
   const preferredStaffId = req.cookies.get(STAFF_COOKIE)?.value || undefined;
   const visitor = visitorDetailFromRequest(req.headers, req.cookies);
-  // With a salesperson's Telegram account connected, the first message carries a code
-  // so the chat that follows can be recognised.
-  const refCode = (await contactCheckEnabled().catch(() => false)) ? newRefCode() : undefined;
+  // Through the sales bot first? The code then rides in the bot link, so the bot knows the click.
+  const botEntry = (await getRoundRobinSettings().catch(() => null))?.chatEntry === 'bot';
+  // A code per click lets the chat that follows be recognised (bot link, or an old-style message).
+  const refCode = botEntry || (await contactCheckEnabled().catch(() => false)) ? newRefCode() : undefined;
 
   // A returning visitor is sent to the same person without new alerts, so the
   // limit only caps how many *new* assignments one address can trigger.
@@ -64,13 +65,17 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean, text
   if (routeResult) {
     // A page's own prefilled text wins; otherwise a plain greeting in the visitor's language. Never a code.
     const message = text && text.trim() ? text : prefilledMessage(langFromAcceptLanguage(visitor.lang), visitor.country);
+    const code = refCode;
+    // Bot first: the visitor opens the sales bot, which identifies them and hands over to the salesperson.
+    const target = botEntry && code ? `https://t.me/${DEFAULT_BOT_USERNAME}?start=${botStartPayload(code)}` : routeResult.targetTelegramUrl;
     const res = redirectMode
-      ? NextResponse.redirect(withPrefilledText(routeResult.targetTelegramUrl, message))
+      ? NextResponse.redirect(withPrefilledText(target, message))
       : NextResponse.json({
           success: true,
           routed: true,
           repeat: routeResult.repeat,
-          targetTelegramUrl: routeResult.targetTelegramUrl,
+          entry: botEntry && code ? 'bot' : 'direct',
+          targetTelegramUrl: target,
           staff: {
             id: routeResult.staff.id,
             name: routeResult.staff.name,

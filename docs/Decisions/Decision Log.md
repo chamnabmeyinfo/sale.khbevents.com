@@ -28,6 +28,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-27 — Optional "bot first" entry: the sales bot identifies the visitor and hands over with one button
+
+- **Decision:** A Round Robin setting lets "Chat on Telegram" clicks go to the sales bot first. The bot asks nothing: it greets by name, makes the lead at once (Telegram id known), marks the click as a real chat, alerts the salesperson and shows one button to the salesperson's chat. Default stays direct; the owner tests bot first on real traffic.
+- **Why:** The owner wants every prospect identified and tracked from the first tap, with the sales team still handling the conversation. Telegram gives a bot the visitor's identity on Start, which a direct chat never does. Kept to one tap and no questions because every extra step loses customers.
+- **Who decided:** Owner asked and said "GO"; Claude with owner approval on the one-tap, no-questions shape.
+- **Affects:** [[Round Robin]], [[Telegram Inbox]], [[Leads CRM]].
+
 ## 2026-09-27 — The first Telegram message is a plain greeting, no template and no code
 
 - **Decision:** A click on "Chat on Telegram" opens the chat with only "សួស្តី 👋" (visitor in Cambodia or Khmer browser) or "Hello 👋". The three-line template (greeting, "I want to ask about: <trip>", a `#K…` code) is gone. Chats are matched to clicks by timing within 30 minutes, for new and known people alike.

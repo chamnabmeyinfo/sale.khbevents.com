@@ -922,6 +922,8 @@ async function finishCheck(rec: TelegramAccountRecord, client: AccountClient, di
     const at = new Date(d.lastAtMs).toISOString();
     const key = `${d.userId}:${at}`;
     if (seenKey.has(key)) continue;
+    // Already a lead (they came through the sales bot): their chat is tracked on the lead, nothing to match.
+    if (isNew && (await findLeadByTelegramUserId(d.userId).catch(() => null))) continue;
     contacts.unshift({ staffId, at, userId: d.userId, username: d.username, name: d.name, text: d.lastText.slice(0, 200) });
     if (!isNew) provisional.add(key);
     added += 1;

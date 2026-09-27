@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { langFromAcceptLanguage, matchContactsToLogs, newRefCode, prefilledMessage, refCodeIn, withRefCode, type RecentContact } from '../contact-verify';
+import { botStartPayload, langFromAcceptLanguage, matchContactsToLogs, newRefCode, prefilledMessage, refCodeFromStartPayload, refCodeIn, withRefCode, type RecentContact } from '../contact-verify';
 import type { RoundRobinLog } from '../types';
 
 const T0 = Date.parse('2026-09-27T09:00:00Z');
@@ -31,6 +31,17 @@ describe('reference codes', () => {
     expect(langFromAcceptLanguage('km-KH,km;q=0.9')).toBe('kh');
     expect(langFromAcceptLanguage('en-US')).toBe('en');
     expect(langFromAcceptLanguage(undefined)).toBe('en');
+  });
+});
+
+describe('bot start payload', () => {
+  it('carries the click code in the bot link and reads it back', () => {
+    expect(botStartPayload('#K7X2M')).toBe('k_7X2M');
+    expect(refCodeFromStartPayload('k_7X2M')).toBe('#K7X2M');
+    expect(refCodeFromStartPayload('k_7x2m')).toBe('#K7X2M');
+    expect(refCodeFromStartPayload('khb_smart-city')).toBeUndefined();
+    expect(refCodeFromStartPayload('k_7X2M1')).toBeUndefined();
+    expect(refCodeFromStartPayload('')).toBeUndefined();
   });
 });
 

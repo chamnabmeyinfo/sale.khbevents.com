@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSettings, getRoundRobinSettings, updateRoundRobinSettings, getPageBySlug, isTelegramWebhookSecured, recordStaffClick } from '@/lib/storage';
+import { getSettings, getRoundRobinSettings, updateRoundRobinSettings, getPageBySlug, isTelegramWebhookSecured, recordStaffClick, getRoundRobinLogs, updateRoundRobinLogs, findLeadByTelegramUserId, createLeadFromTelegramChat, addLeadNote } from '@/lib/storage';
+import { refCodeFromStartPayload } from '@/lib/contact-verify';
+import type { Lead } from '@/lib/types';
 import { selectNextStaff, escapeHtml, readTelegramResponse, countAssignment } from '@/lib/round-robin';
 import { runAfterResponse } from '@/lib/after-response';
 import type { RoundRobinSettings, RoundRobinStaff } from '@/lib/types';
@@ -155,6 +157,13 @@ export async function POST(req: NextRequest) {
     if (text.startsWith('/start')) {
       const payload = text.replace('/start', '').trim();
 
+      // ─── Bot first (Round Robin → "To the sales bot first"): the link carries the click's code ───
+      const clickCode = refCodeFromStartPayload(payload);
+      if (clickCode) {
+        const handled = await handleBotEntry(botToken, settings.telegramChatId, message, clickCode);
+        if (handled) return NextResponse.json({ ok: true });
+      }
+
       // Plain /start without payload — route to sales rep using round robin
       if (!payload) {
         const rrSettings = await getRoundRobinSettings();
@@ -308,6 +317,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
+    // ─── A customer who came through the bot writes to the bot instead of the salesperson ───
+    const botLead = await findLeadByTelegramUserId(String(message.from.id)).catch(() => null);
+    if (botLead?.routing) {
+      await handleBotLeadMessage(botToken, botLead, message, text);
+      return NextResponse.json({ ok: true });
+    }
+
     // ─── Handle regular messages (visitor chatting) ─────────────────
     // Forward to the global chat / manager so someone can respond
     const forwardChatId = settings.telegramChatId;
@@ -337,4 +353,106 @@ export async function POST(req: NextRequest) {
     // Always return 200 to Telegram to avoid retry storms
     return NextResponse.json({ ok: true });
   }
+}
+
+
+type BotMessage = NonNullable<TelegramUpdate['message']>;
+
+const khmerSpeaker = (m: BotMessage) => /^km/i.test(m.from.language_code || '');
+const staffChatUrl = (staff: RoundRobinStaff | undefined) => {
+  const u = (staff?.telegramUsername || '').replace(/^@/, '').trim();
+  return u ? `https://t.me/${u}` : '';
+};
+
+/** The one-tap hand-over: greet, name the salesperson, one button to their chat. */
+function handOverMessage(m: BotMessage, staff: RoundRobinStaff | undefined, pageTitle: string, again = false): { text: string; replyMarkup?: object } {
+  const name = escapeHtml([m.from.first_name, m.from.last_name].filter(Boolean).join(' ') || '');
+  const url = staffChatUrl(staff);
+  const kh = khmerSpeaker(m);
+  const lines = kh
+    ? [
+        `សួស្តី ${name} 👋`,
+        again ? `សូមចុចប៊ូតុងខាងក្រោម ដើម្បីជជែកផ្ទាល់ជាមួយ <b>${escapeHtml(staff?.name || 'ក្រុមលក់')}</b>៖` : (staff ? `<b>${escapeHtml(staff.name)}</b> នឹងជួយអ្នកអំពី <b>${escapeHtml(pageTitle)}</b>។ សូមចុចប៊ូតុងខាងក្រោម ដើម្បីជជែកផ្ទាល់៖` : `ក្រុមលក់យើងនឹងទាក់ទងអ្នកអំពី <b>${escapeHtml(pageTitle)}</b> ឆាប់ៗនេះ 🙏`),
+      ]
+    : [
+        `Hello ${name} 👋`,
+        again ? `Tap the button below to chat directly with <b>${escapeHtml(staff?.name || 'our sales team')}</b>:` : (staff ? `<b>${escapeHtml(staff.name)}</b> will help you with <b>${escapeHtml(pageTitle)}</b>. Tap the button below to chat directly:` : `Our sales team will contact you about <b>${escapeHtml(pageTitle)}</b> shortly 🙏`),
+      ];
+  const button = url && staff ? { inline_keyboard: [[{ text: kh ? `💬 ជជែកជាមួយ ${staff.name}` : `💬 Chat with ${staff.name}`, url }]] } : undefined;
+  return { text: lines.join('\n'), replyMarkup: button };
+}
+
+/**
+ * /start k_<code>: the visitor clicked a page and opened the sales bot. The click is
+ * found by its code, the lead is made at once (we know exactly who this is), the
+ * click is marked as a real chat, the salesperson is told, and the visitor gets one
+ * button to the salesperson's chat. False when the code is unknown (old link).
+ */
+async function handleBotEntry(botToken: string, managerFallbackChatId: string | undefined, m: BotMessage, code: string): Promise<boolean> {
+  // The click's log entry is written right after the page redirected; a very fast tap may beat it.
+  let log = (await getRoundRobinLogs(500)).find((l) => l.refCode === code);
+  if (!log) {
+    await new Promise((r) => setTimeout(r, 1500));
+    log = (await getRoundRobinLogs(500)).find((l) => l.refCode === code);
+  }
+  if (!log) return false;
+  const rr = await getRoundRobinSettings();
+  const staff = rr.staffList.find((s) => s.id === log.staffId);
+  const userId = String(m.from.id);
+  const username = m.from.username || undefined;
+  const name = [m.from.first_name, m.from.last_name].filter(Boolean).join(' ') || undefined;
+  const now = new Date().toISOString();
+  const pageTitle = log.pageTitle || log.pageSlug || 'KHB Events';
+
+  // The lead, now: one per Telegram user.
+  let lead: Lead | null = await findLeadByTelegramUserId(userId).catch(() => null);
+  if (lead) {
+    await addLeadNote(lead.id, `Clicked again (through the bot): ${pageTitle}${log.refCode ? ` (${log.refCode})` : ''}`, 'Sales bot').catch(() => null);
+  } else if (!log.demo) {
+    try {
+      lead = await createLeadFromTelegramChat({ log, contact: { at: now, userId, username, name, text: '', match: 'ref' }, staff: staff || null });
+      await addLeadNote(lead.id, `Came through the sales bot: ${pageTitle}`, 'Sales bot').catch(() => null);
+    } catch (err) {
+      console.error('Bot entry lead error:', err);
+    }
+  }
+  // The click is a real contact from this moment.
+  if (!log.contact) {
+    await updateRoundRobinLogs((all) => all.map((l) => (l.id === log.id && !l.contact ? { ...l, contact: { at: now, userId, username, name, text: '', match: 'ref', checkedAt: now, ...(lead ? { leadId: lead.id } : {}) } } : l))).catch(() => undefined);
+  }
+  // The click itself was counted when the page routed it; nothing to count again here.
+
+  // The visitor: greeting and one button.
+  const hand = handOverMessage(m, staff, pageTitle);
+  await sendTelegramMessage(botToken, m.chat.id, hand.text, hand.replyMarkup ? { replyMarkup: hand.replyMarkup } : undefined);
+
+  // The salesperson (and the manager CC): who is coming.
+  const who = [name, username ? `(@${username})` : ''].filter(Boolean).join(' ') || 'អតិថិជន';
+  const alert = [
+    '👤 <b>អតិថិជនថ្មីមកពី bot</b>',
+    `${escapeHtml(who)}`,
+    `📌 សេវា៖ <b>${escapeHtml(pageTitle)}</b>`,
+    `⏰ ${new Date().toLocaleString('km-KH', { timeZone: 'Asia/Phnom_Penh' })}`,
+    '👉 គេនឹងផ្ញើសារមកអ្នក; សូមឆ្លើយឆាប់!',
+    lead ? `📋 CRM: https://sale.khbevents.com/admin/leads?id=${encodeURIComponent(lead.id)}` : '',
+  ].filter(Boolean).join('\n');
+  const tasks: Promise<unknown>[] = [];
+  if (staff?.telegramChatId) tasks.push(sendTelegramMessage(botToken, staff.telegramChatId, alert));
+  const manager = rr.managerChatId || managerFallbackChatId;
+  if (manager && String(manager) !== String(staff?.telegramChatId) && (rr.enableManagerNotification || !staff?.telegramChatId)) tasks.push(sendTelegramMessage(botToken, manager, alert));
+  runAfterResponse(() => Promise.allSettled(tasks).then(() => undefined));
+  return true;
+}
+
+/** A bot-entry customer wrote to the bot: keep the words on the lead, tell the salesperson, repeat the button. */
+async function handleBotLeadMessage(botToken: string, lead: Lead, m: BotMessage, text: string): Promise<void> {
+  const rr = await getRoundRobinSettings();
+  const staff = rr.staffList.find((s) => s.id === lead.routing?.staffId);
+  await addLeadNote(lead.id, `💬 Wrote to the bot: “${text.slice(0, 300)}${text.length > 300 ? '…' : ''}”`, 'Sales bot').catch(() => null);
+  const hand = handOverMessage(m, staff, lead.landingPageTitle || 'KHB Events', true);
+  await sendTelegramMessage(botToken, m.chat.id, hand.text, hand.replyMarkup ? { replyMarkup: hand.replyMarkup } : undefined);
+  const who = [lead.fullName, lead.customFields?.telegramUsername ? `(@${lead.customFields.telegramUsername})` : ''].filter(Boolean).join(' ');
+  const alert = [`💬 <b>${escapeHtml(who)}</b> សរសេរមក bot៖`, `“${escapeHtml(text.slice(0, 300))}”`, '👉 សូមឆ្លើយគេក្នុងការជជែករបស់អ្នក។', `📋 CRM: https://sale.khbevents.com/admin/leads?id=${encodeURIComponent(lead.id)}`].join('\n');
+  const to = staff?.telegramChatId || rr.managerChatId;
+  if (to) runAfterResponse(() => sendTelegramMessage(botToken, to, alert).then(() => undefined));
 }

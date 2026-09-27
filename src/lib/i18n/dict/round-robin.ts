@@ -300,6 +300,10 @@ export const roundRobin: Dictionary = {
     'rr.adv.botTokenPh': 'Bot token from @BotFather',
     'rr.adv.botTokenHint': 'Shared Telegram bot used to dispatch direct lead alerts.',
     'rr.adv.directRouting': 'Enable Direct Visitor Contact Routing (Chat on Telegram clicks)',
+    'rr.adv.chatEntry': 'Where a "Chat on Telegram" click goes',
+    'rr.adv.chatEntry.direct': 'Straight to the salesperson\'s chat',
+    'rr.adv.chatEntry.bot': 'To the sales bot first, then one button to the salesperson',
+    'rr.adv.chatEntryHint': 'Bot first: the visitor taps Start, the bot knows exactly who they are, makes the lead in the CRM at once and shows one button "Chat with <name>". No questions asked. The salesperson gets an alert with the customer\'s name and @username. Direct: the chat with the salesperson opens at once and the lead is made when the account check sees the message.',
     'rr.adv.ccManager': 'Carbon-Copy (CC) Lead Dispatch Alerts to Manager Group',
 
     // Template builder
@@ -741,6 +745,10 @@ export const roundRobin: Dictionary = {
     'rr.adv.botTokenPh': 'Bot Token ពី @BotFather',
     'rr.adv.botTokenHint': 'Bot Telegram រួមសម្រាប់ផ្ញើការជូនដំណឹង Lead។',
     'rr.adv.directRouting': 'បើកការបញ្ជូនអ្នកទស្សនាផ្ទាល់ (ចុច Chat on Telegram)',
+    'rr.adv.chatEntry': 'ការចុច "Chat on Telegram" ទៅណា',
+    'rr.adv.chatEntry.direct': 'ទៅការជជែកជាមួយបុគ្គលិកផ្ទាល់',
+    'rr.adv.chatEntry.bot': 'ទៅ bot លក់មុន បន្ទាប់មកប៊ូតុងមួយទៅបុគ្គលិក',
+    'rr.adv.chatEntryHint': 'Bot មុន៖ អ្នកទស្សនាចុច Start, bot ដឹងច្បាស់ថាគេជានរណា បង្កើត Lead ក្នុង CRM ភ្លាម និងបង្ហាញប៊ូតុងមួយ "ជជែកជាមួយ <ឈ្មោះ>"។ មិនសួរអ្វីទេ។ បុគ្គលិកទទួលការជូនដំណឹងជាមួយឈ្មោះ និង @username អតិថិជន។ ផ្ទាល់៖ ការជជែកជាមួយបុគ្គលិកបើកភ្លាម ហើយ Lead បង្កើតពេលការពិនិត្យគណនីឃើញសារ។',
     'rr.adv.ccManager': 'ចម្លង (CC) ការជូនដំណឹង Lead ទៅក្រុមអ្នកគ្រប់គ្រង',
 
     'rr.tpl.title': 'រៀបចំសារជូនដំណឹង Telegram & WhatsApp',

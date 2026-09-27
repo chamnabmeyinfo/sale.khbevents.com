@@ -33,6 +33,14 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [ ] If a row ever shows "Telegram ended the session", the salesperson connects again from the same tab (code from their Telegram app). Telegram may also show a new "khbportal" device after a reconnection; ending old ones there is fine. #owner
 - [ ] Later, if the team wants replies within a second instead of about eight: a live update connection per account (Telegram updates), which needs a server that stays up all day rather than Vercel functions. Decide only after the polling version has run a few weeks. #for-claude
 
+### Bot first entry (new, 2026-09-27)
+
+- [x] Round Robin → Advanced → "Where a Chat on Telegram click goes": direct (default) or the sales bot first with one button to the salesperson (2026-09-27). → [[Round Robin]]
+- [ ] Switch it to **To the sales bot first** and test from your other phone: tap the page button, tap Start, read the greeting, tap the button, write to yourself. Check the lead appears in the CRM at once and the click shows "Messaged us". → [[Round Robin]] #owner
+- [ ] After a week on real traffic, compare "Became a real chat" on Team performance between the two settings and keep the better one. #owner
+- [ ] The bot's webhook must be registered for the bot to answer Start (Settings → Telegram, or POST /api/telegram/setup-webhook). If the bot stays silent after Start, that is the first thing to check. #owner
+- [ ] Per-page choice of entry (bot first on one page, direct on another) if the owner wants to test side by side. #for-claude
+
 ### Customer story and AI coach (new, 2026-09-27)
 
 - [x] Stored chats, voice to text, story file per customer, AI coach with heat, next step and suggested reply, Hot first in the inbox (2026-09-27). → [[Customer Story and AI Coach]]

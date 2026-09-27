@@ -166,6 +166,17 @@ What is kept: the customer's name, @username, user id, the time of the first mes
 
 The check runs after normal site traffic together with the lead follow-up check (page tracking, the bot, the admin Leads and Round Robin pages), when Team performance opens, and on **Check now**; at most every 2 minutes per account.
 
+## Bot first: the sales bot greets and hands over (2026-09-27)
+
+**Round Robin → Advanced → Where a "Chat on Telegram" click goes.** Two choices:
+
+- **Straight to the salesperson's chat** (default): the chat opens with a plain greeting; the lead is made when the account check sees the customer's message (by timing within 30 minutes).
+- **To the sales bot first, then one button to the salesperson**: the click sends the visitor to the bot with a short code in the link (`t.me/khb_sale_admin_bot?start=k_7X2M`). When they tap Start, Telegram tells the bot exactly who they are. The bot then, in one message and with no questions: greets them by name (Khmer for Khmer-language Telegram, English otherwise), names the salesperson and the trip, and shows one button **💬 Chat with <name>** to the salesperson's chat. In the same moment the portal makes the lead in [[Leads CRM]] (name, @username, Telegram id, page, salesperson; source `telegram_chat`, match "ref"), marks the click as a real chat on Team performance, and sends the salesperson a short Khmer alert (manager CC as usual). If the customer writes to the bot instead of tapping, the bot keeps the words as a note on the lead, alerts the salesperson and shows the button again. A second click by the same person adds a "Clicked again" note, never a second lead.
+
+Because the customer is identified before they write to the salesperson, the later chat is tracked by Telegram id with no guesswork: the account check refreshes the numbers and the [[Telegram Inbox]] shows the conversation, and the check never makes a second contact for them.
+
+Trade-off: one extra tap (Start, then the button). Test it on real traffic and compare "Became a real chat" on Team performance with the direct setting. The bot is `@khb_sale_admin_bot` (its webhook must be registered, see the Telegram bot set-up); an old link with a code the portal no longer holds falls back to the bot's plain welcome.
+
 ## Telegram inbox
 
 Every Telegram customer, the live conversation (fresh by itself while on screen), Auto seen per salesperson and a reply box that sends from the salesperson's connected account: [[Telegram Inbox]]. Telegram is the only live-chat channel; there is no chat window on the website (owner decision, 2026-09-27).
