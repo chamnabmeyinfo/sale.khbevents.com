@@ -18,6 +18,8 @@ tags: [session, ai, telegram, crm]
 - **AI coach** (`lead-ai.ts`, same key and model as the campaign analyst): summary, intent, heat with reason, objections, next step and when, suggested reply in Khmer and English, coaching, confidence; stored per lead; on demand and up to 3 changed open chats per sweep after site traffic.
 - UI: AI coach card in the Telegram inbox and in every lead's drawer; heat badges and **Hot first** in the inbox; **Use** puts the suggested reply in the reply box.
 
+- Fix after the owner's test (a new customer did not show at once): while the inbox is open, the accounts are checked for new chats every 30 seconds and the list refreshes every 10 seconds; before, only every 2 minutes after site traffic.
+
 ## Verified
 
 - tsc, eslint (0 errors), 271 unit tests (new: chat merge keeps transcripts and caps, story markdown, insight normalising), production build, browser run with the Telegram test double: a voice message got its Telegram transcription once and shows in the bubble; the story markdown holds the conversation with the voice text and downloads as a .md file; without an AI key the coach answers 503 and the card says which key is missing; Hot first present; the CRM drawer shows the card.

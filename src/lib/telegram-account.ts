@@ -42,6 +42,8 @@ import { externalTranscriber } from './transcribe';
 export { AccountBusyError };
 
 export const CHECK_EVERY_MS = 2 * 60 * 1000;
+/** While the Telegram inbox is open, new chats are looked for this often instead. */
+export const INBOX_CHECK_EVERY_MS = 30 * 1000;
 const RECENT_DIALOGS = 40;
 /** Messages stored the first time a chat is opened. */
 const CHAT_BACKFILL = 200;
@@ -787,14 +789,15 @@ export interface CheckResult {
 }
 
 /** Reads the account's recent chats, records new contacts and matches them to clicks. */
-export async function checkAccount(staffId: string, options: { force?: boolean; nowMs?: number } = {}): Promise<CheckResult> {
+export async function checkAccount(staffId: string, options: { force?: boolean; nowMs?: number; everyMs?: number } = {}): Promise<CheckResult> {
   const rec = await getAccountRecord(staffId);
   const skipped: CheckResult = { staffId, skipped: true, newContacts: 0, matched: 0 };
   if (!rec.session || !rec.user) return skipped;
   const nowMs = options.nowMs ?? Date.now();
+  const everyMs = options.everyMs ?? CHECK_EVERY_MS;
   const flood = floodActive(rec, nowMs);
   if (flood) return { ...skipped, floodUntil: flood, error: `Telegram asked this account to wait until ${phnomPenhStamp(Date.parse(flood))}` };
-  if (!options.force && rec.lastCheckAt && nowMs - Date.parse(rec.lastCheckAt) < CHECK_EVERY_MS) return skipped;
+  if (!options.force && rec.lastCheckAt && nowMs - Date.parse(rec.lastCheckAt) < everyMs) return skipped;
   if (options.force && rec.lastForceCheckAt && nowMs - Date.parse(rec.lastForceCheckAt) < FORCE_CHECK_COOLDOWN_MS) {
     return { ...skipped, error: `Check now can run again in ${Math.ceil((FORCE_CHECK_COOLDOWN_MS - (nowMs - Date.parse(rec.lastForceCheckAt))) / 1000)} s` };
   }
@@ -805,7 +808,7 @@ export async function checkAccount(staffId: string, options: { force?: boolean; 
       if (!fresh.session || !fresh.user) return skipped;
       const blocked = floodActive(fresh, nowMs);
       if (blocked) return { ...skipped, floodUntil: blocked, error: `Telegram asked this account to wait until ${phnomPenhStamp(Date.parse(blocked))}` };
-      if (!options.force && fresh.lastCheckAt && nowMs - Date.parse(fresh.lastCheckAt) < CHECK_EVERY_MS) return skipped;
+      if (!options.force && fresh.lastCheckAt && nowMs - Date.parse(fresh.lastCheckAt) < everyMs) return skipped;
       const since = fresh.lastCheckAt ? Date.parse(fresh.lastCheckAt) : nowMs - CHECK_EVERY_MS;
       const stamp = new Date(nowMs).toISOString();
       await patchAccountRecord(staffId, { lastCheckAt: stamp, ...(options.force ? { lastForceCheckAt: stamp } : {}) });
@@ -1086,7 +1089,7 @@ async function alertChatStarted(log: RoundRobinLog, c: { at: string; name?: stri
 }
 
 /** Checks every connected account (throttled). Never throws. */
-export async function checkAllAccounts(options: { force?: boolean } = {}): Promise<CheckResult[]> {
+export async function checkAllAccounts(options: { force?: boolean; everyMs?: number } = {}): Promise<CheckResult[]> {
   try {
     const rr = await getRoundRobinSettings();
     const out: CheckResult[] = [];
@@ -1105,9 +1108,9 @@ export async function checkAllAccounts(options: { force?: boolean } = {}): Promi
 }
 
 /** Runs the check with a time limit, so a page never waits long for Telegram. */
-export async function checkAllAccountsWithin(ms: number): Promise<CheckResult[]> {
+export async function checkAllAccountsWithin(ms: number, options: { everyMs?: number } = {}): Promise<CheckResult[]> {
   return Promise.race([
-    checkAllAccounts(),
+    checkAllAccounts(options),
     new Promise<CheckResult[]>((resolve) => setTimeout(() => resolve([]), ms)),
   ]);
 }

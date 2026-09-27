@@ -11,7 +11,9 @@ import StaffAvatar from './StaffAvatar';
 
 const CARD = 'rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 shadow-xs';
 const SUB = 'text-[11px] text-slate-500 dark:text-gray-400';
-const POLL_MS = 15000;
+/** The list asks this often while the tab is visible; the server looks for new chats every 30 s. */
+const POLL_MS = 10000;
+const HEAT_RANK: Record<string, number> = { hot: 0, warm: 1, cold: 2 };
 const when = (iso?: string) => (iso ? new Date(iso).toLocaleString('en-GB', { timeZone: 'Asia/Phnom_Penh', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '');
 
 /**
@@ -67,7 +69,6 @@ export default function LiveChatInboxClient({ initialId }: { initialId?: string 
     } catch {}
   };
 
-  const HEAT_RANK: Record<string, number> = { hot: 0, warm: 1, cold: 2 };
   const visible = useMemo(() => {
     const list = rows.filter((r) => filter === 'all' || (r.status !== 'WON' && r.status !== 'LOST'));
     return hotFirst ? [...list].sort((a, b) => (HEAT_RANK[a.heat || ''] ?? 3) - (HEAT_RANK[b.heat || ''] ?? 3) || (b.lastAt || '').localeCompare(a.lastAt || '')) : list;
