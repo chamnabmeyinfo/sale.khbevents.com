@@ -161,14 +161,14 @@ export class NeedsPasswordError extends Error {
 }
 
 async function realClient(apiId: number, apiHash: string, session: string): Promise<AccountClient> {
-  const [{ TelegramClient, Api }, { StringSession }, { computeCheck }, { LogLevel }] = await Promise.all([
-    import('telegram'),
-    import('telegram/sessions'),
-    import('telegram/Password'),
-    import('telegram/extensions/Logger'),
-  ]);
-  const client = new TelegramClient(new StringSession(session), apiId, apiHash, { connectionRetries: 2, useWSS: false });
-  client.setLogLevel(LogLevel.NONE);
+  // Everything comes from the package's main export: a sub-path import ('telegram/sessions')
+  // can load a second copy of the library, whose classes fail the client's own checks
+  // ("Only StringSession and StoreSessions are supported").
+  const tg = await import('telegram');
+  const { TelegramClient, Api, sessions, password } = tg;
+  const computeCheck = password.computeCheck;
+  const client = new TelegramClient(new sessions.StringSession(session), apiId, apiHash, { connectionRetries: 2, useWSS: false });
+  client.setLogLevel('none' as Parameters<typeof client.setLogLevel>[0]);
   const fullName = (u: { firstName?: string; lastName?: string }) => [u.firstName, u.lastName].filter(Boolean).join(' ').trim() || undefined;
   return {
     connect: () => client.connect().then(() => undefined),

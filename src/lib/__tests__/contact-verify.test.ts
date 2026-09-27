@@ -21,10 +21,10 @@ describe('reference codes', () => {
   });
 
   it('writes the first message in the visitor language and appends to a page message', () => {
-    expect(prefilledMessage('Smart City Trip', 'en', '#KAB12')).toBe('Hello KHB Events! I\'d like to know more about "Smart City Trip" #KAB12');
-    expect(prefilledMessage('Smart City Trip', 'kh', '#KAB12')).toContain('«Smart City Trip» #KAB12');
-    expect(withRefCode('Hello, seat 3 please', '#KAB12')).toBe('Hello, seat 3 please #KAB12');
-    expect(withRefCode('already #KAB12 here', '#KZZZZ')).toBe('already #KAB12 here');
+    expect(prefilledMessage('Smart City Trip', 'en', '#KAB23')).toBe('Hello KHB Events! I\'d like to know more about "Smart City Trip" #KAB23');
+    expect(prefilledMessage('Smart City Trip', 'kh', '#KAB23')).toContain('«Smart City Trip» #KAB23');
+    expect(withRefCode('Hello, seat 3 please', '#KAB23')).toBe('Hello, seat 3 please #KAB23');
+    expect(withRefCode('already #KAB23 here', '#KZZZZ')).toBe('already #KAB23 here');
     expect(langFromAcceptLanguage('km-KH,km;q=0.9')).toBe('kh');
     expect(langFromAcceptLanguage('en-US')).toBe('en');
     expect(langFromAcceptLanguage(undefined)).toBe('en');
@@ -33,10 +33,10 @@ describe('reference codes', () => {
 
 describe('matchContactsToLogs', () => {
   it('matches by code first, whatever the timing', () => {
-    const logs = [log('a', 's1', T0, { refCode: '#KAB12' }), log('b', 's1', T0 + 60_000, { refCode: '#KCD34' })];
-    const m = matchContactsToLogs(logs, [chat('s1', T0 + 3 * 3600_000, 'u1', 'hi #KAB12')], iso(T0));
+    const logs = [log('a', 's1', T0, { refCode: '#KAB23' }), log('b', 's1', T0 + 60_000, { refCode: '#KCD34' })];
+    const m = matchContactsToLogs(logs, [chat('s1', T0 + 3 * 3600_000, 'u1', 'hi #KAB23')], iso(T0));
     expect(m).toHaveLength(1);
-    expect(m[0]).toMatchObject({ logId: 'a', confirmation: { match: 'ref', userId: 'u1', name: 'User u1', text: 'hi #KAB12' } });
+    expect(m[0]).toMatchObject({ logId: 'a', confirmation: { match: 'ref', userId: 'u1', name: 'User u1', text: 'hi #KAB23' } });
   });
 
   it('otherwise takes the latest click to the same salesperson within 30 minutes', () => {
