@@ -36,11 +36,15 @@ import { saveLeadChanges } from './lead-followup';
 import type { Api as TgApi } from 'telegram';
 import { AccountBusyError, withAccountLease } from './telegram-lease';
 import { classifyTelegramError, dialogUnchanged, FORCE_CHECK_COOLDOWN_MS, sendGuard, shouldMarkRead, type DialogProbe } from './telegram-chat-rules';
+import { getStoredChat, pendingTranscripts, recordChatMessages, saveStoredChat, type StoredChat } from './chat-store';
+import { externalTranscriber } from './transcribe';
 
 export { AccountBusyError };
 
 export const CHECK_EVERY_MS = 2 * 60 * 1000;
 const RECENT_DIALOGS = 40;
+/** Messages stored the first time a chat is opened. */
+const CHAT_BACKFILL = 200;
 const KNOWN_USERS_KEPT = 3000;
 const CONTACTS_KEPT = 300;
 const PEERS_KEPT = 400;
@@ -238,8 +242,12 @@ export interface AccountClient {
   checkPassword(password: string): Promise<void>;
   getMe(): Promise<{ id: string; username?: string; name?: string }>;
   recentDialogs(limit: number): Promise<DialogPeek[]>;
-  /** The latest messages of one private chat (after recentDialogs), newest first. Only who sent it and when. */
-  history(userId: string, limit: number): Promise<ChatMessagePeek[]>;
+  /** The latest messages of one private chat (after recentDialogs), newest first. */
+  history(userId: string, limit: number): Promise<ChatMessage[]>;
+  /** Telegram's own transcription of a voice message; null when Telegram has none (yet) or the account may not use it. */
+  transcribe(peer: PeerRef, messageId: number): Promise<string | null>;
+  /** The voice file itself, for an outside transcriber. Null when it cannot be fetched. */
+  downloadVoice(peer: PeerRef, messageId: number): Promise<{ data: Buffer; mimeType: string } | null>;
   /**
    * Finds one customer's chat: among the dialogs already listed, from a stored access
    * hash (no list needed), further down the dialog list, or by @username. Null when
@@ -267,6 +275,11 @@ export interface ChatMessage {
   text: string;
   /** Attachment kind, when the message is not plain text. */
   media?: 'photo' | 'video' | 'voice' | 'audio' | 'sticker' | 'file' | 'other';
+  /** Seconds, for voice and audio. */
+  duration?: number;
+  /** What a voice message said, once turned into text (from the stored chat). */
+  transcript?: string;
+  tstatus?: 'pending' | 'done' | 'failed';
 }
 
 export class NeedsPasswordError extends Error {
@@ -324,19 +337,31 @@ async function realClient(apiId: number, apiHash: string, session: string): Prom
     const ip = input as { className?: string; accessHash?: { toString(): string } | null };
     return { userId, accessHash: ip?.className === 'InputPeerUser' && ip.accessHash ? ip.accessHash.toString() : undefined, input };
   };
+  type RawMedia = { className?: string; document?: { mimeType?: string; attributes?: Array<{ className?: string; voice?: boolean; duration?: number }> } } | undefined;
   const kind = (m: { media?: unknown }): ChatMessage['media'] => {
-    const media = m.media as { className?: string; document?: { mimeType?: string; attributes?: Array<{ className?: string }> } } | undefined;
+    const media = m.media as RawMedia;
     if (!media) return undefined;
     if (media.className === 'MessageMediaPhoto') return 'photo';
     if (media.className === 'MessageMediaDocument') {
       const mime = media.document?.mimeType || '';
-      const attrs = (media.document?.attributes || []).map((a) => a.className || '');
-      if (attrs.includes('DocumentAttributeSticker')) return 'sticker';
-      if (attrs.some((a) => a === 'DocumentAttributeAudio')) return mime.startsWith('audio/ogg') ? 'voice' : 'audio';
+      const attrs = media.document?.attributes || [];
+      if (attrs.some((a) => a.className === 'DocumentAttributeSticker')) return 'sticker';
+      const audio = attrs.find((a) => a.className === 'DocumentAttributeAudio');
+      if (audio) return audio.voice || mime.startsWith('audio/ogg') ? 'voice' : 'audio';
       if (mime.startsWith('video/')) return 'video';
       return 'file';
     }
     return 'other';
+  };
+  const durationOf = (m: { media?: unknown }): number | undefined => {
+    const audio = ((m.media as RawMedia)?.document?.attributes || []).find((a) => a.className === 'DocumentAttributeAudio');
+    return audio && typeof audio.duration === 'number' ? Math.round(audio.duration) : undefined;
+  };
+  const toMessage = (m: { id: number; out?: boolean; date: number; message?: string; media?: unknown }): ChatMessage => {
+    const out: ChatMessage = { id: Number(m.id), out: Boolean(m.out), atMs: Number(m.date) * 1000, text: m.message || '', media: kind(m) };
+    const duration = durationOf(m);
+    if (duration !== undefined) out.duration = duration;
+    return out;
   };
   return {
     connect: () => client.connect().then(() => undefined),
@@ -390,7 +415,28 @@ async function realClient(apiId: number, apiHash: string, session: string): Prom
       const peer = peers.get(userId);
       if (!peer) return [];
       const msgs = await client.getMessages(peer as InputPeer, { limit });
-      return msgs.map((m) => ({ out: Boolean(m.out), atMs: Number(m.date) * 1000 }));
+      return msgs.map(toMessage);
+    },
+    transcribe: async (peer, messageId) => {
+      try {
+        const r = await client.invoke(new Api.messages.TranscribeAudio({ peer: peer.input as TgApi.TypeInputPeer, msgId: messageId }));
+        if (r.pending || !r.text) return null;
+        return String(r.text).slice(0, 4000);
+      } catch (err) {
+        // A flood wait or a dead session matters everywhere; anything else means Telegram will not
+        // transcribe for this account (no Premium, trial used up) and the outside transcriber takes over.
+        if (classifyTelegramError(err).kind !== 'other') throw err;
+        return null;
+      }
+    },
+    downloadVoice: async (peer, messageId) => {
+      const [msg] = await client.getMessages(peer.input as InputPeer, { ids: [messageId] } as Parameters<typeof client.getMessages>[1]);
+      if (!msg || !msg.media) return null;
+      const media = msg.media as RawMedia;
+      const mimeType = media?.document?.mimeType || 'audio/ogg';
+      const data = await client.downloadMedia(msg, {});
+      if (!data || !(data instanceof Buffer) || !data.length) return null;
+      return { data, mimeType };
     },
     resolvePeer: async (userId, username, accessHash) => {
       const cached = peers.get(userId);
@@ -426,7 +472,7 @@ async function realClient(apiId: number, apiHash: string, session: string): Prom
     },
     messages: async (peer, limit) => {
       const msgs = await client.getMessages(peer.input as InputPeer, { limit });
-      return msgs.map((m) => ({ id: Number(m.id), out: Boolean(m.out), atMs: Number(m.date) * 1000, text: m.message || '', media: kind(m) }));
+      return msgs.map(toMessage);
     },
     sendTo: async (peer, text) => {
       await client.sendMessage(peer.input as InputPeer, { message: text });
@@ -446,7 +492,7 @@ async function realClient(apiId: number, apiHash: string, session: string): Prom
 async function mockClient(session: string): Promise<AccountClient> {
   const fs = await import('node:fs/promises');
   const file = process.env.TELEGRAM_ACCOUNT_MOCK_FILE || '';
-  type MockHistory = Array<ChatMessagePeek & { text?: string; media?: ChatMessage['media'] }>;
+  type MockHistory = Array<ChatMessagePeek & { text?: string; media?: ChatMessage['media']; duration?: number }>;
   interface MockFile {
     me?: { id: string; username?: string; name?: string };
     dialogs?: DialogPeek[];
@@ -455,6 +501,8 @@ async function mockClient(session: string): Promise<AccountClient> {
     readInbox?: Record<string, number>;
     failWith?: string;
     calls?: string[];
+    /** Telegram's transcription per "userId:messageId". */
+    transcripts?: Record<string, string>;
   }
   const read = async (): Promise<MockFile> => {
     try {
@@ -466,7 +514,7 @@ async function mockClient(session: string): Promise<AccountClient> {
   const write = (data: MockFile) => fs.writeFile(file, JSON.stringify(data));
   const note = async (data: MockFile, call: string) => { data.calls = [...(data.calls || []), call].slice(-200); };
   // Ids count up from the oldest message, like Telegram's.
-  const chronological = (list: MockHistory): ChatMessage[] => list.map((m, i) => ({ id: list.length - i, out: m.out, atMs: m.atMs, text: m.text || '', media: m.media }));
+  const chronological = (list: MockHistory): ChatMessage[] => list.map((m, i) => ({ id: list.length - i, out: m.out, atMs: m.atMs, text: m.text || '', media: m.media, ...(m.duration ? { duration: m.duration } : {}) }));
   const fail = (data: MockFile) => {
     if (data.failWith) {
       const m = /FLOOD_WAIT_(\d+)/.exec(data.failWith);
@@ -491,7 +539,14 @@ async function mockClient(session: string): Promise<AccountClient> {
     },
     getMe: async () => (await read()).me || { id: '1', username: 'mockowner', name: 'Mock Owner' },
     recentDialogs: async () => { const data = await read(); await note(data, 'getDialogs'); await write(data); return data.dialogs || []; },
-    history: async (userId) => (await read()).history?.[userId] || [],
+    history: async (userId, limit) => chronological((await read()).history?.[userId] || []).slice(0, limit),
+    transcribe: async (peer, messageId) => {
+      const data = await read();
+      await note(data, `transcribe:${peer.userId}:${messageId}`);
+      await write(data);
+      return data.transcripts?.[`${peer.userId}:${messageId}`] ?? null;
+    },
+    downloadVoice: async () => null,
     resolvePeer: async (userId) => {
       const data = await read();
       const known = (data.dialogs || []).some((d) => d.userId === userId) || Boolean(data.history?.[userId]);
@@ -875,6 +930,67 @@ type ContactInfo = { at: string; userId: string; username?: string; name?: strin
 export const CHAT_STATS_MAX_LEADS = 15;
 export const CHAT_STATS_MESSAGES = 60;
 export const CHAT_STATS_DAYS = 30;
+/** Voice messages turned into text per check and per chat read (each one is a Telegram call or a download). */
+export const VOICE_PER_CHECK = 3;
+export const VOICE_PER_READ = 2;
+
+/**
+ * Gives pending voice messages their text: Telegram's own transcription first, then
+ * the outside transcriber when one is configured. Saves the chat; returns how many
+ * were attempted. Flood or session errors propagate; anything else marks the message.
+ */
+async function transcribePending(client: AccountClient, peer: PeerRef, chat: StoredChat, limit: number): Promise<number> {
+  const outside = externalTranscriber();
+  const pending = pendingTranscripts(chat, limit);
+  let attempted = 0;
+  let changed = false;
+  for (const m of pending) {
+    attempted += 1;
+    let text: string | null = null;
+    let error: string | undefined;
+    try {
+      text = await client.transcribe(peer, m.id);
+    } catch (err) {
+      if (classifyTelegramError(err).kind !== 'other') throw err;
+      error = errText(err);
+    }
+    if (text === null && outside) {
+      try {
+        const file = await client.downloadVoice(peer, m.id);
+        if (file) text = await outside.transcribe(file.data, file.mimeType, 'a customer or salesperson of a Cambodian travel company');
+        else error = error || 'voice file not available';
+      } catch (err) {
+        if (classifyTelegramError(err).kind !== 'other') throw err;
+        error = errText(err);
+      }
+    }
+    if (text !== null) {
+      m.transcript = text;
+      m.tstatus = 'done';
+      delete m.terror;
+      changed = true;
+    } else if (error || !outside) {
+      // Without Telegram's text and without an outside transcriber the message waits; a real error is noted.
+      if (error) { m.tstatus = 'failed'; m.terror = error.slice(0, 120); changed = true; }
+    }
+  }
+  if (changed) {
+    chat.updatedAt = new Date().toISOString();
+    await saveStoredChat(chat);
+  }
+  return attempted;
+}
+
+/** Puts the stored transcripts onto the messages the browser will show. */
+function withTranscripts(messages: ChatMessage[], chat: StoredChat | null): ChatMessage[] {
+  if (!chat) return messages;
+  const byId = new Map(chat.messages.map((m) => [m.id, m]));
+  return messages.map((m) => {
+    const rec = byId.get(m.id);
+    if (!rec || (!rec.transcript && !rec.tstatus)) return m;
+    return { ...m, ...(rec.transcript ? { transcript: rec.transcript } : {}), ...(rec.tstatus ? { tstatus: rec.tstatus } : {}) };
+  });
+}
 
 async function refreshChatStats(client: AccountClient, staffId: string, dialogs: DialogPeek[], nowMs: number): Promise<number> {
   const since = nowMs - CHAT_STATS_DAYS * 86_400_000;
@@ -886,12 +1002,22 @@ async function refreshChatStats(client: AccountClient, staffId: string, dialogs:
     .sort((a, b) => (a.routing?.chat?.updatedAt || '').localeCompare(b.routing?.chat?.updatedAt || ''))
     .slice(0, CHAT_STATS_MAX_LEADS);
   let n = 0;
+  let voiceBudget = VOICE_PER_CHECK;
   for (const lead of leads) {
     const userId = lead.customFields!.telegramUserId;
     // Only chats in the recent list can be read (their peer is known); others keep their last numbers.
     if (!unreadBy.has(userId)) continue;
     const messages = await client.history(userId, CHAT_STATS_MESSAGES);
     if (!messages.length) continue;
+    // Keep the conversation itself (see chat-store.ts) and turn a voice message or two into text.
+    try {
+      const stored = await recordChatMessages(lead.id, staffId, messages);
+      const peer = await client.resolvePeer(userId, lead.customFields?.telegramUsername);
+      if (peer && voiceBudget > 0) voiceBudget -= await transcribePending(client, peer, stored, Math.min(voiceBudget, 2));
+    } catch (err) {
+      if (classifyTelegramError(err).kind !== 'other') throw err;
+      console.error('Chat store error:', err);
+    }
     const prior = lead.routing!.chat;
     // Keep what the inbox learned about the chat's message ids; the counters here are fresh.
     const stats: ChatStats = { ...chatStatsFrom(messages, unreadBy.get(userId), new Date(nowMs).toISOString()), lastMessageId: prior?.lastMessageId, seenMaxId: prior?.seenMaxId };
@@ -1103,7 +1229,19 @@ async function readWithClient(lead: Lead, rec: TelegramAccountRecord, base: Lead
     let stats: ChatStats;
     const stamp = new Date(nowMs).toISOString();
     if (changed) {
-      messages = (await client.messages(peer, options.limit ?? 100)).sort(byTime);
+      // First time this chat is stored: take more history, so the story starts before today.
+      const known = await getStoredChat(lead.id);
+      const limit = known && known.messages.length ? options.limit ?? 100 : Math.max(options.limit ?? 100, CHAT_BACKFILL);
+      messages = (await client.messages(peer, limit)).sort(byTime);
+      let stored: StoredChat | null = known;
+      try {
+        stored = await recordChatMessages(lead.id, staffId, messages);
+        await transcribePending(client, peer, stored, VOICE_PER_READ);
+      } catch (err) {
+        if (classifyTelegramError(err).kind !== 'other') throw err;
+        console.error('Chat store error:', err);
+      }
+      messages = withTranscripts(messages, stored);
       stats = { ...chatStatsFrom(messages, probe.unreadCount, stamp), lastMessageId: probe.topMessageId, seenMaxId };
     } else {
       stats = { ...(prior || { fromCustomer: 0, fromUs: 0, updatedAt: stamp }), unread: probe.unreadCount, lastMessageId: probe.topMessageId, seenMaxId };
@@ -1178,7 +1316,13 @@ export async function sendLeadMessage(leadId: string, rawText: string, by: strin
         seenMaxId = probe.topMessageId;
       }
       await client.sendTo(peer, text);
-      const messages = (await client.messages(peer, 100)).sort(byTime);
+      let messages = (await client.messages(peer, 100)).sort(byTime);
+      try {
+        messages = withTranscripts(messages, await recordChatMessages(lead.id, staffId, messages));
+      } catch (err) {
+        if (classifyTelegramError(err).kind !== 'other') throw err;
+        console.error('Chat store error:', err);
+      }
       const top = messages.reduce((m, x) => Math.max(m, x.id), probe.topMessageId);
       const stats: ChatStats = { ...chatStatsFrom(messages, 0, new Date().toISOString()), lastMessageId: top };
       if (seenMaxId !== undefined) stats.seenMaxId = seenMaxId;
@@ -1221,10 +1365,14 @@ export interface InboxRow {
   firstMessage?: string;
   /** The salesperson's account is connected, so the chat can be read and answered here. */
   connected: boolean;
+  /** The AI coach's last verdict, when it has looked at this lead. */
+  heat?: 'hot' | 'warm' | 'cold';
+  nextStep?: string;
 }
 
 export async function listTelegramInbox(): Promise<InboxRow[]> {
-  const [leads, rr] = await Promise.all([getRealLeads(), getRoundRobinSettings()]);
+  const { listLeadHeat } = await import('./lead-ai');
+  const [leads, rr, heat] = await Promise.all([getRealLeads(), getRoundRobinSettings(), listLeadHeat().catch(() => ({} as Awaited<ReturnType<typeof listLeadHeat>>))]);
   const connected = new Map<string, boolean>();
   for (const s of rr.staffList) {
     const rec = await getAccountRecord(s.id);
@@ -1250,6 +1398,8 @@ export async function listTelegramInbox(): Promise<InboxRow[]> {
         unread: c?.unread,
         firstMessage: l.message,
         connected: connected.get(l.routing!.staffId) ?? false,
+        heat: heat[l.id]?.heat,
+        nextStep: heat[l.id]?.nextStep,
       };
     })
     .sort((a, b) => (b.lastAt || '').localeCompare(a.lastAt || ''));

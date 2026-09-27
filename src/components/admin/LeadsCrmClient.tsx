@@ -21,6 +21,7 @@ import { toWhatsAppNumber } from '@/lib/phone';
 import { toCsv } from '@/lib/csv';
 import { useLanguage } from '@/context/LanguageContext';
 import TelegramChatView from './TelegramChatView';
+import LeadInsightCard from './LeadInsightCard';
 
 const STATUS_FILTERS = ['ALL', 'NEW', 'CONTACTED', 'PROPOSAL_SENT', 'NEGOTIATING', 'WON', 'LOST'];
 
@@ -659,6 +660,7 @@ export default function LeadsCrmClient({ initialLeads, pages, initialStatus, ini
               {selectedLead.customFields?.telegramUserId && (
                 <TelegramChatView key={selectedLead.id} leadId={selectedLead.id} staffName={selectedLead.routing?.staffName} />
               )}
+              <LeadInsightCard key={`ai-${selectedLead.id}`} leadId={selectedLead.id} />
               {getLeadTags(selectedLead).length > 0 && (
                 <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-2">
                   <div className="flex items-center gap-1.5 font-bold text-amber-800 dark:text-amber-300 text-[11px]">

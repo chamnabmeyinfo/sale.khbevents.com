@@ -28,6 +28,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-27 — Store every Telegram conversation, turn voice into text, and let an AI coach read each customer's story
+
+- **Decision:** The portal keeps every message of every Telegram chat lead (both ways, newest 500 per customer), turns voice messages into text (Telegram's own transcription first, Gemini when a key is set), builds one Markdown story per customer (profile, clicks, conversation, notes, numbers) and runs an AI coach on it: summary, heat (hot / warm / cold), what the deal is stuck on, the next step, a suggested Khmer reply to edit, coaching for the salesperson. The coach runs on demand and, for a few changed open chats, after site traffic. The AI never writes to a customer. This replaces the same-day rule "conversations are counted, never stored".
+- **Why:** The owner wants the platform to understand each conversation and decide what to do next with customers who have not converted, and to support the team to close faster. That needs the words, not only the numbers, and voice messages are common in Khmer chats. Storing in the portal also lets the team read a chat when the account is busy.
+- **Who decided:** Owner ("Go ahead", plus the voice-to-text idea); Claude with owner approval on the bounds (500 messages, 2–3 transcriptions per read, 3 automatic analyses per sweep) and on keeping the AI read-only.
+- **Affects:** [[Customer Story and AI Coach]], [[Telegram Inbox]], [[Leads CRM]], [[Round Robin]].
+
 ## 2026-09-27 — Live Telegram chat by careful polling, one connection per account at a time, Auto seen off by default
 
 - **Decision:** The chat view keeps itself fresh while it is on screen (every 8 seconds around a fresh conversation, 20 or 60 seconds around an old one, paused in a background tab, one request at a time), so a customer's reply appears without a Refresh click. Every use of a salesperson's Telegram account takes a lease first, so two servers or two admins never open the same session at the same time; connections are short; Telegram's "wait N seconds" is honoured for the whole account; a session Telegram has ended disconnects the account until a person reconnects; portal replies keep a human pace (1.5 seconds apart, 20 a minute). **Auto seen** is a switch per salesperson, off unless they turn it on; on, the customer's messages are marked read only while a person is looking at the chat in a front tab, once per new message. A reply from the portal always marks the chat read first. No connection is held open between requests and no live update listener runs (deferred).

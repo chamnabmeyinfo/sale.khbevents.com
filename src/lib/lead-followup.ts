@@ -308,6 +308,13 @@ export function scheduleLeadResponseCheck(canTake?: (s: RoundRobinStaff, lead: L
     } catch (err) {
       console.error('Telegram account check error:', err);
     }
+    // The AI coach looks at a few chats that changed since their last analysis (quiet without a key).
+    try {
+      const { analyzeChangedLeads } = await import('./lead-ai');
+      await analyzeChangedLeads();
+    } catch (err) {
+      console.error('Lead AI error:', err);
+    }
   });
 }
 

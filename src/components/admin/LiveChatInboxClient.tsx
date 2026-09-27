@@ -6,6 +6,7 @@ import { Loader2, MessageCircle } from 'lucide-react';
 import type { InboxRow, LeadConversation } from '@/lib/telegram-account';
 import { useLanguage } from '@/context/LanguageContext';
 import TelegramChatView from './TelegramChatView';
+import LeadInsightCard, { HeatBadge } from './LeadInsightCard';
 import StaffAvatar from './StaffAvatar';
 
 const CARD = 'rounded-2xl bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 shadow-xs';
@@ -23,6 +24,8 @@ export default function LiveChatInboxClient({ initialId }: { initialId?: string 
   const [rows, setRows] = useState<InboxRow[]>([]);
   const [selected, setSelected] = useState<string | null>(initialId || null);
   const [filter, setFilter] = useState<'open' | 'all'>('open');
+  const [hotFirst, setHotFirst] = useState(false);
+  const [draft, setDraft] = useState<{ text: string; at: number } | undefined>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -64,7 +67,11 @@ export default function LiveChatInboxClient({ initialId }: { initialId?: string 
     } catch {}
   };
 
-  const visible = useMemo(() => rows.filter((r) => filter === 'all' || (r.status !== 'WON' && r.status !== 'LOST')), [rows, filter]);
+  const HEAT_RANK: Record<string, number> = { hot: 0, warm: 1, cold: 2 };
+  const visible = useMemo(() => {
+    const list = rows.filter((r) => filter === 'all' || (r.status !== 'WON' && r.status !== 'LOST'));
+    return hotFirst ? [...list].sort((a, b) => (HEAT_RANK[a.heat || ''] ?? 3) - (HEAT_RANK[b.heat || ''] ?? 3) || (b.lastAt || '').localeCompare(a.lastAt || '')) : list;
+  }, [rows, filter, hotFirst]);
   const waiting = rows.filter((r) => r.lastFrom === 'customer' && r.status !== 'WON' && r.status !== 'LOST').length;
   const current = rows.find((r) => r.leadId === selected);
   const someNotConnected = rows.some((r) => !r.connected);
@@ -86,7 +93,10 @@ export default function LiveChatInboxClient({ initialId }: { initialId?: string 
                 <button key={f} type="button" aria-pressed={filter === f} onClick={() => setFilter(f)} className={`px-3 py-1 rounded-lg text-xs font-bold cursor-pointer ${filter === f ? 'bg-amber-400 text-black' : 'text-slate-600 dark:text-gray-400'}`}>{f === 'open' ? t('chats.filter.open') : t('chats.filter.all')}</button>
               ))}
             </div>
-            <span className={`${SUB} pa-num`}>{t('chats.waiting', { n: waiting })}</span>
+            <div className="flex items-center gap-2">
+              <button type="button" aria-pressed={hotFirst} onClick={() => setHotFirst((v) => !v)} className={`px-2 py-1 rounded-lg text-[11px] font-bold border cursor-pointer ${hotFirst ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800' : 'border-slate-200 dark:border-emerald-900 text-slate-600 dark:text-gray-400'}`} data-hot-first="">🔥 {t('chats.sort.heat')}</button>
+              <span className={`${SUB} pa-num`}>{t('chats.waiting', { n: waiting })}</span>
+            </div>
           </div>
           {loading ? <div className={`${SUB} flex items-center gap-1.5`}><Loader2 className="w-3.5 h-3.5 animate-spin" />{t('chats.loading')}</div> : visible.length === 0 ? <p className={SUB}>{t('chats.empty')}</p> : (
             <ul className="divide-y divide-slate-100 dark:divide-emerald-950/60 max-h-[70vh] overflow-y-auto">
@@ -102,6 +112,7 @@ export default function LiveChatInboxClient({ initialId }: { initialId?: string 
                       <span className="text-slate-500 dark:text-gray-400 truncate">{r.pageTitle}</span>
                       <span className="text-slate-500 dark:text-gray-400 inline-flex items-center gap-1">· <StaffAvatar name={r.staffName} size={14} /> {r.staffName}</span>
                       <span className="text-slate-500 dark:text-gray-400 pa-num">· {t('chats.stats', { c: r.fromCustomer, u: r.fromUs })}</span>
+                      <HeatBadge heat={r.heat} title={r.nextStep} />
                       {r.lastFrom === 'customer' && r.status !== 'WON' && r.status !== 'LOST' && <span className="px-1.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 font-bold">{t('chats.needsReply')}</span>}
                       {!r.connected && <span className="px-1.5 rounded-full border border-slate-300 dark:border-emerald-800 text-slate-500">{t('chats.notConnected')}</span>}
                       <span className="px-1.5 rounded-full border border-slate-200 dark:border-emerald-900 text-slate-500">{r.status}</span>
@@ -123,7 +134,8 @@ export default function LiveChatInboxClient({ initialId }: { initialId?: string 
                 </div>
                 <Link href={`/admin/leads?id=${encodeURIComponent(current.leadId)}`} className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-emerald-800 text-xs font-bold text-slate-700 dark:text-emerald-300 hover:bg-slate-100 dark:hover:bg-emerald-950">{t('chats.openLead')}</Link>
               </div>
-              <TelegramChatView key={current.leadId} leadId={current.leadId} staffName={current.staffName} canReply={current.connected} onChanged={onChatChanged} />
+              <TelegramChatView key={current.leadId} leadId={current.leadId} staffName={current.staffName} canReply={current.connected} onChanged={onChatChanged} draft={draft} />
+              <LeadInsightCard key={`ai-${current.leadId}`} leadId={current.leadId} onUseReply={(text) => setDraft({ text, at: Date.now() })} onHeat={(heat) => setRows((list) => list.map((r) => (r.leadId === current.leadId ? { ...r, heat } : r)))} />
             </div>
           )}
         </div>

@@ -25,6 +25,7 @@ Live chat with customers, on Telegram, from the portal. Telegram stays the custo
 
 - One list of every Telegram customer (each is a lead in [[Leads CRM]]), newest activity first, with "needs reply" when the customer spoke last.
 - The whole conversation, read live from the salesperson's connected Telegram account (see [[Round Robin]] → Telegram account check). It keeps itself fresh while it is on screen: a customer's reply shows up by itself within about 8 seconds, no Refresh click (since 2026-09-27, later the same day).
+- Every message is also **stored** in the portal, voice messages are turned into text, and the **AI coach** card under the chat says where the customer stands and what to do next, with a Khmer reply to edit (**Use** puts it in the box). Heat badges and **Hot first** in the list. See [[Customer Story and AI Coach]].
 - **Auto seen**, a switch per salesperson (off unless they turn it on): with it on, the customer sees "seen" on Telegram while someone is looking at the chat in the portal.
 - A reply box: the text is sent from the salesperson's Telegram account, so the customer sees it from the person they were talking to. A note on the lead records who sent it from the portal.
 - The same chat view and reply box sit in the lead drawer of the CRM.
@@ -46,7 +47,7 @@ There is **no chat window on the website**: the owner decided on 2026-09-27 that
 
 ## Key rules and defaults
 
-- Reading and sending go through Telegram's user-account API with the stored session; nothing is stored in the portal except the numbers on the lead (messages each way, first reply time, who spoke last, unread, Telegram's id of the latest message and of the last message marked read) and, for each portal reply, a note "💬 Sent on Telegram by <name>: “…”".
+- Reading and sending go through Telegram's user-account API with the stored session. Since 2026-09-27 (later the same day) the conversation itself is stored too, for the story and the AI coach ([[Customer Story and AI Coach]]); the lead keeps the numbers (messages each way, first reply time, who spoke last, unread, Telegram's id of the latest message and of the last message marked read) and, for each portal reply, a note "💬 Sent on Telegram by <name>: “…”".
 - Only chat leads (customers matched by the account check, or tracked with "Track every new chat") appear; the list refreshes every 15 seconds, and the open chat's row updates the moment the chat does.
 - **How the live view looks without hammering Telegram:** the browser asks the server only while the tab is visible, every 8 seconds when the last message is less than 10 minutes old or someone typed in the last 2 minutes, every 20 seconds within the hour, every 60 seconds after that, never faster than 5 seconds, one request at a time. Each request is one short connection with one cheap question to Telegram ("what is the latest message id and the unread count?"); the messages themselves are downloaded only when that answer changed.
 - **Auto seen** marks read only when all four hold: the salesperson's switch is on, the browser says a person is looking (visible and focused tab), Telegram counts unread messages, and this latest message was not marked before. One read receipt per new message, never more.

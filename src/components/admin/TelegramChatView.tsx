@@ -37,6 +37,8 @@ interface Props {
   compact?: boolean;
   /** Called after each successful read, so a list around the chat can update its row. */
   onChanged?: (conversation: LeadConversation) => void;
+  /** Text put into the reply box from outside (the AI coach's suggested reply); a new `at` applies it again. */
+  draft?: { text: string; at: number };
 }
 
 /**
@@ -49,7 +51,7 @@ interface Props {
  * busy, waiting when Telegram asked to, and stopping when the account is not
  * connected. Unchanged chats cost one cheap probe: the server sends no messages back.
  */
-export default function TelegramChatView({ leadId, staffName, canReply = true, compact = false, onChanged }: Props) {
+export default function TelegramChatView({ leadId, staffName, canReply = true, compact = false, onChanged, draft }: Props) {
   const { t } = useLanguage();
   const [data, setData] = useState<LeadConversation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,6 +76,11 @@ export default function TelegramChatView({ leadId, staffName, canReply = true, c
   const loadRef = useRef<(manual?: boolean) => Promise<void>>(async () => undefined);
   const onChangedRef = useRef(onChanged);
   useEffect(() => { onChangedRef.current = onChanged; }, [onChanged]);
+  useEffect(() => {
+    if (!draft?.text) return;
+    const id = window.setTimeout(() => { setReply(draft.text); typedAt.current = Date.now(); }, 0);
+    return () => window.clearTimeout(id);
+  }, [draft?.at, draft?.text]);
 
   const clearTimer = () => {
     if (timer.current !== null) {
@@ -318,11 +325,14 @@ export default function TelegramChatView({ leadId, staffName, canReply = true, c
                   <div className={`flex ${m.out ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[85%] rounded-2xl px-3 py-1.5 text-xs leading-relaxed whitespace-pre-wrap break-words ${m.out ? 'bg-emerald-600 text-[#fff] on-dark rounded-br-sm' : 'bg-white dark:bg-[#0A1610] border border-slate-200 dark:border-emerald-900/50 text-slate-900 dark:text-white rounded-bl-sm'}`}>
                       {m.media && (
-                        <div className={`flex items-center gap-1 text-[10px] font-semibold ${m.out ? 'text-emerald-100' : 'text-slate-500 dark:text-gray-400'} ${m.text ? 'mb-0.5' : ''}`}>
-                          <Paperclip className="w-3 h-3" />{t(`leads.chat.media.${m.media}`)}
+                        <div className={`flex items-center gap-1 text-[10px] font-semibold ${m.out ? 'text-emerald-100' : 'text-slate-500 dark:text-gray-400'} ${m.text || m.transcript ? 'mb-0.5' : ''}`}>
+                          <Paperclip className="w-3 h-3" />{t(`leads.chat.media.${m.media}`)}{m.duration ? <span className="pa-num"> · {m.duration}s</span> : null}
+                          {(m.media === 'voice' || m.media === 'audio') && !m.transcript && m.tstatus === 'pending' ? <span className="italic font-normal"> · {t('leads.chat.voicePending')}</span> : null}
+                          {(m.media === 'voice' || m.media === 'audio') && !m.transcript && m.tstatus === 'failed' ? <span className="italic font-normal"> · {t('leads.chat.voiceFailed')}</span> : null}
                         </div>
                       )}
                       {m.text}
+                      {m.transcript && <div className={`italic ${m.text ? 'mt-0.5' : ''}`} data-transcript="">🎤 {m.transcript}</div>}
                       <div className={`text-[9px] mt-0.5 text-right pa-num ${m.out ? 'text-emerald-100' : 'text-slate-400 dark:text-gray-500'}`}>{time(m.atMs)}</div>
                     </div>
                   </div>

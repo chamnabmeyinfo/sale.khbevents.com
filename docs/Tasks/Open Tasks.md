@@ -33,6 +33,15 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [ ] If a row ever shows "Telegram ended the session", the salesperson connects again from the same tab (code from their Telegram app). Telegram may also show a new "khbportal" device after a reconnection; ending old ones there is fine. #owner
 - [ ] Later, if the team wants replies within a second instead of about eight: a live update connection per account (Telegram updates), which needs a server that stays up all day rather than Vercel functions. Decide only after the polling version has run a few weeks. #for-claude
 
+### Customer story and AI coach (new, 2026-09-27)
+
+- [x] Stored chats, voice to text, story file per customer, AI coach with heat, next step and suggested reply, Hot first in the inbox (2026-09-27). → [[Customer Story and AI Coach]]
+- [ ] Check that `ANTHROPIC_API_KEY` is set in Vercel (it is the campaign analyst's key); then open a customer in the Telegram inbox and press **Analyze now**. → [[Customer Story and AI Coach]] #owner
+- [ ] Decide on voice transcription outside Telegram: add `GEMINI_API_KEY` in Vercel (Google AI Studio key) so voice messages Telegram cannot transcribe still get their text. Without it, only Telegram's own transcription is used. #owner
+- [ ] Tell the team: customer chats are now stored in the CRM and read by the AI coach; the coach suggests, people send. #owner
+- [ ] Delete a lead → also delete its stored chat and analysis rows. #for-claude
+- [ ] Phase 2 of the coach: bot check-ins with the next step and buttons (Done / Snooze / Lost), the morning list of hot customers to the manager, weekly coaching summary, objections per trip on Team performance. #for-claude
+
 ### Prospect journey (audit 2026-09-27)
 
 - [x] Owner answered the audit's questions (2026-09-27): check-in timings customisable with minimums; a Telegram chat may be a lead without a phone (the team asks for it); the manager gets the morning list too; AI later, if at all, only to read chats faster, never to answer customers.

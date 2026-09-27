@@ -2150,6 +2150,17 @@ export async function setMarker(id: string, value: string): Promise<void> {
   await saveDatabase(db);
 }
 
+/** All markers whose id starts with `prefix` (e.g. every `lead_ai:` row), as { id, value }. */
+export async function getMarkersWithPrefix(prefix: string): Promise<Array<{ id: string; value: string }>> {
+  if (isSupabaseConfigured()) {
+    // The next character after ':' in ASCII order bounds the range.
+    const upper = prefix.slice(0, -1) + String.fromCharCode(prefix.charCodeAt(prefix.length - 1) + 1);
+    return (await supabaseGetMarkerRange(prefix, upper).catch(() => null)) || [];
+  }
+  const db = await getDatabase();
+  return Object.entries(db.markers || {}).filter(([k]) => k.startsWith(prefix)).map(([id, value]) => ({ id, value }));
+}
+
 /**
  * Where the per-account Telegram lease lives (see telegram-lease.ts): the Supabase
  * markers, shared by every server; or memory when the portal runs as one server on
