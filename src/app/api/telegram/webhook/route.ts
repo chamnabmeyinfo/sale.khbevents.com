@@ -6,8 +6,6 @@ import type { RoundRobinSettings, RoundRobinStaff } from '@/lib/types';
 import { isValidTelegramWebhookSecret } from '@/lib/auth';
 import { parseClaimData } from '@/lib/lead-response';
 import { claimLeadFromTelegram, scheduleLeadResponseCheck } from '@/lib/lead-followup';
-import { handleTelegramReply } from '@/lib/web-chat';
-import { webChatCodeIn } from '@/lib/web-chat-types';
 
 /**
  * Telegram Bot Webhook Handler for @khb_sale_admin_bot
@@ -41,8 +39,6 @@ interface TelegramUpdate {
     };
     date: number;
     text?: string;
-    /** The message this one answers (a live-chat message from the bot carries a #WC code). */
-    reply_to_message?: { message_id: number; text?: string; caption?: string };
     entities?: Array<{
       type: string;
       offset: number;
@@ -154,17 +150,6 @@ export async function POST(req: NextRequest) {
     const text = message.text.trim();
     const visitorName = [message.from.first_name, message.from.last_name].filter(Boolean).join(' ');
     const visitorUsername = message.from.username ? `@${message.from.username}` : '';
-
-    // ─── A salesperson answers a website live chat by replying to the bot's message ───
-    const repliedCode = webChatCodeIn(message.reply_to_message?.text || message.reply_to_message?.caption);
-    if (repliedCode) {
-      const result = await handleTelegramReply({ code: repliedCode, text, fromChatId: String(chatId), fromName: visitorName || 'Sales' });
-      const note = result.ok
-        ? (result.chat?.status === 'closed' ? '✅ បានបិទការជជែក។' : '✅ បានផ្ញើទៅអតិថិជនលើគេហទំព័រ។')
-        : result.reason === 'wrong_chat' ? '⚠️ ការជជែកនេះជារបស់អ្នកផ្សេង។' : '⚠️ រកមិនឃើញការជជែកនេះទេ។';
-      await sendTelegramMessage(botToken, chatId, note);
-      return NextResponse.json({ ok: true });
-    }
 
     // ─── Handle /start with deep link payload ───────────────────────
     if (text.startsWith('/start')) {

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Loader2, MessageCircle, Paperclip, RefreshCw } from 'lucide-react';
+import { Loader2, MessageCircle, Paperclip, RefreshCw, Send } from 'lucide-react';
 import type { LeadConversation } from '@/lib/telegram-account';
 import { formatWait } from '@/lib/lead-response';
 import { useLanguage } from '@/context/LanguageContext';
@@ -15,11 +15,13 @@ const dayOf = (ms: number) => new Date(ms).toLocaleDateString('en-GB', { timeZon
  * connected account each time it opens (and every 30 s while open). Read only:
  * the salesperson answers from their own Telegram.
  */
-export default function TelegramChatView({ leadId, staffName }: { leadId: string; staffName?: string }) {
+export default function TelegramChatView({ leadId, staffName, canReply = true, compact = false }: { leadId: string; staffName?: string; /** Show the reply box (sends from the salesperson's connected account). */ canReply?: boolean; /** Taller thread for the inbox. */ compact?: boolean }) {
   const { t } = useLanguage();
   const [data, setData] = useState<LeadConversation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [reply, setReply] = useState('');
+  const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async (quiet = false) => {
@@ -43,6 +45,25 @@ export default function TelegramChatView({ leadId, staffName }: { leadId: string
     return () => { window.clearTimeout(first); window.clearInterval(timer); };
   }, [load]);
   useEffect(() => { endRef.current?.scrollIntoView({ block: 'end' }); }, [data?.messages.length]);
+
+  const send = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = reply.trim();
+    if (!text || sending) return;
+    setSending(true);
+    setError('');
+    try {
+      const res = await fetch(`/api/leads/${encodeURIComponent(leadId)}/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, by: 'Admin' }) });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || t('leads.chat.sendFailed'));
+      setData(json.conversation);
+      setReply('');
+    } catch (e2) {
+      setError(e2 instanceof Error ? e2.message : String(e2));
+    } finally {
+      setSending(false);
+    }
+  };
 
   const stats = data?.stats;
   return (
@@ -77,7 +98,7 @@ export default function TelegramChatView({ leadId, staffName }: { leadId: string
       ) : data && data.messages.length === 0 && !data.error ? (
         <div className="text-[11px] text-slate-500 dark:text-gray-400">{t('leads.chat.empty')}</div>
       ) : data && data.messages.length > 0 ? (
-        <div className="max-h-[420px] overflow-y-auto space-y-1.5 pr-1" role="log" aria-live="polite">
+        <div className={`${compact ? 'max-h-[420px]' : 'max-h-[60vh]'} overflow-y-auto space-y-1.5 pr-1`} role="log" aria-live="polite">
           {data.messages.map((m, i) => {
             const prev = data.messages[i - 1];
             const newDay = !prev || dayOf(prev.atMs) !== dayOf(m.atMs);
@@ -101,6 +122,15 @@ export default function TelegramChatView({ leadId, staffName }: { leadId: string
           <div ref={endRef} />
         </div>
       ) : null}
+      {canReply && data && !data.error && (
+        <form onSubmit={send} className="flex items-end gap-2 pt-1" data-telegram-reply="">
+          <textarea value={reply} onChange={(e) => setReply(e.target.value)} rows={2} maxLength={4000} placeholder={t('leads.chat.replyPh', { staff: data.staffName })} className="flex-1 px-3 py-2 rounded-xl border border-sky-200 dark:border-sky-900/60 bg-white dark:bg-[#06100B] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-sky-500 resize-none"
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); (e.currentTarget.form as HTMLFormElement | null)?.requestSubmit(); } }} />
+          <button type="submit" disabled={sending || !reply.trim()} className="h-9 px-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-[#fff] on-dark text-xs font-extrabold inline-flex items-center gap-1 cursor-pointer disabled:opacity-50">
+            {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}{t('leads.chat.send')}
+          </button>
+        </form>
+      )}
       <p className="text-[10px] text-slate-500 dark:text-gray-400">{t('leads.chat.footnote')}</p>
     </div>
   );

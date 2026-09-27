@@ -108,7 +108,7 @@ export default async function CampaignPage({ params, searchParams }: PageProps) 
       builder: page.builder,
     } as LandingPage;
     // Only the public contact details and logo, resolved on the server (page's own, else the company's).
-    return <BuilderPageView page={publicPage} company={companyFor(settings, page)} initialLang={builderLang} serverNowMs={serverNowMs()} liveChat={settings.liveChatEnabled !== false} {...popupProps} />;
+    return <BuilderPageView page={publicPage} company={companyFor(settings, page)} initialLang={builderLang} serverNowMs={serverNowMs()} {...popupProps} />;
   }
 
   if (cleanSlug === 'smart-city-tea-cafe') {

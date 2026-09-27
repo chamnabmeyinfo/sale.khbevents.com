@@ -142,7 +142,7 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapsed }: {
       isActive: pathname.startsWith('/admin/leads') || pathname.startsWith('/admin/chats'),
       subItems: [
         { label: t('nav.leads.all'), href: '/admin/leads', icon: Users },
-        { label: t('nav.leads.chats'), href: '/admin/chats', icon: MessageCircle, badge: 'Live' },
+        { label: t('nav.leads.chats'), href: '/admin/chats', icon: MessageCircle, badge: 'Telegram' },
         { label: t('nav.leads.new'), href: '/admin/leads?status=NEW', icon: Clock, badge: 'NEW' },
         { label: t('nav.leads.negotiating'), href: '/admin/leads?status=NEGOTIATING', icon: UserCheck },
         { label: t('nav.leads.won'), href: '/admin/leads?status=WON', icon: CheckCircle2 },

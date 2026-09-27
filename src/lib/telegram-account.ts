@@ -172,6 +172,8 @@ export interface AccountClient {
   history(userId: string, limit: number): Promise<ChatMessagePeek[]>;
   /** The latest messages with their text, for the chat view. Finds the chat by user id, then by @username. */
   conversation(userId: string, username: string | undefined, limit: number): Promise<ChatMessage[]>;
+  /** Sends a text message to that customer from the connected account (after conversation() resolved the chat). */
+  send(userId: string, username: string | undefined, text: string): Promise<void>;
   logOut(): Promise<void>;
 }
 
@@ -288,6 +290,12 @@ async function realClient(apiId: number, apiHash: string, session: string): Prom
       };
       return msgs.map((m) => ({ id: Number(m.id), out: Boolean(m.out), atMs: Number(m.date) * 1000, text: m.message || '', media: kind(m) }));
     },
+    send: async (userId, username, text) => {
+      let peer = peers.get(userId);
+      if (!peer && username) peer = await client.getInputEntity(username).catch(() => undefined);
+      if (!peer) throw new Error('Chat not found on this account');
+      await client.sendMessage(peer as Parameters<typeof client.sendMessage>[0], { message: text });
+    },
     logOut: async () => {
       await client.invoke(new Api.auth.LogOut());
     },
@@ -328,6 +336,14 @@ async function mockClient(session: string): Promise<AccountClient> {
     recentDialogs: async () => (await read()).dialogs || [],
     history: async (userId) => (await read()).history?.[userId] || [],
     conversation: async (userId) => ((await read()).history?.[userId] || []).map((m, i) => ({ id: i + 1, out: m.out, atMs: m.atMs, text: m.text || '', media: m.media })),
+    send: async (userId, _username, text) => {
+      const data = await read();
+      const history = data.history || {};
+      history[userId] = [{ out: true, atMs: Date.now(), text }, ...(history[userId] || [])];
+      const d = (data.dialogs || []).find((x) => x.userId === userId);
+      if (d) { d.lastIncoming = false; d.lastAtMs = Date.now(); d.lastText = text; d.unread = 0; }
+      await fs.writeFile(file, JSON.stringify({ ...data, history }));
+    },
     logOut: async () => undefined,
   };
 }
@@ -729,4 +745,85 @@ export async function readLeadConversation(leadId: string, limit = 100): Promise
   } finally {
     await client.disconnect();
   }
+}
+
+/**
+ * Sends a reply to a Telegram customer from the portal, through the salesperson's
+ * connected account (so the customer sees it from the salesperson, as usual), then
+ * returns the refreshed conversation. A short note on the lead records who sent it.
+ */
+export async function sendLeadMessage(leadId: string, rawText: string, by: string): Promise<LeadConversation | null> {
+  const text = rawText.replace(/\s+$/g, '').trim().slice(0, 4000);
+  if (!text) throw new Error('Message is empty');
+  const lead = (await getRealLeads()).find((l) => l.id === leadId);
+  const userId = lead?.customFields?.telegramUserId;
+  if (!lead || !userId || !lead.routing) return null;
+  const rec = await getAccountRecord(lead.routing.staffId);
+  if (!rec.session || !rec.user) throw new Error(`${lead.routing.staffName}'s Telegram account is not connected`);
+  const client = await clientFor(rec, rec.session);
+  try {
+    await client.connect();
+    await client.recentDialogs(RECENT_DIALOGS);
+    // Resolve the chat (fills the peer cache), then send.
+    await client.conversation(userId, lead.customFields?.telegramUsername, 1);
+    await client.send(userId, lead.customFields?.telegramUsername, text);
+    rec.session = client.saveSession();
+    await saveAccountRecord(rec);
+  } finally {
+    await client.disconnect();
+  }
+  await addLeadNote(leadId, `💬 Sent on Telegram by ${by}: “${text.slice(0, 160)}${text.length > 160 ? '…' : ''}”`, by).catch(() => null);
+  return readLeadConversation(leadId);
+}
+
+/** Every Telegram customer, newest activity first, for the inbox. */
+export interface InboxRow {
+  leadId: string;
+  name: string;
+  username?: string;
+  pageTitle: string;
+  staffId: string;
+  staffName: string;
+  status: string;
+  createdAt: string;
+  lastAt?: string;
+  lastFrom?: 'customer' | 'us';
+  fromCustomer: number;
+  fromUs: number;
+  unread?: number;
+  firstMessage?: string;
+  /** The salesperson's account is connected, so the chat can be read and answered here. */
+  connected: boolean;
+}
+
+export async function listTelegramInbox(): Promise<InboxRow[]> {
+  const [leads, rr] = await Promise.all([getRealLeads(), getRoundRobinSettings()]);
+  const connected = new Map<string, boolean>();
+  for (const s of rr.staffList) {
+    const rec = await getAccountRecord(s.id);
+    connected.set(s.id, Boolean(rec.session && rec.user));
+  }
+  return leads
+    .filter((l) => l.customFields?.telegramUserId && l.routing)
+    .map((l) => {
+      const c = l.routing!.chat;
+      return {
+        leadId: l.id,
+        name: l.fullName,
+        username: l.customFields?.telegramUsername,
+        pageTitle: l.landingPageTitle,
+        staffId: l.routing!.staffId,
+        staffName: l.routing!.staffName,
+        status: l.status,
+        createdAt: l.createdAt,
+        lastAt: c?.lastAt || l.createdAt,
+        lastFrom: c?.lastFrom,
+        fromCustomer: c?.fromCustomer ?? 0,
+        fromUs: c?.fromUs ?? 0,
+        unread: c?.unread,
+        firstMessage: l.message,
+        connected: connected.get(l.routing!.staffId) ?? false,
+      };
+    })
+    .sort((a, b) => (b.lastAt || '').localeCompare(a.lastAt || ''));
 }

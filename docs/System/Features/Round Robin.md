@@ -160,13 +160,13 @@ What is kept: the customer's name, @username, user id, the time of the first mes
 
 **Did we reply?** For open chat leads of the last 30 days (at most 15 per check, the oldest numbers first), the check reads the last 60 messages of the chat and keeps only numbers on the lead (`routing.chat`): messages from the customer and from us, the customer's first message, our first reply and the seconds between, the last message and who sent it, Telegram's unread count. No message text. Team performance shows a card **Telegram chats: did we reply?**: chats started, answered at least once, average first reply, waiting for our reply now, quiet for 3+ days, won and lost, per salesperson; and the list of customers waiting for a reply (the longest wait first) with CRM links. The visitor list shows the same numbers per click.
 
-**Read the chat itself:** the lead drawer in [[Leads CRM]] shows the live conversation (both sides, times, attachment kinds) through the connected account, read only, refreshed every 30 seconds while open; nothing but the numbers is stored.
+**Read and answer the chat itself:** the lead drawer in [[Leads CRM]] and the [[Telegram Inbox]] show the live conversation (both sides, times, attachment kinds) through the connected account, refreshed every 30 seconds while open, with a reply box that sends from the salesperson's account; nothing but the numbers and a note per portal reply is stored.
 
 The check runs after normal site traffic together with the lead follow-up check (page tracking, the bot, the admin Leads and Round Robin pages), when Team performance opens, and on **Check now**; at most every 2 minutes per account.
 
-## Website live chat
+## Telegram inbox
 
-Visitors can also write in the chat window on the landing pages; the message goes to the salesperson's Telegram (reply to answer) and to the admin inbox, and the chat is a lead. Routing uses the same rules as a click. See [[Live Chat]].
+Every Telegram customer, the live conversation and a reply box that sends from the salesperson's connected account: [[Telegram Inbox]]. Telegram is the only live-chat channel; there is no chat window on the website (owner decision, 2026-09-27).
 
 ## Who can receive what (eligibility)
 

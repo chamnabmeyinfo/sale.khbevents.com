@@ -220,8 +220,8 @@ export interface TelegramReplyStats {
 
 export const QUIET_AFTER_MS = 3 * 86_400_000;
 
-/** Leads that began as a conversation: a Telegram chat or a website live chat. */
-export const isChatLead = (l: Lead) => l.routing?.routeType === 'DIRECT_CONTACT_CLICK' && Boolean(l.customFields?.telegramUserId || l.customFields?.webChatId);
+/** Leads that began as a Telegram conversation. */
+export const isChatLead = (l: Lead) => l.routing?.routeType === 'DIRECT_CONTACT_CLICK' && Boolean(l.customFields?.telegramUserId);
 
 /** Per salesperson: chats started, replied, first-reply time, waiting now, gone quiet, won and lost. */
 export function telegramReplyStats(leads: Lead[], staffList: RoundRobinStaff[], range: { from: string; to: string }, nowMs: number): TelegramReplyStats {

@@ -195,8 +195,8 @@ export const roundRobin: Dictionary = {
     'rr.vis.d.lead': 'CRM',
 
     // Telegram chats: did we reply?
-    'rr.tg.title': 'Chats: did we reply?',
-    'rr.tg.hint': 'Customers who wrote on Telegram (after a click, or directly when "track every new chat" is on) or in the website live chat, and how the conversation went. Each one is also a lead in the CRM.',
+    'rr.tg.title': 'Telegram chats: did we reply?',
+    'rr.tg.hint': 'Customers who wrote on Telegram (after a click, or directly when "track every new chat" is on), and how the conversation went, read from the connected accounts. Each one is also a lead in the CRM, and can be answered from the Telegram inbox.',
     'rr.tg.kpi.chats': 'Chats started',
     'rr.tg.kpi.chatsNote': '{n} answered at least once',
     'rr.tg.kpi.time': 'Average first reply',
@@ -636,7 +636,7 @@ export const roundRobin: Dictionary = {
     'rr.vis.d.lead': 'CRM',
 
     // Telegram chats
-    'rr.tg.title': 'ការជជែក៖ យើងបានឆ្លើយទេ?',
+    'rr.tg.title': 'ការជជែក Telegram៖ យើងបានឆ្លើយទេ?',
     'rr.tg.hint': 'អតិថិជនដែលផ្ញើសារតាម Telegram (បន្ទាប់ពីចុច Chat on Telegram ឬផ្ទាល់ពេលបើក «តាមដានការជជែកថ្មីទាំងអស់») និងដំណើរការសន្ទនា អានពីគណនីដែលបានភ្ជាប់។ ម្នាក់ៗក៏ជា Lead ក្នុង CRM ផងដែរ។',
     'rr.tg.kpi.chats': 'ការជជែកចាប់ផ្តើម',
     'rr.tg.kpi.chatsNote': 'បានឆ្លើយយ៉ាងហោចម្តង {n}',

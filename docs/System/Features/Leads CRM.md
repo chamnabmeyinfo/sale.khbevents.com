@@ -69,11 +69,7 @@ A Telegram lead alert links to `/admin/leads?id=<lead id>`, which opens that lea
 
 ## Live Telegram chat in the lead (2026-09-27)
 
-A lead that began as a Telegram chat (💬 badge in the list, with "messages from the customer / from us"; amber when the customer wrote last) shows the **conversation itself** in the lead drawer: every message of both sides, oldest first, with the time and the kind of attachment (photo, voice message, file…), read live through the salesperson's connected Telegram account when the drawer opens and every 30 seconds while it stays open, or with **Read again**. It is read only: the salesperson answers from their own Telegram. The portal stores only the numbers (messages each way, first reply time, who spoke last); the text is fetched each time and never saved. If that salesperson's account is not connected, the drawer says so. Source: `src/components/admin/TelegramChatView.tsx`, `GET /api/leads/<id>/chat`, `readLeadConversation` in `src/lib/telegram-account.ts`. See [[Round Robin]].
-
-## Live chat leads (2026-09-27)
-
-A visitor who wrote in the website chat window is a lead at once (🌐 badge with messages from the visitor / from us; source `web_chat`, tag `live-chat`, phone when given). The drawer links to the conversation in the **Live chat inbox**. See [[Live Chat]].
+A lead that began as a Telegram chat (💬 badge in the list, with "messages from the customer / from us"; amber when the customer wrote last) shows the **conversation itself** in the lead drawer: every message of both sides, oldest first, with the time and the kind of attachment (photo, voice message, file…), read live through the salesperson's connected Telegram account when the drawer opens and every 30 seconds while it stays open, or with **Read again**. Since the same day it also has a **reply box**: the text is sent from the salesperson's connected account, and a note on the lead records who sent it from the portal. The same view is in the [[Telegram Inbox]]. The portal stores only the numbers (messages each way, first reply time, who spoke last); the text is fetched each time and never saved. If that salesperson's account is not connected, the drawer says so. Source: `src/components/admin/TelegramChatView.tsx`, `GET /api/leads/<id>/chat`, `readLeadConversation` in `src/lib/telegram-account.ts`. See [[Round Robin]].
 
 ## Key rules and defaults
 
