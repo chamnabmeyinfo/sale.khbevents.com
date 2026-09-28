@@ -614,6 +614,25 @@ async function clientFor(rec: TelegramAccountRecord, session: string): Promise<A
   return realClient(rec.apiId, rec.apiHash, session);
 }
 
+/** Telegram's refusal of a login step, in words the admin can act on. */
+export function loginErrorHelp(raw: string): string {
+  const t = raw.toUpperCase();
+  const flood = /FLOOD_WAIT_(\d+)|A WAIT OF (\d+) SECONDS/.exec(t);
+  if (flood) {
+    const sec = Number(flood[1] || flood[2]);
+    return `Telegram asked to wait ${sec >= 3600 ? `${Math.ceil(sec / 3600)} h` : `${Math.ceil(sec / 60)} min`} before sending another code to this number (too many code requests). Try again after that.`;
+  }
+  if (t.includes('PHONE_NUMBER_INVALID')) return 'Telegram does not know this phone number. Type it with the country code, e.g. +855 12 345 678, exactly as in that person\'s Telegram (Settings → My number).';
+  if (t.includes('PHONE_NUMBER_BANNED')) return 'Telegram has banned this phone number. It cannot be connected.';
+  if (t.includes('PHONE_NUMBER_FLOOD') || t.includes('PHONE_PASSWORD_FLOOD')) return 'Too many login codes were asked for this number recently. Wait about 24 hours and try again.';
+  if (t.includes('API_ID_INVALID') || t.includes('API_ID_PUBLISHED_FLOOD')) return 'Telegram rejected the App api_id / api_hash pair. Copy both again from my.telegram.org → API development tools (same app, no spaces). A brand-new app can take a few minutes to work.';
+  if (t.includes('PHONE_CODE_INVALID')) return 'The login code is wrong. Type the code from the Telegram app again.';
+  if (t.includes('PHONE_CODE_EXPIRED')) return 'The login code expired. Press Send login code again.';
+  if (t.includes('PASSWORD_HASH_INVALID')) return 'The two-step password is wrong.';
+  if (t.includes('AUTH_RESTART')) return 'Telegram asked to start the login again. Press Send login code again.';
+  return raw;
+}
+
 const errText = (err: unknown): string => {
   const e = err as { errorMessage?: string; message?: string };
   return (e?.errorMessage || e?.message || String(err)).slice(0, 200);
@@ -700,9 +719,12 @@ export async function startLogin(staffId: string, input: LoginInput): Promise<Te
       const { phoneCodeHash } = await client.sendCode(phone);
       next.pending = { session: client.saveSession(), phoneCodeHash, at: new Date().toISOString() };
     } catch (err) {
-      next.lastError = errText(err);
+      const raw = errText(err);
+      // Telegram's reason, for the server log (no secrets: the code name only).
+      console.error(`Telegram sendCode refused for ${staffId}: ${raw}`);
+      next.lastError = loginErrorHelp(raw);
       await saveAccountRecord(next);
-      throw new Error(`Telegram did not accept the request: ${next.lastError}`);
+      throw new Error(`Telegram did not send the code: ${next.lastError}${next.lastError !== raw ? ` (${raw.slice(0, 60)})` : ''}`);
     } finally {
       await client.disconnect();
     }
@@ -762,7 +784,9 @@ export async function finishLogin(staffId: string, code: string, password?: stri
       await saveAccountRecord(next);
       return statusOf(next, '');
     } catch (err) {
-      rec.lastError = errText(err);
+      const raw = errText(err);
+      console.error(`Telegram login refused for ${staffId}: ${raw}`);
+      rec.lastError = loginErrorHelp(raw);
       await saveAccountRecord(rec);
       throw new Error(`Login failed: ${rec.lastError}`);
     } finally {

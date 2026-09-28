@@ -77,3 +77,14 @@ describe('pollDelayMs', () => {
     expect(pollDelayMs({ nowMs: NOW, typedAtMs: NOW - 5 * 60_000 })).toBe(POLL_SLOW_MS);
   });
 });
+
+import { loginErrorHelp } from '../telegram-account';
+describe('loginErrorHelp', () => {
+  it('turns Telegram login refusals into plain advice', () => {
+    expect(loginErrorHelp('PHONE_NUMBER_INVALID')).toMatch(/country code/);
+    expect(loginErrorHelp('RPCError 400: API_ID_INVALID (caused by auth.SendCode)')).toMatch(/api_id/);
+    expect(loginErrorHelp('A wait of 7200 seconds is required (caused by auth.SendCode)')).toMatch(/2 h/);
+    expect(loginErrorHelp('PHONE_NUMBER_FLOOD')).toMatch(/24 hours/);
+    expect(loginErrorHelp('something else')).toBe('something else');
+  });
+});
