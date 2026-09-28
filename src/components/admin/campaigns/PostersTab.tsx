@@ -2,8 +2,9 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { AlertTriangle, Check, Copy, Loader2 } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { useUrlParam } from '@/lib/use-browser-state';
 import { campaignLink, type Campaign } from '@/lib/campaigns';
 import {
   POSTER_FORMATS,
@@ -19,42 +20,8 @@ import {
 } from '@/lib/ad-posters';
 import type { PageOption } from './CampaignsClient';
 import { LinkRow } from './ManageTab';
+import { CopyButton, PromptBox } from './CopyButton';
 import { CARD, H2, INPUT, LABEL, SUB } from './ui';
-
-function CopyButton({ text }: { text: string }) {
-  const { t } = useLanguage();
-  const [done, setDone] = useState(false);
-  return (
-    <button
-      type="button"
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(text);
-          setDone(true);
-          window.setTimeout(() => setDone(false), 2000);
-        } catch {}
-      }}
-      className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 dark:bg-emerald-950 text-[11px] font-bold text-slate-700 dark:text-emerald-300 cursor-pointer shrink-0"
-    >
-      {done ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}{done ? t('cp.copied') : t('cp.copy')}
-    </button>
-  );
-}
-
-function PromptBox({ title, note, text, testId }: { title: string; note?: string; text: string; testId?: string }) {
-  return (
-    <div className="rounded-xl border border-slate-200 dark:border-emerald-900/60 p-3 space-y-2" data-poster-prompt={testId}>
-      <div className="flex items-start gap-2">
-        <div className="min-w-0 flex-1">
-          <div className="text-xs font-bold text-slate-900 dark:text-white">{title}</div>
-          {note && <div className={SUB}>{note}</div>}
-        </div>
-        <CopyButton text={text} />
-      </div>
-      <pre className="whitespace-pre-wrap text-[11px] leading-relaxed text-slate-700 dark:text-gray-300 bg-slate-50 dark:bg-[#06100B] rounded-lg p-2.5 max-h-56 overflow-y-auto font-sans">{text}</pre>
-    </div>
-  );
-}
 
 function CopyLines({ lang, copy }: { lang: string; copy: PosterCopy }) {
   const { t } = useLanguage();
@@ -151,7 +118,14 @@ function AiIdeas({ slug, goal }: { slug: string; goal: PosterGoal }) {
 /** Admin → Campaigns → Ad posters: prompts and ad text built from a trip page's live facts. */
 export default function PostersTab({ pages }: { pages: PageOption[] }) {
   const { t } = useLanguage();
+  // ?page=<slug> (from Gen Ads) opens the kit on that page.
+  const urlPage = useUrlParam('page');
   const [slug, setSlug] = useState(pages[0]?.slug || '');
+  useEffect(() => {
+    if (!urlPage || !pages.some((p) => p.slug === urlPage)) return;
+    const id = window.setTimeout(() => setSlug(urlPage), 0);
+    return () => window.clearTimeout(id);
+  }, [urlPage, pages]);
   const [facts, setFacts] = useState<PosterFacts | null>(null);
   const [loading, setLoading] = useState(false);
   const [goal, setGoal] = useState<PosterGoal>('launch');

@@ -28,6 +28,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-28 — Gen Ads: the AI writes words, the code writes numbers
+
+- **Decision:** Every landing page card has a **Gen Ads** button that opens the page's ads package: one AI call writes the analysis, three concepts, captions, video script, Google and LinkedIn text, objection posts, the salesperson's first Telegram reply and targeting notes; the code computes every number (offer lines, photo prompts, Canva pack, carousel cards, Google fact headlines, posting plan) from the CMS when the screen opens. Poster and ad slots that state a number not on the page are emptied; long texts are flagged, not dropped. One package is stored per page with one previous version; the first open runs the generation, later runs are an explicit click. Tracked links are one campaign per channel per page with three ad versions, created by a button, never on regenerate.
+- **Why:** The owner wants ad creation much faster, and the standing rules are no invented facts, nothing posted automatically, and AI never talking to customers. Words are where the AI saves time; numbers are where it can lie, so the CMS stays the only source of numbers and a stale package still shows today's price and dates.
+- **Who decided:** Owner ("Add Button to Each landing page … Gen Ads"), Claude on the split between AI text and computed facts, after a three-way design review (marketer, art director, engineer).
+- **Affects:** [[Gen Ads]], [[Campaigns and AI Analyst]], [[AI Keys]].
+
 ## 2026-09-28 — The owner picks the primary AI; the other one is the back-up
 
 - **Decision:** Settings & Security → AI & API keys has a **Primary AI** choice (Claude or Gemini). The AI analyst, the AI coach and the poster headline ideas ask the primary first; when it fails for a service reason (refused key, no credits, outage, rate limit) and the other has a key, the other answers. Voice to text stays on Gemini.

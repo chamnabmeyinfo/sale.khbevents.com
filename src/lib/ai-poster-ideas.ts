@@ -9,6 +9,7 @@
 import { generateJson } from './ai-text';
 import { posterCopy, type PosterFacts, type PosterGoal } from './ad-posters';
 import { pick } from './builder';
+import { numbersIn } from './ad-brief';
 
 export interface PosterIdea {
   angle: string;
@@ -46,11 +47,7 @@ Rules (from the company's copy rules):
 - Khmer: write from the intent, not word for word; plain, natural and shorter than the English; digits as in the facts.
 - Each idea takes a different angle (for example: outcome, fear of missing the right supplier, ease, timing, who it is for).`;
 
-/** Digit groups in a text (Khmer digits read as Latin), e.g. "$750 on 30 Sep" → ["750", "30"]. */
-export function numbersIn(text: string): string[] {
-  const latin = text.replace(/[០-៩]/g, (d) => String('០១២៣៤៥៦៧៨៩'.indexOf(d)));
-  return (latin.match(/\d+(?:[.,]\d+)*/g) || []).map((n) => n.replace(/[.,]/g, ''));
-}
+export { numbersIn };
 
 /** Keeps only ideas whose every number appears in the facts (price, dates, seats, the page's own copy). */
 export function groundedIdeas(ideas: PosterIdea[], factsText: string): PosterIdea[] {

@@ -32,6 +32,7 @@ export default function AdminShell({ children, logo = DEFAULT_LOGO }: { children
     if (pathname === '/admin/pages') return t('crumb.pages');
     if (pathname.startsWith('/admin/builder')) return t('crumb.builder');
     if (pathname === '/admin/pages/new') return t('crumb.pagesNew');
+    if (pathname.startsWith('/admin/pages/') && pathname.endsWith('/ads')) return t('crumb.pagesAds');
     if (pathname.startsWith('/admin/pages/')) return t('crumb.pagesEdit');
     if (pathname.startsWith('/admin/leads')) return t('crumb.leads');
     if (pathname.startsWith('/admin/round-robin')) return t('crumb.roundRobin');

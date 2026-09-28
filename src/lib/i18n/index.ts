@@ -24,12 +24,13 @@ import { builder } from './dict/builder';
 import { media } from './dict/media';
 import { popupAnalytics } from './dict/popup-analytics';
 import { campaigns } from './dict/campaigns';
+import { genAds } from './dict/gen-ads';
 
 export type Lang = 'en' | 'kh';
 export const LANGS: readonly Lang[] = ['en', 'kh'];
 export type Dictionary = { en: Record<string, string>; kh: Record<string, string> };
 
-const parts: Dictionary[] = [common, nav, login, dashboard, pages, leads, settings, roundRobin, ads, guide, editor, editorExtras, auth, builder, media, popupAnalytics, campaigns];
+const parts: Dictionary[] = [common, nav, login, dashboard, pages, leads, settings, roundRobin, ads, guide, editor, editorExtras, auth, builder, media, popupAnalytics, campaigns, genAds];
 
 export const messages: Record<Lang, Record<string, string>> = {
   en: Object.assign({}, ...parts.map((p) => p.en)),

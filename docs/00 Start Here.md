@@ -26,6 +26,7 @@ New here? Read [[How to Use This Vault]] first.
 - [[System Map]]: how the website and admin fit together.
 - Features: [[Landing Pages CMS]], [[Page Builder]], [[Leads CRM]], [[Telegram Inbox]], [[Round Robin]], [[Ads and Popups]], [[Languages]], [[Image Uploads]], [[Content Packs]], [[Tracking and Analytics]], [[Admin and Security]].
 - Features (Telegram): [[Customer Story and AI Coach]].
+- Ads: [[Gen Ads]] (one button on a landing page makes its ads package) and the Ad Poster Kit in [[Campaigns and AI Analyst]].
 - AI and API keys (Anthropic, Gemini) for every AI feature: [[AI Keys]].
 - Runbooks: [[Deploy to Production]], [[Verify Changes Locally]], [[Launch a New Trip Page]], [[Add a Sales Staff Member]], [[Connect a Telegram Account]], [[Bot First Guide]], [[Create a Popup]], [[Change the Admin Password]], [[Rotate the Telegram Bot Token]], [[Run the RLS Lockdown Migration]], [[Restore from a Backup]].
 

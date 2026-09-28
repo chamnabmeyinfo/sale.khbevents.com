@@ -47,6 +47,7 @@ The page on sale right now is `/smart-city-tea-cafe`. See [[Smart City Tea and C
 | Card button Preview Live | Opens the page |
 | Card button Duplicate this page | Copies the page as a **draft**, with "(Copy)" added to the title and `-copy-...` added to the slug. Change the slug before publishing |
 | Card button View Tracking & Pixels | Opens the page's pixel settings |
+| Card button **Gen Ads** | Opens the page's ads package: the AI writes concepts and captions from the page, the code adds every number from the CMS. See [[Gen Ads]] |
 | Card button Dedicated Page Settings | Opens the page's own settings |
 | Card button Delete Page | Deletes the page after a confirmation |
 

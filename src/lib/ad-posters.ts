@@ -142,7 +142,7 @@ export function goalBlocked(goal: PosterGoal, facts: PosterFacts): 'noEarly' | '
 }
 
 /** A date in Phnom Penh time, as the pages write it ("30 September 2026" / "30 កញ្ញា 2026"). */
-function ppDay(iso: string, lang: Lang): string {
+export function ppDay(iso: string, lang: Lang): string {
   const d = new Date(Date.parse(iso) + 7 * 3_600_000);
   const en = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const kh = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];

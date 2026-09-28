@@ -78,6 +78,8 @@ An AI analyst reads the numbers first and writes the plan. The owner reviews it;
 
 Warnings: a page not made with the builder has no price or dates to use; a page with no price; a passed registration deadline.
 
+**Gen Ads** (2026-09-28) goes further: from a landing page card, one AI call writes the whole ads package (three concepts, captions per platform, video script, sales reply) with the same rules; see [[Gen Ads]]. The kit opens on a page from `?page=<slug>` (the Gen Ads screen links to it).
+
 **AI headline ideas** (optional, since 2026-09-28): the button *Suggest more headlines with AI* asks the primary AI (Claude or Gemini) for 5 headline and supporting-line ideas in English and Khmer, from the page's own copy and the CMS offer line, under the Copy Rules (outcome first, short, no invented facts). Any idea with a number that is not in those facts is dropped before it is shown. A person copies the one they like; nothing is published. Needs an Anthropic or Gemini key ([[AI Keys]]); at most 6 requests a minute.
 
 ## How visits are counted

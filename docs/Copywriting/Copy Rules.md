@@ -62,7 +62,7 @@ Use a principle only when the page has evidence for it. Full list: `.claude/skil
 | Scarcity and urgency | Seats left, countdown | Seats and dates come from data |
 | Risk reversal | No payment today, full refund if the organiser cancels | The terms are the real terms |
 | Low-commitment first step | Name and phone only | The call really comes |
-| Loss aversion | "The supplier you want may sign with the importer in that seat" | Used once, near the end |
+| Loss aversion | "The supplier you want may sign with the importer in that seat" | Used once, near the end on the page. In ads ([[Gen Ads]]) it may carry one of the three concepts |
 | Trust transfer | Named expos, the coordinator, a tax invoice | The relationship is real |
 
 ## Page order for a business trip

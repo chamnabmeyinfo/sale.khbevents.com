@@ -29,6 +29,10 @@ export interface JsonRequest {
   timeoutMs: number;
   /** Stream the Anthropic answer (needed for long answers). */
   stream?: boolean;
+  /** SDK retries for Anthropic (default 1). 0 for long requests that must fit a function's time limit. */
+  retries?: number;
+  /** Time left for the back-up provider when the primary failed; the full timeout when not set. */
+  fallbackTimeoutMs?: number;
 }
 
 export interface JsonAnswer {
@@ -42,11 +46,12 @@ export async function generateJson(req: JsonRequest): Promise<JsonAnswer> {
   const providers = await aiTextProviders();
   if (!providers.length) throw new AiAnalystError(NO_AI_KEY, 'no_key');
   let last: AiAnalystError | null = null;
-  for (const provider of providers) {
+  for (const [i, provider] of providers.entries()) {
     const key = await aiKey(provider);
     if (!key) continue;
+    const r = i > 0 && req.fallbackTimeoutMs ? { ...req, timeoutMs: Math.min(req.timeoutMs, req.fallbackTimeoutMs) } : req;
     try {
-      return provider === 'anthropic' ? await askAnthropic(key, req) : await askGemini(key, req);
+      return provider === 'anthropic' ? await askAnthropic(key, r) : await askGemini(key, r);
     } catch (err) {
       last = err instanceof AiAnalystError ? err : new AiAnalystError(err instanceof Error ? err.message : String(err), 'api');
       // A refusal or an unreadable answer is not the key's fault: do not spend the back-up on it.
@@ -58,7 +63,7 @@ export async function generateJson(req: JsonRequest): Promise<JsonAnswer> {
 }
 
 async function askAnthropic(apiKey: string, req: JsonRequest): Promise<JsonAnswer> {
-  const client = new Anthropic({ apiKey, timeout: req.timeoutMs, maxRetries: 1 });
+  const client = new Anthropic({ apiKey, timeout: req.timeoutMs, maxRetries: req.retries ?? 1 });
   const params = {
     model: AI_MODEL,
     max_tokens: req.maxTokens,

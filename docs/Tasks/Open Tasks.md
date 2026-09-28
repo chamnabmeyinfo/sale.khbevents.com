@@ -33,6 +33,14 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [ ] If a row ever shows "Telegram ended the session", the salesperson connects again from the same tab (code from their Telegram app). Telegram may also show a new "khbportal" device after a reconnection; ending old ones there is fine. #owner
 - [ ] Later, if the team wants replies within a second instead of about eight: a live update connection per account (Telegram updates), which needs a server that stays up all day rather than Vercel functions. Decide only after the polling version has run a few weeks. #for-claude
 
+### Gen Ads (2026-09-28)
+
+- [x] **Gen Ads** button on every landing page card: one AI call turns the page into an ads package (analysis, three concepts with poster text and captions, video script, Google and LinkedIn text, objection posts, first Telegram reply, targeting, A/B tests, posting plan); every number comes from the CMS; flagged lines show why. → [[Gen Ads]]
+- [ ] Open **Gen Ads** on the Korea sourcing page once the deploy is READY (the first open runs the AI), read the three concepts and the Khmer, and tell Claude what reads wrong or is missing. #owner
+- [ ] Press **Create tracked links** there, then use the Facebook / Telegram / TikTok links of each concept in the ads, so Campaigns → Performance shows which concept sells. This replaces "one campaign per trip, one ad version per poster" for pages that use Gen Ads. #owner
+- [ ] Have a native Khmer speaker read the Khmer captions and the first Telegram reply before they are posted. #owner
+- [ ] Later, if useful: a poster text preview card (4:5) in the portal before Canva; per-concept LinkedIn text; a "save as Telegram Reply Template" button for the first reply. Decide after a few real runs. #for-claude
+
 ### AI & API keys (2026-09-28)
 
 - [x] Settings & Security → AI & API keys: Anthropic and Gemini keys saved in the portal (checked before saving, shown only as the last four characters), used by the AI analyst, the AI coach, voice to text and the new AI headline ideas in Ad posters. → [[AI Keys]]

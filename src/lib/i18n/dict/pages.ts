@@ -35,6 +35,8 @@ export const pages: Dictionary = {
     'pages.trackingTitle': 'View Tracking & Pixels',
     'pages.settingsTitle': 'Dedicated Page Settings',
     'pages.deleteTitle': 'Delete Page',
+    'pages.genAds': 'Gen Ads',
+    'pages.genAdsTitle': 'Generate ad concepts from this page with AI: captions, poster ideas, video script',
 
     // Delete
     'pages.confirmDelete': 'Are you sure you want to delete the landing page "{title}"?',
@@ -127,6 +129,8 @@ export const pages: Dictionary = {
     'pages.trackingTitle': 'មើលការតាមដាន និង Pixels',
     'pages.settingsTitle': 'ការកំណត់ដាច់ដោយឡែករបស់ទំព័រ',
     'pages.deleteTitle': 'លុបទំព័រ',
+    'pages.genAds': 'Gen Ads',
+    'pages.genAdsTitle': 'បង្កើតគំនិតផ្សព្វផ្សាយពីទំព័រនេះដោយ AI៖ អត្ថបទ post គំនិតផ្ទាំងផ្សព្វផ្សាយ ស្គ្រីបវីដេអូ',
 
     'pages.confirmDelete': 'តើលោកអ្នកប្រាកដថាចង់លុបទំព័រ Landing "{title}" មែនទេ?',
     'pages.deleteFailed': 'លុបទំព័រមិនបាន',

@@ -23,7 +23,8 @@ import {
   Activity,
   Sliders,
   Upload,
-  Printer
+  Printer,
+  Sparkles
 } from 'lucide-react';
 import { LandingPage } from '@/lib/types';
 import { isContentPack, mergeContentPack } from '@/lib/content-pack';
@@ -355,8 +356,8 @@ export default function PagesManagerClient({ initialPages, stats }: PagesManager
                 </div>
               </div>
 
-              <div className="p-5 pt-0 border-t border-slate-100 dark:border-emerald-950/80 mt-2 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5">
+              <div className="p-5 pt-0 border-t border-slate-100 dark:border-emerald-950/80 mt-2 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => handleCopyLink(page.slug, page.id)}
@@ -397,7 +398,7 @@ export default function PagesManagerClient({ initialPages, stats }: PagesManager
                   </button>
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <Link
                     href={`/admin/pages/${page.id}?tab=tracking`}
                     className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold flex items-center transition-colors"
@@ -412,6 +413,16 @@ export default function PagesManagerClient({ initialPages, stats }: PagesManager
                     title={t('pages.settingsTitle')}
                   >
                     <Sliders className="w-3.5 h-3.5" />
+                  </Link>
+
+                  <Link
+                    href={`/admin/pages/${page.id}/ads`}
+                    className="px-3 py-1.5 rounded-lg bg-violet-50 dark:bg-violet-500/20 text-violet-800 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-500/30 border border-violet-300 dark:border-violet-500/40 text-xs font-semibold flex items-center gap-1 transition-colors"
+                    title={t('pages.genAdsTitle')}
+                    data-gen-ads={page.slug}
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    <span>{t('pages.genAds')}</span>
                   </Link>
 
                   <Link
