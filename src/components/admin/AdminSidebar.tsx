@@ -19,6 +19,7 @@ import {
   Sparkles,
   Target,
   Link2,
+  ImageIcon,
   UserCheck, 
   Clock, 
   CheckCircle2, 
@@ -180,6 +181,7 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapsed }: {
       subItems: [
         { label: t('nav.campaigns.performance'), href: '/admin/campaigns', icon: BarChart3, badge: 'New' },
         { label: t('nav.campaigns.manage'), href: '/admin/campaigns?tab=manage', icon: Link2 },
+        { label: t('nav.campaigns.posters'), href: '/admin/campaigns?tab=posters', icon: ImageIcon },
         { label: t('nav.campaigns.ai'), href: '/admin/campaigns?tab=ai', icon: Sparkles },
         { label: t('nav.campaigns.setup'), href: '/admin/campaigns?tab=setup', icon: Settings },
       ]

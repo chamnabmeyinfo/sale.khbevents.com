@@ -28,6 +28,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-28 — Ad posters: the portal writes the prompts and text from live facts; an image tool draws
+
+- **Decision:** An Ad Poster Kit in Campaigns & AI builds image prompts (four sizes: 4:5, 1:1, 9:16, 1.91:1) and poster text from the page's live CMS facts; image tools draw the background only and the text is typeset in Canva. The portal does not generate images itself.
+- **Why:** Prices, dates and seats on a poster must match the CMS (Copy Rules), which a hand-typed prompt cannot guarantee. Image generators write Khmer badly, so text is added with real fonts. One size cannot fit every platform; four cover Facebook, Instagram, TikTok, Telegram, Google and LinkedIn.
+- **Who decided:** Owner ("OK Please Do it."), on Claude's recommendation.
+- **Affects:** [[Campaigns and AI Analyst]].
+
 ## 2026-09-28 — Google Analytics: one property for the whole site, as a complement to the portal's own tracking
 
 - **Decision:** Keep the portal's own tracking (Campaigns & AI) as the main source for sales decisions, and add Google Analytics 4 as a free complement: one Measurement ID set once in Settings, loaded on every landing page and the home page. No separate property per page, and no new analytics system.

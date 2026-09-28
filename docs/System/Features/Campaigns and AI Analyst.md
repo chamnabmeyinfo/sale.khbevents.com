@@ -1,7 +1,7 @@
 ---
 type: feature
 tags: [system, feature, analytics, marketing, ai]
-updated: 2026-09-25
+updated: 2026-09-28
 admin_path: /admin/campaigns
 admin_menu: Campaigns & AI
 source:
@@ -16,6 +16,9 @@ source:
   - src/lib/conversions.ts
   - src/lib/conversions-server.ts
   - src/lib/ai-analyst.ts
+  - src/lib/ad-posters.ts
+  - src/components/admin/campaigns/PostersTab.tsx
+  - src/app/api/campaigns/posters/route.ts
   - src/lib/ai-store.ts
   - src/app/api/campaigns/
   - src/app/api/track/route.ts
@@ -44,6 +47,7 @@ An AI analyst reads the numbers first and writes the plan. The owner reviews it;
 |---|---|
 | **Performance** | Visits, engaged visits, leads, customers, spend and cost per lead; "What needs attention" findings; a table per campaign (with the salesperson's first answer time and leads not yet contacted); visitor journey; how far visitors read (per section); visits and leads per day; visits by hour; breakdowns by channel, app browser, device, language, new or returning, page and ad |
 | **Campaigns & links** | Create a campaign for each ad or post, then copy its tracked link and QR code. Record the money spent |
+| **Ad posters** | The Ad Poster Kit: image prompts per size, poster text in English and Khmer, tracked links and QR codes, and one all-in-one prompt, built from the page's live facts (since 2026-09-28; see below) |
 | **AI analyst** | Latest analysis: verdict, data quality, numbered actions with steps, campaign verdicts (scale, keep, fix, pause, too early), insights, tests to run, ad ideas, sales follow-up. Settings for the daily run |
 | **Tracking setup** | Which keys are set, pixels per page, test codes, the last server sends to Meta and TikTok |
 
@@ -53,6 +57,26 @@ An AI analyst reads the numbers first and writes the plan. The owner reviews it;
 2. Copy the link (or one link per ad) into the ad's Website URL, the post, or the Telegram message. Use the QR code for print.
 3. Once a week, copy the spend from Ads Manager into the campaign.
 4. Read **Performance**, and the **AI analyst** plan that arrives every evening.
+
+## Ad Poster Kit (2026-09-28)
+
+**Campaigns & AI → Ad posters** makes the material for a social media poster; an image tool (ChatGPT, Gemini, Midjourney, Canva AI) draws it and Canva finishes it.
+
+1. Pick the trip page and the goal: announce the trip, early-bird price, last seats, or registration closing. A goal the page cannot back is greyed out (no open early-bird price, no seat counter, no open deadline).
+2. **Photo prompts, one per size**, asking for no text and leaving room for it:
+
+| Size | Pixels | Placements | Keep text out of |
+|---|---|---|---|
+| 4:5 | 1080×1350 | Facebook and Instagram feed, LinkedIn feed | 60 px from the edges |
+| 1:1 | 1080×1080 | Facebook, Instagram, LinkedIn, Telegram posts, Google Display square | 60 px from the edges |
+| 9:16 | 1080×1920 | TikTok, Reels, Stories, Telegram stories, YouTube Shorts | top 15%, bottom 35%, 64 px sides |
+| 1.91:1 | 1200×628 | Google Display, LinkedIn and Facebook link ads | 40 px; headline and price only |
+
+3. **Poster text** in English and Khmer: the page's own hero headline, supporting line, button and reassurance, plus an offer line computed from the CMS (price, early-bird date and later price, seats left, closing date; Phnom Penh dates). Nothing is invented; the text is only as current as the moment it is copied.
+4. **Tracked links and QR codes** of the page's campaigns (one ad version per poster), or a link to create one.
+5. **One all-in-one prompt** for a design assistant with every size, the text, the brand colour and the rules (no added prices, dates, testimonials or logos; Khmer typeset in a Khmer font, never drawn by the image tool).
+
+Warnings: a page not made with the builder has no price or dates to use; a page with no price; a passed registration deadline.
 
 ## How visits are counted
 

@@ -147,7 +147,7 @@ function Links({ campaign, origin }: { campaign: Pick<Campaign, 'pageSlug' | 'sl
   );
 }
 
-function LinkRow({ label, url, fileName }: { label: string; url: string; fileName: string }) {
+export function LinkRow({ label, url, fileName }: { label: string; url: string; fileName: string }) {
   const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);

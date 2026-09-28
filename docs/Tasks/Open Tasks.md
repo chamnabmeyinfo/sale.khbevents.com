@@ -33,6 +33,12 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [ ] If a row ever shows "Telegram ended the session", the salesperson connects again from the same tab (code from their Telegram app). Telegram may also show a new "khbportal" device after a reconnection; ending old ones there is fine. #owner
 - [ ] Later, if the team wants replies within a second instead of about eight: a live update connection per account (Telegram updates), which needs a server that stays up all day rather than Vercel functions. Decide only after the polling version has run a few weeks. #for-claude
 
+### Ad posters (2026-09-28)
+
+- [x] Ad Poster Kit in Campaigns & AI → Ad posters: photo prompts for 4:5, 1:1, 9:16 and 1.91:1, poster text in English and Khmer from the live CMS facts, tracked links and QR codes, and an all-in-one prompt. → [[Campaigns and AI Analyst]]
+- [ ] Before making posters, create a campaign per trip with one ad version per poster (Campaigns & links), so each poster's leads are counted. #owner
+- [ ] Optional later: send the kit straight to Canva to create draft designs in the four sizes (Claude can do this from a chat today with the Canva connector). #for-claude
+
 ### Google Analytics for the whole site (2026-09-28)
 
 - [x] One GA4 Measurement ID in Settings loads on every landing page and the home page; the home page is tracked by the portal too; forms and the floating Telegram button send GA4 events. → [[Tracking and Analytics]]

@@ -1,13 +1,14 @@
 'use client';
 
 import React from 'react';
-import { BarChart3, Bot, Link2, Settings2, Target } from 'lucide-react';
+import { BarChart3, Bot, ImageIcon, Link2, Settings2, Target } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useUrlParam } from '@/lib/use-browser-state';
 import OverviewTab from './OverviewTab';
 import ManageTab from './ManageTab';
 import AiTab from './AiTab';
 import SetupTab from './SetupTab';
+import PostersTab from './PostersTab';
 
 export interface PageOption {
   slug: string;
@@ -15,7 +16,7 @@ export interface PageOption {
   id: string;
 }
 
-const TABS = ['overview', 'manage', 'ai', 'setup'] as const;
+const TABS = ['overview', 'manage', 'posters', 'ai', 'setup'] as const;
 type Tab = (typeof TABS)[number];
 
 /** Admin → Campaigns: performance report, campaigns and links, AI analyst, tracking setup. */
@@ -36,6 +37,7 @@ export default function CampaignsClient({ pages }: { pages: PageOption[] }) {
   const icons: Record<Tab, React.ReactNode> = {
     overview: <BarChart3 className="w-4 h-4" />,
     manage: <Link2 className="w-4 h-4" />,
+    posters: <ImageIcon className="w-4 h-4" />,
     ai: <Bot className="w-4 h-4" />,
     setup: <Settings2 className="w-4 h-4" />,
   };
@@ -61,6 +63,7 @@ export default function CampaignsClient({ pages }: { pages: PageOption[] }) {
       </nav>
       {tab === 'overview' && <OverviewTab pages={pages} />}
       {tab === 'manage' && <ManageTab pages={pages} />}
+      {tab === 'posters' && <PostersTab pages={pages} />}
       {tab === 'ai' && <AiTab pages={pages} />}
       {tab === 'setup' && <SetupTab />}
     </div>
