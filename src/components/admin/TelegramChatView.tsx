@@ -245,7 +245,10 @@ export default function TelegramChatView({ leadId, staffName, canReply = true, c
 
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
-    const text = reply.trim();
+    await sendText(reply.trim());
+  };
+
+  const sendText = async (text: string) => {
     if (!text || sending) return;
     setSending(true);
     setError('');
@@ -272,6 +275,9 @@ export default function TelegramChatView({ leadId, staffName, canReply = true, c
   };
 
   const stats = data?.stats;
+  const firstName = (data?.customer.name || '').trim().split(/\s+/)[0] || '';
+  // The customer's greeting is Khmer whatever the admin's own language; "Edit first" changes it.
+  const helloText = data ? t('leads.chat.hello.textKh', { name: firstName, staff: data.staffName, page: data.pageTitle || 'KHB Events' }) : '';
   const chipLabel = live.view === 'flood' ? t('leads.chat.flood', { at: live.until ? time(Date.parse(live.until)) : '' }) : t(`leads.chat.state.${live.view}`);
   return (
     <div className="rounded-xl border border-sky-200 dark:border-sky-900/60 bg-sky-50/60 dark:bg-sky-950/20 p-3.5 space-y-2" data-telegram-chat="" data-live-state={live.view} data-last-id={lastId || undefined}>
@@ -312,7 +318,24 @@ export default function TelegramChatView({ leadId, staffName, canReply = true, c
       {loading && !data ? (
         <div className="text-[11px] text-slate-500 flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />{t('leads.chat.loading')}</div>
       ) : data && data.messages.length === 0 && !data.error ? (
-        <div className="text-[11px] text-slate-500 dark:text-gray-400">{t('leads.chat.empty')}</div>
+        <div className="space-y-2" data-say-hello="">
+          <div className="text-[11px] text-slate-500 dark:text-gray-400">{t('leads.chat.empty')}</div>
+          {canReply && data.customer.username ? (
+            <div className="p-2.5 rounded-lg bg-white dark:bg-[#0A1610] border border-sky-200 dark:border-sky-900/50 text-xs space-y-1.5">
+              <div className="font-bold text-sky-800 dark:text-sky-300">{t('leads.chat.hello.title')}</div>
+              <p className="whitespace-pre-wrap text-slate-800 dark:text-gray-100">{helloText}</p>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" disabled={sending} onClick={() => void sendText(helloText)} className="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-[#fff] on-dark text-xs font-extrabold inline-flex items-center gap-1 cursor-pointer disabled:opacity-50" data-say-hello-send="">
+                  {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}{t('leads.chat.hello.send')}
+                </button>
+                <button type="button" onClick={() => { setReply(helloText); typedAt.current = Date.now(); }} className="px-3 py-1.5 rounded-xl border border-sky-200 dark:border-sky-800 text-sky-800 dark:text-sky-300 text-xs font-bold cursor-pointer">{t('leads.chat.hello.edit')}</button>
+              </div>
+              <p className="text-[10px] text-slate-500 dark:text-gray-400">{t('leads.chat.hello.hint')}</p>
+            </div>
+          ) : canReply ? (
+            <div className="text-[11px] text-amber-800 dark:text-amber-300">{t('leads.chat.hello.noUsername')}</div>
+          ) : null}
+        </div>
       ) : data && data.messages.length > 0 ? (
         <div className="relative">
           <div ref={listRef} onScroll={onScroll} className={`${compact ? 'max-h-[420px]' : 'max-h-[60vh]'} overflow-y-auto space-y-1.5 pr-1`} role="log" aria-live="polite">

@@ -175,7 +175,11 @@ The check runs after normal site traffic together with the lead follow-up check 
 
 Because the customer is identified before they write to the salesperson, the later chat is tracked by Telegram id with no guesswork: the account check refreshes the numbers and the [[Telegram Inbox]] shows the conversation, and the check never makes a second contact for them.
 
-Trade-off: one extra tap (Start, then the button). Test it on real traffic and compare "Became a real chat" on Team performance with the direct setting. The bot is `@khb_sale_admin_bot` (its webhook must be registered, see the Telegram bot set-up); an old link with a code the portal no longer holds falls back to the bot's plain welcome.
+**Say hello** (since 2026-09-27, later the same day): a bot-entry customer who tapped Start but never wrote shows in the [[Telegram Inbox]] with an empty chat and a ready Khmer greeting naming them, the salesperson and the trip ("សួស្តី Dara 👋 ខ្ញុំ Chamnab Mey ពី KHB Events…"). **Send this hello** sends it once from the salesperson's own account; **Edit first** puts it in the reply box. Only possible when the customer has a public @username. Without one, the bot's greeting is followed by a one-tap **📱 Share my phone number** button; a shared number lands on the lead, the salesperson is alerted with it, and the customer is thanked.
+
+**Per page:** each landing page can choose its own entry under the page's dedicated settings → Lead Routing → "Where this page's Chat on Telegram click goes" (same as Round Robin, direct, or bot first), so bot first can be tested on one page against direct on another.
+
+Trade-off: one extra tap (Start, then the button). Test it on real traffic and compare "Became a real chat" on Team performance with the direct setting. The bot is `@khb_sale_admin_bot` (its webhook must be registered, see the Telegram bot set-up); an old link with a code the portal no longer holds falls back to the bot's plain welcome. The step-by-step guide for the owner is [[Bot First Guide]].
 
 ## Telegram inbox
 

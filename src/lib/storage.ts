@@ -73,6 +73,7 @@ import {
   supabaseGetMarkerRange,
   supabaseDeleteMarkerRange,
   supabaseSetMarker,
+  supabaseSetLeadPhone,
   supabaseGetStaffClickStats,
   supabaseSaveStaffClickStats,
   supabaseGetPopupAds,
@@ -1267,6 +1268,20 @@ export async function updateLeadStatus(
 
   await saveDatabase(db);
   return lead;
+}
+
+/** The phone number a customer shared through the sales bot. */
+export async function setLeadPhone(id: string, phone: string): Promise<void> {
+  const clean = phone.replace(/[^\d+]/g, '').slice(0, 20);
+  if (!clean) return;
+  if (isSupabaseConfigured()) await supabaseSetLeadPhone(id, clean).catch(() => false);
+  const db = await getDatabase();
+  const lead = db.leads.find((l) => l.id === id);
+  if (lead) {
+    lead.phone = clean;
+    lead.updatedAt = new Date().toISOString();
+    await saveDatabase(db);
+  }
 }
 
 export async function addLeadNote(

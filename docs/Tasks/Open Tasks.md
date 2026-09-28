@@ -39,7 +39,8 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [ ] Switch it to **To the sales bot first** and test from your other phone: tap the page button, tap Start, read the greeting, tap the button, write to yourself. Check the lead appears in the CRM at once and the click shows "Messaged us". → [[Round Robin]] #owner
 - [ ] After a week on real traffic, compare "Became a real chat" on Team performance between the two settings and keep the better one. #owner
 - [ ] The bot's webhook must be registered for the bot to answer Start (Settings → Telegram, or POST /api/telegram/setup-webhook). If the bot stays silent after Start, that is the first thing to check. #owner
-- [ ] Per-page choice of entry (bot first on one page, direct on another) if the owner wants to test side by side. #for-claude
+- [x] Per-page choice of entry, **Say hello** from the inbox for silent bot-entry customers, one-tap phone share for people without a @username (2026-09-28). Guide: [[Bot First Guide]].
+- [ ] Follow [[Bot First Guide]] step by step on the second phone, then decide after a week which pages keep bot first. #owner
 
 ### Customer story and AI coach (new, 2026-09-27)
 

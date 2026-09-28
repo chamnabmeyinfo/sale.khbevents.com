@@ -338,6 +338,15 @@ export async function supabaseCreateLead(lead: Lead): Promise<Lead> {
   return lead;
 }
 
+/** Writes the phone number the customer shared (through the bot) onto the lead. */
+export async function supabaseSetLeadPhone(id: string, phone: string): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  const { error } = await supabase.from('leads').update({ phone, updated_at: new Date().toISOString() }).eq('id', id);
+  if (error) console.error('Supabase setLeadPhone error:', error);
+  return !error;
+}
+
 export async function supabaseUpdateLeadStatus(
   id: string,
   status: LeadStatus,

@@ -583,6 +583,8 @@ export interface IsolatedPageSettings {
   email?: string;
 
   // 2. Lead Routing & Notifications
+  /** Where this page's "Chat on Telegram" click goes: the Round Robin default, straight to the salesperson, or the sales bot first. */
+  chatEntry?: 'default' | 'direct' | 'bot';
   telegramBotToken?: string;
   telegramChatId?: string;
   enableTelegramAlerts?: boolean;

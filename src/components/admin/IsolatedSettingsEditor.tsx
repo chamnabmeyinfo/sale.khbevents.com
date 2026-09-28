@@ -289,6 +289,21 @@ export default function IsolatedSettingsEditor({ formData, setFormData }: Isolat
             </p>
           </div>
 
+          <label className="block text-xs">
+            <span className="font-bold text-slate-800 dark:text-gray-200">{t('isolated.chatEntry.label')}</span>
+            <select
+              value={settings.chatEntry || 'default'}
+              onChange={(e) => updateSetting('chatEntry', e.target.value === 'bot' || e.target.value === 'direct' ? e.target.value : 'default')}
+              className="mt-1 w-full px-3 py-2 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-sm focus:border-amber-400 focus:outline-none"
+              data-page-chat-entry=""
+            >
+              <option value="default">{t('isolated.chatEntry.default')}</option>
+              <option value="direct">{t('isolated.chatEntry.direct')}</option>
+              <option value="bot">{t('isolated.chatEntry.bot')}</option>
+            </select>
+            <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-1 block">{t('isolated.chatEntry.hint')}</span>
+          </label>
+
           {/* Telegram Alert Configuration */}
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-emerald-950/20 border border-slate-200 dark:border-emerald-900/40">

@@ -1216,6 +1216,8 @@ export interface LeadConversation {
   staffId: string;
   staffName: string;
   customer: { userId: string; username?: string; name: string };
+  /** The trip or page the customer asked about, for a first greeting. */
+  pageTitle?: string;
   /** Oldest first. Empty when `unchanged`: keep the messages already shown. */
   messages: ChatMessage[];
   stats: ChatStats;
@@ -1256,6 +1258,7 @@ function conversationBase(lead: Lead, userId: string, username: string | undefin
     staffId: lead.routing!.staffId,
     staffName: lead.routing!.staffName,
     customer: { userId, username, name: lead.fullName },
+    pageTitle: lead.landingPageTitle || undefined,
     messages: [],
     stats,
     readAt: new Date(nowMs).toISOString(),

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSettings, getRoundRobinSettings, updateRoundRobinSettings, getPageBySlug, isTelegramWebhookSecured, recordStaffClick, getRoundRobinLogs, updateRoundRobinLogs, findLeadByTelegramUserId, createLeadFromTelegramChat, addLeadNote } from '@/lib/storage';
+import { getSettings, getRoundRobinSettings, updateRoundRobinSettings, getPageBySlug, isTelegramWebhookSecured, recordStaffClick, getRoundRobinLogs, updateRoundRobinLogs, findLeadByTelegramUserId, createLeadFromTelegramChat, addLeadNote, setLeadPhone } from '@/lib/storage';
 import { refCodeFromStartPayload } from '@/lib/contact-verify';
 import type { Lead } from '@/lib/types';
 import { selectNextStaff, escapeHtml, readTelegramResponse, countAssignment } from '@/lib/round-robin';
@@ -41,6 +41,8 @@ interface TelegramUpdate {
     };
     date: number;
     text?: string;
+    /** The customer tapped "share my phone number". */
+    contact?: { phone_number: string; first_name?: string; last_name?: string; user_id?: number };
     entities?: Array<{
       type: string;
       offset: number;
@@ -143,6 +145,13 @@ export async function POST(req: NextRequest) {
     }
 
     const message = update.message;
+
+    // ─── A bot-entry customer shared their phone number ───
+    if (message?.contact?.phone_number && (!message.contact.user_id || message.contact.user_id === message.from.id)) {
+      const lead = await findLeadByTelegramUserId(String(message.from.id)).catch(() => null);
+      if (lead) await handleSharedPhone(botToken, lead, message);
+      return NextResponse.json({ ok: true });
+    }
 
     if (!message?.text) {
       return NextResponse.json({ ok: true });
@@ -425,6 +434,13 @@ async function handleBotEntry(botToken: string, managerFallbackChatId: string | 
   // The visitor: greeting and one button.
   const hand = handOverMessage(m, staff, pageTitle);
   await sendTelegramMessage(botToken, m.chat.id, hand.text, hand.replyMarkup ? { replyMarkup: hand.replyMarkup } : undefined);
+  // No public @username: the salesperson cannot write first, so offer a one-tap phone share.
+  if (!username) {
+    const kh = khmerSpeaker(m);
+    await sendTelegramMessage(botToken, m.chat.id, kh ? 'ឬចែករំលែកលេខទូរស័ព្ទ ដើម្បីឱ្យបុគ្គលិកទាក់ទងអ្នក 👇' : 'Or share your phone number so the salesperson can reach you 👇', {
+      replyMarkup: { keyboard: [[{ text: kh ? '📱 ចែករំលែកលេខទូរស័ព្ទ' : '📱 Share my phone number', request_contact: true }]], one_time_keyboard: true, resize_keyboard: true },
+    }).catch(() => undefined);
+  }
 
   // The salesperson (and the manager CC): who is coming.
   const who = [name, username ? `(@${username})` : ''].filter(Boolean).join(' ') || 'អតិថិជន';
@@ -453,6 +469,20 @@ async function handleBotLeadMessage(botToken: string, lead: Lead, m: BotMessage,
   await sendTelegramMessage(botToken, m.chat.id, hand.text, hand.replyMarkup ? { replyMarkup: hand.replyMarkup } : undefined);
   const who = [lead.fullName, lead.customFields?.telegramUsername ? `(@${lead.customFields.telegramUsername})` : ''].filter(Boolean).join(' ');
   const alert = [`💬 <b>${escapeHtml(who)}</b> សរសេរមក bot៖`, `“${escapeHtml(text.slice(0, 300))}”`, '👉 សូមឆ្លើយគេក្នុងការជជែករបស់អ្នក។', `📋 CRM: https://sale.khbevents.com/admin/leads?id=${encodeURIComponent(lead.id)}`].join('\n');
+  const to = staff?.telegramChatId || rr.managerChatId;
+  if (to) runAfterResponse(() => sendTelegramMessage(botToken, to, alert).then(() => undefined));
+}
+
+/** The customer shared their phone through the bot: onto the lead, and the salesperson can call or write. */
+async function handleSharedPhone(botToken: string, lead: Lead, m: BotMessage): Promise<void> {
+  const phone = m.contact!.phone_number;
+  await setLeadPhone(lead.id, phone).catch(() => undefined);
+  await addLeadNote(lead.id, `📱 Shared phone number through the bot`, 'Sales bot').catch(() => null);
+  const kh = khmerSpeaker(m);
+  await sendTelegramMessage(botToken, m.chat.id, kh ? 'អរគុណ! បុគ្គលិកយើងនឹងទាក់ទងអ្នកឆាប់ៗ 🙏' : 'Thank you! Our salesperson will contact you shortly 🙏', { replyMarkup: { remove_keyboard: true } });
+  const rr = await getRoundRobinSettings();
+  const staff = rr.staffList.find((s) => s.id === lead.routing?.staffId);
+  const alert = [`📱 <b>${escapeHtml(lead.fullName)}</b> បានចែករំលែកលេខទូរស័ព្ទ៖ <code>${escapeHtml(phone)}</code>`, `📌 ${escapeHtml(lead.landingPageTitle || 'KHB Events')}`, '👉 សូមទាក់ទងគេឥឡូវ។', `📋 CRM: https://sale.khbevents.com/admin/leads?id=${encodeURIComponent(lead.id)}`].join('\n');
   const to = staff?.telegramChatId || rr.managerChatId;
   if (to) runAfterResponse(() => sendTelegramMessage(botToken, to, alert).then(() => undefined));
 }

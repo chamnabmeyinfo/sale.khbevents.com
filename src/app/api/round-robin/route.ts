@@ -44,8 +44,11 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean, text
   const userAgent = req.headers.get('user-agent') || undefined;
   const preferredStaffId = req.cookies.get(STAFF_COOKIE)?.value || undefined;
   const visitor = visitorDetailFromRequest(req.headers, req.cookies);
-  // Through the sales bot first? The code then rides in the bot link, so the bot knows the click.
-  const botEntry = (await getRoundRobinSettings().catch(() => null))?.chatEntry === 'bot';
+  // Through the sales bot first? The page may choose for itself; otherwise the Round Robin setting decides.
+  // The code then rides in the bot link, so the bot knows the click.
+  const [rrForEntry, pageForEntry] = await Promise.all([getRoundRobinSettings().catch(() => null), getPageBySlug(slug).catch(() => null)]);
+  const pageEntry = pageForEntry?.isolatedSettings?.chatEntry;
+  const botEntry = pageEntry && pageEntry !== 'default' ? pageEntry === 'bot' : rrForEntry?.chatEntry === 'bot';
   // A code per click lets the chat that follows be recognised (bot link, or an old-style message).
   const refCode = botEntry || (await contactCheckEnabled().catch(() => false)) ? newRefCode() : undefined;
 
