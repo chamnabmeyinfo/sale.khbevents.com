@@ -7,8 +7,8 @@
  *    Telegram Premium. No audio leaves Telegram.
  * 2. Gemini, when a Gemini key is set (Settings → AI & API keys, or GEMINI_API_KEY in
  *    Vercel): the voice file is downloaded
- *    through the account and sent to Google for transcription. Model from
- *    GEMINI_TRANSCRIBE_MODEL (default gemini-2.5-flash).
+ *    through the account and sent to Google for transcription. Model: the newest
+ *    Flash model the key can use (gemini-models.ts), or GEMINI_TRANSCRIBE_MODEL.
  * With neither, the message stays "pending" and shows as a voice message.
  */
 
@@ -18,20 +18,18 @@ export interface Transcriber {
 }
 
 import { aiKey } from './ai-keys';
+import { geminiModel, isModelGone } from './gemini-models';
 
 export async function geminiConfigured(): Promise<boolean> {
   return Boolean(await aiKey('gemini'));
 }
-
-const GEMINI_MODEL = () => process.env.GEMINI_TRANSCRIBE_MODEL || 'gemini-2.5-flash';
 
 export const geminiTranscriber: Transcriber = {
   name: 'gemini',
   async transcribe(audio, mimeType, hint) {
     const key = await aiKey('gemini');
     if (!key) throw new Error('No Gemini API key is set');
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL())}:generateContent`;
-    const res = await fetch(url, {
+    const call = (model: string) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify({
@@ -45,6 +43,12 @@ export const geminiTranscriber: Transcriber = {
       }),
       signal: AbortSignal.timeout(40_000),
     });
+    const model = await geminiModel(key, 'transcribe');
+    let res = await call(model);
+    if (!res.ok && isModelGone(res.status, await res.clone().text().catch(() => ''))) {
+      const fresh = await geminiModel(key, 'transcribe', true);
+      if (fresh !== model) res = await call(fresh);
+    }
     if (!res.ok) throw new Error(`Gemini ${res.status}: ${(await res.text()).slice(0, 160)}`);
     const data = (await res.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
     const text = (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();

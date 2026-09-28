@@ -109,7 +109,7 @@ Warnings: a page not made with the builder has no price or dates to use; a page 
 
 ## AI analyst
 
-- **Model:** the primary AI set in Settings & Security → AI & API keys: Claude (`claude-opus-5`, with Anthropic's automatic fallback model) or Gemini (`gemini-2.5-flash` unless `GEMINI_TEXT_MODEL` says otherwise). If the primary fails and the other has a key, the other answers. Each stored report records the model that wrote it ([[AI Keys]]).
+- **Model:** the primary AI set in Settings & Security → AI & API keys: Claude (`claude-opus-5`, with Anthropic's automatic fallback model) or Gemini (the newest Flash model the key can use, unless `GEMINI_TEXT_MODEL` says otherwise). If the primary fails and the other has a key, the other answers. Each stored report records the model that wrote it ([[AI Keys]]).
 - **What it reads:** only aggregated numbers from the report, the rule findings, each page's sections and deadline, and the campaign audience notes. No personal data.
 - **Rules it follows:** quote the numbers; say when data is too thin; never invent figures, customers or testimonials; give at most 6 actions, ordered by impact.
 - **When it runs:** on demand ("Analyse now"), and once a day with the 20:00 Phnom Penh cron. The daily run is skipped when there were no visits or leads, so it costs nothing on empty days.

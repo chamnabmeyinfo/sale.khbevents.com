@@ -7,6 +7,7 @@ admin_menu: Settings & Security → AI & API keys
 source:
   - src/lib/ai-keys.ts
   - src/lib/ai-text.ts
+  - src/lib/gemini-models.ts
   - src/app/api/settings/ai/route.ts
   - src/components/admin/AiKeysPanel.tsx
   - src/lib/ai-analyst.ts
@@ -33,7 +34,8 @@ One place for the API keys of the AI services the portal uses: **Settings & Secu
 - If the primary has no key, the other one answers; with no key at all, the AI features stay off.
 - The choice is saved with the keys (`primary` in the `ai_keys` row) and works at once.
 - Voice to text always uses Gemini: Claude does not take audio.
-- Models: Claude Opus 5; Gemini uses `gemini-2.5-flash` unless the Vercel variable `GEMINI_TEXT_MODEL` names another. Each stored report and coach result records the model that wrote it.
+- Models: Claude Opus 5. For Gemini the portal asks Google which models the key can use and takes the newest general **Flash** model (not lite, image or audio models), rechecked every 6 hours. If Google answers that a model is gone (404), it picks again at once and retries. **Test the key in use** shows the model it will use. The Vercel variables `GEMINI_TEXT_MODEL` and `GEMINI_TRANSCRIBE_MODEL` override the choice. Each stored report and coach result records the model that wrote it.
+- Why not a fixed name: on 2026-09-28 `gemini-2.5-flash` answered 404 "no longer available to new users" for a new key.
 
 ## How it works
 

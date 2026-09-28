@@ -25,6 +25,7 @@ vi.mock('@anthropic-ai/sdk', () => {
 
 import { aiKeyStatuses, aiTextProviders, saveAiKey, setAiPrimary } from '../ai-keys';
 import { AiAnalystError, generateJson } from '../ai-text';
+import { pickFlashModel } from '../gemini-models';
 
 const REQ = { system: 's', user: 'u', schema: { type: 'object' }, effort: 'medium' as const, maxTokens: 1000, timeoutMs: 5000 };
 const geminiOk = (json: unknown) => new Response(JSON.stringify({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify(json) }] } }], modelVersion: 'gemini-test' }), { status: 200 });
@@ -61,7 +62,8 @@ describe('primary AI', () => {
     vi.stubGlobal('fetch', fetchMock);
     const answer = await generateJson(REQ);
     expect(answer).toMatchObject({ provider: 'gemini', model: 'gemini-test', data: { ideas: [] } });
-    const body = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
+    const gen = (fetchMock.mock.calls as unknown as Array<[string, RequestInit]>).find(([u]) => u.includes(':generateContent'))!;
+    const body = JSON.parse(gen[1].body as string);
     expect(body.generationConfig).toMatchObject({ responseMimeType: 'application/json', responseJsonSchema: { type: 'object' } });
   });
 
@@ -93,5 +95,38 @@ describe('primary AI', () => {
     expect(err).toBeInstanceOf(AiAnalystError);
     expect(err.code).toBe('bad_output');
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('asks Google for the current Flash model and retries when a model is retired', async () => {
+    await saveAiKey('gemini', 'AIzaSy-test-gemini-key-000000000');
+    await setAiPrimary('gemini');
+    const list = { models: [
+      { name: 'models/gemini-2.5-flash', supportedGenerationMethods: ['generateContent'] },
+      { name: 'models/gemini-3.8-flash', supportedGenerationMethods: ['generateContent'] },
+    ] };
+    let listCalls = 0;
+    const urls: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      urls.push(url);
+      if (url.includes('/models?')) {
+        listCalls += 1;
+        // First list is stale (only the retired model); the refreshed one has the new model.
+        return new Response(JSON.stringify(listCalls === 1 ? { models: [list.models[0]] } : list), { status: 200 });
+      }
+      if (url.includes('gemini-2.5-flash')) return new Response(JSON.stringify({ error: { message: 'This model models/gemini-2.5-flash is no longer available to new users.' } }), { status: 404 });
+      return geminiOk({ ok: 1 });
+    }));
+    expect(await generateJson(REQ)).toMatchObject({ provider: 'gemini', data: { ok: 1 } });
+    expect(urls.filter((u) => u.includes(':generateContent')).map((u) => u.split('/models/')[1])).toEqual(['gemini-2.5-flash:generateContent', 'gemini-3.8-flash:generateContent']);
+  });
+});
+
+describe('pickFlashModel', () => {
+  const m = (name: string, methods = ['generateContent']) => ({ name: `models/${name}`, supportedGenerationMethods: methods });
+  it('takes the newest general Flash model, stable before preview', () => {
+    expect(pickFlashModel([m('gemini-2.5-flash'), m('gemini-3.8-flash'), m('gemini-3.8-flash-lite'), m('gemini-4.0-flash-image'), m('gemini-3.5-pro')])).toBe('gemini-3.8-flash');
+    expect(pickFlashModel([m('gemini-3.8-flash-preview-09-2026'), m('gemini-3.8-flash')])).toBe('gemini-3.8-flash');
+    expect(pickFlashModel([m('gemini-3.8-flash'), m('gemini-3.10-flash-preview')])).toBe('gemini-3.10-flash-preview');
+    expect(pickFlashModel([m('gemini-3.8-flash', ['embedContent']), m('text-embedding-004')])).toBeNull();
   });
 });

@@ -12,6 +12,7 @@
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { getMarker, setMarker } from './storage';
+import { listGeminiModels, pickFlashModel } from './gemini-models';
 
 export type AiProvider = 'anthropic' | 'gemini';
 export const AI_PROVIDERS: AiProvider[] = ['anthropic', 'gemini'];
@@ -142,12 +143,12 @@ export async function testAiKey(provider: AiProvider, key?: string): Promise<{ o
       await client.models.list({ limit: 1 });
       return { ok: true, message: 'The Anthropic key works.' };
     }
-    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1', {
-      headers: { 'x-goog-api-key': k },
-      signal: AbortSignal.timeout(15_000),
-    });
-    if (res.ok) return { ok: true, message: 'The Gemini key works.' };
-    return { ok: false, message: res.status === 400 || res.status === 403 ? 'Google rejected this key.' : `Google answered ${res.status}.` };
+    const { status, models } = await listGeminiModels(k);
+    if (status === 200) {
+      const model = process.env.GEMINI_TEXT_MODEL?.trim() || pickFlashModel(models);
+      return { ok: true, message: model ? `The Gemini key works (model ${model}).` : 'The Gemini key works.' };
+    }
+    return { ok: false, message: status === 400 || status === 403 ? 'Google rejected this key.' : `Google answered ${status}.` };
   } catch (err) {
     if (err instanceof Anthropic.AuthenticationError) return { ok: false, message: 'Anthropic rejected this key.' };
     if (err instanceof Anthropic.PermissionDeniedError) return { ok: false, message: 'This key has no access to the API (check its workspace and billing).' };

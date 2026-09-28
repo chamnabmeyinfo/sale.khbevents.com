@@ -18,10 +18,13 @@ tags: [session, ai]
 - One shared AI layer (`src/lib/ai-text.ts`) for the AI analyst, the AI coach and the poster headline ideas. It asks the primary, then the other one on a service failure. Gemini answers through its JSON mode with the same answer shape, so the screens did not change.
 - Texts in English and Khmer now say "Anthropic or Gemini" where they said Anthropic only.
 
+- Follow-up the same day: the owner's first Gemini test failed with 404 (`gemini-2.5-flash` no longer available to new users). The Gemini model is no longer hard-coded: the portal picks the newest Flash model from the key's own model list, and picks again and retries when Google says a model is gone. Voice to text uses the same rule.
+
 ## Verified
 
 - Typecheck; 308 unit tests, including the primary order, the Gemini answer, the switch to the back-up, and no switch on an unreadable answer.
 - Local browser check with mock keys (15/15): choosing Gemini, the choice kept after reload, the back-up notes, the keys screen admin only. `data/db.json` restored.
+- 310 unit tests after the follow-up, including picking from a model list and the retry after a 404.
 - Not tested against the real Gemini and Anthropic services from here (no keys in the test setup).
 
 ## Decisions

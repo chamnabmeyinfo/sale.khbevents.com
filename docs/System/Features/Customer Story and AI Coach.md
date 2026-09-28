@@ -40,7 +40,7 @@ Telegram inbox (`/admin/chats`): heat badges in the list, **🔥 Hot first**, th
 
 ## Key rules and defaults
 
-- Needs an Anthropic or Gemini key (Settings & Security → AI & API keys; see [[AI Keys]]), the same primary AI as the campaign analyst. Without it the card says so and nothing is sent anywhere. Voice transcription outside Telegram needs the Gemini key (model `GEMINI_TRANSCRIBE_MODEL`, default gemini-2.5-flash); without it voice messages Telegram cannot transcribe stay marked "text coming…".
+- Needs an Anthropic or Gemini key (Settings & Security → AI & API keys; see [[AI Keys]]), the same primary AI as the campaign analyst. Without it the card says so and nothing is sent anywhere. Voice transcription outside Telegram needs the Gemini key (the newest Flash model the key can use, or `GEMINI_TRANSCRIBE_MODEL` if set); without it voice messages Telegram cannot transcribe stay marked "text coming…".
 - The AI never writes to a customer. It reads and suggests; a person sends.
 - The story is built fresh from the stored chat each time; the analysis is stored per lead (`lead_ai:<leadId>`) with when and on how many messages it was based.
 - Stored chats live in `chat:<leadId>` rows of `system_settings` (or the local file), newest 500 messages per lead. Admin only, same protection as the Telegram session: the RLS lockdown matters.

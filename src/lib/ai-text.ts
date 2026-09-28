@@ -8,10 +8,9 @@
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { aiKey, aiTextProviders, type AiProvider } from './ai-keys';
+import { geminiModel, isModelGone } from './gemini-models';
 
 export const AI_MODEL = 'claude-opus-5';
-/** Gemini model for text features; override with GEMINI_TEXT_MODEL. */
-export const geminiTextModel = () => process.env.GEMINI_TEXT_MODEL?.trim() || 'gemini-2.5-flash';
 
 export class AiAnalystError extends Error {
   constructor(message: string, public code: 'no_key' | 'refused' | 'bad_output' | 'api') {
@@ -91,10 +90,8 @@ interface GeminiResponse {
 }
 
 async function askGemini(key: string, req: JsonRequest): Promise<JsonAnswer> {
-  const model = geminiTextModel();
-  let res: Response;
-  try {
-    res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+  let model = await geminiModel(key, 'text');
+  const call = (m: string) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:generateContent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify({
@@ -108,6 +105,20 @@ async function askGemini(key: string, req: JsonRequest): Promise<JsonAnswer> {
       }),
       signal: AbortSignal.timeout(req.timeoutMs),
     });
+  let res: Response;
+  try {
+    res = await call(model);
+    if (!res.ok) {
+      const body = await res.clone().text().catch(() => '');
+      // Google retired the model name: pick again from the key's current list and retry once.
+      if (isModelGone(res.status, body)) {
+        const fresh = await geminiModel(key, 'text', true);
+        if (fresh !== model) {
+          model = fresh;
+          res = await call(model);
+        }
+      }
+    }
   } catch (err) {
     throw new AiAnalystError(`Gemini could not be reached (${err instanceof Error ? err.message : String(err)}).`, 'api');
   }
