@@ -33,6 +33,11 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [ ] If a row ever shows "Telegram ended the session", the salesperson connects again from the same tab (code from their Telegram app). Telegram may also show a new "khbportal" device after a reconnection; ending old ones there is fine. #owner
 - [ ] Later, if the team wants replies within a second instead of about eight: a live update connection per account (Telegram updates), which needs a server that stays up all day rather than Vercel functions. Decide only after the polling version has run a few weeks. #for-claude
 
+### Connecting accounts (2026-09-28)
+
+- [x] Step-by-step for the my.telegram.org form in the settings tab and in [[Connect a Telegram Account]] (2026-09-28).
+- [ ] Optional later: set the app once for the whole team and connect by scanning a QR code instead of phone and code. #for-claude
+
 ### Bot first entry (new, 2026-09-27)
 
 - [x] Round Robin → Advanced → "Where a Chat on Telegram click goes": direct (default) or the sales bot first with one button to the salesperson (2026-09-27). → [[Round Robin]]

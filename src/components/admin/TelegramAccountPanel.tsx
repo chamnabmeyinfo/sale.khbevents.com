@@ -115,6 +115,12 @@ export default function TelegramAccountPanel() {
               <li>{t('tga.step2')}</li>
               <li>{t('tga.step3')}</li>
             </ol>
+            <details className="mt-2 text-xs text-slate-600 dark:text-gray-300" data-app-form-help="">
+              <summary className="cursor-pointer font-bold text-sky-800 dark:text-sky-300">{t('tga.formTitle')}</summary>
+              <ul className="mt-1 list-disc pl-4 space-y-0.5">
+                {['title', 'short', 'url', 'platform', 'desc', 'error', 'after', 'reuse'].map((k) => <li key={k}>{t(`tga.form.${k}`)}</li>)}
+              </ul>
+            </details>
             <p className={`${SUB} mt-2`}>{t('tga.privacy')}</p>
             {mock && <p className="mt-2 text-[11px] font-bold text-violet-700 dark:text-violet-300">{t('tga.mock')}</p>}
           </div>
