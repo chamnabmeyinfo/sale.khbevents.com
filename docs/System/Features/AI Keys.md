@@ -48,6 +48,14 @@ One place for the API keys of the AI services the portal uses: **Settings & Secu
 - **Storage:** the `ai_keys` row of `system_settings`, next to the bot token and the Telegram sessions. Keep the database locked (RLS) and the Supabase service key private. Anyone with the admin password can replace or remove a key.
 - **Cost:** every AI request is billed to the account that owns the key. Set a monthly spend limit in the Anthropic and Google consoles.
 
+## When the AI says it is busy or out of quota
+
+- **"Gemini: this model has no free quota for your key"** — Google's free tier gives the newest models little or no quota (Google's message says `limit: 0`). The portal cannot change that: it is a setting of the Google project the key belongs to. Fix: in Google AI Studio, turn on billing for that project (pay as you go; a few cents per run), or make Claude the primary AI and put credits on the Anthropic account.
+- **"Gemini: today's quota is used up"** — the free tier's daily cap. Resets at midnight Pacific time; billing removes it.
+- **"Gemini is busy (rate limit or quota)"** — a per-minute limit. The portal already waits as long as Google asks and retries once; if it still fails, wait a minute. Billing raises the per-minute limits too.
+- **Claude "credit balance is too low"** — the Anthropic account has no credits: console.anthropic.com → Billing.
+- When both services fail, the message shows both reasons, separated by "·". The portal's own limits are only there to stop accidental double clicks (Gen Ads: 6 runs per ten minutes; poster ideas: 6 per minute).
+
 ## Not built, on purpose
 
 - **An AI chat that answers customers.** The owner decided on 2026-09-27 that AI helps the team read and answer chats faster but never talks to customers; the AI coach suggests replies that a person sends ([[Customer Story and AI Coach]]).

@@ -24,7 +24,7 @@ vi.mock('@anthropic-ai/sdk', () => {
 });
 
 import { aiKeyStatuses, aiTextProviders, saveAiKey, setAiPrimary } from '../ai-keys';
-import { AiAnalystError, generateJson } from '../ai-text';
+import { AiAnalystError, generateJson, geminiBusyMessage, geminiRetryDelay } from '../ai-text';
 import { pickFlashModel } from '../gemini-models';
 
 const REQ = { system: 's', user: 'u', schema: { type: 'object' }, effort: 'medium' as const, maxTokens: 1000, timeoutMs: 5000 };
@@ -128,5 +128,44 @@ describe('pickFlashModel', () => {
     expect(pickFlashModel([m('gemini-3.8-flash-preview-09-2026'), m('gemini-3.8-flash')])).toBe('gemini-3.8-flash');
     expect(pickFlashModel([m('gemini-3.8-flash'), m('gemini-3.10-flash-preview')])).toBe('gemini-3.10-flash-preview');
     expect(pickFlashModel([m('gemini-3.8-flash', ['embedContent']), m('text-embedding-004')])).toBeNull();
+  });
+
+  it('explains a Gemini 429: no free quota, daily cap, or a short limit that is retried once', async () => {
+    const noQuota = 'You exceeded your current quota, please check your plan and billing details. * Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-3.8-flash';
+    expect(geminiBusyMessage(noQuota)).toMatch(/no free quota for your key/);
+    expect(geminiBusyMessage(noQuota)).toMatch(/Turn on billing/);
+    expect(geminiBusyMessage('Quota exceeded for metric: generate_content_free_tier_requests_per_day, limit: 250')).toMatch(/today's quota is used up/);
+    expect(geminiBusyMessage('Resource has been exhausted (e.g. check quota).')).toMatch(/busy \(rate limit or quota\)/);
+    expect(geminiRetryDelay('{"error":{"details":[{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"2.5s"}]}}')).toBe(3);
+    expect(geminiRetryDelay('{}')).toBeNull();
+
+    await saveAiKey('gemini', 'AIzaSy-test-gemini-key-000000000');
+    await setAiPrimary('gemini');
+    let calls = 0;
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url.includes('/models?')) return new Response(JSON.stringify({ models: [{ name: 'models/gemini-3.8-flash', supportedGenerationMethods: ['generateContent'] }] }), { status: 200 });
+      calls += 1;
+      if (calls === 1) return new Response(JSON.stringify({ error: { code: 429, message: 'Resource has been exhausted', details: [{ '@type': 'type.googleapis.com/google.rpc.RetryInfo', retryDelay: '0.1s' }] } }), { status: 429 });
+      return geminiOk({ ok: 1 });
+    }));
+    expect(await generateJson({ ...REQ, timeoutMs: 60_000 })).toMatchObject({ provider: 'gemini', data: { ok: 1 } });
+    expect(calls).toBe(2);
+  });
+
+  it('when both services fail, the message carries both reasons', async () => {
+    await saveAiKey('anthropic', 'sk-ant-test-anthropic-key-00000000');
+    await saveAiKey('gemini', 'AIzaSy-test-gemini-key-000000000');
+    await setAiPrimary('anthropic');
+    const { default: Anthropic } = await import('@anthropic-ai/sdk');
+    const ApiError = Anthropic.APIError as unknown as new (m: string) => Error;
+    anthropicAnswer = () => { const e = new ApiError('credit balance is too low'); (e as { status?: number }).status = 400; throw e; };
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url.includes('/models?')) return new Response(JSON.stringify({ models: [{ name: 'models/gemini-3.8-flash', supportedGenerationMethods: ['generateContent'] }] }), { status: 200 });
+      return new Response(JSON.stringify({ error: { code: 429, message: 'Quota exceeded for metric: generate_content_free_tier_requests, limit: 0' } }), { status: 429 });
+    }));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const err = await generateJson(REQ).catch((e) => e);
+    expect(err.code).toBe('api');
+    expect(err.message).toMatch(/Anthropic error 400 · Gemini: this model has no free quota/);
   });
 });

@@ -45,7 +45,7 @@ export interface JsonAnswer {
 export async function generateJson(req: JsonRequest): Promise<JsonAnswer> {
   const providers = await aiTextProviders();
   if (!providers.length) throw new AiAnalystError(NO_AI_KEY, 'no_key');
-  let last: AiAnalystError | null = null;
+  const failed: string[] = [];
   for (const [i, provider] of providers.entries()) {
     const key = await aiKey(provider);
     if (!key) continue;
@@ -53,13 +53,34 @@ export async function generateJson(req: JsonRequest): Promise<JsonAnswer> {
     try {
       return provider === 'anthropic' ? await askAnthropic(key, r) : await askGemini(key, r);
     } catch (err) {
-      last = err instanceof AiAnalystError ? err : new AiAnalystError(err instanceof Error ? err.message : String(err), 'api');
+      const e = err instanceof AiAnalystError ? err : new AiAnalystError(err instanceof Error ? err.message : String(err), 'api');
       // A refusal or an unreadable answer is not the key's fault: do not spend the back-up on it.
-      if (last.code !== 'api') throw last;
-      console.error(`AI ${provider} failed:`, last.message);
+      if (e.code !== 'api') throw e;
+      console.error(`AI ${provider} failed:`, e.message);
+      failed.push(e.message);
     }
   }
-  throw last ?? new AiAnalystError(NO_AI_KEY, 'no_key');
+  // Both services answered with an error: the owner sees both reasons, not only the last one.
+  throw new AiAnalystError(failed.length > 1 ? failed.join(' · ') : failed[0] || NO_AI_KEY, failed.length ? 'api' : 'no_key');
+}
+
+/** Seconds Google asks us to wait, from a 429 body (google.rpc.RetryInfo), or null. */
+export function geminiRetryDelay(body: string): number | null {
+  const m = /"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/.exec(body);
+  return m ? Math.ceil(Number(m[1])) : null;
+}
+
+/** What a Gemini 429 means for the owner, with Google's own words. */
+export function geminiBusyMessage(reason: string): string {
+  const r = reason.replace(/\s+/g, ' ').trim().slice(0, 220);
+  const google = r ? ` Google says: "${r}".` : '';
+  if (/free[_ ]tier/i.test(r) && /limit:\s*0\b/.test(r)) {
+    return `Gemini: this model has no free quota for your key.${google} Turn on billing for the key's project in Google AI Studio (pay as you go), or make Claude the primary AI in Settings → AI & API keys.`;
+  }
+  if (/per[_ ]?day|daily|PerDay/i.test(r)) {
+    return `Gemini: today's quota is used up.${google} It resets at midnight Pacific time; billing in Google AI Studio removes the daily cap, or use Claude.`;
+  }
+  return `Gemini is busy (rate limit or quota).${google} Try again in a minute; billing in Google AI Studio raises the limits.`;
 }
 
 async function askAnthropic(apiKey: string, req: JsonRequest): Promise<JsonAnswer> {
@@ -111,6 +132,7 @@ async function askGemini(key: string, req: JsonRequest): Promise<JsonAnswer> {
       signal: AbortSignal.timeout(req.timeoutMs),
     });
   let res: Response;
+  const startedAt = Date.now();
   try {
     res = await call(model);
     if (!res.ok) {
@@ -122,6 +144,14 @@ async function askGemini(key: string, req: JsonRequest): Promise<JsonAnswer> {
           model = fresh;
           res = await call(model);
         }
+      } else if (res.status === 429) {
+        // A short per-minute limit: wait as long as Google asks (once, within the time budget) and retry.
+        const wait = geminiRetryDelay(body);
+        const left = req.timeoutMs - (Date.now() - startedAt);
+        if (wait !== null && wait <= 45 && !/limit:\s*0\b/.test(body) && left > (wait + 30) * 1000) {
+          await new Promise((resolve) => setTimeout(resolve, wait * 1000));
+          res = await call(model);
+        }
       }
     }
   } catch (err) {
@@ -131,7 +161,7 @@ async function askGemini(key: string, req: JsonRequest): Promise<JsonAnswer> {
     const body = await res.text().catch(() => '');
     let reason = '';
     try { reason = String((JSON.parse(body) as { error?: { message?: unknown } }).error?.message || ''); } catch {}
-    if (res.status === 429) throw new AiAnalystError('Gemini is busy (rate limit or quota). Try again in a minute.', 'api');
+    if (res.status === 429) throw new AiAnalystError(geminiBusyMessage(reason), 'api');
     throw new AiAnalystError(`Gemini error ${res.status}${reason ? `: ${reason.slice(0, 200)}` : ''}`, 'api');
   }
   const data = (await res.json()) as GeminiResponse;
