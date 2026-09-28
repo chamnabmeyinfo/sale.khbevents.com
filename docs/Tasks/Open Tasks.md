@@ -33,6 +33,13 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [ ] If a row ever shows "Telegram ended the session", the salesperson connects again from the same tab (code from their Telegram app). Telegram may also show a new "khbportal" device after a reconnection; ending old ones there is fine. #owner
 - [ ] Later, if the team wants replies within a second instead of about eight: a live update connection per account (Telegram updates), which needs a server that stays up all day rather than Vercel functions. Decide only after the polling version has run a few weeks. #for-claude
 
+### Google Analytics for the whole site (2026-09-28)
+
+- [x] One GA4 Measurement ID in Settings loads on every landing page and the home page; the home page is tracked by the portal too; forms and the floating Telegram button send GA4 events. → [[Tracking and Analytics]]
+- [ ] Create one GA4 property for sale.khbevents.com (analytics.google.com → Admin → Create property → Web stream), and paste its Measurement ID (G-…) in Settings → Social & Public Channels → Google Analytics 4 for the whole site. Then Save. #owner
+- [ ] In GA4: Admin → Events → mark `generate_lead` and `contact` as key events; Admin → Data retention → 14 months. If you run Google Ads, link it and import `generate_lead`. #owner
+- [ ] Remove any per-page GA4 ID in the pages' Tracking & Pixels tab unless it is a different property on purpose. #owner
+
 ### Sales process: direct + account tracking (2026-09-28)
 
 - [x] Process set: straight to the salesperson, tracked through the connected accounts, bot alerts and reminders only. Quick replies no longer hide a new chat; click alert no longer mentions a code; waiting-customer reminder (15 min default); Telegram chats in the daily summary; disconnect alert. → [[Telegram Sales Process]]

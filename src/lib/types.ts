@@ -791,6 +791,8 @@ export interface SystemSettings {
   facebookUrl?: string;
   tiktokUrl?: string;
   linkedinUrl?: string;
+  /** Google Analytics 4 measurement ID for the whole site (every landing page and the home page). Not secret. */
+  ga4MeasurementId?: string;
   
   // Notifications
   telegramBotToken?: string;

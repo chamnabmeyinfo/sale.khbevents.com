@@ -2,6 +2,7 @@ import { getActivePopupAds, getPages, getPublicSettings } from '@/lib/storage';
 import { HOME_SLUG } from '@/lib/popup-ads';
 import { getPagePin, toPublicPage } from '@/lib/page-access';
 import MainSalesView from '@/components/landing/MainSalesView';
+import { Ga4Tag } from '@/components/common/GoogleAnalytics';
 import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -33,5 +34,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const settings = await getPublicSettings();
   const popupAds = await getActivePopupAds(HOME_SLUG, popupPreviewId);
 
-  return <MainSalesView pages={pages} settings={settings} popupAds={popupAds} popupPreviewId={popupPreviewId} />;
+  return (
+    <>
+      <Ga4Tag id={settings.ga4MeasurementId} />
+      <MainSalesView pages={pages} settings={settings} popupAds={popupAds} popupPreviewId={popupPreviewId} />
+    </>
+  );
 }

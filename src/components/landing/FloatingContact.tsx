@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { MessageCircle, Send, X } from 'lucide-react';
+import { trackClientEvent } from '@/components/common/LandingPageTracking';
+import { gaEvent } from '@/components/common/GoogleAnalytics';
 
 interface FloatingContactProps {
   whatsappNumber?: string;
@@ -39,6 +41,10 @@ export default function FloatingContact({
           href={telegramHref}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => {
+            trackClientEvent(pageSlug, 'telegram_click', { placement: 'floating' });
+            gaEvent('telegram_click');
+          }}
           className="w-12 h-12 rounded-full bg-[#2AABEE] hover:bg-[#229ED9] text-white flex items-center justify-center shadow-lg shadow-[#2AABEE]/30 hover:scale-110 transition-all group relative"
           aria-label="Chat on Telegram"
         >

@@ -248,7 +248,7 @@ export function buildCampaignReport(input: {
   const apps = groupBy(visits, leads, (v) => v.app || 'Browser', (l) => (leadVisit(l) ? leadVisit(l)!.app || 'Browser' : null));
   const languages = groupBy(visits, leads, (v) => v.lang || 'en', (l) => leadVisit(l)?.lang || (l.customFields?.language === 'kh' ? 'kh' : l.customFields?.language === 'en' ? 'en' : null));
   const visitorType = groupBy(visits, leads, (v) => (v.ret ? 'returning' : 'new'), (l) => { const v = leadVisit(l); return v ? (v.ret ? 'returning' : 'new') : null; });
-  const pageTitle = (slug: string) => input.pages.find((p) => p.slug === slug)?.title || slug;
+  const pageTitle = (slug: string) => input.pages.find((p) => p.slug === slug)?.title || (slug === 'main-sales' ? 'Home page' : slug);
   const pages = groupBy(visits, leads, (v) => v.p, (l) => l.landingPageSlug, pageTitle);
   for (const row of pages) row.spend = campaigns.filter((c) => c.pageSlug === row.key).reduce((s, c) => s + spendBetween(c, from, to), 0);
 

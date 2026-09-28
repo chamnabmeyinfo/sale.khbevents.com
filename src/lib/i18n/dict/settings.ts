@@ -181,6 +181,8 @@ export const settings: Dictionary = {
     'settings.social.tiktok': 'TikTok Profile URL',
     'settings.social.telegramUsername': 'Telegram Public Channel / Username',
     'settings.social.telegramHint': 'Used for public Telegram buttons on campaign pages (e.g. t.me/khbevents).',
+    'settings.ga4.label': 'Google Analytics 4 for the whole site (Measurement ID)',
+    'settings.ga4.hint': 'One GA4 property for sale.khbevents.com: paste its Measurement ID (G-…, from GA4 → Admin → Data streams). It loads on every landing page and the home page, including new pages, and receives generate_lead (form sent), contact (Telegram click) and select_content (button or seat). A page\'s own ID in Tracking & Pixels is added to it; the same ID is never counted twice. Leave empty to switch it off.',
 
     // Telegram tab
     'settings.telegram.heading': 'Instant Telegram Lead Notifications',
@@ -409,6 +411,8 @@ export const settings: Dictionary = {
     'settings.social.tiktok': 'URL គណនី TikTok',
     'settings.social.telegramUsername': 'ឆានែល Telegram សាធារណៈ / ឈ្មោះអ្នកប្រើ',
     'settings.social.telegramHint': 'ប្រើសម្រាប់ប៊ូតុង Telegram លើទំព័រយុទ្ធនាការ (ឧ. t.me/khbevents)។',
+    'settings.ga4.label': 'Google Analytics 4 សម្រាប់គេហទំព័រទាំងមូល (Measurement ID)',
+    'settings.ga4.hint': 'Property GA4 តែមួយសម្រាប់ sale.khbevents.com៖ បិទភ្ជាប់ Measurement ID (G-… ពី GA4 → Admin → Data streams)។ វាដំណើរការលើទំព័រលក់ទាំងអស់ និងទំព័រដើម រួមទាំងទំព័រថ្មី ហើយទទួល generate_lead (ផ្ញើទម្រង់) contact (ចុច Telegram) និង select_content (ប៊ូតុង ឬកៅអី)។ ID ផ្ទាល់ខ្លួនរបស់ទំព័រក្នុង Tracking & Pixels ត្រូវបន្ថែមលើវា; ID ដូចគ្នាមិនរាប់ពីរដងទេ។ ទុកទទេដើម្បីបិទ។',
 
     'settings.telegram.heading': 'ការជូនដំណឹង Lead ភ្លាមៗតាម Telegram',
     'settings.telegram.badge': 'ជូនដំណឹងភ្លាមៗ',

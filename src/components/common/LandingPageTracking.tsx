@@ -5,6 +5,10 @@ import Script from 'next/script';
 import { LandingPage, TrackingEventType } from '@/lib/types';
 import { takePopupLeads } from '@/components/common/popup-attribution';
 import { getAttribution, getFirstTouch, getVisitor } from '@/components/common/attribution';
+import { Ga4Tag, gaEvent } from '@/components/common/GoogleAnalytics';
+
+/** What the tracking needs from a page: a landing page, or the home page (slug and title only). */
+export type TrackedPage = Pick<LandingPage, 'slug' | 'title'> & Partial<Pick<LandingPage, 'category' | 'urgency' | 'tracking'>>;
 
 // Helper: Get or create session ID
 export function getSessionId(): string {
@@ -215,7 +219,7 @@ interface TrackingWindow extends Window {
 }
 
 export function trackLandingEvent(
-  page?: LandingPage,
+  page?: TrackedPage,
   eventType?: TrackingEventType,
   eventData?: Record<string, unknown>,
   lang?: 'en' | 'kh'
@@ -264,25 +268,8 @@ export function trackLandingEvent(
     }
   }
 
-  // Google Analytics 4 (gtag)
-  if (tracking?.ga4MeasurementId && tracking.ga4Enabled !== false && typeof win.gtag === 'function') {
-    if (eventType === 'form_submit') {
-      win.gtag('event', 'generate_lead', {
-        page_title: page.title,
-        ...(eventData?.value ? { value: eventData.value, currency: 'USD' } : {}),
-      });
-    } else if (eventType === 'telegram_click') {
-      win.gtag('event', 'contact', {
-        event_category: 'engagement',
-        event_label: 'Telegram Inquiry',
-      });
-    } else if (eventType === 'cta_click' || eventType === 'seat_select') {
-      win.gtag('event', 'select_content', {
-        content_type: 'seat',
-        item_id: eventData?.seat || eventData?.label,
-      });
-    }
-  }
+  // Google Analytics 4: every configured ID (the site-wide one from Settings and the page's own).
+  gaEvent(eventType, { pageTitle: page.title, value: eventData?.value, label: eventData?.label, seat: eventData?.seat });
 
   // Google Tag Manager dataLayer
   if (tracking?.gtmContainerId && tracking.gtmEnabled !== false) {
@@ -314,7 +301,7 @@ export function trackLandingEvent(
 }
 
 interface LandingPageTrackingProps {
-  page?: LandingPage;
+  page?: TrackedPage;
   lang?: 'en' | 'kh';
   /** Builder section ids in page order, to report how far visitors read. */
   sections?: string[];
@@ -506,25 +493,8 @@ export default function LandingPageTracking({ page, lang = 'en', sections }: Lan
       )}
 
       {/* ── 3. Google Analytics 4 (GA4) ── */}
-      {tracking?.ga4MeasurementId && tracking.ga4Enabled !== false && (
-        <>
-          <Script
-            src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(tracking.ga4MeasurementId || '')}`}
-            strategy="afterInteractive"
-          />
-          <Script id={`ga4-init-${page.slug}`} strategy="afterInteractive">
-            {`
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', ${jsString(tracking.ga4MeasurementId)}, {
-                page_title: ${jsString(page.title)},
-                page_path: window.location.pathname
-              });
-            `}
-          </Script>
-        </>
-      )}
+      {/* The site-wide ID from Settings is loaded by the page route; a page's own ID adds to it. */}
+      {tracking?.ga4MeasurementId && tracking.ga4Enabled !== false && <Ga4Tag id={tracking.ga4MeasurementId} />}
 
       {/* ── 4. TikTok Pixel ── */}
       {tracking?.tiktokPixelId && tracking.tiktokPixelEnabled !== false && (

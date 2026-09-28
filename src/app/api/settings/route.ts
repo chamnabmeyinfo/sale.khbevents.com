@@ -4,6 +4,7 @@ import { isAuthenticated, hashPassword, setAdminSession } from '@/lib/auth';
 import { SystemSettings } from '@/lib/types';
 import { isMaskedSecret, maskSecret } from '@/lib/secrets';
 import { safeLogo } from '@/lib/company';
+import { normalizeGa4Id } from '@/lib/ga4';
 
 export async function GET() {
   const authed = await isAuthenticated();
@@ -44,6 +45,12 @@ export async function PUT(req: NextRequest) {
     if (text(body.address) !== undefined) updateData.address = text(body.address);
     // Logo: an uploaded image or https link; empty goes back to the built-in logo.
     if (text(body.logoUrl) !== undefined) updateData.logoUrl = safeLogo(body.logoUrl) || '';
+    // Google Analytics for the whole site: a G- measurement ID, or empty to switch it off.
+    if (body.ga4MeasurementId !== undefined) {
+      const ga4 = normalizeGa4Id(body.ga4MeasurementId);
+      if (ga4 === null) return NextResponse.json({ error: 'The Google Analytics ID looks like G-XXXXXXXXXX (from GA4 → Admin → Data streams).' }, { status: 400 });
+      updateData.ga4MeasurementId = ga4;
+    }
     if (text(body.facebookUrl) !== undefined) updateData.facebookUrl = text(body.facebookUrl);
     if (text(body.tiktokUrl) !== undefined) updateData.tiktokUrl = text(body.tiktokUrl);
     if (text(body.telegramChatId) !== undefined) updateData.telegramChatId = text(body.telegramChatId);

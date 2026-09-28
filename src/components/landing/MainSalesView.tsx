@@ -15,6 +15,8 @@ import FloatingContact from './FloatingContact';
 import Footer from './Footer';
 import { LandingPage, PopupAd, SystemSettings } from '@/lib/types';
 import PopupAdsHost from '@/components/common/PopupAds';
+import LandingPageTracking from '@/components/common/LandingPageTracking';
+import { HOME_SLUG } from '@/lib/popup-ads';
 
 interface MainSalesViewProps {
   pages: LandingPage[];
@@ -67,6 +69,8 @@ export default function MainSalesView({ pages, settings, popupAds, popupPreviewI
         pageSlug="main-sales"
       />
       <PopupAdsHost ads={popupAds} previewId={popupPreviewId} pageSlug="main-sales" />
+      {/* Visits, scroll and campaign of the home page, like any landing page (reported as "Home page"). */}
+      <LandingPageTracking page={{ slug: HOME_SLUG, title: `${settings.companyName} home page` }} />
 
       <Footer
         logo={companyFor(settings).logo}

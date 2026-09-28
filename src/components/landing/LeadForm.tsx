@@ -4,6 +4,7 @@ import { popupStorageKeys } from '@/lib/popup-ads';
 import React, { useState, Suspense } from 'react';
 import { Send, CheckCircle2, ShieldCheck, Sparkles, MessageCircle, Lock } from 'lucide-react';
 import { trackClientEvent } from '@/components/common/LandingPageTracking';
+import { gaEvent } from '@/components/common/GoogleAnalytics';
 import { IsolatedPageSettings } from '@/lib/types';
 import { errorMessage as describeError } from '@/lib/errors';
 import { safeRedirectUrl } from '@/lib/safe-url';
@@ -95,6 +96,8 @@ function LeadFormInner({
         eventType: formData.eventType,
         client: formData.fullName,
       });
+      // Google Analytics gets the event only, never the name or phone.
+      gaEvent('form_submit', { pageTitle: landingPageTitle });
 
       const redirectTarget = safeRedirectUrl(isolatedSettings?.redirectUrl);
       if (isolatedSettings?.postSubmitAction === 'redirect' && redirectTarget) {

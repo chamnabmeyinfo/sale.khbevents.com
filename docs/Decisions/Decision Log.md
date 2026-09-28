@@ -28,6 +28,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-28 — Google Analytics: one property for the whole site, as a complement to the portal's own tracking
+
+- **Decision:** Keep the portal's own tracking (Campaigns & AI) as the main source for sales decisions, and add Google Analytics 4 as a free complement: one Measurement ID set once in Settings, loaded on every landing page and the home page. No separate property per page, and no new analytics system.
+- **Why:** The portal already ties visits to Telegram chats, leads and won deals, which GA4 cannot see. GA4 adds a standard second view, longer history and the link to Google Ads. One property keeps the whole site's journeys together; a per-page ID was easy to forget on new pages.
+- **Who decided:** Owner ("OK Please Build it! Follow your Recommend."), on Claude's recommendation.
+- **Affects:** [[Tracking and Analytics]], [[Campaigns and AI Analyst]].
+
 ## 2026-09-28 — Sales process details after the audit: greeting rule, reminder timing, manager chats
 
 - **Decision:** (1) A customer the account already knew takes a click only when their first message starts with the greeting the click typed; a chat the salesperson started never takes one. (2) Waiting reminder: the salesperson first, and again when the customer writes after that reminder; the manager once, only if the customer still waits the same minutes after the salesperson's reminder, never at the same moment; a reminder that would fall after closing moves to the next shift start; no 24-hour cap (messages older than 7 days are ignored); more than 3 due at once arrive as one list. (3) Manager messages keep two destinations, now documented and shown in the admin: copies (CC) go to Settings → Instant Telegram Alerts → Target Chat ID; manager-only messages (daily summary, waiting customers, disconnected accounts, unanswered form leads) go to the Fallback Manager Telegram Chat ID, else that Settings chat. (4) Crawlers and link previews are not routed. (5) The fallback bot promises a reply within 15 minutes in business hours, not at any hour.

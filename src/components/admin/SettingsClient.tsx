@@ -52,6 +52,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
     address: initialSettings.address || 'Diamond Island (Koh Pich), Phnom Penh, Cambodia',
     facebookUrl: initialSettings.facebookUrl || 'https://facebook.com/khbevents',
     tiktokUrl: initialSettings.tiktokUrl || 'https://tiktok.com/@khbevents',
+    ga4MeasurementId: initialSettings.ga4MeasurementId || '',
     enableTelegramAlerts: initialSettings.enableTelegramAlerts ?? false,
     telegramBotToken: initialSettings.telegramBotToken || '',
     telegramChatId: initialSettings.telegramChatId || '',
@@ -360,6 +361,23 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                 />
                 <span className="text-[10px] text-slate-500 dark:text-zinc-500 mt-1 block">
                   {t('settings.social.telegramHint')}
+                </span>
+              </div>
+
+              <div className="sm:col-span-2 pt-3 border-t border-slate-200 dark:border-emerald-950">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
+                  {t('settings.ga4.label')}
+                </label>
+                <input
+                  type="text"
+                  value={formData.ga4MeasurementId}
+                  onChange={(e) => setFormData({ ...formData, ga4MeasurementId: e.target.value.trim().toUpperCase() })}
+                  placeholder="G-XXXXXXXXXX"
+                  data-site-ga4=""
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#06100B] border border-slate-200 dark:border-emerald-900/60 text-slate-900 dark:text-white text-xs font-mono focus:outline-none focus:border-amber-400 transition-colors"
+                />
+                <span className="text-[10px] text-slate-500 dark:text-zinc-500 mt-1 block">
+                  {t('settings.ga4.hint')}
                 </span>
               </div>
             </div>

@@ -95,11 +95,16 @@ import bundledDbJson from '../../data/db.json';
 const CACHE_SECONDS = 60;
 /** The company logo lives in its own settings row: the settings table has no column for it. */
 const LOGO_MARKER = 'brand_logo';
+/** The site-wide Google Analytics ID, in its own row for the same reason. */
+const GA4_MARKER = 'site_ga4';
 const cachedSupabaseSettings = unstable_cache(async () => {
   const settings = await supabaseGetSettings();
   if (!settings) return settings;
-  const logoUrl = await supabaseGetMarker(LOGO_MARKER).catch(() => null);
-  return logoUrl ? { ...settings, logoUrl } : settings;
+  const [logoUrl, ga4] = await Promise.all([
+    supabaseGetMarker(LOGO_MARKER).catch(() => null),
+    supabaseGetMarker(GA4_MARKER).catch(() => null),
+  ]);
+  return { ...settings, ...(logoUrl ? { logoUrl } : {}), ...(ga4 ? { ga4MeasurementId: ga4 } : {}) };
 }, ['supabase-settings'], {
   tags: ['settings'], revalidate: CACHE_SECONDS,
 });
@@ -1371,9 +1376,11 @@ export async function updateSettings(
     try {
       updated = await supabaseUpdateSettings(partial);
       if (partial.logoUrl !== undefined) await supabaseSetMarker(LOGO_MARKER, partial.logoUrl || '');
+      if (partial.ga4MeasurementId !== undefined) await supabaseSetMarker(GA4_MARKER, partial.ga4MeasurementId || '');
       if (updated) {
         const logoUrl = partial.logoUrl !== undefined ? partial.logoUrl : await supabaseGetMarker(LOGO_MARKER).catch(() => null);
-        updated = { ...updated, logoUrl: logoUrl || undefined };
+        const ga4 = partial.ga4MeasurementId !== undefined ? partial.ga4MeasurementId : await supabaseGetMarker(GA4_MARKER).catch(() => null);
+        updated = { ...updated, logoUrl: logoUrl || undefined, ga4MeasurementId: ga4 || undefined };
       }
     } catch (err) {
       console.error('Supabase updateSettings error:', err);
