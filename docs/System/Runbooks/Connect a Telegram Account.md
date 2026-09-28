@@ -51,6 +51,7 @@ On the salesperson's row in Settings → Telegram account check:
 | No code arrives | the code comes inside the Telegram app on that phone, from "Telegram"; check the phone number and country code |
 | "Telegram ended the session" on the row | the device was removed in Telegram, or logged out; connect again from step 2 |
 | "Telegram asked this account to wait until …" | nothing to do; it clears by itself |
+| "Request was unsuccessful 1 time(s)" (before 2026-09-28) | fixed: the number lives on another Telegram data centre and the portal now retries there; press Send login code once more |
 
 Never write the api_hash, phone numbers or login codes in the vault or in chats.
 

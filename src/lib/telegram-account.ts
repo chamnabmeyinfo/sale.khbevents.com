@@ -345,9 +345,12 @@ async function realClient(apiId: number, apiHash: string, session: string): Prom
   const tg = await import('telegram');
   const { TelegramClient, Api, sessions, password, helpers } = tg;
   const computeCheck = password.computeCheck;
-  // No automatic waiting or retrying inside the library: a flood wait comes back to us
-  // as an error and blocks the account for as long as Telegram asked (see noteTelegramError).
-  const client = new TelegramClient(new sessions.StringSession(session), apiId, apiHash, { connectionRetries: 2, requestRetries: 1, floodSleepThreshold: 0, useWSS: false });
+  // No automatic waiting on a flood: floodSleepThreshold 0 makes the library throw it at
+  // once, and the account is blocked for as long as Telegram asked (see noteTelegramError).
+  // requestRetries stays at 3: a login to a phone on another Telegram data centre is
+  // answered "go to DC n" and needs a second attempt there (PHONE_MIGRATE). With 1, the
+  // library gave up with "Request was unsuccessful 1 time(s)". Flood waits never retry.
+  const client = new TelegramClient(new sessions.StringSession(session), apiId, apiHash, { connectionRetries: 2, requestRetries: 3, floodSleepThreshold: 0, useWSS: false });
   client.setLogLevel('none' as Parameters<typeof client.setLogLevel>[0]);
   const fullName = (u: { firstName?: string; lastName?: string }) => [u.firstName, u.lastName].filter(Boolean).join(' ').trim() || undefined;
   type InputPeer = NonNullable<Parameters<typeof client.getMessages>[0]>;
@@ -630,6 +633,7 @@ export function loginErrorHelp(raw: string): string {
   if (t.includes('PHONE_CODE_EXPIRED')) return 'The login code expired. Press Send login code again.';
   if (t.includes('PASSWORD_HASH_INVALID')) return 'The two-step password is wrong.';
   if (t.includes('AUTH_RESTART')) return 'Telegram asked to start the login again. Press Send login code again.';
+  if (t.includes('REQUEST WAS UNSUCCESSFUL')) return 'Telegram did not answer in time (network or data-centre switch). Wait a minute and press Send login code once more.';
   return raw;
 }
 

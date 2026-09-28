@@ -85,6 +85,7 @@ describe('loginErrorHelp', () => {
     expect(loginErrorHelp('RPCError 400: API_ID_INVALID (caused by auth.SendCode)')).toMatch(/api_id/);
     expect(loginErrorHelp('A wait of 7200 seconds is required (caused by auth.SendCode)')).toMatch(/2 h/);
     expect(loginErrorHelp('PHONE_NUMBER_FLOOD')).toMatch(/24 hours/);
+    expect(loginErrorHelp('Request was unsuccessful 1 time(s)')).toMatch(/Wait a minute/);
     expect(loginErrorHelp('something else')).toBe('something else');
   });
 });
