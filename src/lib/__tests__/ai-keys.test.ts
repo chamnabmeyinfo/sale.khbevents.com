@@ -37,6 +37,8 @@ describe('master AI keys', () => {
     expect(aiKeyShapeError('anthropic', 'AIzaSyAbcdefghijklmnopqrstuvwxyz')).toMatch(/sk-ant-/);
     expect(aiKeyShapeError('anthropic', 'short')).toMatch(/does not look/);
     expect(aiKeyShapeError('gemini', 'AIzaSyAbcdefghijklmnopqrstuvwxyz_-12')).toBeNull();
+    // Newer Google key format, with a dot (made-up value).
+    expect(aiKeyShapeError('gemini', 'AQ.Xy12-_abcdefghijklmnopqrstuvWXYZ0123')).toBeNull();
     expect(aiKeyShapeError('gemini', 'AIza with spaces in it here ok')).toMatch(/does not look/);
   });
 });

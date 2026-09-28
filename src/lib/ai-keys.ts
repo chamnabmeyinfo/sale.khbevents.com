@@ -81,7 +81,8 @@ export function aiKeyShapeError(provider: AiProvider, key: string): string | nul
   const k = key.trim();
   if (k.length < 20 || k.length > 300 || /\s/.test(k)) return 'That does not look like an API key.';
   if (provider === 'anthropic' && !k.startsWith('sk-ant-')) return 'An Anthropic API key starts with "sk-ant-" (console.anthropic.com → API keys).';
-  if (provider === 'gemini' && !/^[A-Za-z0-9_-]+$/.test(k)) return 'A Gemini API key has only letters, digits, "-" and "_" (aistudio.google.com → Get API key).';
+  // Google keys are "AIza…" or, in the newer format, "AQ.…" (with a dot): letters, digits, ".", "-", "_".
+  if (provider === 'gemini' && !/^[A-Za-z0-9._-]+$/.test(k)) return 'A Gemini API key has only letters, digits, ".", "-" and "_" (aistudio.google.com → Get API key).';
   return null;
 }
 
