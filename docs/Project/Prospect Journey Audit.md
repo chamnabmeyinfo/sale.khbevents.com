@@ -1,7 +1,7 @@
 ---
 type: audit
 tags: [project, audit, tracking, crm, round-robin, ai]
-updated: 2026-09-27
+updated: 2026-09-28
 source:
   - src/components/common/LandingPageTracking.tsx
   - src/components/common/attribution.ts
@@ -22,6 +22,9 @@ source:
 # Prospect Journey Audit
 
 How one prospect is tracked today from the ad to the closed deal, where the trail breaks, and what to build so the system can read prospect behaviour and the bot can follow up with the sales team. Written 2026-09-27 at the owner's request. Decisions that follow from it go in [[Decision Log]]; work items in [[Open Tasks]].
+
+> [!note] Status on 2026-09-28
+> Much of Phase 1 is live, and the process in force is [[Telegram Sales Process]]: a Telegram chat becomes a CRM lead, reply numbers are kept, the conversation itself is stored (the owner reversed "numbers only" on 2026-09-27), the AI coach reads the whole story, and the waiting-customer reminder and the Telegram section of the daily summary run. Not built: running the account check from the routing tick and the daily cron (it runs on traffic; see [[Open Tasks]]). The stage table and the guard rails below describe 27 Sep and are kept as history.
 
 ## The journey today, stage by stage
 

@@ -1928,7 +1928,7 @@ export async function recordDirectContactRoute(params: {
   userAgent?: string;
   /** Location, referrer, campaign and visit ids from the request (shown to the admin). */
   visitor?: VisitorDetail;
-  /** Reference code put in the prefilled message, so the chat that follows can be recognised. */
+  /** The click's reference code: in the sales-bot link (bot first), and on the log and the lead; never in the greeting. */
   refCode?: string;
   /** Staff id from the visitor's cookie: keep them with the person they already met. */
   preferredStaffId?: string;
@@ -1938,7 +1938,8 @@ export async function recordDirectContactRoute(params: {
   demo?: boolean;
 }): Promise<DirectContactRoute | null> {
   const db = await getDatabase();
-  const page = db.pages.find((p) => p.slug === params.pageSlug);
+  // The page as the CMS has it now (title for the alerts, its own Round Robin), else the bundled copy.
+  const page = (await getPageBySlug(params.pageSlug).catch(() => null)) || db.pages.find((p) => p.slug === params.pageSlug);
   const useCustomRr = Boolean(page?.isolatedSettings?.useCustomRoundRobin && page.isolatedSettings.customRoundRobin?.enabled);
   const globalRr = useCustomRr ? null : await getRoundRobinSettings();
   const rrSettings = useCustomRr
@@ -2041,8 +2042,10 @@ export async function recordDirectContactRoute(params: {
         '🔔 <b>អតិថិជនថ្មីចុច Telegram មករកអ្នក</b>',
         `📌 សេវា៖ <b>${escapeHtml(pageTitle)}</b>`,
         `⏰ ${stamp}`,
+        // Nobody was on shift, so the click still came to this person: say so, like the form lead card.
+        staff.workHours && !staffOnShift(staff, Date.now()) ? '🌙 ក្រៅម៉ោងធ្វើការ៖ សូមឆ្លើយពេលវេនរបស់អ្នកចាប់ផ្តើម' : '',
         '👉 បើគេផ្ញើសារមក សូមឆ្លើយឱ្យលឿន!',
-      ].join('\n');
+      ].filter(Boolean).join('\n');
       tasks.push(
         send(staff.telegramChatId, params.demo ? `🧪 <b>DEMO / សាកល្បង:</b> test click from Simulation Studio, not a real customer.\n\n${staffAlertText}` : staffAlertText).then((data) => {
           if (!data.ok) alertNote = `Staff alert failed: ${data.description || 'Telegram error'}`;
@@ -2055,10 +2058,11 @@ export async function recordDirectContactRoute(params: {
     const managerChatId = rrSettings.managerChatId || systemSettings.telegramChatId;
     if (botToken && rrSettings.enableManagerNotification && managerChatId && String(managerChatId) !== String(staff.telegramChatId)) {
       const managerAlert = [
+        params.demo ? '🧪 <b>DEMO / សាកល្បង:</b> test click from Simulation Studio, not a real customer.\n' : '',
         `🔔 <b>អតិថិជនចុច Telegram</b> → ${escapeHtml(staff.name)} (@${cleanUsername})`,
         `📌 សេវា៖ ${escapeHtml(pageTitle)}`,
         `⏰ ${stamp}`,
-      ].join('\n');
+      ].filter(Boolean).join('\n');
       tasks.push(send(managerChatId, managerAlert));
     }
 

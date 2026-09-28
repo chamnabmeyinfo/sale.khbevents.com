@@ -51,7 +51,7 @@ describe('team performance', () => {
     const text = dailySummaryText(leads, clicks, team, DAY);
     expect(text).toContain('<b>4</b> form leads · <b>6</b> Telegram clicks');
     expect(text).toContain('Buttons tapped: <b>3</b> of 4 (75%)');
-    expect(text).toContain('<b>Dara</b>: 2 leads · 4 clicks · 2 tapped · avg 3 min');
+    expect(text).toContain('<b>Dara</b>: 2 form leads · 4 clicks · 2 tapped · avg 3 min');
     expect(text).toContain('Still no reply (1)');
     expect(text).toContain('Korea &lt;trip&gt;');
     expect(text).toContain('Fastest reply: <b>Dara</b>');

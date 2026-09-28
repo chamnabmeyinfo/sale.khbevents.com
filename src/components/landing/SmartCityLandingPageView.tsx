@@ -593,9 +593,8 @@ export default function SmartCityLandingPageView({ page, settings, initialLang, 
   const availableSeats = Array.from({ length: effTotalSeats }, (_, i) => i + 1).filter(n => n > localClaimed);
 
   // Telegram msg for concierge
-  const tgMsg = encodeURIComponent(`Hello KHB Events, I want to reserve Seat #${regSeat} for the Vietnam Delegation 2026. My name is ${regName.trim() || 'Guest'}.`);
-  // tgUrl already carries a query string, so the prefilled message is an extra parameter.
-  const tgConciergeUrl = `${tgUrl}&text=${tgMsg}`;
+  // No prefilled template (owner decision 2026-09-27): the Round Robin types a plain greeting in the visitor's language.
+  const tgConciergeUrl = tgUrl;
 
 
 

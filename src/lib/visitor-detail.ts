@@ -93,6 +93,17 @@ export interface AgentInfo {
 
 const BOT_RE = /bot\b|bot\/|crawl|spider|slurp|headless|phantomjs|puppeteer|playwright|selenium|python-requests|python-urllib|\bcurl\/|\bwget\/|go-http-client|java\/|libwww|httpclient|axios\/|node-fetch|undici|postman|insomnia|scrapy|facebookexternalhit|facebookcatalog|telegrambot|whatsapp\/|skypeuripreview|twitterbot|linkedinbot|discordbot|slackbot|pinterest|embedly|quora link preview|bitlybot|semrush|ahrefs|mj12bot|dotbot|petalbot|bytespider|yandex|baiduspider|duckduckbot|applebot|google-inspectiontool|lighthouse|pagespeed|gtmetrix|uptimerobot|pingdom|site24x7|statuscake|simulation engine/i;
 
+/**
+ * Crawlers, link previews and scripts that follow a link by themselves, for routing decisions. Stricter
+ * than BOT_RE (which only labels rows): a real phone whose model name ends in "bot" never matches.
+ */
+const CRAWLER_RE = /bot\/|bot;|crawl|spider|slurp|facebookexternalhit|facebookcatalog|telegrambot|whatsapp\/|skypeuripreview|linkedinbot|slackbot|embedly|quora link preview|headlesschrome|phantomjs|lighthouse|pagespeed|gtmetrix|uptimerobot|pingdom|site24x7|statuscake|python-requests|python-urllib|\bcurl\/|\bwget\/|go-http-client|libwww|scrapy|axios\/|node-fetch|postman/i;
+
+/** True for a crawler, link preview or script (not a person in a browser). No User-Agent: false. */
+export function isAutomatedAgent(ua: string | undefined | null): boolean {
+  return CRAWLER_RE.test((ua || '').trim());
+}
+
 /** Device, operating system, browser and app from a User-Agent string. */
 export function parseUserAgent(ua: string | undefined | null): AgentInfo {
   const s = (ua || '').trim();
@@ -226,7 +237,7 @@ export function clickCheck(entry: Pick<RoundRobinLog, 'userAgent' | 'visitor' | 
   else if (reasons.some((r) => r === 'noAgent' || r === 'noReferrer' || r === 'outsideReferrer' || r === 'manyFromIp' || r === 'tooFast')) verdict = 'check';
   // A visit we can see, with real reading, outweighs a missing referrer.
   if (verdict === 'check' && reasons.includes('readPage') && !reasons.includes('manyFromIp') && !reasons.includes('noAgent')) verdict = 'real';
-  // A real chat in the salesperson's Telegram, carrying the code from the click, is the strongest proof there is.
+  // A chat identified by the click's own code (through the sales bot, or an old message carrying it) is the strongest proof there is.
   if (reasons.includes('chatConfirmed') && verdict !== 'bot') verdict = 'real';
   return { verdict, reasons };
 }

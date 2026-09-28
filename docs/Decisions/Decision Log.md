@@ -28,6 +28,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-28 — Sales process details after the audit: greeting rule, reminder timing, manager chats
+
+- **Decision:** (1) A customer the account already knew takes a click only when their first message starts with the greeting the click typed; a chat the salesperson started never takes one. (2) Waiting reminder: the salesperson first, and again when the customer writes after that reminder; the manager once, only if the customer still waits the same minutes after the salesperson's reminder, never at the same moment; a reminder that would fall after closing moves to the next shift start; no 24-hour cap (messages older than 7 days are ignored); more than 3 due at once arrive as one list. (3) Manager messages keep two destinations, now documented and shown in the admin: copies (CC) go to Settings → Instant Telegram Alerts → Target Chat ID; manager-only messages (daily summary, waiting customers, disconnected accounts, unanswered form leads) go to the Fallback Manager Telegram Chat ID, else that Settings chat. (4) Crawlers and link previews are not routed. (5) The fallback bot promises a reply within 15 minutes in business hours, not at any hour.
+- **Why:** An audit of the flow against the code found known customers taking new visitors' clicks, a Friday-evening message never reminded, the salesperson and the manager alerted in the same second, and texts that described earlier behaviour. The two manager destinations stay because merging them would move copies away from the chat the team reads today; entering the same chat in both places merges them.
+- **Who decided:** Claude, within the owner's request "make sure every detail is accurate"; the owner can change any of these.
+- **Affects:** [[Telegram Sales Process]], [[Round Robin]], [[Telegram Inbox]], [[Sales Playbook]].
+
 ## 2026-09-28 — The sales process: straight to the salesperson, tracked through their accounts, the bot only alerts
 
 - **Decision:** "Chat on Telegram" clicks go straight to the salesperson's own Telegram chat (plain "សួស្តី 👋" greeting), and every salesperson's account is connected so the portal tracks the chats. The sales bot does not talk to customers in this process: it alerts the salesperson at the click and when the customer writes, reminds the salesperson when a customer has waited too long (15 minutes by default, working hours only, manager at twice the time), sends the manager the daily summary (now with Telegram chat numbers), and tells the manager and the salesperson when an account is disconnected. Bot first stays available per page for tests only. The step-by-step description is [[Telegram Sales Process]].

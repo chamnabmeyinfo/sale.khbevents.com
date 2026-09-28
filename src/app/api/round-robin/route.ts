@@ -3,7 +3,7 @@ import { getPageBySlug, getSettings, recordDirectContactRoute, getRoundRobinSett
 import { rateLimitByIp, getClientIp } from '@/lib/rate-limit';
 import { resolveFallbackTelegramUrl, DEFAULT_BOT_USERNAME } from '@/lib/round-robin';
 import { STAFF_COOKIE, rememberStaffCookie } from '@/lib/staff-cookie';
-import { visitorDetailFromRequest } from '@/lib/visitor-detail';
+import { isAutomatedAgent, visitorDetailFromRequest } from '@/lib/visitor-detail';
 import { botStartPayload, langFromAcceptLanguage, newRefCode, prefilledMessage } from '@/lib/contact-verify';
 import { contactCheckEnabled } from '@/lib/telegram-account';
 
@@ -44,6 +44,12 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean, text
   const userAgent = req.headers.get('user-agent') || undefined;
   const preferredStaffId = req.cookies.get(STAFF_COOKIE)?.value || undefined;
   const visitor = visitorDetailFromRequest(req.headers, req.cookies);
+  // Search engines and link previews follow the button too: send them on without choosing a salesperson,
+  // so nobody is alerted or counted and no click is left open for a real customer's chat to be matched to.
+  if (isAutomatedAgent(userAgent)) {
+    const target = await fallbackUrl(slug);
+    return redirectMode ? NextResponse.redirect(target) : NextResponse.json({ success: true, routed: false, targetTelegramUrl: target, note: 'Automated visitor: not routed' });
+  }
   // Through the sales bot first? The page may choose for itself; otherwise the Round Robin setting decides.
   // The code then rides in the bot link, so the bot knows the click.
   const [rrForEntry, pageForEntry] = await Promise.all([getRoundRobinSettings().catch(() => null), getPageBySlug(slug).catch(() => null)]);
@@ -94,7 +100,8 @@ async function route(req: NextRequest, slug: string, redirectMode: boolean, text
 
   const targetTelegramUrl = await fallbackUrl(slug);
   if (redirectMode) {
-    return NextResponse.redirect(withPrefilledText(targetTelegramUrl, text));
+    // A person's chat gets the same greeting; the bot's start link carries none (withPrefilledText skips links with '?').
+    return NextResponse.redirect(withPrefilledText(targetTelegramUrl, text && text.trim() ? text : prefilledMessage(langFromAcceptLanguage(visitor.lang), visitor.country)));
   }
   return NextResponse.json({
     success: true,

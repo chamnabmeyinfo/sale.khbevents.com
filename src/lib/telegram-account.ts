@@ -10,7 +10,8 @@
  *   `tg_account:<staffId>` row of system_settings (the same protection as the bot token).
  * - A check lists the account's recent private chats. A chat with a person we have
  *   not seen before is a new contact; its first message is matched to the click that
- *   led to it (reference code, or timing). See contact-verify.ts.
+ *   led to it (timing and the typed greeting; old messages may carry a reference code).
+ *   See contact-verify.ts.
  * - The inbox reads one chat at a time: a cheap probe of its counters, the messages
  *   only when something changed, and, with "Auto seen" on, one read receipt per new
  *   customer message while a person is looking. Replies are sent from the account
@@ -31,7 +32,7 @@ import { getLeaseStore, getMarker, getRoundRobinLogs, getRoundRobinSettings, get
 import { escapeHtml, readTelegramResponse, shiftStartMs, staffOnShift } from './round-robin';
 import { formatWait } from './lead-response';
 import type { ChatStats, Lead, RoundRobinLog, RoundRobinStaff } from './types';
-import { chatStatsFrom, matchContactsToLogs, type ChatMessagePeek, type RecentContact } from './contact-verify';
+import { chatStatsFrom, matchContactsToLogs, startsWithGreeting, type ChatMessagePeek, type RecentContact } from './contact-verify';
 import { createLeadFromTelegramChat, findLeadByTelegramUserId, getLeadById, getRealLeads, addLeadNote } from './storage';
 import { saveLeadChanges } from './lead-followup';
 import type { Api as TgApi } from 'telegram';
@@ -45,7 +46,8 @@ export { AccountBusyError };
 export const CHECK_EVERY_MS = 2 * 60 * 1000;
 /** While the Telegram inbox is open, new chats are looked for this often instead. */
 export const INBOX_CHECK_EVERY_MS = 30 * 1000;
-const RECENT_DIALOGS = 40;
+/** Chats read per check (Telegram lists pinned chats, groups and bots in the same list, so 100 leaves room). */
+const RECENT_DIALOGS = 100;
 /** Messages stored the first time a chat is opened. */
 const CHAT_BACKFILL = 200;
 const KNOWN_USERS_KEPT = 3000;
@@ -194,7 +196,8 @@ export function statusOf(rec: TelegramAccountRecord, staffName: string, nowMs = 
     lastCheckAt: rec.lastCheckAt,
     lastError: rec.lastError,
     contactsFound: contacts.length,
-    matched: contacts.filter((c) => c.logId).length,
+    // Chats matched to a click (leads from "Track every new chat" carry a direct: id and are not clicks).
+    matched: contacts.filter((c) => c.logId && !c.logId.startsWith('direct:')).length,
     trackAll: Boolean(rec.trackAll),
     autoSeen: Boolean(rec.autoSeen),
     floodUntil: floodActive(rec, nowMs),
@@ -217,7 +220,7 @@ export async function listAccountStatuses(): Promise<TelegramAccountStatus[]> {
   return Promise.all(rr.staffList.map(async (s) => statusOf(await getAccountRecord(s.id), s.name)));
 }
 
-/** True when at least one salesperson's account is connected (then clicks carry a reference code). */
+/** True when at least one salesperson's account is connected (then each click gets a reference code, kept on its log). */
 export async function contactCheckEnabled(): Promise<boolean> {
   const rr = await getRoundRobinSettings();
   for (const s of rr.staffList) {
@@ -612,6 +615,13 @@ async function mockClient(session: string): Promise<AccountClient> {
   };
 }
 
+/** Closes the client's connection when the lease's time limit aborts the work (see telegram-lease.ts). */
+function closeOnAbort(signal: AbortSignal | undefined, client: AccountClient): void {
+  if (!signal) return;
+  if (signal.aborted) void client.disconnect();
+  else signal.addEventListener('abort', () => { void client.disconnect(); }, { once: true });
+}
+
 async function clientFor(rec: TelegramAccountRecord, session: string): Promise<AccountClient> {
   if (process.env.TELEGRAM_ACCOUNT_MOCK === '1') return mockClient(session);
   if (!rec.apiId || !rec.apiHash) throw new Error('API ID and API hash are missing');
@@ -748,7 +758,7 @@ export async function startLogin(staffId: string, input: LoginInput): Promise<Te
   const phone = input.phone.replace(/[^\d+]/g, '');
   if (!/^\+?\d{8,15}$/.test(phone)) throw new Error('Enter the phone number with the country code, for example +855 12 345 678');
   if (!Number.isInteger(input.apiId) || input.apiId <= 0) throw new Error('The API ID is a number from my.telegram.org');
-  return withAccountLease(staffId, async () => {
+  return withAccountLease(staffId, async (signal) => {
     // Read inside the lease: the copy is current when it is written back.
     const rec = await getAccountRecord(staffId);
     // An empty hash keeps the one saved earlier (it is never sent back to the browser).
@@ -756,6 +766,7 @@ export async function startLogin(staffId: string, input: LoginInput): Promise<Te
     if (!/^[a-f0-9]{32}$/i.test(apiHash)) throw new Error('The API hash is 32 letters and digits from my.telegram.org');
     const next: TelegramAccountRecord = { ...rec, apiId: input.apiId, apiHash, phone, pending: undefined, lastError: undefined };
     const client = await clientFor(next, '');
+    closeOnAbort(signal, client);
     try {
       await client.connect();
       const { phoneCodeHash } = await client.sendCode(phone);
@@ -777,7 +788,7 @@ export async function startLogin(staffId: string, input: LoginInput): Promise<Te
 
 /** Step 2: the code from the phone (and the two-step password when the account has one). */
 export async function finishLogin(staffId: string, code: string, password?: string): Promise<TelegramAccountStatus> {
-  return withAccountLease(staffId, async () => {
+  return withAccountLease(staffId, async (signal) => {
     const rec = await getAccountRecord(staffId);
     if (!rec.pending || !rec.phone) throw new Error('Ask for a code first');
     if (Date.now() - Date.parse(rec.pending.at) > 15 * 60 * 1000) {
@@ -785,6 +796,7 @@ export async function finishLogin(staffId: string, code: string, password?: stri
       throw new Error('The code has expired. Ask for a new one.');
     }
     const client = await clientFor(rec, rec.pending!.session);
+    closeOnAbort(signal, client);
     try {
       await client.connect();
       if (!rec.pending!.needsPassword) {
@@ -841,9 +853,10 @@ export async function finishLogin(staffId: string, code: string, password?: stri
 export async function disconnectAccount(staffId: string): Promise<TelegramAccountStatus> {
   const rec = await getAccountRecord(staffId);
   if (rec.session) {
-    await withAccountLease(staffId, async () => {
+    await withAccountLease(staffId, async (signal) => {
       try {
         const client = await clientFor(rec, rec.session!);
+        closeOnAbort(signal, client);
         await client.connect();
         await client.logOut().catch(() => undefined);
         await client.disconnect();
@@ -931,7 +944,7 @@ export async function checkAccount(staffId: string, options: { force?: boolean; 
     return { ...skipped, error: `Check now can run again in ${Math.ceil((FORCE_CHECK_COOLDOWN_MS - (nowMs - Date.parse(rec.lastForceCheckAt))) / 1000)} s` };
   }
   try {
-    return await withAccountLease(staffId, async () => {
+    return await withAccountLease(staffId, async (signal) => {
       // Another server may have checked while we waited for the lease.
       const fresh = await getAccountRecord(staffId);
       if (!fresh.session || !fresh.user) return skipped;
@@ -942,6 +955,7 @@ export async function checkAccount(staffId: string, options: { force?: boolean; 
       const stamp = new Date(nowMs).toISOString();
       await patchAccountRecord(staffId, { lastCheckAt: stamp, ...(options.force ? { lastForceCheckAt: stamp } : {}) });
       const client = await clientFor(fresh, fresh.session);
+      closeOnAbort(signal, client);
       let dialogs: DialogPeek[];
       try {
         await client.connect();
@@ -973,6 +987,8 @@ async function finishCheck(rec: TelegramAccountRecord, client: AccountClient, di
   const seenKey = new Set(contacts.map((c) => `${c.userId}:${c.at}`));
   // Known people who wrote since the last check: they count only if a click explains the message.
   const provisional = new Set<string>();
+  // Contacts found by this check (older ones were seen before).
+  const foundNow = new Set<string>();
   const summary: CheckSummary = { at: new Date(nowMs).toISOString(), dialogs: dialogs.length, incoming: 0, newPeople: 0, knownRecent: 0, matched: 0, leadsMade: 0, newest: [] };
 
   // Clicks to this salesperson not yet matched to a chat (last 24 h): a known person's message only matters near one.
@@ -988,14 +1004,23 @@ async function finishCheck(rec: TelegramAccountRecord, client: AccountClient, di
   // check runs (the dialog then ends with our message) or a customer who writes again later hides nothing.
   let lookups = 0;
   let lookupsStopped = false;
-  const firstIncoming = async (d: DialogPeek, notBeforeMs: number): Promise<{ atMs: number; text: string } | null | undefined> => {
-    // undefined: could not look (budget used up, or Telegram refused); null: looked, no message from them.
+  type Found = { atMs: number; text: string; openedByUs?: boolean };
+  const firstIncoming = async (d: DialogPeek, notBeforeMs: number): Promise<Found | null | undefined> => {
+    // undefined: could not look (budget used up, or Telegram refused); null: looked, nothing from them since notBeforeMs.
     if (lookupsStopped || lookups >= HISTORY_LOOKUPS_PER_CHECK) return undefined;
     lookups += 1;
     try {
       const msgs = await client.history(d.userId, 20);
       const incoming = msgs.filter((m) => !m.out && m.atMs >= notBeforeMs).sort((a, b) => a.atMs - b.atMs || a.id - b.id);
-      return incoming.length ? { atMs: incoming[0].atMs, text: incoming[0].text || '' } : null;
+      if (!incoming.length) return null;
+      const first = incoming[0];
+      // The greeting typed by the click says little: add the customer's next words for the alert and the lead.
+      const next = !first.text || startsWithGreeting(first.text) ? incoming.slice(1).find((m) => m.text && !startsWithGreeting(m.text)) : undefined;
+      // The whole chat is in view and the salesperson wrote first, in this period, without the customer
+      // sending the click's greeting: they started it (a form lead messaged on Telegram, say).
+      const oldest = msgs.reduce<(typeof msgs)[number] | undefined>((o, m) => (!o || m.atMs < o.atMs ? m : o), undefined);
+      const openedByUs = msgs.length < 20 && Boolean(oldest?.out) && oldest!.atMs >= notBeforeMs && !startsWithGreeting(first.text);
+      return { atMs: first.atMs, text: next ? `${first.text || ''}\n${next.text}`.trim() : first.text || '', ...(openedByUs ? { openedByUs } : {}) };
     } catch (err) {
       if (classifyTelegramError(err).kind !== 'other') {
         lookupsStopped = true;
@@ -1004,45 +1029,65 @@ async function finishCheck(rec: TelegramAccountRecord, client: AccountClient, di
       return undefined;
     }
   };
+  // Messages worth matching: since the last look, or since the earliest unmatched click if that is older.
+  const notBefore = Math.min(since, earliestOpenClick ?? since) - 60_000;
 
   let added = 0;
-  for (const d of dialogs) {
-    if (d.isBot || d.isSelf || !d.lastAtMs) continue;
-    const isNew = !known.has(d.userId);
-    const recent = d.lastAtMs > since - 60_000;
+  const people = dialogs.filter((d) => !d.isBot && !d.isSelf && d.lastAtMs);
+  for (const d of people) {
     if (d.lastIncoming) {
       summary.incoming += 1;
-      if (summary.newest.length < 6) summary.newest.push({ name: d.name || d.username || d.userId, username: d.username, atMs: d.lastAtMs, known: !isNew });
+      if (summary.newest.length < 6) summary.newest.push({ name: d.name || d.username || d.userId, username: d.username, atMs: d.lastAtMs, known: known.has(d.userId) });
     }
-    // Nothing new with this person since the last look.
+  }
+  // New people first, so the lookup budget goes to them before people the account already knew.
+  const ordered = [...people.filter((d) => !known.has(d.userId)), ...people.filter((d) => known.has(d.userId))];
+  for (const d of ordered) {
+    const isNew = !known.has(d.userId);
+    const recent = d.lastAtMs > since - 60_000;
+    // Nothing new with a known person since the last look.
     if (!isNew && !recent) continue;
     // A known person with no unmatched click to explain them is an existing customer chatting on.
     if (!isNew && earliestOpenClick === undefined) {
       if (d.lastIncoming) summary.knownRecent += 1;
       continue;
     }
-    // A chat the salesperson opened with someone new who has not written back: nothing to match until it changes.
-    if (isNew && !d.lastIncoming && !recent) continue;
-    // Which message to match: the customer's first one (new person), or their first one since the last look (known person).
-    let msg: { atMs: number; text: string } | null | undefined;
-    if (isNew) msg = await firstIncoming(d, 0);
-    else if (!d.lastIncoming) msg = await firstIncoming(d, Math.max(since - 60_000, (earliestOpenClick ?? nowMs) - 60_000));
-    if (msg === undefined) msg = d.lastIncoming ? { atMs: d.lastAtMs, text: d.lastText } : null;
-    // No message from them (the salesperson wrote first, or we could not read the chat): look again next time.
-    if (!msg) continue;
+    let msg = await firstIncoming(d, notBefore);
+    if (msg === null) {
+      if (!d.lastIncoming) {
+        // Nothing from them in the period. Someone new: an old chat, or one the salesperson opened; remember
+        // them, so a later reply is not taken for a brand-new customer.
+        if (isNew) known.add(d.userId);
+        continue;
+      }
+      // They spoke last, before the period (an earlier check did not finish): keep their latest message.
+      // It is too old for any open click, so it can only become a Track every new chat lead.
+      msg = { atMs: d.lastAtMs, text: d.lastText };
+    }
+    if (msg === undefined) {
+      // Could not read the chat: fall back to their latest message if they spoke last; otherwise look next time.
+      if (!d.lastIncoming) continue;
+      msg = { atMs: d.lastAtMs, text: d.lastText };
+    }
     if (isNew) summary.newPeople += 1;
     else summary.knownRecent += 1;
     known.add(d.userId);
     const at = new Date(msg.atMs).toISOString();
     const key = `${d.userId}:${at}`;
     if (seenKey.has(key)) continue;
-    // Already a lead (they came through the sales bot): their chat is tracked on the lead, nothing to match.
-    if (isNew && (await findLeadByTelegramUserId(d.userId).catch(() => null))) continue;
-    contacts.unshift({ staffId, at, userId: d.userId, username: d.username, name: d.name, text: msg.text.slice(0, 200) });
+    if (isNew) {
+      // Already this salesperson's lead (they came through the sales bot): tracked on the lead, nothing to match.
+      const existing = await findLeadByTelegramUserId(d.userId).catch(() => null);
+      if (existing && existing.routing?.staffId === staffId) continue;
+    }
+    contacts.unshift({ staffId, at, userId: d.userId, username: d.username, name: d.name, text: msg.text.slice(0, 200), known: !isNew, ...(msg.openedByUs ? { openedByUs: true } : {}) });
     seenKey.add(key);
+    foundNow.add(key);
     if (!isNew) provisional.add(key);
     added += 1;
   }
+  // Whether the salesperson has answered, for the wording of the alert.
+  const answered = new Map(people.map((d) => [d.userId, !d.lastIncoming]));
 
   // Match to clicks and leads.
   const matches = matchContactsToLogs(staffLogs, contacts, new Date(nowMs).toISOString());
@@ -1070,17 +1115,20 @@ async function finishCheck(rec: TelegramAccountRecord, client: AccountClient, di
       const log = logById.get(m.logId);
       if (!log || log.demo) continue;
       // Every confirmed chat is a prospect in the CRM (one lead per Telegram user).
+      let existed = false;
       try {
-        const lead = await leadForChat(log, m.confirmation, staff);
+        const found = await leadForChat(log, m.confirmation, staff);
+        const lead = found.lead;
+        existed = found.existed;
         m.confirmation.leadId = lead.id;
-        summary.leadsMade += 1;
+        if (!existed) summary.leadsMade += 1;
         const row = summary.newest.find((n) => (m.contact.username ? n.username === m.contact.username : n.name === (m.contact.name || m.contact.userId)));
         if (row) row.leadId = lead.id;
         await updateRoundRobinLogs((all) => all.map((l) => (l.id === log.id && l.contact ? { ...l, contact: { ...l.contact, leadId: lead.id } } : l)));
       } catch (err) {
         console.error('Lead from Telegram chat error:', err);
       }
-      await alertChatStarted(log, m.confirmation).catch(() => undefined);
+      await alertChatStarted(log, m.confirmation, { answered: answered.get(m.contact.userId) === true, existing: existed }).catch(() => undefined);
     }
   }
 
@@ -1088,14 +1136,18 @@ async function finishCheck(rec: TelegramAccountRecord, client: AccountClient, di
   if (rec.trackAll) {
     const rr = await getRoundRobinSettings();
     const staff = rr.staffList.find((s) => s.id === staffId) || null;
-    // New people whose message is recent (a week): older unmatched contacts stay as they are.
-    for (const c of contacts.filter((x) => !x.logId && Date.parse(x.at) >= nowMs - 7 * 86_400_000)) {
+    // New people whose message is recent (a week): older unmatched contacts stay as they are, and so do
+    // chats the salesperson started (a form lead answering on Telegram is already in the CRM).
+    for (const c of contacts.filter((x) => !x.logId && !x.openedByUs && Date.parse(x.at) >= nowMs - 7 * 86_400_000)) {
       try {
         const existing = await findLeadByTelegramUserId(c.userId);
         if (existing) continue;
         const lead = await createLeadFromTelegramChat({ contact: c, staff });
         c.logId = `direct:${lead.id}`;
         summary.leadsMade += 1;
+        // Alert only for people found now: switching the option on must not replay a week of chats
+        // (those who still wait are covered by the reminder).
+        if (foundNow.has(`${c.userId}:${c.at}`)) await alertDirectChat(staffId, c, lead.id, answered.get(c.userId) === true).catch(() => undefined);
       } catch (err) {
         console.error('Lead from direct Telegram chat error:', err);
       }
@@ -1125,14 +1177,15 @@ async function finishCheck(rec: TelegramAccountRecord, client: AccountClient, di
   return { staffId, newContacts: Math.max(0, added), matched: matches.length, statsUpdated, error: statsError };
 }
 
-/** The CRM lead for a confirmed chat: found by Telegram user id, or made now. */
-async function leadForChat(log: RoundRobinLog, c: ContactInfo, staff: RoundRobinStaff | null) {
+/** The CRM lead for a confirmed chat: found by Telegram user id (existed = true), or made now. */
+async function leadForChat(log: RoundRobinLog, c: ContactInfo, staff: RoundRobinStaff | null): Promise<{ lead: Lead; existed: boolean }> {
   const existing = await findLeadByTelegramUserId(c.userId);
   if (existing) {
-    await addLeadNote(existing.id, `Clicked again: ${log.pageTitle || log.pageSlug}${log.refCode ? ` (${log.refCode})` : ''}${c.text ? ` · “${c.text.slice(0, 120)}”` : ''}`, 'Telegram check').catch(() => null);
-    return existing;
+    const other = staff && existing.routing?.staffId && existing.routing.staffId !== staff.id ? ` · now chatting with ${staff.name}` : '';
+    await addLeadNote(existing.id, `Clicked again: ${log.pageTitle || log.pageSlug}${other}${c.text ? ` · “${c.text.slice(0, 120)}”` : ''}`, 'Telegram check').catch(() => null);
+    return { lead: existing, existed: true };
   }
-  return createLeadFromTelegramChat({ log, contact: c, staff });
+  return { lead: await createLeadFromTelegramChat({ log, contact: c, staff }), existed: false };
 }
 
 type ContactInfo = { at: string; userId: string; username?: string; name?: string; text?: string; match: 'ref' | 'time'; leadId?: string };
@@ -1208,18 +1261,25 @@ function withTranscripts(messages: ChatMessage[], chat: StoredChat | null): Chat
 async function refreshChatStats(client: AccountClient, staffId: string, dialogs: DialogPeek[], nowMs: number): Promise<number> {
   const since = nowMs - CHAT_STATS_DAYS * 86_400_000;
   const unreadBy = new Map(dialogs.map((d) => [d.userId, d.unread]));
+  const dialogBy = new Map(dialogs.map((d) => [d.userId, d]));
   const leads = (await getRealLeads())
     .filter((l) => l.routing?.routeType === 'DIRECT_CONTACT_CLICK' && l.routing.staffId === staffId && l.customFields?.telegramUserId)
     .filter((l) => l.status !== 'WON' && l.status !== 'LOST' && Date.parse(l.createdAt) >= since)
-    // The ones with the oldest numbers first, so every open chat gets its turn.
+    // Only chats in the recent list (their peer is known) whose last message or unread count changed
+    // since the numbers were taken: an unchanged chat costs no Telegram call.
+    .filter((l) => {
+      const d = dialogBy.get(l.customFields!.telegramUserId);
+      if (!d) return false;
+      const c = l.routing?.chat;
+      return !(c?.lastAt && Date.parse(c.lastAt) === d.lastAtMs && (c.unread ?? 0) === (d.unread ?? 0));
+    })
+    // The ones with the oldest numbers first, so every changed chat gets its turn.
     .sort((a, b) => (a.routing?.chat?.updatedAt || '').localeCompare(b.routing?.chat?.updatedAt || ''))
     .slice(0, CHAT_STATS_MAX_LEADS);
   let n = 0;
   let voiceBudget = VOICE_PER_CHECK;
   for (const lead of leads) {
     const userId = lead.customFields!.telegramUserId;
-    // Only chats in the recent list can be read (their peer is known); others keep their last numbers.
-    if (!unreadBy.has(userId)) continue;
     const messages = await client.history(userId, CHAT_STATS_MESSAGES);
     if (!messages.length) continue;
     // Keep the conversation itself (see chat-store.ts) and turn a voice message or two into text.
@@ -1268,8 +1328,6 @@ function statsDiffer(a: ChatStats | undefined, b: ChatStats): boolean {
 /** Allowed values for Round Robin → "Remind when a Telegram customer waits" (minutes; 0 = off). */
 export const CHAT_REPLY_MINUTE_CHOICES = [0, 10, 15, 30, 60] as const;
 export const DEFAULT_CHAT_REPLY_MINUTES = 15;
-/** Waits longer than this, counted from the start of the salesperson's shift, are left to the daily summary (no burst of old reminders). */
-const REMIND_WITHIN_MS = 24 * 3600_000;
 /** Customer messages older than this are never reminded about, whatever the shifts. */
 const REMIND_MAX_AGE_MS = 7 * 86_400_000;
 
@@ -1285,16 +1343,31 @@ export interface WaitDecision {
   staff: boolean;
   /** Send the manager a copy now. */
   manager: boolean;
-  /** When the wait began (ISO): the key that makes each reminder go out once per wait. */
+  /** When the wait began (ISO): the customer's first unanswered message, the key that keeps each reminder to once per wait. */
   forAt: string;
+  /** How long the customer has been waiting, in clock time, since that message. */
   waitedMs: number;
+  /** The customer wrote again after the salesperson's reminder. */
+  again?: boolean;
+}
+
+/**
+ * When the reminder clock starts for a message at `fromMs`: at once during the salesperson's shift,
+ * otherwise when the next shift opens; and if the reminder would fall due after the shift has
+ * ended, at the start of the next shift instead, so it never comes at closing time or days late.
+ */
+function reminderClockStart(staff: Pick<RoundRobinStaff, 'workHours'>, fromMs: number, ms: number): number {
+  const start = shiftStartMs(staff, fromMs);
+  return staffOnShift(staff, start + ms) ? start : shiftStartMs(staff, start + ms);
 }
 
 /**
  * Whether a customer who spoke last should trigger a reminder now. The wait starts at their first
- * unanswered message (the chat numbers, when current) or else at their last message (never early);
- * outside the salesperson's working hours the clock starts when the shift opens, and nobody is
- * reminded off shift. One salesperson reminder per wait; the manager at twice the time.
+ * unanswered message (the chat numbers, when current) or else at their last message (never early).
+ * Nobody is reminded while the salesperson is off shift (no working hours set = always on shift).
+ * The salesperson is reminded once per wait, and again if the customer writes after that reminder;
+ * the manager once per wait, `minutes` after the salesperson's reminder (twice the time at the earliest).
+ * Nothing for a customer whose last message is more than 7 days old.
  */
 export function waitDecision(input: {
   minutes: number;
@@ -1307,26 +1380,42 @@ export function waitDecision(input: {
 }): WaitDecision | null {
   const { minutes, nowMs, stats, staff } = input;
   if (!minutes) return null;
-  const current = stats?.waitingSince && stats.lastAt && Date.parse(stats.lastAt) === input.lastIncomingAtMs;
-  const sinceMs = current ? Date.parse(stats!.waitingSince!) : input.lastIncomingAtMs;
-  if (!Number.isFinite(sinceMs) || nowMs - sinceMs > REMIND_MAX_AGE_MS) return null;
+  const lastMs = input.lastIncomingAtMs;
+  const current = stats?.waitingSince && stats.lastAt && Date.parse(stats.lastAt) === lastMs;
+  const sinceMs = current ? Date.parse(stats!.waitingSince!) : lastMs;
+  if (!Number.isFinite(sinceMs) || !Number.isFinite(lastMs) || nowMs - lastMs > REMIND_MAX_AGE_MS) return null;
   if (!staffOnShift(staff, nowMs)) return null;
-  // A message sent off shift (night, weekend) starts the clock when the next shift opens.
-  const waitedMs = nowMs - shiftStartMs(staff, sinceMs);
-  if (waitedMs < minutes * 60_000 || waitedMs > REMIND_WITHIN_MS) return null;
+  const ms = minutes * 60_000;
   const forAt = new Date(sinceMs).toISOString();
-  const same = input.reminder?.forAt === forAt;
-  const staffDue = Boolean((staff.telegramChatId || '').trim()) && !(same && input.reminder?.staffAt);
+  // What was already sent during this wait (a reminder from before it began was for an earlier one).
+  // Times, not the stored key, decide: the key moves when the chat numbers catch up with the dialog.
+  const staffAtMs = input.reminder?.staffAt ? Date.parse(input.reminder.staffAt) : NaN;
+  const reminded = Number.isFinite(staffAtMs) && staffAtMs >= sinceMs;
+  const managerAtMs = input.reminder?.managerAt ? Date.parse(input.reminder.managerAt) : NaN;
+  const managerTold = Number.isFinite(managerAtMs) && managerAtMs >= sinceMs;
+  const staffChat = (staff.telegramChatId || '').trim();
+  // The salesperson: first reminder of this wait, or again for a message that came after it.
+  const again = reminded && lastMs > staffAtMs;
+  const onShiftWait = nowMs - reminderClockStart(staff, again ? lastMs : sinceMs, ms);
+  const staffDue = Boolean(staffChat) && (!reminded || again) && onShiftWait >= ms;
+  // The manager: once per wait, after the salesperson had `minutes` to answer their reminder.
   const manager = (input.managerChat || '').trim();
-  const managerDue = waitedMs >= minutes * 2 * 60_000 && Boolean(manager) && manager !== String(staff.telegramChatId || '').trim() && !(same && input.reminder?.managerAt);
+  let managerDue = false;
+  if (manager && manager !== staffChat && !managerTold) {
+    if (reminded) managerDue = nowMs - staffAtMs >= ms;
+    else if (!staffChat) managerDue = nowMs - reminderClockStart(staff, sinceMs, ms) >= 2 * ms;
+  }
   if (!staffDue && !managerDue) return null;
-  return { staff: staffDue, manager: managerDue, forAt, waitedMs };
+  return { staff: staffDue, manager: managerDue, forAt, waitedMs: nowMs - sinceMs, ...(staffDue && again ? { again: true } : {}) };
 }
+
+/** More reminders than this due at once for one salesperson go out as one list instead. */
+const REMINDERS_ONE_BY_ONE = 3;
 
 /**
  * After a check: for each of this salesperson's open Telegram chat leads whose customer spoke
  * last (seen in the dialogs Telegram just returned, so the answer is current), remind the
- * salesperson once the wait passes the set minutes and copy the manager at twice that.
+ * salesperson once the wait passes the set minutes and copy the manager later (waitDecision).
  */
 async function remindWaitingChats(staffId: string, dialogs: DialogPeek[], nowMs: number): Promise<number> {
   const waitingDialogs = dialogs.filter((d) => !d.isBot && !d.isSelf && d.lastIncoming && d.lastAtMs);
@@ -1341,87 +1430,147 @@ async function remindWaitingChats(staffId: string, dialogs: DialogPeek[], nowMs:
   const managerChat = (rr.managerChatId || rr.fallbackChatId || settings.telegramChatId || '').trim();
   const leads = (await getRealLeads()).filter((l) => l.routing?.staffId === staffId && l.customFields?.telegramUserId && l.status !== 'WON' && l.status !== 'LOST');
   const byUser = new Map(leads.map((l) => [l.customFields!.telegramUserId, l]));
+  const due: Array<{ lead: Lead; d: DialogPeek; decision: WaitDecision }> = [];
+  for (const d of waitingDialogs) {
+    const lead = byUser.get(d.userId);
+    if (!lead?.routing) continue;
+    const decision = waitDecision({ minutes, nowMs, lastIncomingAtMs: d.lastAtMs, stats: lead.routing.chat, staff, reminder: lead.routing.chatReminder, managerChat });
+    if (decision) due.push({ lead, d, decision });
+  }
+  if (!due.length) return 0;
+
   const send = (chatId: string, text: string) =>
     fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
     }).then(readTelegramResponse).then((d) => Boolean(d.ok)).catch(() => false);
-  let sent = 0;
-  for (const d of waitingDialogs) {
-    const lead = byUser.get(d.userId);
-    if (!lead?.routing) continue;
-    const decision = waitDecision({ minutes, nowMs, lastIncomingAtMs: d.lastAtMs, stats: lead.routing.chat, staff, reminder: lead.routing.chatReminder, managerChat });
-    if (!decision) continue;
-    const who = [lead.fullName, lead.customFields?.telegramUsername ? `(@${lead.customFields.telegramUsername})` : ''].filter(Boolean).join(' ');
-    const waited = formatWait(Math.round(decision.waitedMs / 1000));
-    const link = `https://sale.khbevents.com/admin/chats?id=${encodeURIComponent(lead.id)}`;
-    const said = d.lastText ? `💬 “${escapeHtml(d.lastText.slice(0, 120))}${d.lastText.length > 120 ? '…' : ''}”` : '';
-    const reminder = { ...(lead.routing.chatReminder?.forAt === decision.forAt ? lead.routing.chatReminder : {}), forAt: decision.forAt };
-    if (decision.staff) {
+  const who = (l: Lead) => escapeHtml([l.fullName, l.customFields?.telegramUsername ? `(@${l.customFields.telegramUsername})` : ''].filter(Boolean).join(' '));
+  const service = (l: Lead) => escapeHtml(l.landingPageTitle || 'KHB Events');
+  const waited = (x: (typeof due)[number]) => escapeHtml(formatWait(Math.round(x.decision.waitedMs / 1000)));
+  const wrote = (x: (typeof due)[number]) => phnomPenhStamp(Date.parse(x.decision.forAt));
+  const link = (l: Lead) => `https://sale.khbevents.com/admin/chats?id=${encodeURIComponent(l.id)}`;
+  const inbox = 'https://sale.khbevents.com/admin/chats';
+  const listed = (rows: string[]) => (rows.length > 10 ? [...rows.slice(0, 10), `… +${rows.length - 10}`] : rows);
+
+  const staffSent = new Set<string>();
+  const toStaff = due.filter((x) => x.decision.staff);
+  if (toStaff.length > REMINDERS_ONE_BY_ONE) {
+    const ok = await send(staff.telegramChatId, [
+      `⏳ <b>អតិថិជន ${toStaff.length} នាក់រង់ចាំចម្លើយ</b>`,
+      ...listed(toStaff.map((x) => `• ${who(x.lead)} · ${service(x.lead)} · ${waited(x)}`)),
+      '👉 សូមឆ្លើយឥឡូវ!',
+      `📋 ${inbox}`,
+    ].join('\n'));
+    if (ok) toStaff.forEach((x) => staffSent.add(x.lead.id));
+  } else {
+    for (const x of toStaff) {
+      const said = x.d.lastText ? `💬 “${escapeHtml(x.d.lastText.slice(0, 120))}${x.d.lastText.length > 120 ? '…' : ''}”` : '';
       const ok = await send(staff.telegramChatId, [
-        `⏳ <b>អតិថិជនរង់ចាំចម្លើយ ${escapeHtml(waited)} ហើយ</b>`,
-        `👤 ${escapeHtml(who)}`,
-        `📌 សេវា៖ <b>${escapeHtml(lead.landingPageTitle || 'KHB Events')}</b>`,
+        x.decision.again ? `⏳ <b>អតិថិជនសរសេរមកម្តងទៀត · រង់ចាំចម្លើយ ${waited(x)} ហើយ</b>` : `⏳ <b>អតិថិជនរង់ចាំចម្លើយ ${waited(x)} ហើយ</b>`,
+        `👤 ${who(x.lead)}`,
+        `📌 សេវា៖ <b>${service(x.lead)}</b>`,
+        `🕒 សរសេរមកតាំងពី៖ ${wrote(x)}`,
         said,
         '👉 សូមឆ្លើយឥឡូវ!',
-        `📋 ${link}`,
+        `📋 ${link(x.lead)}`,
       ].filter(Boolean).join('\n'));
-      if (ok) { reminder.staffAt = new Date(nowMs).toISOString(); sent += 1; }
-    }
-    if (decision.manager) {
-      const ok = await send(managerChat, [
-        `⏳ <b>Customer still waiting for a reply</b> → ${escapeHtml(staff.name)}`,
-        `👤 ${escapeHtml(who)} · ${escapeHtml(lead.landingPageTitle || 'KHB Events')}`,
-        `⏱️ Waiting ${escapeHtml(waited)}`,
-        `📋 ${link}`,
-      ].join('\n'));
-      if (ok) { reminder.managerAt = new Date(nowMs).toISOString(); sent += 1; }
-    }
-    if (reminder.staffAt !== lead.routing.chatReminder?.staffAt || reminder.managerAt !== lead.routing.chatReminder?.managerAt || reminder.forAt !== lead.routing.chatReminder?.forAt) {
-      const fresh = (await getLeadById(lead.id).catch(() => null)) || lead;
-      if (fresh.routing) {
-        fresh.routing = { ...fresh.routing, chatReminder: reminder };
-        await saveLeadChanges(fresh).catch(() => undefined);
-      }
+      if (ok) staffSent.add(x.lead.id);
     }
   }
-  return sent;
+
+  const managerSent = new Set<string>();
+  const toManager = due.filter((x) => x.decision.manager);
+  if (toManager.length > REMINDERS_ONE_BY_ONE) {
+    const ok = await send(managerChat, [
+      `⏳ <b>${toManager.length} customers still waiting for a reply</b> → ${escapeHtml(staff.name)}`,
+      ...listed(toManager.map((x) => `• ${who(x.lead)} · ${service(x.lead)} · waiting ${waited(x)}`)),
+      `📋 ${inbox}`,
+    ].join('\n'));
+    if (ok) toManager.forEach((x) => managerSent.add(x.lead.id));
+  } else {
+    for (const x of toManager) {
+      const ok = await send(managerChat, [
+        `⏳ <b>Customer still waiting for a reply</b> → ${escapeHtml(staff.name)}`,
+        `👤 ${who(x.lead)} · ${service(x.lead)}`,
+        `🕒 Wrote ${wrote(x)} · waiting ${waited(x)}`,
+        `📋 ${link(x.lead)}`,
+      ].join('\n'));
+      if (ok) managerSent.add(x.lead.id);
+    }
+  }
+
+  // Remember what went out, so each reminder is sent once per wait.
+  const nowIso = new Date(nowMs).toISOString();
+  for (const x of due) {
+    const prev = x.lead.routing!.chatReminder;
+    const reminder = { ...prev, forAt: x.decision.forAt };
+    if (staffSent.has(x.lead.id)) reminder.staffAt = nowIso;
+    if (managerSent.has(x.lead.id)) reminder.managerAt = nowIso;
+    if (reminder.staffAt === prev?.staffAt && reminder.managerAt === prev?.managerAt && reminder.forAt === prev?.forAt) continue;
+    const fresh = (await getLeadById(x.lead.id).catch(() => null)) || x.lead;
+    if (fresh.routing) {
+      fresh.routing = { ...fresh.routing, chatReminder: reminder };
+      await saveLeadChanges(fresh).catch(() => undefined);
+    }
+  }
+  return staffSent.size + managerSent.size;
+}
+
+/** Sends one bot message to the salesperson and, when Manager notification is on, a copy to the manager chat. */
+async function sendChatAlert(staffId: string, text: string): Promise<void> {
+  const [rr, settings] = await Promise.all([getRoundRobinSettings(), getSettings()]);
+  const token = settings.telegramBotToken;
+  if (!token) return;
+  const staff = rr.staffList.find((s) => s.id === staffId);
+  const send = (chatId: string) =>
+    fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
+    }).then(readTelegramResponse).catch(() => undefined);
+  const tasks: Promise<unknown>[] = [];
+  if (staff?.telegramChatId) tasks.push(send(staff.telegramChatId));
+  // Same destination as the click copy: the Manager Chat ID, else the company chat in Settings.
+  const manager = rr.managerChatId || settings.telegramChatId;
+  if (rr.enableManagerNotification && manager && String(manager) !== String(staff?.telegramChatId)) tasks.push(send(manager));
+  await Promise.allSettled(tasks);
 }
 
 /**
  * Tells the salesperson (and the manager, when CC is on) that the customer behind a
  * click has now written: who they are and what they asked. Short and in Khmer.
+ * `answered`: the salesperson already replied (no "reply now"); `existing`: a customer
+ * who already had a lead clicked again.
  */
-async function alertChatStarted(log: RoundRobinLog, c: { at: string; name?: string; username?: string; text?: string; match: 'ref' | 'time'; leadId?: string }): Promise<void> {
+async function alertChatStarted(log: RoundRobinLog, c: { at: string; name?: string; username?: string; text?: string; match: 'ref' | 'time'; leadId?: string }, opts: { answered?: boolean; existing?: boolean } = {}): Promise<void> {
   if (log.demo) return;
-  const [rr, settings] = await Promise.all([getRoundRobinSettings(), getSettings()]);
-  const token = settings.telegramBotToken;
-  if (!token) return;
-  const staff = rr.staffList.find((s) => s.id === log.staffId);
   const who = [c.name, c.username ? `(@${c.username})` : ''].filter(Boolean).join(' ') || 'អតិថិជន';
+  const head = opts.existing ? '🔁 <b>អតិថិជនចាស់ចុចម្តងទៀត ហើយផ្ញើសារមកអ្នក</b>' : '✅ <b>អតិថិជនបានផ្ញើសារមកអ្នកហើយ</b>';
   const text = [
-    c.match === 'ref' ? '✅ <b>អតិថិជនបានផ្ញើសារមកអ្នកហើយ</b>' : '✅ <b>អតិថិជនបានផ្ញើសារមកអ្នកហើយ</b> (ប្រហែលពីការចុចនេះ)',
+    c.match === 'ref' ? head : `${head} (ប្រហែលពីការចុចនេះ)`,
     `👤 ${escapeHtml(who)}`,
     `📌 សេវា៖ <b>${escapeHtml(log.pageTitle || log.pageSlug)}</b>`,
     c.text ? `💬 “${escapeHtml(c.text.slice(0, 120))}${c.text.length > 120 ? '…' : ''}”` : '',
     `⏰ ${phnomPenhStamp(Date.parse(c.at))}`,
-    '👉 សូមឆ្លើយឥឡូវ!',
+    opts.answered ? '✔️ បានឆ្លើយរួចហើយ' : '👉 សូមឆ្លើយឥឡូវ!',
     c.leadId ? `📋 CRM: https://sale.khbevents.com/admin/leads?id=${encodeURIComponent(c.leadId)}` : '',
   ].filter(Boolean).join('\n');
-  const send = (chatId: string) =>
-    fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
-    }).then(readTelegramResponse).catch(() => undefined);
-  const tasks: Promise<unknown>[] = [];
-  if (staff?.telegramChatId) tasks.push(send(staff.telegramChatId));
-  const manager = rr.managerChatId || settings.telegramChatId;
-  if (rr.enableManagerNotification && manager && String(manager) !== String(staff?.telegramChatId)) {
-    tasks.push(send(manager));
-  }
-  await Promise.allSettled(tasks);
+  await sendChatAlert(log.staffId, text);
+}
+
+/** "Track every new chat": a new customer wrote without a click and became a lead. */
+async function alertDirectChat(staffId: string, c: { at: string; name?: string; username?: string; text?: string }, leadId: string, answered: boolean): Promise<void> {
+  const who = [c.name, c.username ? `(@${c.username})` : ''].filter(Boolean).join(' ') || 'អតិថិជន';
+  const text = [
+    '💬 <b>អតិថិជនថ្មីផ្ញើសារមកផ្ទាល់</b> (មិនមែនពីការចុចលើទំព័រ)',
+    `👤 ${escapeHtml(who)}`,
+    c.text ? `💬 “${escapeHtml(c.text.slice(0, 120))}${c.text.length > 120 ? '…' : ''}”` : '',
+    `⏰ ${phnomPenhStamp(Date.parse(c.at))}`,
+    answered ? '✔️ បានឆ្លើយរួចហើយ' : '👉 សូមឆ្លើយឥឡូវ!',
+    `📋 CRM: https://sale.khbevents.com/admin/leads?id=${encodeURIComponent(leadId)}`,
+  ].filter(Boolean).join('\n');
+  await sendChatAlert(staffId, text);
 }
 
 /** Checks every connected account (throttled). Never throws. */
@@ -1539,17 +1688,18 @@ export async function readLeadConversation(leadId: string, options: ReadOptions 
   const flood = floodActive(rec, nowMs);
   if (flood) return { ...base, unchanged: options.since !== undefined, live: { state: 'flood', floodUntil: flood, retryInMs: Date.parse(flood) - nowMs } };
   try {
-    return await withAccountLease(staffId, () => readWithClient(lead, rec, base, options, nowMs), { waitMs: 0, store: getLeaseStore() });
+    return await withAccountLease(staffId, (signal) => readWithClient(lead, rec, base, options, nowMs, signal), { waitMs: 0, store: getLeaseStore() });
   } catch (err) {
     if (err instanceof AccountBusyError) return { ...base, unchanged: options.since !== undefined, live: { state: 'busy', retryInMs: err.retryInMs } };
     throw err;
   }
 }
 
-async function readWithClient(lead: Lead, rec: TelegramAccountRecord, base: LeadConversation, options: ReadOptions, nowMs: number): Promise<LeadConversation> {
+async function readWithClient(lead: Lead, rec: TelegramAccountRecord, base: LeadConversation, options: ReadOptions, nowMs: number, signal?: AbortSignal): Promise<LeadConversation> {
   const staffId = rec.staffId;
   const userId = base.customer.userId;
   const client = await clientFor(rec, rec.session!);
+  closeOnAbort(signal, client);
   const patch: Partial<TelegramAccountRecord> = {};
   try {
     await client.connect();
@@ -1629,7 +1779,7 @@ export async function sendLeadMessage(leadId: string, rawText: string, by: strin
   const pace = sendGuard(first.sendTimes, nowMs);
   if (!pace.ok) throw new SendPaceError(pace.retryInMs);
 
-  const result = await withAccountLease(staffId, async () => {
+  const result = await withAccountLease(staffId, async (signal) => {
     // Fresh copy inside the lease: another reply may have just gone out.
     const rec = await getAccountRecord(staffId);
     if (!rec.session || !rec.user) throw new Error(`${lead.routing!.staffName}'s Telegram account is not connected`);
@@ -1644,6 +1794,7 @@ export async function sendLeadMessage(leadId: string, rawText: string, by: strin
     const base = conversationBase(lead, userId, username, now);
     base.autoSeen = Boolean(rec.autoSeen);
     const client = await clientFor(rec, rec.session);
+    closeOnAbort(signal, client);
     const patch: Partial<TelegramAccountRecord> = {};
     try {
       await client.connect();

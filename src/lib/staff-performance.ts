@@ -157,9 +157,17 @@ export function waitingLeads(leads: Lead[], day: string): Lead[] {
 const PP_OFFSET_MS = 7 * 60 * 60 * 1000;
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 const ppTime = (iso: string) => new Date(Date.parse(iso) + PP_OFFSET_MS).toISOString().slice(11, 16);
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** "16:20" on the summary's own day, else "29 Sep 09:00" (Phnom Penh). */
+const ppWhen = (iso: string, day: string) => {
+  const ms = Date.parse(iso);
+  if (phnomPenhDay(ms) === day) return ppTime(iso);
+  const local = new Date(ms + PP_OFFSET_MS);
+  return `${local.getUTCDate()} ${MONTHS[local.getUTCMonth()]} ${ppTime(iso)}`;
+};
 
 /** The text of the day's summary (HTML for Telegram). */
-export function dailySummaryText(leads: Lead[], clickStats: StaffClickStats, staffList: RoundRobinStaff[], day: string, chat?: { leads: Lead[]; nowMs: number }): string {
+export function dailySummaryText(leads: Lead[], clickStats: StaffClickStats, staffList: RoundRobinStaff[], day: string, chat?: { leads: Lead[]; nowMs: number; untracked?: string[] }): string {
   const perf = teamPerformance(leads, clickStats, staffList, { from: day, to: day });
   const t = perf.totals;
   const dateLabel = new Date(`${day}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
@@ -173,7 +181,7 @@ export function dailySummaryText(leads: Lead[], clickStats: StaffClickStats, sta
     '',
   ];
   for (const r of perf.rows.filter((x) => x.formLeads || x.clicks || x.tapped)) {
-    lines.push(`👤 <b>${escapeHtml(r.name)}</b>: ${plural(r.formLeads, 'lead')} · ${plural(r.clicks, 'click')} · ${r.tapped} tapped${r.avgResponseSeconds !== null ? ` · avg ${formatWait(r.avgResponseSeconds)}` : ''}${r.waiting ? ` · ⏳ ${r.waiting} waiting` : ''}`);
+    lines.push(`👤 <b>${escapeHtml(r.name)}</b>: ${plural(r.formLeads, 'form lead')} · ${plural(r.clicks, 'click')} · ${r.tapped} tapped${r.avgResponseSeconds !== null ? ` · avg ${formatWait(r.avgResponseSeconds)}` : ''}${r.waiting ? ` · ⏳ ${r.waiting} waiting` : ''}`);
   }
   const waiting = waitingLeads(leads, day);
   if (waiting.length) {
@@ -197,11 +205,13 @@ export function dailySummaryText(leads: Lead[], clickStats: StaffClickStats, sta
         lines.push('', `⏳ <b>Telegram customers waiting for our reply (${open.waiting.length})</b>`);
         for (const l of open.waiting.slice(0, 8)) {
           const since = l.routing?.chat?.waitingSince || l.routing?.chat?.lastAt || l.createdAt;
-          lines.push(`• ${escapeHtml(l.fullName)} · ${escapeHtml(l.landingPageTitle)} · ${escapeHtml(l.routing?.staffName || '')} · since ${ppTime(since)}`);
+          lines.push(`• ${escapeHtml(l.fullName)} · ${escapeHtml(l.landingPageTitle)} · ${escapeHtml(l.routing?.staffName || '')} · since ${ppWhen(since, day)}`);
         }
         if (open.waiting.length > 8) lines.push(`… and ${open.waiting.length - 8} more`);
       }
     }
+    // The numbers above only cover connected accounts: say whose chats are not being read.
+    if (chat.untracked?.length) lines.push('', `⚠️ <b>Telegram chats not tracked now</b>: ${escapeHtml(chat.untracked.join(', '))}`);
   }
   const fastest = perf.rows.filter((r) => r.avgResponseSeconds !== null && r.tapped >= 2).sort((a, b) => a.avgResponseSeconds! - b.avgResponseSeconds!)[0];
   if (fastest) lines.push('', `⚡ Fastest reply: <b>${escapeHtml(fastest.name)}</b> (${formatWait(fastest.avgResponseSeconds!)})`);

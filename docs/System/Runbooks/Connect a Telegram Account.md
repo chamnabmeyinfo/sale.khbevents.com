@@ -6,7 +6,7 @@ updated: 2026-09-28
 
 # Connect a Telegram Account
 
-How to connect a salesperson's Telegram account to the portal (Admin → Settings & Security → **Telegram account check**). Once connected, the portal can see new chats, show them in the [[Telegram Inbox]], and send replies from the portal. Background in [[Round Robin]].
+How to connect a salesperson's Telegram account to the portal (Admin → Settings & Security → **Telegram account check**). In the chosen process ([[Telegram Sales Process]]) the connection is what turns a customer's chat into a lead and drives the "customer messaged you" alert, the waiting-customer reminder and the disconnect alert. It also shows the chats in the [[Telegram Inbox]] and sends replies typed in the portal. Background in [[Round Robin]].
 
 ## 1. Create the app once (for the whole team)
 
@@ -38,9 +38,10 @@ On the salesperson's row in Settings → Telegram account check:
 
 ## 3. After connecting
 
+- [ ] Compare "Connected as @…" with the salesperson's **Telegram @Username** on their Round Robin row: they must be the same account. Nothing warns you if they differ, and then customers are sent to one account while the portal reads the other, so nothing is tracked.
 - [ ] Press **Check the connection**: it must say "Account lock OK".
 - [ ] Press **Check now**, then open **What the last check saw**: recent chats should be listed.
-- [ ] Telegram → Settings → Privacy and Security → **Terminate old sessions if inactive for**: set 6 months, so a quiet period does not log the portal out.
+- [ ] Telegram → Settings → Devices → **Automatically terminate old sessions → If inactive for**: 6 months (or the longest option), so a quiet period does not log the portal out.
 - [ ] Decide **Track every new chat** and **Auto seen** for this salesperson.
 
 ## If something is off

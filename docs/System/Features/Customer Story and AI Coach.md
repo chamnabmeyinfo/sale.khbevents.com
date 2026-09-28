@@ -17,7 +17,7 @@ source:
 
 # Customer Story and AI Coach
 
-Every Telegram conversation is now kept in the portal, voice messages are turned into text, and each customer has a **story file** (Markdown) that an AI coach reads to tell the team where the customer stands and what to do next. Built on 2026-09-27 at the owner's request, reversing the earlier "numbers only" rule (see [[Decision Log]]).
+The conversation of every Telegram chat lead is now kept in the portal (other chats of the salespeople's accounts are not stored), voice messages are turned into text, and each customer has a **story file** (Markdown) that an AI coach reads to tell the team where the customer stands and what to do next. With `ANTHROPIC_API_KEY` set, the story, conversation included, is sent to Anthropic for the analysis. How chats become leads: [[Telegram Sales Process]]. Built on 2026-09-27 at the owner's request, reversing the earlier "numbers only" rule (see [[Decision Log]]).
 
 ## What it does for sales
 

@@ -54,7 +54,7 @@ Return flights Cambodia to South Korea; hotel 3 nights / 4 days; breakfast at th
 ## How the page sells
 
 - Built with the [[Page Builder]]: hero, who it is for, the three fairs, what is included, price card, how to join, lead form (asks which sector), FAQ, closing call to action.
-- The main button opens Mr. Tim Vutha's Telegram directly (not [[Round Robin]]). The form sends leads to the CRM like every page form, with the chosen sector.
+- The main button opens Mr. Tim Vutha's Telegram directly (not [[Round Robin]]), so the [[Telegram Sales Process]] does not apply to it: no bot alert, no click log, no match, and the chat becomes a lead only if his account is connected with Track every new chat on. The form sends leads to the CRM like every page form, with the chosen sector.
 - The price card shows $750 with $799 struck through and an "Early-bird price ends in" countdown. After the early-bird date it shows $799 and "Registration closes in" by itself.
 
 ## Not on the page on purpose

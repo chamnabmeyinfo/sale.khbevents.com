@@ -51,10 +51,10 @@ The full process, step by step, is [[Telegram Sales Process]]. In short:
 
 - The button goes to `/api/round-robin?page=<slug>&redirect=true` (`src/app/api/round-robin/route.ts`).
 - [[Round Robin]] picks one active salesperson with a Telegram username. The visitor is sent straight to that person's Telegram chat, with "សួស្តី 👋" (or "Hello 👋") already typed.
-- The bot sends the salesperson an alert that a visitor was routed to them. This needs the bot token (Admin → Settings & Security) and the salesperson's Chat ID (Admin → Staff Round Robin). If the manager CC setting is on, the manager gets a copy.
-- **The click alert has no name or phone.** The visitor appears in your Telegram when they write. Once your Telegram account is connected, the portal sees that chat, makes the lead in the CRM, and the bot sends a second alert "the customer messaged you" with their name and first words.
-- If the customer waits longer than the set time (15 minutes by default, during your working hours), the bot reminds you; the manager is told at twice the time.
-- Nobody reachable? The click goes to the page's or company's Telegram contact, or to the bot. This happens when Round Robin is paused, direct contact routing is off, or no active staff member has a Telegram username. It also happens when one internet address makes more than 10 new clicks in 10 minutes (`rateLimitByIp` in `src/app/api/round-robin/route.ts`).
+- The bot sends the salesperson an alert that a visitor was routed to them. This needs the bot token (Admin → Settings & Security) and the salesperson's Chat ID (Admin → Staff Round Robin). If the manager CC setting is on, the chat in Settings → Instant Telegram Alerts gets a copy.
+- **The click alert has no name or phone.** The visitor appears in your Telegram when they write. Once your Telegram account is connected, the portal sees that chat and, if their first message comes within 30 minutes of the click, makes the lead in the CRM; the bot then sends a second alert "the customer messaged you" with their name and first words. Check the service (📌) in the alert: the customer's greeting does not name the trip.
+- If the customer waits longer than the set time (15 minutes by default, during your working hours), the bot reminds you, and again if they write after that reminder. The manager is told if they still wait that long after your reminder.
+- Nobody reachable? The click goes to the page's or company's Telegram contact, or to the bot. This happens when Round Robin is paused, direct contact routing is off, or no active staff member has a Telegram username. It also happens when one internet address makes more than 10 clicks in 10 minutes and has no remembered salesperson (`rateLimitByIp` in `src/app/api/round-robin/route.ts`).
 
 ### B. The visitor sends the form
 
@@ -72,7 +72,7 @@ The full process, step by step, is [[Telegram Sales Process]]. In short:
 
 ### C. The lead in the CRM
 
-Every form lead is in **Admin → Leads & CRM Pipeline**. See [[Leads CRM]]. Move it through these statuses:
+Every form lead and every Telegram chat lead is in **Admin → Leads & CRM Pipeline**. See [[Leads CRM]]. Move it through these statuses:
 
 | Status (admin label) | Khmer label | Use it when |
 |---|---|---|
@@ -85,7 +85,7 @@ Every form lead is in **Admin → Leads & CRM Pipeline**. See [[Leads CRM]]. Mov
 
 Each lead has **Internal Organizer Notes**, a **WhatsApp Chat** button and a **Direct Call** button. Write a note after every contact.
 
-Telegram click-throughs (route A) are not saved as leads. They appear in Admin → Staff Round Robin → Real-Time Routing Log. Ask the visitor for their name and phone in the chat, and ask them to send the form on the page so the lead is in the CRM.
+A Telegram click-through (route A) becomes a lead by itself once the customer writes within 30 minutes of the click and the salesperson's account is connected: event type "Telegram chat", name and @username, no phone, status NEW. Ask for their phone in the chat and add it to that lead. Do not ask them to send the form: that makes a second lead for the same person. The status does not change when you reply: set CONTACTED yourself. A click with no message stays in Admin → Staff Round Robin → Real-Time Routing Log only.
 
 ## Returning visitors stay with their salesperson
 
@@ -111,7 +111,7 @@ A remembered salesperson who is paused or unreachable is skipped, and the rotati
 
 Suggested rhythm. The owner can change it (see "To confirm").
 
-- [ ] **Within 15 minutes** of a new lead: call. This is the promise on the page.
+- [ ] **Within 15 minutes** of a new lead: call a form lead; answer a Telegram chat lead in the chat (it has no phone yet; the bot reminds you). This is the promise on the page.
 - [ ] No answer: send the Telegram or WhatsApp message from [[Telegram Reply Templates]] ("First contact after a form lead").
 - [ ] After the call: send itinerary and price. Set status to PROPOSAL SENT.
 - [ ] After 24 hours with no reply: send the follow-up template.
@@ -134,7 +134,7 @@ The form field is "Phone (Telegram or WhatsApp)", so some leads use only WhatsAp
 ### Salesperson
 
 - [ ] Open Telegram. Check the bot alerts and your chats from the night.
-- [ ] Open Admin → Leads & CRM Pipeline, tab **NEW Requests**. Nothing should stay NEW for more than 15 minutes in business hours.
+- [ ] Open Admin → Leads & CRM Pipeline, tab **NEW Requests**. Nothing should stay NEW for more than 15 minutes in business hours. Telegram chat leads stay NEW until you change them: set CONTACTED once you have answered.
 - [ ] Check live price, deadlines and seats left in Admin → Landing Pages CMS before quoting.
 - [ ] Reply to every chat. Use [[Telegram Reply Templates]].
 - [ ] Update the status and add a note on every lead you touched.
@@ -145,7 +145,7 @@ The form field is "Phone (Telegram or WhatsApp)", so some leads use only WhatsAp
 - [ ] Admin → Staff Round Robin: the readiness check at the top should say **Ready**. Fix any red item.
 - [ ] Everyone on shift is active. Everyone off shift is paused.
 - [ ] Every active salesperson has a Telegram username and a Chat ID (press **Test**).
-- [ ] Admin → Leads & CRM Pipeline: no lead left in NEW. Reassign or call if one is.
+- [ ] Admin → Leads & CRM Pipeline: no lead left in NEW. Reassign or call if one is (a Telegram chat lead has no phone: check its chat in the Telegram inbox first).
 - [ ] Look for "Fallback to Manager" or "Telegram Failed" on leads. Someone's alert did not arrive.
 - [ ] Update "Claimed Seats" in Admin → Landing Pages CMS when a seat is taken. The number does not change by itself; the page shows whatever the admin holds.
 - [ ] Adding a new team member: [[Add a Sales Staff Member]].

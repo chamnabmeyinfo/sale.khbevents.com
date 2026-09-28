@@ -69,5 +69,16 @@ describe('withAccountLease limits', () => {
     const never = new Promise<void>(() => undefined);
     await expect(withAccountLease('s8', () => never, { store, maxHoldMs: 50 })).rejects.toThrow('took too long');
     expect(await withAccountLease('s8', async () => 'free', { store, waitMs: 0 })).toBe('free');
+  }, 10_000);
+
+  it('tells timed-out work to close its connection before the account is free again', async () => {
+    const store = memoryLeaseStore();
+    const events: string[] = [];
+    const work = (signal: AbortSignal) => new Promise<void>((resolve) => {
+      signal.addEventListener('abort', () => { events.push('disconnect'); setTimeout(() => { events.push('closed'); resolve(); }, 20); });
+    });
+    await expect(withAccountLease('s9', work, { store, maxHoldMs: 30 })).rejects.toThrow('took too long');
+    expect(events).toEqual(['disconnect', 'closed']);
+    expect(await withAccountLease('s9', async () => 'next', { store, waitMs: 0 })).toBe('next');
   });
 });

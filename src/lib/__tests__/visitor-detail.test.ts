@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clickCheck, countryFlag, countryName, parseUserAgent, sourceLabel, utmFromUrl, visitorDetailFromRequest } from '../visitor-detail';
+import { clickCheck, countryFlag, countryName, isAutomatedAgent, parseUserAgent, sourceLabel, utmFromUrl, visitorDetailFromRequest } from '../visitor-detail';
 import type { RoundRobinLog } from '../types';
 
 const IPHONE_TG = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Telegram-iOS/10.12';
@@ -30,6 +30,20 @@ describe('parseUserAgent', () => {
     expect(parseUserAgent(CURL)).toMatchObject({ device: 'bot', bot: true, browser: 'curl' });
     expect(parseUserAgent('Simulation Engine/1.0').bot).toBe(true);
     expect(parseUserAgent('')).toMatchObject({ device: 'unknown', bot: false });
+  });
+
+  it('tells crawlers and scripts from people for routing, without catching phone names ending in "bot"', () => {
+    for (const ua of [
+      FB_PREVIEW, CURL, 'TelegramBot (like TwitterBot)', 'WhatsApp/2.23.20.0 A', 'Twitterbot/1.0',
+      'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+      'Mozilla/5.0 (compatible; PetalBot;+https://webmaster.petalsearch.com/site/petalbot)',
+      'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/129.0.0.0 Safari/537.36',
+      'Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)',
+    ]) expect(isAutomatedAgent(ua)).toBe(true);
+    for (const ua of [
+      IPHONE_TG, ANDROID_CHROME, WIN_CHROME, IPAD_SAFARI, '', undefined,
+      'Mozilla/5.0 (Linux; Android 11; CUBOT X50) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+    ]) expect(isAutomatedAgent(ua)).toBe(false);
   });
 });
 

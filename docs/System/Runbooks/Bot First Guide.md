@@ -38,7 +38,7 @@ Two ways:
 
 Team performance, per page and per week:
 
-- **Clicks → real chats.** With bot first, "Messaged us" counts everyone who tapped Start, even if they never wrote. Compare with the direct weeks.
+- **Clicks → real chats.** With bot first, "Messaged us · sure" counts everyone who tapped Start, even if they never wrote. Compare with the direct weeks.
 - **Leads made** from clicks: CRM leads with source `telegram_chat` per week.
 - **Drop at Start:** clicks minus Start taps. If more than a quarter of clickers never tap Start, bot first is costing you; switch that page back to direct.
 - **Replies:** the "did we reply" card should improve, because the salesperson can open the conversation instead of waiting.

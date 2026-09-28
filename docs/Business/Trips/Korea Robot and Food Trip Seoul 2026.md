@@ -52,7 +52,7 @@ Return flights Cambodia to South Korea; hotel 3 nights / 4 days; breakfast at th
 
 ## How the page sells
 
-Same layout as [[Korea Sourcing Trip Seoul 2026]]: hero, who it is for, the three fairs, what is included, price card, how to join, lead form (asks which sector), FAQ, closing call to action. The Telegram button opens Mr. Tim Vutha's Telegram; the form sends leads to the CRM with the chosen sector. The price switches from $750 to $799 by itself after the early-bird date.
+Same layout as [[Korea Sourcing Trip Seoul 2026]]: hero, who it is for, the three fairs, what is included, price card, how to join, lead form (asks which sector), FAQ, closing call to action. The Telegram button opens Mr. Tim Vutha's Telegram directly, outside the [[Telegram Sales Process]] (no bot alert, no click log, no match; a lead only with Track every new chat on his connected account); the form sends leads to the CRM with the chosen sector. The price switches from $750 to $799 by itself after the early-bird date.
 
 No testimonials, seat counter, itinerary or partner names: the caption has none.
 

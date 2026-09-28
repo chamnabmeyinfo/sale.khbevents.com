@@ -24,7 +24,7 @@ Live chat with customers, on Telegram, from the portal. Telegram stays the custo
 ## What it does for sales
 
 - One list of every Telegram customer (each is a lead in [[Leads CRM]]), newest activity first, with "needs reply" when the customer spoke last.
-- The whole conversation, read live from the salesperson's connected Telegram account (see [[Round Robin]] → Telegram account check). It keeps itself fresh while it is on screen: a customer's reply shows up by itself within about 8 seconds, no Refresh click (since 2026-09-27, later the same day).
+- The whole conversation, read live from the salesperson's connected Telegram account (see [[Round Robin]] → Telegram account check). It keeps itself fresh while it is on screen: a customer's reply shows up by itself within about 8 seconds in an active chat (20 to 60 seconds in a quiet one), no Refresh click (since 2026-09-27, later the same day).
 - Every message is also **stored** in the portal, voice messages are turned into text, and the **AI coach** card under the chat says where the customer stands and what to do next, with a Khmer reply to edit (**Use** puts it in the box). Heat badges and **Hot first** in the list. See [[Customer Story and AI Coach]].
 - **Auto seen**, a switch per salesperson (off unless they turn it on): with it on, the customer sees "seen" on Telegram while someone is looking at the chat in the portal.
 - A reply box: the text is sent from the salesperson's Telegram account, so the customer sees it from the person they were talking to. A note on the lead records who sent it from the portal.
@@ -48,7 +48,7 @@ There is **no chat window on the website**: the owner decided on 2026-09-27 that
 ## Key rules and defaults
 
 - Reading and sending go through Telegram's user-account API with the stored session. Since 2026-09-27 (later the same day) the conversation itself is stored too, for the story and the AI coach ([[Customer Story and AI Coach]]); the lead keeps the numbers (messages each way, first reply time, who spoke last, unread, Telegram's id of the latest message and of the last message marked read) and, for each portal reply, a note "💬 Sent on Telegram by <name>: “…”".
-- Only chat leads (customers matched by the account check, or tracked with "Track every new chat") appear. While the inbox is open the list refreshes every 10 seconds and the connected accounts are checked for **new chats every 30 seconds** (elsewhere every 2 minutes), so a customer's first message shows here within about half a minute; the open chat's row updates the moment the chat does.
+- Only chat leads appear: customers who wrote within 30 minutes of a click (matched by the account check), new people tracked with "Track every new chat", and bot-first customers. See [[Telegram Sales Process]]. While the inbox is open the list refreshes every 10 seconds and the connected accounts are checked for **new chats every 30 seconds** (elsewhere every 2 minutes), so a customer's first message shows here within about half a minute; the open chat's row updates the moment the chat does.
 - **How the live view looks without hammering Telegram:** the browser asks the server only while the tab is visible, every 8 seconds when the last message is less than 10 minutes old or someone typed in the last 2 minutes, every 20 seconds within the hour, every 60 seconds after that, never faster than 5 seconds, one request at a time. Each request is one short connection with one cheap question to Telegram ("what is the latest message id and the unread count?"); the messages themselves are downloaded only when that answer changed.
 - **Auto seen** marks read only when all four hold: the salesperson's switch is on, the browser says a person is looking (visible and focused tab), Telegram counts unread messages, and this latest message was not marked before. One read receipt per new message, never more.
 - Replies from the portal keep a human pace: at least 1.5 seconds apart and at most 20 a minute per account; a faster attempt is refused with "Please wait …" and the text stays in the box.
@@ -61,19 +61,19 @@ Telegram ends a login session it sees used from two connections at the same time
 - **Short connections.** Connect, one to three calls, disconnect. Nothing stays connected between requests, and no live update listener runs on a server (deferred; see the decision of 2026-09-27).
 - **Telegram's wait is honoured.** When Telegram answers "wait N seconds" (FLOOD_WAIT), the account is left alone until that time plus 2 seconds: the chat view says **Telegram asked to wait until …**, replies are refused with the same message, the settings row shows it, and **Check now** says wait. It clears by itself.
 - **A dead session disconnects the account.** If Telegram says the session is gone (ended from Settings → Devices, or the account logged in elsewhere with this same session), the portal forgets the session, the settings row shows "Telegram ended the session (…). Connect the account again.", and the chat view stops looking. Nobody's chats are read through a dead session.
-- **Check now** runs at most every 30 seconds per account; the automatic check at most every 2 minutes.
-- **Customer waiting too long** (since 2026-09-28): the bot reminds the salesperson when a chat's customer wrote last and nobody answered for the set time (Round Robin → Advanced, 15 minutes by default, working hours only), once per wait; the manager at twice the time. See [[Telegram Sales Process]] → step 5.
-- Only replies typed by a person are ever sent from the account; there is no automatic sending, typing indicator or fake presence.
+- **Check now** runs at most every 30 seconds per account; the automatic check every 30 seconds while the inbox is open, otherwise at most every 2 minutes with site traffic.
+- **Customer waiting too long** (since 2026-09-28): the bot reminds the salesperson when a chat's customer wrote last and nobody answered for the set time (Round Robin → Advanced, 15 minutes by default, only while the salesperson is on shift), and again if the customer writes after that reminder; the manager once, if the customer still waits that long after the salesperson's reminder. See [[Telegram Sales Process]] → step 5.
+- Only what a person sends is ever sent from the account (a typed reply, or the suggested hello they press); there is no automatic sending, typing indicator or fake presence.
 - A reply from the portal counts as the salesperson's reply in "Telegram chats: did we reply?" on Team performance.
 - The reply box appears only when that salesperson's account is connected.
 
 ## Limits and gotchas
 
 - Sending from the portal uses the salesperson's account at a human pace; do not automate mass messages from it, Telegram limits user accounts that send too much.
-- Photos, voice messages and files show as labelled attachments, without the file itself.
+- Photos and files show as labelled attachments, without the file itself. Voice messages show their text once transcribed (🎤, "text coming…" until then).
 - A customer not among the salesperson's 300 most recent chats and without a @username cannot be opened (Telegram needs one of the two to find the chat).
 - Each open of a chat is a fresh read from Telegram (a second or two); after that the view keeps itself fresh as long as the tab is visible.
-- "Live" here means within about 8 seconds, not instant. Replies within a second would need a connection held open all day per account; that is deferred (Open Tasks).
+- "Live" here means within 8 to 60 seconds, not instant. Replies within a second would need a connection held open all day per account; that is deferred (Open Tasks).
 - The first time a customer's chat is opened after a (re)connection, the portal looks the chat up in the salesperson's chat list (up to 300 chats) and remembers Telegram's handle for it, so later looks need no list.
 
 ## Related

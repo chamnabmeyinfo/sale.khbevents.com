@@ -35,9 +35,15 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 
 ### Sales process: direct + account tracking (2026-09-28)
 
-- [x] Process set: straight to the salesperson, tracked through the connected accounts, bot alerts and reminders only. Quick replies no longer hide a new chat; click alert no longer mentions a code; waiting-customer reminder (15 min default, manager at twice); Telegram chats in the daily summary; disconnect alert. → [[Telegram Sales Process]]
-- [ ] Check the settings list in [[Telegram Sales Process]] → "Settings that make this work": entry = straight to the salesperson (also on each page), manager notification and manager chat, each row's Telegram username = the connected account, Chat IDs, every salesperson pressed Start in the bot, reminder minutes, daily summary hour. #owner
-- [ ] Tell the team: after a click they get the alert; when the customer writes, a second alert with the name; if a customer waits 15 minutes in working hours, the bot reminds them and later tells the manager. #owner
+- [x] Process set: straight to the salesperson, tracked through the connected accounts, bot alerts and reminders only. Quick replies no longer hide a new chat; click alert no longer mentions a code; waiting-customer reminder (15 min default); Telegram chats in the daily summary; disconnect alert. → [[Telegram Sales Process]]
+- [x] Audit fixes, same day: known customers take a click only with the greeting; chats the salesperson started never do; lookups limited to the period; 100 chats read; crawlers not routed; greeting on fallback chats; timed-out checks close their connection; alerts for Track-every-new-chat leads and "already answered" wording; reminders move to the next shift, repeat when the customer writes again, reach the manager only after the salesperson had time, and come as one list when many; summary shows dates, untracked salespeople and retries a failed send; screen texts and the readiness check corrected. → [[Telegram Sales Process]]
+- [ ] Check the settings list in [[Telegram Sales Process]] → "Settings that make this work": entry = straight to the salesperson (also on each page), CC and the Settings Target Chat ID, the Fallback Manager chat, each row's Telegram username = the connected account, Chat IDs, every salesperson pressed Start in the bot, working hours, reminder minutes, daily summary hour. #owner
+- [ ] Tell the team: after a click they get the alert; when the customer writes, a second alert with the name (check the 📌 service: the greeting does not name the trip); if a customer waits 15 minutes in working hours, the bot reminds them, and tells the manager if they still wait 15 minutes later. Chat leads stay NEW until they set Contacted. #owner
+- [ ] Switch Off in Round Robin any salesperson whose Telegram account is not connected: clicks to them are not tracked (the daily summary names them under "not tracked"). #owner
+- [ ] Decide on the Smart City page's promises next to the Telegram button: "Message <coordinator> on Telegram" (Round Robin may pick someone else), "Itinerary PDF sent at once" (nothing sends it: the salesperson must, in the first reply) and "Coordinator replies within 15 minutes" (no "business hours"). Keep and brief the team, or reword. → [[Telegram Sales Process]] #owner
+- [ ] Decide whether the account check may also run from a scheduler at night (the tick address every 2–5 minutes), so leads, alerts and reminders do not wait for the next visitor. Today it runs only with traffic, the inbox open, or Check now. #owner
+- [ ] Decide what happens when a returning customer is routed to a different salesperson: today the lead stays with the first one (note "now chatting with …"), so reminders and the inbox follow the first salesperson's chat. Option: move the lead to whoever the customer is chatting with. #owner
+- [ ] Follow-ups from the audit: one row per routing-log entry (two writes at once can lose a click or a chat mark); "Not checked" instead of "No chat yet" for salespeople without a connected account; a logged click for the bot's fallback path and for plain Start; returning-visitor clicks labelled "no alert" instead of DELIVERED; keep the referrer on Telegram buttons; two clicks within a second going to the same person; send chat leads to the page webhook; warn when a row's username is not the connected account, and when an active salesperson has no connected account. #for-claude
 - [ ] Optional later: bot reminder for clicks that never became a chat within 30 minutes (only if clicks seem to go missing). #for-claude
 
 ### Connecting accounts (2026-09-28)
@@ -48,11 +54,10 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 ### Bot first entry (new, 2026-09-27)
 
 - [x] Round Robin → Advanced → "Where a Chat on Telegram click goes": direct (default) or the sales bot first with one button to the salesperson (2026-09-27). → [[Round Robin]]
-- [ ] Switch it to **To the sales bot first** and test from your other phone: tap the page button, tap Start, read the greeting, tap the button, write to yourself. Check the lead appears in the CRM at once and the click shows "Messaged us". → [[Round Robin]] #owner
-- [ ] After a week on real traffic, compare "Became a real chat" on Team performance between the two settings and keep the better one. #owner
+- [x] Superseded by the 2026-09-28 decision ([[Telegram Sales Process]]): do not switch the Round Robin setting to bot first. Bot first stays for a test on one page's own setting only ([[Bot First Guide]]).
 - [ ] The bot's webhook must be registered for the bot to answer Start (Settings → Telegram, or POST /api/telegram/setup-webhook). If the bot stays silent after Start, that is the first thing to check. #owner
 - [x] Per-page choice of entry, **Say hello** from the inbox for silent bot-entry customers, one-tap phone share for people without a @username (2026-09-28). Guide: [[Bot First Guide]].
-- [ ] Follow [[Bot First Guide]] step by step on the second phone, then decide after a week which pages keep bot first. #owner
+- [ ] Optional: test bot first on one page's own setting with [[Bot First Guide]], on the second phone. The site-wide process stays direct. #owner
 
 ### Customer story and AI coach (new, 2026-09-27)
 
@@ -76,10 +81,10 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 ### Telegram account check (new, 2026-09-27)
 
 - [x] Connect the owner's Telegram account in Settings → Telegram account check (2026-09-27).
-- [ ] After a few real customers write, check Team Performance → Who reached the team: the **Chat** column should say "Messaged us" for them, and the salesperson should have received the "អតិថិជនបានផ្ញើសារមកអ្នកហើយ" alert. Tell Claude if the wording of the three messages should change. → [[Round Robin]] #owner
-- [ ] Telegram → Settings → Devices → "Terminate old sessions if inactive for": set 6 months, so a quiet period does not log the portal out. #owner
+- [ ] After a few real customers write, check Team Performance → Who reached the team: the **Chat** column should say "Messaged us · by time" for them, and the salesperson should have received the "អតិថិជនបានផ្ញើសារមកអ្នកហើយ" alert. Tell Claude if the wording of the three messages should change. → [[Round Robin]] #owner
+- [ ] Telegram → Settings → Devices → Automatically terminate old sessions → "If inactive for": 6 months (or the longest option), so a quiet period does not log the portal out. #owner
 - [x] Other salespeople: two more sales accounts connected by the owner (2026-09-28), using one shared app (api_id/api_hash). → [[Connect a Telegram Account]]
-- [ ] For each newly connected salesperson: Check the connection (lock OK), Check now, set Terminate old sessions to 6 months in their Telegram, decide Track every new chat and Auto seen, tell them their customer chats are stored in the CRM. → [[Connect a Telegram Account]] #owner
+- [ ] For each newly connected salesperson: Check the connection (lock OK), Check now, set "If inactive for" to 6 months in their Telegram (Settings → Devices), decide Track every new chat and Auto seen, tell them their customer chats are stored in the CRM. → [[Connect a Telegram Account]] #owner
 - [x] The account check runs after normal site traffic with the lead follow-up check (2026-09-27).
 
 ### Visitor details (new, 2026-09-27)
@@ -129,8 +134,8 @@ Suggested order: lock the database first, then change the token and the password
 
 - [ ] Confirm the early-bird date. The caption says "before 31/9/26"; the page uses 30 September 2026. Change it in the builder if needed. → [[Korea Sourcing Trip Seoul 2026]] #owner
 - [ ] Send real photos for the Korea page (hero and social sharing), and a day-by-day itinerary if it should be shown. → [[Korea Sourcing Trip Seoul 2026]] #owner
-- [ ] Decide whether the Korea page's Telegram button goes to Mr. Tim Vutha directly (as now) or through Round Robin. Since 2026-09-25 a third option exists: make him (and helpers) the Korea pages' team under **Serves pages**. → [[Round Robin]] #owner
-- [ ] Set each salesperson's working hours, pages and (if needed) daily limit in Staff Round Robin, choose the **Daily summary** time, check the Manager Chat ID, then Save. → [[Round Robin]] #owner
+- [ ] Decide whether the Korea pages' Telegram button goes to Mr. Tim Vutha directly (as now) or through Round Robin. As it is, the [[Telegram Sales Process]] does not apply there: no alert, no click log, no match; the chat becomes a lead only with Track every new chat, as "Telegram (direct)". A third option since 2026-09-25: make him (and helpers) the Korea pages' team under **Serves pages**. → [[Round Robin]] #owner
+- [ ] Set each salesperson's working hours, pages and (if needed) daily limit in Staff Round Robin, choose the **Daily summary** time, set the chats for manager messages (Settings → Instant Telegram Alerts → Target Chat ID for the CC copies; Fallback Manager Telegram Chat ID for the summary and reminders), then Save. Without working hours a salesperson counts as always on shift, so reminders can come at night. → [[Round Robin]] #owner
 - [ ] Before going live: open **Settings & Security → Demo data**, check the list (untick anything real), tick **Reset all statistics to zero**, type DELETE and run it once. → [[Admin and Security]] #owner
 - [ ] Upload each salesperson's photo in Staff Round Robin (camera button), then Save. → [[Round Robin]] #owner
 - [ ] After a week, open **Staff Round Robin → Team Performance** and review reply times with the team. → [[Round Robin]] #owner

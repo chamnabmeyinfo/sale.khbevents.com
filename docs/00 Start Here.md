@@ -33,7 +33,7 @@ New here? Read [[How to Use This Vault]] first.
 - [[Open Tasks]]: what still needs doing, and who does it.
 - [[Decision Log]]: what we decided, when, and why.
 - [[Landing Page Builder Roadmap]]: where the landing page system is going, phase by phase.
-- [[Prospect Journey Audit]]: how a prospect is tracked from the ad to the deal, the gaps, and the plan for behaviour analysis and bot follow-up.
+- [[Prospect Journey Audit]]: the 27 Sep audit of how a prospect was tracked from the ad to the deal, the gaps then, and the plan for behaviour analysis and bot follow-up (history; the process in force is [[Telegram Sales Process]]).
 - [[Project History]]: what was built, in order.
 - Sessions folder: one short log per working session with Claude.
 

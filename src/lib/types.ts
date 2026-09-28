@@ -1229,7 +1229,7 @@ export interface RoundRobinLog {
   userAgent?: string;
   /** Location, referrer, campaign and visit ids (since 27 Sep 2026). */
   visitor?: VisitorDetail;
-  /** Reference code put in the prefilled Telegram message (#K7X2M), to recognise the chat that follows. */
+  /** The click's reference code (#K7X2M): carried by the sales-bot link (bot first); messages from before 2026-09-28 had it too. */
   refCode?: string;
   /** The chat that followed, when the salesperson's Telegram account is connected and the check found it. */
   contact?: ContactConfirmation;

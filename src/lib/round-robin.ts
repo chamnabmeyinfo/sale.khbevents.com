@@ -351,7 +351,7 @@ export interface RoundRobinHealthItem {
  */
 export function roundRobinHealth(
   settings: RoundRobinSettings,
-  context: { telegramConfigured: boolean; contactUsername?: string },
+  context: { telegramConfigured: boolean; contactUsername?: string; companyChat?: string },
   lang: 'en' | 'kh' = 'en'
 ): RoundRobinHealthItem[] {
   const items: RoundRobinHealthItem[] = [];
@@ -432,13 +432,25 @@ export function roundRobinHealth(
         : `"Chat on Telegram" clicks bypass the team and go to ${target}.`,
     });
   }
-  if (settings.enabled && active.length > 0 && !settings.managerChatId && !settings.fallbackChatId) {
+  // Manager-only messages go to the Fallback chat, else the Settings chat; copies (CC) only to the Settings chat.
+  const companyChat = (context.companyChat || '').trim();
+  const managerOnlyChat = (settings.managerChatId || settings.fallbackChatId || companyChat || '').trim();
+  const copiesChat = (settings.managerChatId || companyChat || '').trim();
+  if (settings.enabled && active.length > 0 && !managerOnlyChat) {
     items.push({
       level: 'warning',
-      title: kh ? 'គ្មានច្បាប់ចម្លងទៅអ្នកគ្រប់គ្រង' : 'No manager copy',
+      title: kh ? 'គ្មាន Chat អ្នកគ្រប់គ្រង' : 'No manager chat',
       detail: kh
-        ? 'សូមកំណត់ Chat ID អ្នកគ្រប់គ្រង ឬ Fallback ដើម្បីឃើញគ្រប់ Lead ទោះការជូនដំណឹងទៅបុគ្គលិកបរាជ័យក៏ដោយ។'
-        : 'Set a Manager or Fallback Chat ID so you see every routed lead even when a staff alert fails.',
+        ? 'គ្មាននរណាទទួលសង្ខេបប្រចាំថ្ងៃ អតិថិជន Telegram ដែលនៅរង់ចាំ Lead ទម្រង់ដែលគ្មាននរណាឆ្លើយ ឬគណនីដែលត្រូវបានផ្តាច់ទេ។ សូមកំណត់ ការកំណត់ → ការជូនដំណឹង Telegram → Chat ID គោលដៅ ឬ Chat ID អ្នកគ្រប់គ្រង (Fallback) នៅទីនេះ។'
+        : 'Nobody gets the daily summary, Telegram customers still waiting, form leads nobody answered or disconnected accounts. Set Settings → Instant Telegram Alerts → Target Chat ID, or the Fallback Manager Telegram Chat ID here.',
+    });
+  } else if (settings.enabled && active.length > 0 && settings.enableManagerNotification && !copiesChat) {
+    items.push({
+      level: 'warning',
+      title: kh ? 'ច្បាប់ចម្លងអ្នកគ្រប់គ្រងគ្មានកន្លែងទៅ' : 'Manager copies go nowhere',
+      detail: kh
+        ? 'CC បានបើក ប៉ុន្តែច្បាប់ចម្លងនៃការចុច Lead ទម្រង់ និង "អតិថិជនបានផ្ញើសារមកអ្នកហើយ" ទៅ ការកំណត់ → ការជូនដំណឹង Telegram → Chat ID គោលដៅ ដែលនៅទទេ។ Chat Fallback មិនទទួលវាទេ។'
+        : 'CC is on, but copies of clicks, form leads and "customer messaged you" go to Settings → Instant Telegram Alerts → Target Chat ID, which is empty. The Fallback chat does not receive them.',
     });
   }
   if (items.length === 0) {

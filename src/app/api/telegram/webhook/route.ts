@@ -176,6 +176,15 @@ export async function POST(req: NextRequest) {
       // Plain /start without payload — route to sales rep using round robin
       if (!payload) {
         const rrSettings = await getRoundRobinSettings();
+        // A salesperson (or the manager) pressing Start to receive alerts: confirm it; this is not a customer.
+        const teamMember = (rrSettings?.staffList || []).find((s) => String(s.telegramChatId || '').trim() === String(message.from.id));
+        const isManager = [rrSettings?.managerChatId, rrSettings?.fallbackChatId, settings.telegramChatId].some((id) => String(id || '').trim() === String(message.from.id));
+        if (teamMember || isManager) {
+          await sendTelegramMessage(botToken, chatId,
+            `✅ <b>${escapeHtml(teamMember?.name || visitorName)}</b>: bot នេះនឹងផ្ញើការជូនដំណឹងការលក់មកអ្នកនៅទីនេះ។\n` +
+            `This bot will send your sales alerts here.`);
+          return NextResponse.json({ ok: true });
+        }
         const selection = rrSettings?.enabled ? selectNextStaff(rrSettings, { need: 'username', ctx: { nowMs: Date.now() } }) : null;
         if (selection) await commitBotAssignment(rrSettings, selection.staff, selection.nextIndex);
         const rep = selection?.staff;
@@ -284,8 +293,11 @@ export async function POST(req: NextRequest) {
         `📌 <b>អ្នកកំពុងសាកសួរអំពី៖</b>\n` +
         `🏷️ <b>${escapeHtml(pageTitle)}</b>` +
         `${staffLine}\n\n` +
-        `⏱️ ក្រុមលក់របស់យើងនឹងទាក់ទងអ្នកក្នុងរយៈពេល <b>15 នាទី</b>!\n\n` +
-        `សូមផ្ញើសារអ្វីដែលអ្នកចង់សាកសួរនៅទីនេះ ហើយយើងនឹងជួយអ្នកភ្លាមៗ 🙏`,
+        // The page's own promise: a reply within 15 minutes in business hours. With a salesperson named,
+        // send the customer to them: what is written to the bot only reaches the company chat.
+        (assignedStaff?.telegramUsername
+          ? `👇 សូមចុចប៊ូតុងខាងក្រោម ដើម្បីជជែកផ្ទាល់ជាមួយ <b>${escapeHtml(assignedStaff.name)}</b>។ យើងឆ្លើយក្នុងរយៈពេល 15 នាទី ក្នុងម៉ោងធ្វើការ 🙏`
+          : `សូមផ្ញើសារអ្វីដែលអ្នកចង់សាកសួរនៅទីនេះ។ ក្រុមលក់របស់យើងនឹងឆ្លើយក្នុងម៉ោងធ្វើការ 🙏`),
         welcomeButtons.length > 0 ? { replyMarkup: { inline_keyboard: welcomeButtons } } : undefined
       );
 
@@ -310,8 +322,9 @@ export async function POST(req: NextRequest) {
       }
 
       // ─── Also notify manager / global chat ────────────────────────
+      // A copy like any other when CC is on; always when nobody could be assigned (the manager must pick it up).
       const managerChatId = rrSettings?.managerChatId || settings.telegramChatId;
-      if (managerChatId && managerChatId !== assignedStaff?.telegramChatId) {
+      if (managerChatId && managerChatId !== assignedStaff?.telegramChatId && (rrSettings?.enableManagerNotification || !assignedStaff)) {
         const managerNotification = 
           `🔔 <b>Telegram Bot Click — អតិថិជនថ្មី</b>\n` +
           `━━━━━━━━━━━━━━━━━━━━\n` +

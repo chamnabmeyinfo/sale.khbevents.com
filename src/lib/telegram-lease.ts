@@ -66,14 +66,20 @@ async function tryTakeLease(store: LeaseStore, id: string, owner: string, nowMs:
   return store.cas(id, raw && raw !== EMPTY ? raw : raw === EMPTY ? EMPTY : null, next);
 }
 
+/** After the hold limit: how long the abandoned work gets to close its connection before the lease is given back. */
+const ABORT_GRACE_MS = 5_000;
+
 /**
  * Runs `fn` while holding the account's lease. `waitMs` is how long to wait for a
  * busy lease before giving up with AccountBusyError. The lease is released in
- * `finally`, after `fn` has finished and closed its connection.
+ * `finally`, after `fn` has finished and closed its connection. Past the hold
+ * limit the signal passed to `fn` aborts: `fn` must close its connection on it
+ * (the lease is kept a few more seconds for that), so an abandoned call never
+ * overlaps the next one on the same session.
  */
 export async function withAccountLease<T>(
   staffId: string,
-  fn: () => Promise<T>,
+  fn: (signal: AbortSignal) => Promise<T>,
   options: { waitMs?: number; store: LeaseStore; nowMs?: () => number; maxHoldMs?: number }
 ): Promise<T> {
   const waitMs = options.waitMs ?? 0;
@@ -114,11 +120,20 @@ export async function withAccountLease<T>(
       })();
     }, RENEW_EVERY_MS);
     let timer: ReturnType<typeof setTimeout> | undefined;
+    const abort = new AbortController();
+    const work = fn(abort.signal);
     try {
       const limit = new Promise<never>((_, reject) => {
         timer = setTimeout(() => reject(new Error('The Telegram call took too long and was abandoned')), options.maxHoldMs ?? MAX_HOLD_MS);
       });
-      return await Promise.race([fn(), limit]);
+      return await Promise.race([work, limit]);
+    } catch (err) {
+      if (!abort.signal.aborted && timer !== undefined && !(await settledWithin(work, 0))) {
+        // Timed out: tell the work to close its connection, and wait for it before giving the lease back.
+        abort.abort();
+        await settledWithin(work, ABORT_GRACE_MS);
+      }
+      throw err;
     } finally {
       clearInterval(renew);
       if (timer) clearTimeout(timer);
@@ -131,6 +146,14 @@ export async function withAccountLease<T>(
     release();
     if (locks.get(staffId) === chain) locks.delete(staffId);
   }
+}
+
+/** True when the promise settles (either way) within `ms`. */
+async function settledWithin(p: Promise<unknown>, ms: number): Promise<boolean> {
+  let done = false;
+  const watched = p.then(() => { done = true; }, () => { done = true; });
+  await Promise.race([watched, new Promise((r) => setTimeout(r, ms))]);
+  return done;
 }
 
 /** An in-memory store for tests and the local file fallback. */

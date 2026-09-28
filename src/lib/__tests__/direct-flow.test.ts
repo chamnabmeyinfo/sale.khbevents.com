@@ -38,56 +38,87 @@ describe('chatReplyMinutes', () => {
 describe('waitDecision', () => {
   const staff = { telegramChatId: '111', workHours: undefined as RoundRobinStaff['workHours'] };
   const base = { minutes: 15, nowMs: NOW, staff, managerChat: '999' };
+  const at = (ms: number) => new Date(ms).toISOString();
 
   it('reminds the salesperson once the wait passes the minutes, not before', () => {
     expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 10 * MIN })).toBeNull();
     const d = waitDecision({ ...base, lastIncomingAtMs: NOW - 16 * MIN })!;
-    expect(d).toMatchObject({ staff: true, manager: false });
-    expect(d.forAt).toBe(new Date(NOW - 16 * MIN).toISOString());
+    expect(d).toMatchObject({ staff: true, manager: false, forAt: at(NOW - 16 * MIN), waitedMs: 16 * MIN });
+    expect(d.again).toBeUndefined();
   });
 
   it('counts from the first unanswered message when the numbers are current, never earlier otherwise', () => {
-    const lastAt = new Date(NOW - 5 * MIN).toISOString();
+    const lastAt = at(NOW - 5 * MIN);
     // Current numbers: first unanswered message 20 min ago → due.
-    expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 5 * MIN, stats: { lastAt, waitingSince: new Date(NOW - 20 * MIN).toISOString() } })?.staff).toBe(true);
+    expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 5 * MIN, stats: { lastAt, waitingSince: at(NOW - 20 * MIN) } })?.staff).toBe(true);
     // Numbers older than the dialog (another message since): only the last message counts → not yet.
-    expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 5 * MIN, stats: { lastAt: new Date(NOW - 40 * MIN).toISOString(), waitingSince: new Date(NOW - 40 * MIN).toISOString() } })).toBeNull();
+    expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 5 * MIN, stats: { lastAt: at(NOW - 40 * MIN), waitingSince: at(NOW - 40 * MIN) } })).toBeNull();
   });
 
-  it('copies the manager at twice the time, once; the salesperson only once per wait', () => {
-    const forAt = new Date(NOW - 31 * MIN).toISOString();
-    expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 31 * MIN })).toMatchObject({ staff: true, manager: true });
-    expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 31 * MIN, reminder: { forAt, staffAt: 'x' } })).toMatchObject({ staff: false, manager: true });
-    expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 31 * MIN, reminder: { forAt, staffAt: 'x', managerAt: 'y' } })).toBeNull();
-    // A new wait (the customer wrote again after our reply) starts a new cycle.
-    expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 16 * MIN, reminder: { forAt, staffAt: 'x', managerAt: 'y' } })?.staff).toBe(true);
+  it('tells the manager only after the salesperson had the minutes to answer their reminder, once per wait', () => {
+    const w = NOW - 31 * MIN;
+    // Twice the time has passed but nobody was reminded yet: the salesperson first, never both at once.
+    expect(waitDecision({ ...base, lastIncomingAtMs: w })).toMatchObject({ staff: true, manager: false });
+    // Reminded 10 minutes ago: nothing yet. 15 minutes ago: the manager.
+    expect(waitDecision({ ...base, lastIncomingAtMs: w, reminder: { forAt: at(w), staffAt: at(NOW - 10 * MIN) } })).toBeNull();
+    expect(waitDecision({ ...base, lastIncomingAtMs: w, reminder: { forAt: at(w), staffAt: at(NOW - 15 * MIN) } })).toMatchObject({ staff: false, manager: true });
+    expect(waitDecision({ ...base, lastIncomingAtMs: w, reminder: { forAt: at(w), staffAt: at(NOW - 15 * MIN), managerAt: at(NOW - MIN) } })).toBeNull();
+    // Reminders sent before this wait began were for an earlier one.
+    expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 16 * MIN, reminder: { forAt: at(w - 60 * MIN), staffAt: at(w - 40 * MIN), managerAt: at(w - 20 * MIN) } })).toMatchObject({ staff: true, manager: false });
   });
 
-  it('is quiet when off, off shift, for very old waits, and never copies the manager into their own chat', () => {
+  it('reminds the salesperson again when the customer writes after the reminder; the manager still once', () => {
+    const since = NOW - 90 * MIN;
+    const stats = (lastMs: number) => ({ lastAt: at(lastMs), waitingSince: at(since) });
+    const reminder = { forAt: at(since), staffAt: at(NOW - 70 * MIN), managerAt: at(NOW - 55 * MIN) };
+    expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 16 * MIN, stats: stats(NOW - 16 * MIN), reminder })).toMatchObject({ staff: true, manager: false, again: true, forAt: at(since), waitedMs: 90 * MIN });
+    // Their new message is only 10 minutes old: not yet. Nothing new since the reminder: nothing.
+    expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 10 * MIN, stats: stats(NOW - 10 * MIN), reminder })).toBeNull();
+    expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 75 * MIN, stats: stats(NOW - 75 * MIN), reminder })).toBeNull();
+  });
+
+  it('never copies the manager into the salesperson\'s own chat; without a salesperson chat, the manager at twice the time', () => {
+    expect(waitDecision({ ...base, managerChat: '111', lastIncomingAtMs: NOW - 40 * MIN, reminder: { forAt: at(NOW - 40 * MIN), staffAt: at(NOW - 20 * MIN) } })).toBeNull();
+    const noChat = { ...staff, telegramChatId: '' };
+    expect(waitDecision({ ...base, staff: noChat, lastIncomingAtMs: NOW - 20 * MIN })).toBeNull();
+    expect(waitDecision({ ...base, staff: noChat, lastIncomingAtMs: NOW - 31 * MIN })).toMatchObject({ staff: false, manager: true });
+  });
+
+  it('is quiet when off, off shift, or for a message over 7 days old', () => {
     expect(waitDecision({ ...base, minutes: 0, lastIncomingAtMs: NOW - 60 * MIN })).toBeNull();
     // Shift 08:00–12:00 Phnom Penh: 17:00 is off shift.
     expect(waitDecision({ ...base, staff: { ...staff, workHours: { days: allWeek, from: '08:00', to: '12:00' } }, lastIncomingAtMs: NOW - 60 * MIN })).toBeNull();
-    expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 25 * 3600_000 })).toBeNull();
-    expect(waitDecision({ ...base, managerChat: '111', lastIncomingAtMs: NOW - 40 * MIN })).toMatchObject({ staff: true, manager: false });
-  });
-
-  it('reminds at the next shift about a message from days ago, but not about a wait already over 24 h of shift time', () => {
-    // Shift on Thursdays only, 16:30–20:00; the message came on Tuesday: the clock starts Thursday 16:30.
-    const thursdays = { ...staff, workHours: { days: [4], from: '16:30', to: '20:00' } };
-    const d = waitDecision({ ...base, staff: thursdays, lastIncomingAtMs: NOW - 2 * 86_400_000 })!;
-    expect(Math.round(d.waitedMs / MIN)).toBe(30);
-    // No working hours: a message 25 h ago has waited 25 h of shift time → daily summary only.
-    expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 25 * 3600_000 })).toBeNull();
-    // Older than 7 days: never.
-    expect(waitDecision({ ...base, staff: thursdays, lastIncomingAtMs: NOW - 8 * 86_400_000 })).toBeNull();
+    expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 8 * 86_400_000 })).toBeNull();
+    // Six days unanswered and never reminded (no check ran, or reminders were off): reminded now.
+    expect(waitDecision({ ...base, lastIncomingAtMs: NOW - 6 * 86_400_000 })).toMatchObject({ staff: true });
   });
 
   it('starts the clock when the shift opens for a message that came in off shift', () => {
-    // Shift 16:30–20:00 Phnom Penh; message at 16:00 (before the shift), now 17:00 → waited 30 min of shift.
+    // Shift 16:30–20:00 Phnom Penh; message at 16:00 (before the shift), now 17:00: 30 min of shift passed.
     const shift = { ...staff, workHours: { days: allWeek, from: '16:30', to: '20:00' } };
-    const d = waitDecision({ ...base, staff: shift, lastIncomingAtMs: NOW - 60 * MIN })!;
-    expect(Math.round(d.waitedMs / MIN)).toBe(30);
-    expect(d).toMatchObject({ staff: true, manager: true });
+    expect(waitDecision({ ...base, staff: shift, lastIncomingAtMs: NOW - 60 * MIN })).toMatchObject({ staff: true, manager: false, waitedMs: 60 * MIN });
+    expect(waitDecision({ ...base, staff: shift, nowMs: NOW - 20 * MIN, lastIncomingAtMs: NOW - 60 * MIN })).toBeNull();
+    // Thursdays only: a message from Tuesday is reminded about on Thursday, 15 minutes after the shift opens.
+    const thursdays = { ...staff, workHours: { days: [4], from: '16:30', to: '20:00' } };
+    expect(waitDecision({ ...base, staff: thursdays, lastIncomingAtMs: NOW - 2 * 86_400_000 })?.staff).toBe(true);
+    expect(waitDecision({ ...base, staff: thursdays, nowMs: NOW - 20 * MIN, lastIncomingAtMs: NOW - 2 * 86_400_000 })).toBeNull();
+  });
+
+  it('moves a reminder that would fall after closing time to the next shift', () => {
+    const weekdays = { ...staff, workHours: { days: [1, 2, 3, 4, 5], from: '08:00', to: '17:00' } };
+    const pp = (local: string) => Date.parse(`${local}+07:00`);
+    const friday = pp('2026-10-02T16:50:00');
+    const d = (nowLocal: string, reminder?: { forAt: string; staffAt?: string }) => waitDecision({ ...base, staff: weekdays, nowMs: pp(nowLocal), lastIncomingAtMs: friday, reminder });
+    expect(d('2026-10-02T16:59:00')).toBeNull();
+    expect(d('2026-10-02T17:05:00')).toBeNull();
+    // Monday: the clock restarted when the shift opened at 08:00.
+    expect(d('2026-10-05T08:10:00')).toBeNull();
+    expect(d('2026-10-05T08:15:00')).toMatchObject({ staff: true, manager: false });
+    const reminded = { forAt: at(friday), staffAt: at(pp('2026-10-05T08:15:00')) };
+    expect(d('2026-10-05T08:29:00', reminded)).toBeNull();
+    expect(d('2026-10-05T08:30:00', reminded)).toMatchObject({ staff: false, manager: true });
+    // Monday 16:50 → Tuesday: the salesperson at 08:15, the manager later, not both at the shift start.
+    expect(waitDecision({ ...base, staff: weekdays, nowMs: pp('2026-10-06T08:15:00'), lastIncomingAtMs: pp('2026-10-05T16:50:00') })).toMatchObject({ staff: true, manager: false });
   });
 });
 
@@ -108,8 +139,14 @@ describe('daily summary Telegram section', () => {
     expect(text).toContain('<b>Telegram chats today</b>: 2 new chats · 1 answered · first reply avg <b>4 min</b>');
     expect(text).toContain('<b>Dara</b>: 2 chats · 1 answered');
     expect(text).toContain('Telegram customers waiting for our reply (2)');
-    expect(text).toContain('Customer 3 · Vietnam &lt;trip&gt; · Dara · since 09:00');
+    expect(text).toContain('Customer 3 · Vietnam &lt;trip&gt; · Dara · since 29 Sep 09:00');
     expect(text).toContain('Customer 2 · Vietnam &lt;trip&gt; · Dara · since 16:20');
     expect(text).not.toMatch(/\n\n\n/);
+    expect(text).not.toContain('not tracked');
+  });
+
+  it('names the salespeople whose chats are not tracked, even on a day without chats', () => {
+    const text = dailySummaryText([], {}, team, '2026-10-01', { leads: [], nowMs: NOW, untracked: ['Sokha (not connected)', 'Dara (paused by Telegram)'] });
+    expect(text).toContain('⚠️ <b>Telegram chats not tracked now</b>: Sokha (not connected), Dara (paused by Telegram)');
   });
 });

@@ -226,9 +226,10 @@ export default function RoundRobinManagerClient({
   const health = useMemo(
     () => roundRobinHealth(settings, {
       telegramConfigured: Boolean(botToken || systemSettings.telegramBotToken),
-      contactUsername: systemSettings.telegramUsername
+      contactUsername: systemSettings.telegramUsername,
+      companyChat: systemSettings.telegramChatId
     }, lang),
-    [settings, botToken, systemSettings.telegramBotToken, systemSettings.telegramUsername, lang]
+    [settings, botToken, systemSettings.telegramBotToken, systemSettings.telegramUsername, systemSettings.telegramChatId, lang]
   );
   const placeholderCount = settings.staffList.filter(isPlaceholderStaff).length;
   const handleRemovePlaceholders = () => {
@@ -1519,6 +1520,9 @@ export default function RoundRobinManagerClient({
                   {t('rr.adv.ccManager')}
                 </span>
               </label>
+              <p className="text-[10px] text-slate-500 dark:text-gray-400 -mt-1 ml-6">
+                {t('rr.adv.ccManagerHint')}
+              </p>
             </div>
           </div>
         </div>

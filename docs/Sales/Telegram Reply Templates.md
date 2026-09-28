@@ -34,7 +34,7 @@ Ready-to-paste replies for [[Smart City Tea and Cafe Vietnam 2026]], in English 
 
 ## 1. First reply after a Telegram click-through
 
-The visitor came from the "Chat on Telegram" button. Reply as soon as they write.
+The visitor came from the "Chat on Telegram" button. Reply as soon as they write. Their first message is only a greeting ("សួស្តី 👋" or "Hello 👋"), which does not name the trip: check the service (📌) in the bot's alert first, and adapt the trip name below. How the flow works: [[Telegram Sales Process]].
 
 **EN**
 > Hello {name}, thank you for your message. I am {staff_name} from KHB Events, and I look after the Smart City, Tea & Cafe Business Trip to Vietnam 2026. What is your business? Tell me and I will show you which expo, meetings and factory visit fit you best.

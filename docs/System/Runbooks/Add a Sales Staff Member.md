@@ -59,7 +59,8 @@ Keep the staff list in the admin only. Do not copy names, usernames or Chat IDs 
 | Active member without a Chat ID | Steps 5 to 9 for that person. |
 | Round Robin is paused | Switch **System Enabled** to **ACTIVE**. |
 | Direct contact routing is off | Tick **Enable Direct Visitor Contact Routing** under Advanced Routing Engine Rules & Fallbacks. |
-| No manager copy | Fill **Fallback Manager Telegram Chat ID** (a manager or group chat) under Advanced rules. |
+| No manager chat | Fill Admin → Settings & Security → Instant Telegram Alerts → **Target Chat ID** (it gets the CC copies), and/or **Fallback Manager Telegram Chat ID** under Advanced rules (it gets the daily summary, waiting customers and disconnect alerts). Simplest: the same chat in both. |
+| Manager copies go nowhere | CC is on but the Settings chat (Target Chat ID) is empty: fill it. The Fallback chat does not receive copies. |
 
 ## If something goes wrong
 

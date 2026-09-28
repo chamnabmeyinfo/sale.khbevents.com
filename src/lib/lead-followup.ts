@@ -138,6 +138,29 @@ function managerChat(rr: RoundRobinSettings, fallback?: string): string {
   return (rr.managerChatId || rr.fallbackChatId || fallback || '').trim();
 }
 
+/**
+ * Salespeople who receive clicks (active, with a Telegram username) but whose chats are not tracked
+ * right now: account not connected, or Telegram asked it to wait. Empty when no account is connected
+ * at all (the account check is not in use).
+ */
+async function untrackedSalespeople(rr: RoundRobinSettings, nowMs: number): Promise<string[]> {
+  try {
+    const { listAccountStatuses } = await import('./telegram-account');
+    const statuses = await listAccountStatuses();
+    if (!statuses.some((st) => st.connected)) return [];
+    return rr.staffList
+      .filter((s) => s.isActive && (s.telegramUsername || '').trim())
+      .flatMap((s) => {
+        const st = statuses.find((x) => x.staffId === s.id);
+        if (!st?.connected) return [`${s.name} (not connected)`];
+        if (st.floodUntil && Date.parse(st.floodUntil) > nowMs) return [`${s.name} (paused by Telegram)`];
+        return [];
+      });
+  } catch {
+    return [];
+  }
+}
+
 export interface CheckResult {
   skipped?: boolean;
   checked: number;
@@ -343,7 +366,8 @@ export async function maybeSendDailySummary(options: { nowMs?: number; force?: b
   const localHour = new Date(nowMs + PP_OFFSET_MS).getUTCHours();
   if (!options.force && localHour < hour) return { sent: false, reason: 'too early' };
   const day = phnomPenhDay(nowMs);
-  if (!options.force && (await getMarker('rr_daily_summary')) === day) return { sent: false, reason: 'already sent' };
+  const lastSent = await getMarker('rr_daily_summary');
+  if (!options.force && lastSent === day) return { sent: false, reason: 'already sent' };
   const settings = await getSettings();
   const manager = managerChat(rr, settings.telegramChatId);
   if (!settings.telegramBotToken || !manager) return { sent: false, reason: 'no bot or manager chat' };
@@ -353,7 +377,9 @@ export async function maybeSendDailySummary(options: { nowMs?: number; force?: b
     .filter((l) => !isDemoLead(l, sampleLeadIds()));
   // Telegram chat leads of the last 30 days, for the chats section (new today, answered, waiting now).
   const chatLeads = await getRealLeads().catch(() => [] as Lead[]);
-  const text = dailySummaryText(leads, await getStaffClickStats(), rr.staffList, day, { leads: chatLeads, nowMs });
+  const text = dailySummaryText(leads, await getStaffClickStats(), rr.staffList, day, { leads: chatLeads, nowMs, untracked: await untrackedSalespeople(rr, nowMs) });
   const res = await sendText(settings.telegramBotToken, manager, text);
+  // Not delivered: free the day again, so the next traffic tries once more.
+  if (!res.ok) await setMarker('rr_daily_summary', lastSent || '').catch(() => undefined);
   return { sent: Boolean(res.ok) };
 }

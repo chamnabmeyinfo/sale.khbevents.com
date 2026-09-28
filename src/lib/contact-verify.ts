@@ -1,10 +1,12 @@
 /**
  * Did the visitor who clicked "Chat on Telegram" really start a chat?
  *
- * Two clues: a short reference code (#K7X2M) is put in the prefilled first message,
- * and a chat that begins shortly after a click to the same salesperson is a probable
- * match. The salesperson's own Telegram account (see telegram-account.ts) tells us
- * which chats began. Pure helpers here, client-safe.
+ * A chat that begins shortly after a click to the same salesperson is a probable match; the
+ * greeting the click typed ("សួស្តី 👋" / "Hello 👋") tells a clicking visitor from a customer
+ * chatting on. A short reference code (#K7X2M) identifies each click: it rides only in the
+ * sales-bot link (bot first) and in messages from before 2026-09-28, never in the greeting.
+ * The salesperson's own Telegram account (see telegram-account.ts) tells us which chats began.
+ * Pure helpers here, client-safe.
  */
 import type { ChatStats, ContactConfirmation, RoundRobinLog } from './types';
 
@@ -68,6 +70,15 @@ export interface RecentContact {
   text?: string;
   /** Set once matched to a log entry. */
   logId?: string;
+  /** The account already knew this person (in its chat list when connected, or seen by an earlier check). */
+  known?: boolean;
+  /** The salesperson wrote first, during the period checked (a form lead messaged on Telegram, say): not a click. */
+  openedByUs?: boolean;
+}
+
+/** True when a message starts with the greeting typed for the customer by a "Chat on Telegram" click. */
+export function startsWithGreeting(text: string | undefined | null): boolean {
+  return /^\s*(សួស្តី|hello)\s*👋/iu.test(text || '');
 }
 
 /** Clicks within this long before the first message count as a probable match. */
@@ -115,8 +126,13 @@ export function matchContactsToLogs(
     else rest.push(c);
   }
 
-  // 2. Time: the latest click to the same person shortly before the message.
-  for (const c of rest.sort((a, b) => a.at.localeCompare(b.at))) {
+  // 2. Time: the latest click to the same person shortly before the message. A new person who sent the
+  // greeting the click typed goes first, then other new people. A person the account already knew
+  // counts only when they sent that greeting: an existing customer chatting on must not take a click.
+  // Nor does a chat the salesperson started: the customer is answering them, not arriving from a page.
+  const rank = (c: RecentContact) => (c.known ? 2 : startsWithGreeting(c.text) ? 0 : 1);
+  const timed = rest.filter((c) => !c.openedByUs && (!c.known || startsWithGreeting(c.text)));
+  for (const c of timed.sort((a, b) => rank(a) - rank(b) || a.at.localeCompare(b.at))) {
     const atMs = Date.parse(c.at);
     const pick = open
       .filter((l) => !used.has(l.id) && l.staffId === c.staffId && l.routeType === 'DIRECT_CONTACT_CLICK')

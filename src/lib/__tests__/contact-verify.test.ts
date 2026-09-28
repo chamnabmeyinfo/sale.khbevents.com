@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { botStartPayload, langFromAcceptLanguage, matchContactsToLogs, newRefCode, prefilledMessage, refCodeFromStartPayload, refCodeIn, withRefCode, type RecentContact } from '../contact-verify';
+import { botStartPayload, langFromAcceptLanguage, matchContactsToLogs, newRefCode, prefilledMessage, refCodeFromStartPayload, refCodeIn, startsWithGreeting, withRefCode, type RecentContact } from '../contact-verify';
 import type { RoundRobinLog } from '../types';
 
 const T0 = Date.parse('2026-09-27T09:00:00Z');
@@ -80,5 +80,44 @@ describe('matchContactsToLogs', () => {
   it('skips chats already matched', () => {
     const logs = [log('a', 's1', T0)];
     expect(matchContactsToLogs(logs, [{ ...chat('s1', T0 + 60_000, 'u1', 'hi'), logId: 'z' }])).toEqual([]);
+  });
+
+  it('lets a known person take a click only with the greeting the click typed', () => {
+    const logs = [log('a', 's1', T0)];
+    const known = (text: string): RecentContact => ({ ...chat('s1', T0 + 60_000, 'u9', text), known: true });
+    // An existing customer chatting on, just after someone clicked: not that visitor.
+    expect(matchContactsToLogs(logs, [known('Any news about my booking?')])).toEqual([]);
+    expect(matchContactsToLogs(logs, [known('សួស្តី 👋\nតម្លៃប៉ុន្មាន?')]).map((x) => x.logId)).toEqual(['a']);
+    expect(matchContactsToLogs(logs, [known('Hello 👋')]).map((x) => x.logId)).toEqual(['a']);
+  });
+
+  it('never gives a click to a chat the salesperson started', () => {
+    // A form lead the salesperson messaged on Telegram answers just after someone else clicked.
+    expect(matchContactsToLogs([log('a', 's1', T0)], [{ ...chat('s1', T0 + 60_000, 'u5', 'Yes, I sent the form'), openedByUs: true }])).toEqual([]);
+  });
+
+  it('gives the click to a new person with the greeting first, then other new people, then known people', () => {
+    // Two new people after one click: the one who sent the greeting takes it, even when they wrote second.
+    const one = matchContactsToLogs([log('a', 's1', T0)], [chat('s1', T0 + 60_000, 'u1', 'How much is the trip?'), chat('s1', T0 + 120_000, 'u2', 'សួស្តី 👋')]);
+    expect(one.map((x) => [x.logId, x.contact.userId])).toEqual([['a', 'u2']]);
+    // Two clicks: the new person goes first and takes the latest; the known person with the greeting gets the other.
+    const two = matchContactsToLogs(
+      [log('a', 's1', T0), log('b', 's1', T0 + 30_000)],
+      [{ ...chat('s1', T0 + 60_000, 'u9', 'Hello 👋'), known: true }, chat('s1', T0 + 70_000, 'u1', 'hi')]
+    );
+    expect(two.map((x) => [x.logId, x.contact.userId]).sort()).toEqual([['a', 'u9'], ['b', 'u1']]);
+  });
+});
+
+describe('startsWithGreeting', () => {
+  it('recognises the greeting the click types, in either language', () => {
+    expect(startsWithGreeting('សួស្តី 👋')).toBe(true);
+    expect(startsWithGreeting('  Hello 👋 KHB')).toBe(true);
+    expect(startsWithGreeting('hello👋')).toBe(true);
+    expect(startsWithGreeting(prefilledMessage('en'))).toBe(true);
+    expect(startsWithGreeting(prefilledMessage('kh'))).toBe(true);
+    expect(startsWithGreeting('Hello, is the trip still open?')).toBe(false);
+    expect(startsWithGreeting('Price? Hello 👋')).toBe(false);
+    expect(startsWithGreeting('')).toBe(false);
   });
 });
