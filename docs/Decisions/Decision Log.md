@@ -1,7 +1,7 @@
 ---
 type: decision-log
 tags: [decision, log]
-updated: 2026-09-27
+updated: 2026-09-28
 source:
   - git log (commits befb78b to 6d1e831)
   - src/lib/telegram-lease.ts
@@ -27,6 +27,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 **Who decides:** "Owner" means the business owner decided it. "Claude with owner approval" means Claude proposed it during a working session and the owner accepted the result.
 
 ---
+
+## 2026-09-28 — The sales process: straight to the salesperson, tracked through their accounts, the bot only alerts
+
+- **Decision:** "Chat on Telegram" clicks go straight to the salesperson's own Telegram chat (plain "សួស្តី 👋" greeting), and every salesperson's account is connected so the portal tracks the chats. The sales bot does not talk to customers in this process: it alerts the salesperson at the click and when the customer writes, reminds the salesperson when a customer has waited too long (15 minutes by default, working hours only, manager at twice the time), sends the manager the daily summary (now with Telegram chat numbers), and tells the manager and the salesperson when an account is disconnected. Bot first stays available per page for tests only. The step-by-step description is [[Telegram Sales Process]].
+- **Why:** With all salespeople's accounts connected, the tracking the bot would give (who wrote, from which click) comes from the accounts, without the extra tap that loses some customers. Customers get what they expect: a real person's chat. The manager wanted the bot for alerts, not conversations.
+- **Who decided:** Owner ("Should I let the system route prospects direct to them and track via the accounts, and the bot just alert the manager?" … "Nice! Please update the process to this flow"). Claude with owner approval on the details: reminder default 15 minutes to match the page promise "replies within 15 minutes in business hours", the manager at twice the time, and the disconnect alert.
+- **Affects:** [[Telegram Sales Process]], [[Round Robin]], [[Telegram Inbox]], [[Sales Playbook]], [[Bot First Guide]].
 
 ## 2026-09-27 — Optional "bot first" entry: the sales bot identifies the visitor and hands over with one button
 

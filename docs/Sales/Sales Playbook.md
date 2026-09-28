@@ -1,7 +1,7 @@
 ---
 type: playbook
 tags: [sales, playbook, leads]
-updated: 2026-09-24
+updated: 2026-09-28
 source:
   - src/lib/round-robin.ts
   - src/app/api/round-robin/route.ts
@@ -36,8 +36,9 @@ Visitor (ad, popup, link)
 Landing page  ── /smart-city-tea-cafe
    │
    ├── A. "Chat on Telegram" button ──► Round Robin picks a salesperson
-   │                                    ──► visitor lands in YOUR Telegram chat
+   │                                    ──► visitor lands in YOUR Telegram chat ("សួស្តី 👋" typed)
    │                                    ──► you get a bot alert "a visitor clicked"
+   │                                    ──► they write: lead in the CRM + bot alert "the customer messaged you"
    │
    └── B. Registration form ──► lead saved in Admin → Leads & CRM Pipeline (status NEW)
                                ──► Round Robin picks a salesperson
@@ -46,10 +47,13 @@ Landing page  ── /smart-city-tea-cafe
 
 ### A. The visitor clicks "Chat on Telegram"
 
+The full process, step by step, is [[Telegram Sales Process]]. In short:
+
 - The button goes to `/api/round-robin?page=<slug>&redirect=true` (`src/app/api/round-robin/route.ts`).
-- [[Round Robin]] picks one active salesperson with a Telegram username. The visitor is sent straight to that person's Telegram chat.
+- [[Round Robin]] picks one active salesperson with a Telegram username. The visitor is sent straight to that person's Telegram chat, with "សួស្តី 👋" (or "Hello 👋") already typed.
 - The bot sends the salesperson an alert that a visitor was routed to them. This needs the bot token (Admin → Settings & Security) and the salesperson's Chat ID (Admin → Staff Round Robin). If the manager CC setting is on, the manager gets a copy.
-- **The alert has no name or phone.** The visitor appears in your Telegram when they write. Watch your chats and answer fast.
+- **The click alert has no name or phone.** The visitor appears in your Telegram when they write. Once your Telegram account is connected, the portal sees that chat, makes the lead in the CRM, and the bot sends a second alert "the customer messaged you" with their name and first words.
+- If the customer waits longer than the set time (15 minutes by default, during your working hours), the bot reminds you; the manager is told at twice the time.
 - Nobody reachable? The click goes to the page's or company's Telegram contact, or to the bot. This happens when Round Robin is paused, direct contact routing is off, or no active staff member has a Telegram username. It also happens when one internet address makes more than 10 new clicks in 10 minutes (`rateLimitByIp` in `src/app/api/round-robin/route.ts`).
 
 ### B. The visitor sends the form

@@ -33,6 +33,13 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [ ] If a row ever shows "Telegram ended the session", the salesperson connects again from the same tab (code from their Telegram app). Telegram may also show a new "khbportal" device after a reconnection; ending old ones there is fine. #owner
 - [ ] Later, if the team wants replies within a second instead of about eight: a live update connection per account (Telegram updates), which needs a server that stays up all day rather than Vercel functions. Decide only after the polling version has run a few weeks. #for-claude
 
+### Sales process: direct + account tracking (2026-09-28)
+
+- [x] Process set: straight to the salesperson, tracked through the connected accounts, bot alerts and reminders only. Quick replies no longer hide a new chat; click alert no longer mentions a code; waiting-customer reminder (15 min default, manager at twice); Telegram chats in the daily summary; disconnect alert. → [[Telegram Sales Process]]
+- [ ] Check the settings list in [[Telegram Sales Process]] → "Settings that make this work": entry = straight to the salesperson (also on each page), manager notification and manager chat, each row's Telegram username = the connected account, Chat IDs, every salesperson pressed Start in the bot, reminder minutes, daily summary hour. #owner
+- [ ] Tell the team: after a click they get the alert; when the customer writes, a second alert with the name; if a customer waits 15 minutes in working hours, the bot reminds them and later tells the manager. #owner
+- [ ] Optional later: bot reminder for clicks that never became a chat within 30 minutes (only if clicks seem to go missing). #for-claude
+
 ### Connecting accounts (2026-09-28)
 
 - [x] Step-by-step for the my.telegram.org form in the settings tab and in [[Connect a Telegram Account]] (2026-09-28).
@@ -62,7 +69,7 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [x] Phase 1a (2026-09-27): Telegram chat → CRM lead, conversation counts and reply times, "Did we reply?" card, automatic account check after site traffic.
 - [ ] Phase 1b: prospect timeline in the lead drawer, behaviour chips and a hot / warm / cold score. #for-claude
 - [ ] Phase 2: bot check-ins to the salesperson with status buttons (timings set by the owner, minimum 15 minutes for the first and 1 hour between repeats, at most 3 a day per prospect, paused outside working hours), text replies saved as notes, escalation to the manager, morning list to each salesperson and the manager, weekly pipeline summary. #for-claude
-- [ ] Owner: tell the team that their connected Telegram work account's customer chats can be read in the CRM by admins (read only). → [[Leads CRM]] #owner
+- [ ] Owner: tell the team that their connected Telegram work account's customer chats can be read and answered from the portal by admins, and are stored in the CRM for the AI coach. → [[Leads CRM]] #owner
 - [ ] Owner: if customers also write to the team directly (not from a page), tick **Track every new chat** on your row in Settings → Telegram account check. → [[Round Robin]] #owner
 - [ ] Owner: after a few real chats, open Team Performance → Telegram chats: did we reply? and check the numbers against what the team sees in Telegram. In the CRM, chat leads have no phone until the team adds it. → [[Round Robin]] #owner
 

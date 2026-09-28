@@ -71,6 +71,9 @@ export async function PUT(req: NextRequest) {
     const minutes = Number(settings.responseMinutes);
     settings.responseMinutes = (RESPONSE_MINUTE_CHOICES as readonly number[]).includes(minutes) ? minutes : 0;
     settings.chatEntry = settings.chatEntry === 'bot' ? 'bot' : 'direct';
+    // Waiting-customer reminder: one of the offered minutes (0 = off); anything else keeps the default.
+    const replyMinutes = Number(settings.chatReplyMinutes);
+    settings.chatReplyMinutes = settings.chatReplyMinutes !== undefined && settings.chatReplyMinutes !== null && [0, 10, 15, 30, 60].includes(replyMinutes) ? replyMinutes : undefined;
     const hour = Number(settings.dailySummaryHour);
     settings.dailySummaryHour = settings.dailySummaryHour !== undefined && settings.dailySummaryHour !== null && [17, 18, 19, 20].includes(hour) ? hour : undefined;
     if (autoNormalize) {

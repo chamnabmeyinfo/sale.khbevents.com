@@ -2035,14 +2035,14 @@ export async function recordDirectContactRoute(params: {
 
     let alertNote: string | undefined;
     if (botToken && staff.telegramChatId) {
-      // Short and in Khmer: the service the customer asks about, the code they will send, when.
+      // Short and in Khmer: the service the customer asks about and when. The chat opens with a plain
+      // greeting (no code); if the customer writes, the account check links the chat to this click.
       const staffAlertText = [
         '🔔 <b>អតិថិជនថ្មីចុច Telegram មករកអ្នក</b>',
         `📌 សេវា៖ <b>${escapeHtml(pageTitle)}</b>`,
-        params.refCode ? `🔑 កូដក្នុងសាររបស់អតិថិជន៖ <code>${escapeHtml(params.refCode)}</code>` : '',
         `⏰ ${stamp}`,
-        '👉 អតិថិជននឹងផ្ញើសារមកភ្លាម។ សូមឆ្លើយឱ្យលឿន!',
-      ].filter(Boolean).join('\n');
+        '👉 បើគេផ្ញើសារមក សូមឆ្លើយឱ្យលឿន!',
+      ].join('\n');
       tasks.push(
         send(staff.telegramChatId, params.demo ? `🧪 <b>DEMO / សាកល្បង:</b> test click from Simulation Studio, not a real customer.\n\n${staffAlertText}` : staffAlertText).then((data) => {
           if (!data.ok) alertNote = `Staff alert failed: ${data.description || 'Telegram error'}`;
@@ -2057,9 +2057,8 @@ export async function recordDirectContactRoute(params: {
       const managerAlert = [
         `🔔 <b>អតិថិជនចុច Telegram</b> → ${escapeHtml(staff.name)} (@${cleanUsername})`,
         `📌 សេវា៖ ${escapeHtml(pageTitle)}`,
-        params.refCode ? `🔑 កូដ៖ <code>${escapeHtml(params.refCode)}</code>` : '',
         `⏰ ${stamp}`,
-      ].filter(Boolean).join('\n');
+      ].join('\n');
       tasks.push(send(managerChatId, managerAlert));
     }
 

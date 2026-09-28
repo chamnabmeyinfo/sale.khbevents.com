@@ -159,6 +159,12 @@ export function chatStatsFrom(messages: ChatMessagePeek[], unread?: number, nowI
   if (last) {
     stats.lastAt = new Date(last.atMs).toISOString();
     stats.lastFrom = last.out ? 'us' : 'customer';
+    if (!last.out) {
+      // The wait for our reply starts at the customer's first message after our last one.
+      let i = sorted.length - 1;
+      while (i > 0 && !sorted[i - 1].out) i -= 1;
+      stats.waitingSince = new Date(sorted[i].atMs).toISOString();
+    }
   }
   return stats;
 }

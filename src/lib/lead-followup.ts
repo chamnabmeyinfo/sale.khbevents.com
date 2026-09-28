@@ -351,7 +351,9 @@ export async function maybeSendDailySummary(options: { nowMs?: number; force?: b
   const since = new Date(nowMs - 2 * 24 * 60 * 60 * 1000).toISOString();
   const leads = (isSupabaseConfigured() ? (await supabaseGetLeadsSince(since).catch(() => null)) || [] : (await getLeads()).filter((l) => l.createdAt >= since))
     .filter((l) => !isDemoLead(l, sampleLeadIds()));
-  const text = dailySummaryText(leads, await getStaffClickStats(), rr.staffList, day);
+  // Telegram chat leads of the last 30 days, for the chats section (new today, answered, waiting now).
+  const chatLeads = await getRealLeads().catch(() => [] as Lead[]);
+  const text = dailySummaryText(leads, await getStaffClickStats(), rr.staffList, day, { leads: chatLeads, nowMs });
   const res = await sendText(settings.telegramBotToken, manager, text);
   return { sent: Boolean(res.ok) };
 }

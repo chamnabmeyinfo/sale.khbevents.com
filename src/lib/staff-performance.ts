@@ -159,7 +159,7 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 const ppTime = (iso: string) => new Date(Date.parse(iso) + PP_OFFSET_MS).toISOString().slice(11, 16);
 
 /** The text of the day's summary (HTML for Telegram). */
-export function dailySummaryText(leads: Lead[], clickStats: StaffClickStats, staffList: RoundRobinStaff[], day: string): string {
+export function dailySummaryText(leads: Lead[], clickStats: StaffClickStats, staffList: RoundRobinStaff[], day: string, chat?: { leads: Lead[]; nowMs: number }): string {
   const perf = teamPerformance(leads, clickStats, staffList, { from: day, to: day });
   const t = perf.totals;
   const dateLabel = new Date(`${day}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
@@ -182,6 +182,26 @@ export function dailySummaryText(leads: Lead[], clickStats: StaffClickStats, sta
       lines.push(`• ${escapeHtml(l.fullName)} · ${escapeHtml(l.landingPageTitle)} · ${escapeHtml(l.routing?.staffName || '')} · since ${ppTime(l.createdAt)}`);
     }
     if (waiting.length > 8) lines.push(`… and ${waiting.length - 8} more`);
+  }
+  // Telegram chats read through the salespeople's connected accounts.
+  if (chat) {
+    const today = telegramReplyStats(chat.leads, staffList, { from: day, to: day }, chat.nowMs);
+    const open = telegramReplyStats(chat.leads, staffList, { from: phnomPenhDay(chat.nowMs - 30 * 86_400_000), to: day }, chat.nowMs);
+    const c = today.totals;
+    if (c.chats || open.waiting.length) {
+      lines.push('', `💬 <b>Telegram chats today</b>: ${plural(c.chats, 'new chat')} · ${c.replied} answered${c.avgFirstReplySeconds !== null ? ` · first reply avg <b>${formatWait(c.avgFirstReplySeconds)}</b>` : ''}`);
+      for (const r of today.rows.filter((x) => x.chats)) {
+        lines.push(`👤 <b>${escapeHtml(r.name)}</b>: ${plural(r.chats, 'chat')} · ${r.replied} answered${r.avgFirstReplySeconds !== null ? ` · avg ${formatWait(r.avgFirstReplySeconds)}` : ''}`);
+      }
+      if (open.waiting.length) {
+        lines.push('', `⏳ <b>Telegram customers waiting for our reply (${open.waiting.length})</b>`);
+        for (const l of open.waiting.slice(0, 8)) {
+          const since = l.routing?.chat?.waitingSince || l.routing?.chat?.lastAt || l.createdAt;
+          lines.push(`• ${escapeHtml(l.fullName)} · ${escapeHtml(l.landingPageTitle)} · ${escapeHtml(l.routing?.staffName || '')} · since ${ppTime(since)}`);
+        }
+        if (open.waiting.length > 8) lines.push(`… and ${open.waiting.length - 8} more`);
+      }
+    }
   }
   const fastest = perf.rows.filter((r) => r.avgResponseSeconds !== null && r.tapped >= 2).sort((a, b) => a.avgResponseSeconds! - b.avgResponseSeconds!)[0];
   if (fastest) lines.push('', `⚡ Fastest reply: <b>${escapeHtml(fastest.name)}</b> (${formatWait(fastest.avgResponseSeconds!)})`);

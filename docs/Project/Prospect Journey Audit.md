@@ -78,7 +78,7 @@ The portal already has an AI analyst (Claude, key in Vercel, daily campaign plan
 ## Data and privacy rules for this work
 
 - Customer data stays in the CRM and the routing log, never in the vault or in AI prompts beyond the minimum.
-- Conversation content is not stored; only counts, times and the first message (200 characters) already kept today.
+- Conversation content is not stored; only counts, times and the first message (200 characters) already kept today. *(Changed 2026-09-27 at the owner's request: conversations of chat leads are now stored for the story and the AI coach, see [[Customer Story and AI Coach]]. The process in force is [[Telegram Sales Process]].)*
 - The connected Telegram session, the bot token and the service key must be behind the RLS lockdown before Phase 2 automates more writes. See [[Run the RLS Lockdown Migration]].
 - Everything the bot proposes is reversible in the CRM.
 

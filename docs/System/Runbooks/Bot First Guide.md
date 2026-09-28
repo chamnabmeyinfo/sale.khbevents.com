@@ -8,6 +8,9 @@ updated: 2026-09-28
 
 How to switch on, test and judge the "bot first" entry for "Chat on Telegram" clicks. Background in [[Round Robin]] → Bot first.
 
+> [!note] Not the chosen process
+> Since 2026-09-28 the owner runs **straight to the salesperson**, tracked through the connected accounts, with the bot only alerting and reminding the team: [[Telegram Sales Process]]. Use this guide only to test bot first on a page.
+
 ## 1. Before you switch
 
 - [ ] The sales bot must answer **Start**. Open `t.me/khb_sale_admin_bot`, tap Start: it must reply. If it stays silent, register the webhook (Admin → Settings → Telegram, or `POST /api/telegram/setup-webhook`) and try again.

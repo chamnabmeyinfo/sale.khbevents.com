@@ -1,7 +1,7 @@
 ---
 type: feature
 tags: [system, feature, telegram, live-chat, sales-team]
-updated: 2026-09-27
+updated: 2026-09-28
 admin_path: /admin/chats
 admin_menu: Leads & CRM Pipeline → Telegram inbox
 source:
@@ -62,6 +62,7 @@ Telegram ends a login session it sees used from two connections at the same time
 - **Telegram's wait is honoured.** When Telegram answers "wait N seconds" (FLOOD_WAIT), the account is left alone until that time plus 2 seconds: the chat view says **Telegram asked to wait until …**, replies are refused with the same message, the settings row shows it, and **Check now** says wait. It clears by itself.
 - **A dead session disconnects the account.** If Telegram says the session is gone (ended from Settings → Devices, or the account logged in elsewhere with this same session), the portal forgets the session, the settings row shows "Telegram ended the session (…). Connect the account again.", and the chat view stops looking. Nobody's chats are read through a dead session.
 - **Check now** runs at most every 30 seconds per account; the automatic check at most every 2 minutes.
+- **Customer waiting too long** (since 2026-09-28): the bot reminds the salesperson when a chat's customer wrote last and nobody answered for the set time (Round Robin → Advanced, 15 minutes by default, working hours only), once per wait; the manager at twice the time. See [[Telegram Sales Process]] → step 5.
 - Only replies typed by a person are ever sent from the account; there is no automatic sending, typing indicator or fake presence.
 - A reply from the portal counts as the salesperson's reply in "Telegram chats: did we reply?" on Team performance.
 - The reply box appears only when that salesperson's account is connected.

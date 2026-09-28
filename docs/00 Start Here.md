@@ -1,7 +1,7 @@
 ---
 type: index
 tags: [index]
-updated: 2026-09-24
+updated: 2026-09-28
 ---
 
 # KHB Events — Project Vault
@@ -15,6 +15,7 @@ New here? Read [[How to Use This Vault]] first.
 - [[KHB Events Company Profile]]: who we are, what we sell, how customers reach us.
 - [[Smart City Tea and Cafe Vietnam 2026]], [[Korea Sourcing Trip Seoul 2026]], [[Korea Robot and Food Trip Seoul 2026]]: the trip currently on sale.
 - [[Sales Playbook]]: how a lead becomes a booked seat.
+- [[Telegram Sales Process]]: how a "Chat on Telegram" click is routed, tracked, alerted and followed up, step by step.
 - [[FAQ Answers]]: approved answers to the questions customers ask.
 - [[Telegram Reply Templates]]: ready-to-paste replies in English and Khmer.
 - [[Copy Rules]]: how we write sales copy, in English and Khmer.
@@ -24,7 +25,8 @@ New here? Read [[How to Use This Vault]] first.
 
 - [[System Map]]: how the website and admin fit together.
 - Features: [[Landing Pages CMS]], [[Page Builder]], [[Leads CRM]], [[Telegram Inbox]], [[Round Robin]], [[Ads and Popups]], [[Languages]], [[Image Uploads]], [[Content Packs]], [[Tracking and Analytics]], [[Admin and Security]].
-- Runbooks: [[Deploy to Production]], [[Verify Changes Locally]], [[Launch a New Trip Page]], [[Add a Sales Staff Member]], [[Create a Popup]], [[Change the Admin Password]], [[Rotate the Telegram Bot Token]], [[Run the RLS Lockdown Migration]], [[Restore from a Backup]].
+- Features (Telegram): [[Customer Story and AI Coach]].
+- Runbooks: [[Deploy to Production]], [[Verify Changes Locally]], [[Launch a New Trip Page]], [[Add a Sales Staff Member]], [[Connect a Telegram Account]], [[Bot First Guide]], [[Create a Popup]], [[Change the Admin Password]], [[Rotate the Telegram Bot Token]], [[Run the RLS Lockdown Migration]], [[Restore from a Backup]].
 
 ## Keeping track
 

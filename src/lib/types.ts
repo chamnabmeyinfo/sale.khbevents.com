@@ -1103,6 +1103,11 @@ export interface RoundRobinSettings {
   /** Hour (Phnom Penh, 0–23) for the daily summary to the manager chat. Missing = off. */
   dailySummaryHour?: number;
   /**
+   * Minutes a Telegram customer may wait for a reply (they spoke last) before the bot reminds
+   * the salesperson; the manager gets a copy at twice this. 0 = off. Missing = 15.
+   */
+  chatReplyMinutes?: number;
+  /**
    * Where a "Chat on Telegram" click goes: straight to the salesperson's chat (default),
    * or to the sales bot first, which identifies the visitor, makes the lead and hands
    * over with one button (owner decision, 2026-09-27).
@@ -1125,6 +1130,8 @@ export interface ChatStats {
   /** The latest message: when and who sent it. */
   lastAt?: string;
   lastFrom?: 'customer' | 'us';
+  /** When the customer spoke last: their first message after our last one (the wait for our reply starts here). */
+  waitingSince?: string;
   /** Unread messages from the customer, as Telegram counts them. */
   unread?: number;
   /** Telegram's id of the latest message in the chat: the browser asks "anything after this?". */
@@ -1159,6 +1166,8 @@ export interface RoutingDetail {
   managerAlerted?: boolean;
   /** For a lead that began as a Telegram chat: the conversation so far, from the salesperson's connected account. */
   chat?: ChatStats;
+  /** The waiting-customer reminder for the current wait (forAt = when the wait began): when the salesperson and the manager were told. */
+  chatReminder?: { forAt: string; staffAt?: string; managerAt?: string };
 }
 
 /** Who the visitor behind a click or form was, from the request that carried it (admin only). */
