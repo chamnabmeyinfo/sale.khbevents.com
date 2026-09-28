@@ -32,6 +32,7 @@ One place for the API keys of the AI services the portal uses: **Settings & Secu
 - **Priority:** a key saved here wins over the Vercel variable (`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`), which stays as the fallback. **Remove saved key** goes back to the Vercel variable, or switches the service off.
 - **Works at once:** no redeploy. Servers pick up a change within 30 seconds.
 - **Test the key in use** repeats the free check.
+- **When Anthropic refuses a key**, the message shows Anthropic's own reason. The usual one is a 400 "credit balance is too low": the key is fine but the account has no credits. Fix it in console.anthropic.com → Settings → Billing, then save again.
 - **Storage:** the `ai_keys` row of `system_settings`, next to the bot token and the Telegram sessions. Keep the database locked (RLS) and the Supabase service key private. Anyone with the admin password can replace or remove a key.
 - **Cost:** every AI request is billed to the account that owns the key. Set a monthly spend limit in the Anthropic and Google consoles.
 

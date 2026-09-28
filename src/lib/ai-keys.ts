@@ -123,7 +123,23 @@ export async function testAiKey(provider: AiProvider, key?: string): Promise<{ o
   } catch (err) {
     if (err instanceof Anthropic.AuthenticationError) return { ok: false, message: 'Anthropic rejected this key.' };
     if (err instanceof Anthropic.PermissionDeniedError) return { ok: false, message: 'This key has no access to the API (check its workspace and billing).' };
-    if (err instanceof Anthropic.APIError) return { ok: false, message: `Anthropic answered ${err.status ?? 'an error'}.` };
+    if (err instanceof Anthropic.APIError) return { ok: false, message: anthropicErrorMessage(err.status, err.error) };
     return { ok: false, message: 'The check could not reach the service.' };
   }
+}
+
+/**
+ * Turns an Anthropic error into a line the admin can act on. Anthropic's own reason is kept
+ * (it never contains the key), with a plain hint for the common account problems.
+ */
+export function anthropicErrorMessage(status: number | undefined, body: unknown): string {
+  const inner = (body as { error?: { message?: unknown } } | undefined)?.error?.message;
+  const reason = typeof inner === 'string' ? inner.trim().slice(0, 300) : '';
+  const lower = reason.toLowerCase();
+  if (/credit balance|billing|purchase credits/.test(lower)) {
+    return `Anthropic: the account has no credits or billing is not set up. Add credits in console.anthropic.com → Settings → Billing, then save the key again.${reason ? ` (${reason})` : ''}`;
+  }
+  if (/disabled|suspended/.test(lower)) return `Anthropic: this organization or key is disabled. Check console.anthropic.com.${reason ? ` (${reason})` : ''}`;
+  if (status === 529 || /overloaded/.test(lower)) return 'Anthropic is busy right now. Try again in a minute.';
+  return reason ? `Anthropic answered ${status ?? 'an error'}: ${reason}` : `Anthropic answered ${status ?? 'an error'}.`;
 }

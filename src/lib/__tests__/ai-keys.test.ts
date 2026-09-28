@@ -7,7 +7,7 @@ vi.mock('../storage', () => ({
   setMarker: async (id: string, value: string) => { rows.set(id, value); },
 }));
 
-import { aiKey, aiKeyShapeError, aiKeyStatuses, saveAiKey } from '../ai-keys';
+import { aiKey, aiKeyShapeError, anthropicErrorMessage, aiKeyStatuses, saveAiKey } from '../ai-keys';
 import { groundedIdeas, numbersIn } from '../ai-poster-ideas';
 
 describe('master AI keys', () => {
@@ -40,6 +40,14 @@ describe('master AI keys', () => {
     // Newer Google key format, with a dot (made-up value).
     expect(aiKeyShapeError('gemini', 'AQ.Xy12-_abcdefghijklmnopqrstuvWXYZ0123')).toBeNull();
     expect(aiKeyShapeError('gemini', 'AIza with spaces in it here ok')).toMatch(/does not look/);
+  });
+
+  it('explains Anthropic errors instead of showing only the status', () => {
+    const credit = { type: 'error', error: { type: 'invalid_request_error', message: 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.' } };
+    expect(anthropicErrorMessage(400, credit)).toMatch(/no credits or billing/);
+    expect(anthropicErrorMessage(400, { error: { message: 'Something else went wrong' } })).toBe('Anthropic answered 400: Something else went wrong');
+    expect(anthropicErrorMessage(400, undefined)).toBe('Anthropic answered 400.');
+    expect(anthropicErrorMessage(529, undefined)).toMatch(/busy/);
   });
 });
 
