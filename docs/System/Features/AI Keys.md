@@ -6,6 +6,7 @@ admin_path: /admin/settings#ai
 admin_menu: Settings & Security → AI & API keys
 source:
   - src/lib/ai-keys.ts
+  - src/lib/ai-text.ts
   - src/app/api/settings/ai/route.ts
   - src/components/admin/AiKeysPanel.tsx
   - src/lib/ai-analyst.ts
@@ -22,8 +23,17 @@ One place for the API keys of the AI services the portal uses: **Settings & Secu
 
 | Service | Key | Used by |
 |---|---|---|
-| Anthropic (Claude) | starts with `sk-ant-`, from console.anthropic.com → API keys | AI analyst ([[Campaigns and AI Analyst]]), AI coach ([[Customer Story and AI Coach]]), AI headline ideas in Ad posters |
-| Google Gemini | from aistudio.google.com → Get API key | Voice messages to text when Telegram cannot transcribe them |
+| Anthropic (Claude) | starts with `sk-ant-`, from console.anthropic.com → API keys | AI analyst ([[Campaigns and AI Analyst]]), AI coach ([[Customer Story and AI Coach]]), AI headline ideas in Ad posters, when it is the primary AI or the back-up |
+| Google Gemini | from aistudio.google.com → Get API key | The same three features when it is the primary AI or the back-up; always voice messages to text when Telegram cannot transcribe them |
+
+## Primary AI
+
+- The **Primary AI** card picks which service writes the AI analyst report, the AI coach and the poster headline ideas. Anthropic is the default until someone chooses.
+- If the primary fails (key refused, no credits, service down, rate limit) and the other service has a key, the other one answers. A refused request or an unreadable answer does not switch; it shows the error.
+- If the primary has no key, the other one answers; with no key at all, the AI features stay off.
+- The choice is saved with the keys (`primary` in the `ai_keys` row) and works at once.
+- Voice to text always uses Gemini: Claude does not take audio.
+- Models: Claude Opus 5; Gemini uses `gemini-2.5-flash` unless the Vercel variable `GEMINI_TEXT_MODEL` names another. Each stored report and coach result records the model that wrote it.
 
 ## How it works
 
@@ -39,7 +49,7 @@ One place for the API keys of the AI services the portal uses: **Settings & Secu
 ## Not built, on purpose
 
 - **An AI chat that answers customers.** The owner decided on 2026-09-27 that AI helps the team read and answer chats faster but never talks to customers; the AI coach suggests replies that a person sends ([[Customer Story and AI Coach]]).
-- **A choice of model.** The features use Claude Opus 5 with Anthropic's automatic fallback; cheaper models do not support every option the features use.
+- **A free choice of model.** The screen picks the service, not the model: Claude Opus 5 with Anthropic's automatic fallback, or the Gemini model above.
 
 ## Related
 

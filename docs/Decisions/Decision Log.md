@@ -28,6 +28,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-28 — The owner picks the primary AI; the other one is the back-up
+
+- **Decision:** Settings & Security → AI & API keys has a **Primary AI** choice (Claude or Gemini). The AI analyst, the AI coach and the poster headline ideas ask the primary first; when it fails for a service reason (refused key, no credits, outage, rate limit) and the other has a key, the other answers. Voice to text stays on Gemini.
+- **Why:** The owner asked to set which API the system uses. A back-up keeps the AI features working when one account runs out of credits, which is what happened with the first Anthropic key (it answered 400).
+- **Who decided:** Owner ("Set Primary API"), Claude on the back-up rule and on not switching after a refusal or an unreadable answer.
+- **Affects:** [[AI Keys]], [[Campaigns and AI Analyst]], [[Customer Story and AI Coach]].
+
 ## 2026-09-28 — AI keys are managed in the portal; AI still never talks to customers
 
 - **Decision:** The Anthropic and Gemini keys are saved in Settings & Security → AI & API keys (checked with the service before saving, shown only as the last four characters, stored with the other server secrets) and used by every AI feature; the Vercel variables stay as a fallback. Added AI headline ideas to the Ad Poster Kit, with a check that drops any idea stating a number not in the page's facts. No customer-facing AI chat.

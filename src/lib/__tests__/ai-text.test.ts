@@ -1,0 +1,97 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const rows = new Map<string, string>();
+vi.mock('../storage', () => ({
+  getMarker: async (id: string) => rows.get(id) ?? null,
+  setMarker: async (id: string, value: string) => { rows.set(id, value); },
+}));
+
+// A stand-in Anthropic client: `anthropicAnswer` decides what the next call returns.
+let anthropicAnswer: () => unknown = () => { throw new Error('not set'); };
+vi.mock('@anthropic-ai/sdk', () => {
+  class APIError extends Error { status?: number; }
+  class AuthenticationError extends APIError {}
+  class RateLimitError extends APIError {}
+  class PermissionDeniedError extends APIError {}
+  class Anthropic {
+    static APIError = APIError;
+    static AuthenticationError = AuthenticationError;
+    static RateLimitError = RateLimitError;
+    static PermissionDeniedError = PermissionDeniedError;
+    beta = { messages: { create: async () => anthropicAnswer(), stream: () => ({ finalMessage: async () => anthropicAnswer() }) } };
+  }
+  return { default: Anthropic };
+});
+
+import { aiKeyStatuses, aiTextProviders, saveAiKey, setAiPrimary } from '../ai-keys';
+import { AiAnalystError, generateJson } from '../ai-text';
+
+const REQ = { system: 's', user: 'u', schema: { type: 'object' }, effort: 'medium' as const, maxTokens: 1000, timeoutMs: 5000 };
+const geminiOk = (json: unknown) => new Response(JSON.stringify({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify(json) }] } }], modelVersion: 'gemini-test' }), { status: 200 });
+
+describe('primary AI', () => {
+  beforeEach(async () => {
+    rows.clear();
+    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.GEMINI_API_KEY;
+    await saveAiKey('anthropic', null); // also clears the 30 s key cache
+    rows.clear();
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('orders providers primary first, and skips providers without a key', async () => {
+    expect(await aiTextProviders()).toEqual([]);
+    await saveAiKey('gemini', 'AIzaSy-test-gemini-key-000000000');
+    expect(await aiTextProviders()).toEqual(['gemini']);
+    await saveAiKey('anthropic', 'sk-ant-test-anthropic-key-00000000');
+    expect(await aiTextProviders()).toEqual(['anthropic', 'gemini']);
+    await setAiPrimary('gemini');
+    expect(await aiTextProviders()).toEqual(['gemini', 'anthropic']);
+    expect((await aiKeyStatuses()).map((s) => [s.provider, s.primary])).toEqual([['anthropic', false], ['gemini', true]]);
+    // Saving a key keeps the choice.
+    await saveAiKey('anthropic', 'sk-ant-test-anthropic-key-11111111');
+    expect(await aiTextProviders()).toEqual(['gemini', 'anthropic']);
+  });
+
+  it('answers with Gemini when it is primary', async () => {
+    await saveAiKey('gemini', 'AIzaSy-test-gemini-key-000000000');
+    await saveAiKey('anthropic', 'sk-ant-test-anthropic-key-00000000');
+    await setAiPrimary('gemini');
+    const fetchMock = vi.fn(async () => geminiOk({ ideas: [] }));
+    vi.stubGlobal('fetch', fetchMock);
+    const answer = await generateJson(REQ);
+    expect(answer).toMatchObject({ provider: 'gemini', model: 'gemini-test', data: { ideas: [] } });
+    const body = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
+    expect(body.generationConfig).toMatchObject({ responseMimeType: 'application/json', responseJsonSchema: { type: 'object' } });
+  });
+
+  it('falls back to the other AI when the primary fails', async () => {
+    await saveAiKey('gemini', 'AIzaSy-test-gemini-key-000000000');
+    await saveAiKey('anthropic', 'sk-ant-test-anthropic-key-00000000');
+    const { default: Anthropic } = await import('@anthropic-ai/sdk');
+    const ApiError = Anthropic.APIError as unknown as new (m: string) => Error;
+    anthropicAnswer = () => { const e = new ApiError('no credits'); (e as { status?: number }).status = 400; throw e; };
+    vi.stubGlobal('fetch', vi.fn(async () => geminiOk({ ok: 1 })));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(await generateJson(REQ)).toMatchObject({ provider: 'gemini', data: { ok: 1 } });
+  });
+
+  it('uses Claude when it is primary and works, and reports no key when none is set', async () => {
+    await expect(generateJson(REQ)).rejects.toMatchObject({ code: 'no_key' });
+    await saveAiKey('anthropic', 'sk-ant-test-anthropic-key-00000000');
+    anthropicAnswer = () => ({ stop_reason: 'end_turn', model: 'claude-test', content: [{ type: 'text', text: '{"a":1}' }] });
+    expect(await generateJson({ ...REQ, stream: true })).toMatchObject({ provider: 'anthropic', model: 'claude-test', data: { a: 1 } });
+  });
+
+  it('does not spend the back-up on an unreadable answer', async () => {
+    await saveAiKey('anthropic', 'sk-ant-test-anthropic-key-00000000');
+    await saveAiKey('gemini', 'AIzaSy-test-gemini-key-000000000');
+    anthropicAnswer = () => ({ stop_reason: 'end_turn', content: [{ type: 'text', text: 'not json' }] });
+    const fetchMock = vi.fn(async () => geminiOk({}));
+    vi.stubGlobal('fetch', fetchMock);
+    const err = await generateJson(REQ).catch((e) => e);
+    expect(err).toBeInstanceOf(AiAnalystError);
+    expect(err.code).toBe('bad_output');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});

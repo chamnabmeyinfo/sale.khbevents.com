@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
-import { AI_PROVIDERS, aiKeyShapeError, aiKeyStatuses, saveAiKey, testAiKey, type AiProvider } from '@/lib/ai-keys';
+import { AI_PROVIDERS, aiKeyShapeError, aiKeyStatuses, saveAiKey, setAiPrimary, testAiKey, type AiProvider } from '@/lib/ai-keys';
 import { rateLimitByIp } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
@@ -16,7 +16,8 @@ export async function GET() {
 /**
  * { provider, action: 'save', key } checks the key, then saves it;
  * { provider, action: 'remove' } removes the saved key (the Vercel variable, if any, applies again);
- * { provider, action: 'test' } checks the key in use.
+ * { provider, action: 'test' } checks the key in use;
+ * { provider, action: 'primary' } makes it the AI the text features ask first.
  */
 export async function POST(req: NextRequest) {
   const unauthorized = await requireAdmin();
@@ -30,6 +31,10 @@ export async function POST(req: NextRequest) {
 
   if (body.action === 'remove') {
     await saveAiKey(provider, null);
+    return NextResponse.json({ success: true, keys: await aiKeyStatuses() });
+  }
+  if (body.action === 'primary') {
+    await setAiPrimary(provider);
     return NextResponse.json({ success: true, keys: await aiKeyStatuses() });
   }
   if (body.action === 'test') {

@@ -37,6 +37,9 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 
 - [x] Settings & Security → AI & API keys: Anthropic and Gemini keys saved in the portal (checked before saving, shown only as the last four characters), used by the AI analyst, the AI coach, voice to text and the new AI headline ideas in Ad posters. → [[AI Keys]]
 - [ ] Paste the Anthropic key and (optional) the Gemini key there, press **Check and save**, and set a monthly spend limit in each provider's console. #owner
+- [x] Primary AI choice (Claude or Gemini) with the other as automatic back-up; failed Anthropic checks now show Anthropic's reason. → [[AI Keys]]
+- [ ] Revoke the Anthropic and Gemini keys that were pasted in the chat, create new ones, save them in the portal, and choose the **Primary AI**. #owner
+- [ ] Try each AI feature once on Gemini (AI analyst, Analyze now on a customer, poster ideas) and compare the Khmer quality with Claude before keeping Gemini as primary. #owner
 - [ ] Optional later: remove `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` from Vercel once the keys are saved in the portal, so there is one place to rotate them. #owner
 
 ### Ad posters (2026-09-28)

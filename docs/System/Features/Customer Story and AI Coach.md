@@ -17,7 +17,7 @@ source:
 
 # Customer Story and AI Coach
 
-The conversation of every Telegram chat lead is now kept in the portal (other chats of the salespeople's accounts are not stored), voice messages are turned into text, and each customer has a **story file** (Markdown) that an AI coach reads to tell the team where the customer stands and what to do next. With the Anthropic key set ([[AI Keys]]), the story, conversation included, is sent to Anthropic for the analysis. How chats become leads: [[Telegram Sales Process]]. Built on 2026-09-27 at the owner's request, reversing the earlier "numbers only" rule (see [[Decision Log]]).
+The conversation of every Telegram chat lead is now kept in the portal (other chats of the salespeople's accounts are not stored), voice messages are turned into text, and each customer has a **story file** (Markdown) that an AI coach reads to tell the team where the customer stands and what to do next. With an AI key set ([[AI Keys]]), the story, conversation included, is sent for the analysis to the primary AI: Anthropic (Claude) or Google (Gemini), or to the other one when the primary fails. How chats become leads: [[Telegram Sales Process]]. Built on 2026-09-27 at the owner's request, reversing the earlier "numbers only" rule (see [[Decision Log]]).
 
 ## What it does for sales
 
@@ -40,7 +40,7 @@ Telegram inbox (`/admin/chats`): heat badges in the list, **🔥 Hot first**, th
 
 ## Key rules and defaults
 
-- Needs the Anthropic key (Settings & Security → AI & API keys, or `ANTHROPIC_API_KEY` in Vercel; see [[AI Keys]]), the same key as the campaign analyst. Without it the card says so and nothing is sent anywhere. Voice transcription outside Telegram needs the Gemini key (model `GEMINI_TRANSCRIBE_MODEL`, default gemini-2.5-flash); without it voice messages Telegram cannot transcribe stay marked "text coming…".
+- Needs an Anthropic or Gemini key (Settings & Security → AI & API keys; see [[AI Keys]]), the same primary AI as the campaign analyst. Without it the card says so and nothing is sent anywhere. Voice transcription outside Telegram needs the Gemini key (model `GEMINI_TRANSCRIBE_MODEL`, default gemini-2.5-flash); without it voice messages Telegram cannot transcribe stay marked "text coming…".
 - The AI never writes to a customer. It reads and suggests; a person sends.
 - The story is built fresh from the stored chat each time; the analysis is stored per lead (`lead_ai:<leadId>`) with when and on how many messages it was based.
 - Stored chats live in `chat:<leadId>` rows of `system_settings` (or the local file), newest 500 messages per lead. Admin only, same protection as the Telegram session: the RLS lockdown matters.

@@ -5,14 +5,14 @@
  * and once a day with the daily cron, so the owner opens a ready answer.
  *
  * Only aggregated numbers are sent: no names, phones, e-mails or ids.
- * Needs the Anthropic key (Settings → AI & API keys, or ANTHROPIC_API_KEY in Vercel).
+ * Runs on the primary AI set in Settings → AI & API keys (Claude or Gemini), with the other as back-up.
  */
-import Anthropic from '@anthropic-ai/sdk';
-import { aiKey } from './ai-keys';
+import { aiTextProviders } from './ai-keys';
+import { generateJson } from './ai-text';
 import type { CampaignReport, PageInfo } from './campaign-analytics';
 import type { Campaign } from './campaigns';
 
-export const AI_MODEL = 'claude-opus-5';
+export { AI_MODEL, AiAnalystError } from './ai-text';
 
 export interface AiAction {
   priority: number;
@@ -180,52 +180,27 @@ export function analystBrief(report: CampaignReport, campaigns: Campaign[], page
   };
 }
 
+/** True when an Anthropic or a Gemini key is set. */
 export async function aiConfigured(): Promise<boolean> {
-  return Boolean(await aiKey('anthropic'));
+  return (await aiTextProviders()).length > 0;
 }
 
-export class AiAnalystError extends Error {
-  constructor(message: string, public code: 'no_key' | 'refused' | 'bad_output' | 'api') {
-    super(message);
-  }
-}
-
-/** Runs the analysis. Throws AiAnalystError with a short reason on failure. */
-export async function runAiAnalysis(input: { report: CampaignReport; campaigns: Campaign[]; pages: PageInfo[]; lang: 'en' | 'kh'; pageSlug?: string }): Promise<AiReport> {
-  const apiKey = await aiKey('anthropic');
-  if (!apiKey) throw new AiAnalystError('No Anthropic API key: add it in Settings → AI & API keys.', 'no_key');
-  const client = new Anthropic({ apiKey, timeout: 280_000, maxRetries: 1 });
+/** Runs the analysis on the primary AI. Throws AiAnalystError with a short reason on failure. */
+export async function runAiAnalysis(input: { report: CampaignReport; campaigns: Campaign[]; pages: PageInfo[]; lang: 'en' | 'kh'; pageSlug?: string }): Promise<{ report: AiReport; model: string }> {
   const brief = analystBrief(input.report, input.campaigns, input.pages, input.pageSlug);
   const language = input.lang === 'kh'
     ? 'Write every text field in Khmer (ខ្មែរ), natural and plain; keep campaign keys, numbers, "Telegram", "Facebook" and section names as they are.'
     : 'Write every text field in clear, simple English.';
-
-  let message: Anthropic.Beta.BetaMessage;
-  try {
-    const stream = client.beta.messages.stream({
-      model: AI_MODEL,
-      max_tokens: 32000,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-      thinking: { type: 'adaptive' },
-      output_config: { effort: 'high', format: { type: 'json_schema', schema: AI_REPORT_SCHEMA as unknown as Record<string, unknown> } },
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: `${language}\n\nCampaign report:\n${JSON.stringify(brief)}` }],
-    });
-    message = await stream.finalMessage();
-  } catch (err) {
-    if (err instanceof Anthropic.AuthenticationError) throw new AiAnalystError('The Anthropic API key was rejected.', 'api');
-    if (err instanceof Anthropic.RateLimitError) throw new AiAnalystError('The AI service is busy (rate limit). Try again in a minute.', 'api');
-    if (err instanceof Anthropic.APIError) throw new AiAnalystError(`AI service error ${err.status ?? ''}`.trim(), 'api');
-    throw new AiAnalystError(err instanceof Error ? err.message : String(err), 'api');
-  }
-  if (message.stop_reason === 'refusal') throw new AiAnalystError('The AI declined this request.', 'refused');
-  const text = message.content.filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === 'text').map((b) => b.text).join('');
-  try {
-    return normalizeAiReport(JSON.parse(text));
-  } catch {
-    throw new AiAnalystError(message.stop_reason === 'max_tokens' ? 'The answer was cut off. Try again.' : 'The AI answer could not be read.', 'bad_output');
-  }
+  const answer = await generateJson({
+    system: SYSTEM_PROMPT,
+    user: `${language}\n\nCampaign report:\n${JSON.stringify(brief)}`,
+    schema: AI_REPORT_SCHEMA as unknown as Record<string, unknown>,
+    effort: 'high',
+    maxTokens: 32000,
+    timeoutMs: 280_000,
+    stream: true,
+  });
+  return { report: normalizeAiReport(answer.data), model: answer.model };
 }
 
 const s = (v: unknown, n = 2000) => (typeof v === 'string' ? v.trim().slice(0, n) : '');

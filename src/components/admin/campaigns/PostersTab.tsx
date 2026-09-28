@@ -85,7 +85,7 @@ function CopyLines({ lang, copy }: { lang: string; copy: PosterCopy }) {
 
 interface PosterIdea { angle: string; headlineEn: string; headlineKh: string; supportEn: string; supportKh: string }
 
-/** Optional: headline ideas written by Claude from the same facts (a person picks; numbers are checked). */
+/** Optional: headline ideas written by the primary AI from the same facts (a person picks; numbers are checked). */
 function AiIdeas({ slug, goal }: { slug: string; goal: PosterGoal }) {
   const { t } = useLanguage();
   const [ideas, setIdeas] = useState<PosterIdea[] | null>(null);

@@ -5,7 +5,7 @@
  *   ai_settings          language, daily run on/off, Telegram brief on/off
  */
 import { escapeHtml } from './round-robin';
-import { AiAnalystError, aiConfigured, AI_MODEL, runAiAnalysis, type StoredAiReport } from './ai-analyst';
+import { AiAnalystError, aiConfigured, runAiAnalysis, type StoredAiReport } from './ai-analyst';
 import { getCampaignReport } from './campaign-store';
 import { phnomPenhDay } from './popup-analytics';
 import { getMarker, setMarker } from './storage';
@@ -66,19 +66,19 @@ export async function runAndStoreAiReport(opts: { days: number; lang: 'en' | 'kh
   const { report, campaigns, pages } = await getCampaignReport(opts.days, opts.pageSlug);
   const ai = await runAiAnalysis({ report, campaigns, pages, lang: opts.lang, pageSlug: opts.pageSlug });
   const stored: StoredAiReport = {
-    report: ai,
+    report: ai.report,
     lang: opts.lang,
     days: opts.days,
     pageSlug: opts.pageSlug,
     generatedAt: new Date().toISOString(),
-    model: AI_MODEL,
+    model: ai.model,
     trigger: opts.trigger,
     basis: { visits: report.total.visits, leads: report.total.leads, won: report.total.won, spend: report.total.spend },
   };
   await setMarker('ai_campaign_report', JSON.stringify(stored));
   const history = await getAiHistory();
   await setMarker('ai_campaign_history', JSON.stringify([
-    { generatedAt: stored.generatedAt, days: stored.days, lang: stored.lang, basis: stored.basis, headline: ai.headline, actions: ai.actions.slice(0, 3).map((a) => a.title) },
+    { generatedAt: stored.generatedAt, days: stored.days, lang: stored.lang, basis: stored.basis, headline: ai.report.headline, actions: ai.report.actions.slice(0, 3).map((a) => a.title) },
     ...history,
   ].slice(0, 10)));
   return stored;

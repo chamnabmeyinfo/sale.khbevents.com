@@ -1,14 +1,12 @@
 /**
- * AI headline ideas for the Ad Poster Kit: Claude writes a few poster headlines and supporting
+ * AI headline ideas for the Ad Poster Kit: the primary AI writes a few poster headlines and supporting
  * lines (English and Khmer) from the trip page's own copy and live facts. A person picks one;
  * nothing is published by itself. Any idea that states a number not found in the facts is
  * dropped, so the AI cannot invent a price, date, seat count or statistic.
  *
- * Server only (uses the Anthropic key from ai-keys.ts).
+ * Server only (uses the primary AI key from ai-keys.ts).
  */
-import Anthropic from '@anthropic-ai/sdk';
-import { aiKey } from './ai-keys';
-import { AI_MODEL, AiAnalystError } from './ai-analyst';
+import { generateJson } from './ai-text';
 import { posterCopy, type PosterFacts, type PosterGoal } from './ad-posters';
 import { pick } from './builder';
 
@@ -62,10 +60,8 @@ export function groundedIdeas(ideas: PosterIdea[], factsText: string): PosterIde
 
 const clean = (v: unknown, n: number) => (typeof v === 'string' ? v.trim().replace(/\s+/g, ' ').slice(0, n) : '');
 
-/** Asks Claude for poster headline ideas. Throws AiAnalystError with a short reason on failure. */
+/** Asks the primary AI (Claude or Gemini) for poster headline ideas. Throws AiAnalystError with a short reason on failure. */
 export async function suggestPosterIdeas(facts: PosterFacts, goal: PosterGoal, description: string): Promise<PosterIdea[]> {
-  const apiKey = await aiKey('anthropic');
-  if (!apiKey) throw new AiAnalystError('No Anthropic API key: add it in Settings → AI & API keys.', 'no_key');
   const en = posterCopy(facts, goal, 'en');
   const kh = posterCopy(facts, goal, 'kh');
   const factsText = [
@@ -79,33 +75,15 @@ export async function suggestPosterIdeas(facts: PosterFacts, goal: PosterGoal, d
   ].filter(Boolean).join('\n');
   const goalText = { launch: 'announce the trip', early: 'fill seats before the early-bird price ends', lastSeats: 'fill the last seats', deadline: 'get registrations before registration closes' }[goal];
 
-  const client = new Anthropic({ apiKey, timeout: 90_000, maxRetries: 1 });
-  let message: Anthropic.Beta.BetaMessage;
-  try {
-    message = await client.beta.messages.create({
-      model: AI_MODEL,
-      max_tokens: 16000,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-      thinking: { type: 'adaptive' },
-      output_config: { effort: 'medium', format: { type: 'json_schema', schema: IDEAS_SCHEMA as unknown as Record<string, unknown> } },
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: `Goal of the ad: ${goalText}.\n\nFacts (the only facts you may use):\n${factsText}\n\nWrite 5 poster ideas.` }],
-    });
-  } catch (err) {
-    if (err instanceof Anthropic.AuthenticationError) throw new AiAnalystError('The Anthropic API key was rejected.', 'api');
-    if (err instanceof Anthropic.RateLimitError) throw new AiAnalystError('The AI service is busy (rate limit). Try again in a minute.', 'api');
-    if (err instanceof Anthropic.APIError) throw new AiAnalystError(`AI service error ${err.status ?? ''}`.trim(), 'api');
-    throw new AiAnalystError(err instanceof Error ? err.message : String(err), 'api');
-  }
-  if (message.stop_reason === 'refusal') throw new AiAnalystError('The AI declined this request.', 'refused');
-  const text = message.content.filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === 'text').map((b) => b.text).join('');
-  let raw: unknown;
-  try {
-    raw = JSON.parse(text);
-  } catch {
-    throw new AiAnalystError('The AI answer could not be read.', 'bad_output');
-  }
+  const answer = await generateJson({
+    system: SYSTEM_PROMPT,
+    user: `Goal of the ad: ${goalText}.\n\nFacts (the only facts you may use):\n${factsText}\n\nWrite 5 poster ideas.`,
+    schema: IDEAS_SCHEMA as unknown as Record<string, unknown>,
+    effort: 'medium',
+    maxTokens: 16000,
+    timeoutMs: 90_000,
+  });
+  const raw = answer.data;
   const list = raw && typeof raw === 'object' && Array.isArray((raw as { ideas?: unknown }).ideas) ? (raw as { ideas: unknown[] }).ideas : [];
   const ideas = list.slice(0, 8).map((x) => {
     const o = (x && typeof x === 'object' ? x : {}) as Record<string, unknown>;

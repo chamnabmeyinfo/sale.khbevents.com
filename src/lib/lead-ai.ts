@@ -4,14 +4,13 @@
  * the suggested reply is a draft a person edits and sends.
  *
  * Runs on demand ("Analyze now") and, for open chat leads whose conversation
- * changed, a few at a time after site traffic. Needs the Anthropic key (Settings →
- * AI & API keys, or ANTHROPIC_API_KEY in Vercel; the same key as the campaign analyst). Results live in `lead_ai:<leadId>`.
+ * changed, a few at a time after site traffic. Needs an AI key (Settings →
+ * AI & API keys: the primary AI, Claude or Gemini, as for the campaign analyst). Results live in `lead_ai:<leadId>`.
  */
-import Anthropic from '@anthropic-ai/sdk';
 import { getLeadById, getMarker, getMarkersWithPrefix, getRealLeads, setMarker } from './storage';
 import { buildLeadStory } from './lead-story';
-import { AI_MODEL, AiAnalystError } from './ai-analyst';
-import { aiKey } from './ai-keys';
+import { AiAnalystError, generateJson, NO_AI_KEY } from './ai-text';
+import { aiTextProviders } from './ai-keys';
 
 export type Heat = 'hot' | 'warm' | 'cold';
 
@@ -80,7 +79,7 @@ You read one customer's story (profile, clicks, the whole Telegram conversation,
 const rowId = (leadId: string) => `lead_ai:${leadId}`;
 
 export async function leadAiConfigured(): Promise<boolean> {
-  return Boolean(await aiKey('anthropic'));
+  return (await aiTextProviders()).length > 0;
 }
 
 export async function getLeadInsight(leadId: string): Promise<StoredLeadInsight | null> {
@@ -129,8 +128,7 @@ export function normalizeInsight(raw: unknown): LeadInsight {
 
 /** Analyses one lead now and stores the result. Throws AiAnalystError on failure. */
 export async function analyzeLead(leadId: string, options: { lang?: 'en' | 'kh'; trigger?: 'manual' | 'auto' } = {}): Promise<StoredLeadInsight> {
-  const apiKey = await aiKey('anthropic');
-  if (!apiKey) throw new AiAnalystError('No Anthropic API key: add it in Settings → AI & API keys.', 'no_key');
+  if (!(await leadAiConfigured())) throw new AiAnalystError(NO_AI_KEY, 'no_key');
   const lead = await getLeadById(leadId);
   if (!lead) throw new AiAnalystError('Lead not found', 'bad_output');
   const story = await buildLeadStory(leadId);
@@ -138,39 +136,21 @@ export async function analyzeLead(leadId: string, options: { lang?: 'en' | 'kh';
   const language = options.lang === 'kh'
     ? 'Write summary, intent, heatReason, nextStep, nextStepWhen and coaching in Khmer (ខ្មែរ), plain and natural.'
     : 'Write summary, intent, heatReason, nextStep, nextStepWhen and coaching in clear, simple English.';
-  const client = new Anthropic({ apiKey, timeout: 120_000, maxRetries: 1 });
-  let message: Anthropic.Beta.BetaMessage;
-  try {
-    const stream = client.beta.messages.stream({
-      model: AI_MODEL,
-      max_tokens: 6000,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-      thinking: { type: 'adaptive' },
-      output_config: { effort: 'medium', format: { type: 'json_schema', schema: LEAD_INSIGHT_SCHEMA as unknown as Record<string, unknown> } },
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: `${language}\nToday (Phnom Penh): ${new Date().toLocaleString('en-GB', { timeZone: 'Asia/Phnom_Penh' })}.\n\nCustomer story:\n\n${story.markdown.slice(0, 60_000)}` }],
-    });
-    message = await stream.finalMessage();
-  } catch (err) {
-    if (err instanceof Anthropic.AuthenticationError) throw new AiAnalystError('The Anthropic API key was rejected.', 'api');
-    if (err instanceof Anthropic.RateLimitError) throw new AiAnalystError('The AI service is busy (rate limit). Try again in a minute.', 'api');
-    if (err instanceof Anthropic.APIError) throw new AiAnalystError(`AI service error ${err.status ?? ''}`.trim(), 'api');
-    throw new AiAnalystError(err instanceof Error ? err.message : String(err), 'api');
-  }
-  if (message.stop_reason === 'refusal') throw new AiAnalystError('The AI declined this request.', 'refused');
-  const text = message.content.filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === 'text').map((b) => b.text).join('');
-  let insight: LeadInsight;
-  try {
-    insight = normalizeInsight(JSON.parse(text));
-  } catch {
-    throw new AiAnalystError('The AI answer could not be read.', 'bad_output');
-  }
+  const answer = await generateJson({
+    system: SYSTEM_PROMPT,
+    user: `${language}\nToday (Phnom Penh): ${new Date().toLocaleString('en-GB', { timeZone: 'Asia/Phnom_Penh' })}.\n\nCustomer story:\n\n${story.markdown.slice(0, 60_000)}`,
+    schema: LEAD_INSIGHT_SCHEMA as unknown as Record<string, unknown>,
+    effort: 'medium',
+    maxTokens: 6000,
+    timeoutMs: 120_000,
+    stream: true,
+  });
+  const insight = normalizeInsight(answer.data);
   const stored: StoredLeadInsight = {
     leadId,
     insight,
     generatedAt: new Date().toISOString(),
-    model: AI_MODEL,
+    model: answer.model,
     basis: { messages: story.messages, pendingVoice: story.pendingVoice, chatUpdatedAt: lead.routing?.chat?.updatedAt, status: lead.status },
     trigger: options.trigger || 'manual',
   };

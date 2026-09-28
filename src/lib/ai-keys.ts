@@ -22,6 +22,8 @@ const ENV: Record<AiProvider, string> = { anthropic: 'ANTHROPIC_API_KEY', gemini
 interface StoredKeys {
   anthropic?: string;
   gemini?: string;
+  /** Provider the text AI features ask first (default: Anthropic). */
+  primary?: AiProvider;
   updatedAt?: Partial<Record<AiProvider, string>>;
 }
 
@@ -49,6 +51,28 @@ export async function aiKey(provider: AiProvider): Promise<string | undefined> {
   return saved || process.env[ENV[provider]]?.trim() || undefined;
 }
 
+/** The provider set as primary in Settings (Anthropic when never chosen). */
+export async function aiPrimary(): Promise<AiProvider> {
+  const p = (await stored()).primary;
+  return p && AI_PROVIDERS.includes(p) ? p : 'anthropic';
+}
+
+/** Providers the text AI features may use, in order: the primary first, then the back-up. Only providers with a key. */
+export async function aiTextProviders(): Promise<AiProvider[]> {
+  const primary = await aiPrimary();
+  const order: AiProvider[] = [primary, ...AI_PROVIDERS.filter((p) => p !== primary)];
+  const out: AiProvider[] = [];
+  for (const p of order) if (await aiKey(p)) out.push(p);
+  return out;
+}
+
+export async function setAiPrimary(provider: AiProvider): Promise<void> {
+  cache = null;
+  const current = await stored();
+  await setMarker(ROW, JSON.stringify({ ...current, primary: provider }));
+  cache = null;
+}
+
 export interface AiKeyStatus {
   provider: AiProvider;
   set: boolean;
@@ -57,10 +81,13 @@ export interface AiKeyStatus {
   last4?: string;
   updatedAt?: string;
   envName: string;
+  /** Set as the primary AI for text features. */
+  primary: boolean;
 }
 
 export async function aiKeyStatuses(): Promise<AiKeyStatus[]> {
   const s = await stored();
+  const primary = await aiPrimary();
   return AI_PROVIDERS.map((provider) => {
     const saved = s[provider]?.trim();
     const env = process.env[ENV[provider]]?.trim();
@@ -72,6 +99,7 @@ export async function aiKeyStatuses(): Promise<AiKeyStatus[]> {
       ...(key ? { last4: key.slice(-4) } : {}),
       ...(saved && s.updatedAt?.[provider] ? { updatedAt: s.updatedAt[provider] } : {}),
       envName: ENV[provider],
+      primary: provider === primary,
     };
   });
 }
