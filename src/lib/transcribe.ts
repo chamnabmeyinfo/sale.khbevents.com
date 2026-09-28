@@ -5,7 +5,8 @@
  * 1. Telegram's own transcription (messages.TranscribeAudio) through the
  *    salesperson's account: free trials on ordinary accounts, unlimited with
  *    Telegram Premium. No audio leaves Telegram.
- * 2. Gemini, when GEMINI_API_KEY is set in Vercel: the voice file is downloaded
+ * 2. Gemini, when a Gemini key is set (Settings → AI & API keys, or GEMINI_API_KEY in
+ *    Vercel): the voice file is downloaded
  *    through the account and sent to Google for transcription. Model from
  *    GEMINI_TRANSCRIBE_MODEL (default gemini-2.5-flash).
  * With neither, the message stays "pending" and shows as a voice message.
@@ -16,8 +17,10 @@ export interface Transcriber {
   transcribe(audio: Buffer, mimeType: string, hint: string): Promise<string>;
 }
 
-export function geminiConfigured(): boolean {
-  return Boolean(process.env.GEMINI_API_KEY);
+import { aiKey } from './ai-keys';
+
+export async function geminiConfigured(): Promise<boolean> {
+  return Boolean(await aiKey('gemini'));
 }
 
 const GEMINI_MODEL = () => process.env.GEMINI_TRANSCRIBE_MODEL || 'gemini-2.5-flash';
@@ -25,8 +28,8 @@ const GEMINI_MODEL = () => process.env.GEMINI_TRANSCRIBE_MODEL || 'gemini-2.5-fl
 export const geminiTranscriber: Transcriber = {
   name: 'gemini',
   async transcribe(audio, mimeType, hint) {
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) throw new Error('GEMINI_API_KEY is not set');
+    const key = await aiKey('gemini');
+    if (!key) throw new Error('No Gemini API key is set');
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL())}:generateContent`;
     const res = await fetch(url, {
       method: 'POST',
@@ -50,6 +53,6 @@ export const geminiTranscriber: Transcriber = {
 };
 
 /** The external transcriber to use, or null when none is configured. */
-export function externalTranscriber(): Transcriber | null {
-  return geminiConfigured() ? geminiTranscriber : null;
+export async function externalTranscriber(): Promise<Transcriber | null> {
+  return (await geminiConfigured()) ? geminiTranscriber : null;
 }

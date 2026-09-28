@@ -16,8 +16,10 @@ import {
   Laptop,
   Eraser,
   DatabaseBackup,
+  Sparkles,
 } from 'lucide-react';
 import ClearDemoData from './ClearDemoData';
+import AiKeysPanel from './AiKeysPanel';
 import BackupsPanel from './BackupsPanel';
 import TelegramAccountPanel from './TelegramAccountPanel';
 import ImageField from './ImageField';
@@ -32,9 +34,9 @@ interface SettingsClientProps {
   initialSettings: SystemSettings;
 }
 
-type SettingsTab = 'profile' | 'social' | 'telegram' | 'appearance' | 'security' | 'data' | 'backups' | 'tgaccount';
+type SettingsTab = 'profile' | 'social' | 'telegram' | 'appearance' | 'security' | 'data' | 'backups' | 'tgaccount' | 'ai';
 /** Tabs that are not part of the settings form (they have their own screens). */
-const PANEL_TABS: SettingsTab[] = ['data', 'backups', 'tgaccount'];
+const PANEL_TABS: SettingsTab[] = ['data', 'backups', 'tgaccount', 'ai'];
 
 export default function SettingsClient({ initialSettings }: SettingsClientProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
@@ -89,7 +91,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '');
-      if (['profile', 'social', 'telegram', 'appearance', 'security', 'data', 'backups', 'tgaccount'].includes(hash)) {
+      if (['profile', 'social', 'telegram', 'appearance', 'security', 'data', 'backups', 'tgaccount', 'ai'].includes(hash)) {
         setActiveTab(hash as SettingsTab);
       }
     };
@@ -170,7 +172,8 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
           { id: 'security', label: `🛡️ ${t('settings.tab.security')}`, icon: ShieldCheck },
           { id: 'data', label: `🧹 ${t('settings.tab.data')}`, icon: Eraser },
           { id: 'backups', label: `🗄️ ${t('settings.tab.backups')}`, icon: DatabaseBackup },
-          { id: 'tgaccount', label: `💬 ${t('settings.tab.tgaccount')}`, icon: Bell }
+          { id: 'tgaccount', label: `💬 ${t('settings.tab.tgaccount')}`, icon: Bell },
+          { id: 'ai', label: `✨ ${t('settings.tab.ai')}`, icon: Sparkles }
         ].map((tab) => {
           const TabIcon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -651,6 +654,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
       {activeTab === 'data' && <ClearDemoData />}
       {activeTab === 'backups' && <BackupsPanel />}
       {activeTab === 'tgaccount' && <TelegramAccountPanel />}
+      {activeTab === 'ai' && <AiKeysPanel />}
     </div>
   );
 }

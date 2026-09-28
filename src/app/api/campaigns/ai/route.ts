@@ -15,7 +15,7 @@ export async function GET() {
   const unauthorized = await requireAdmin();
   if (unauthorized) return unauthorized;
   const [latest, history, settings] = await Promise.all([getLatestAiReport(), getAiHistory(), getAiSettings()]);
-  return NextResponse.json({ success: true, configured: aiConfigured(), latest, history, settings });
+  return NextResponse.json({ success: true, configured: await aiConfigured(), latest, history, settings });
 }
 
 /** { action: 'run', days, lang, page } runs a new analysis; { action: 'settings', settings } saves settings. */

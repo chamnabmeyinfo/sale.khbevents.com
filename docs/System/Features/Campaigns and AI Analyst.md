@@ -78,6 +78,8 @@ An AI analyst reads the numbers first and writes the plan. The owner reviews it;
 
 Warnings: a page not made with the builder has no price or dates to use; a page with no price; a passed registration deadline.
 
+**AI headline ideas** (optional, since 2026-09-28): the button *Suggest more headlines with AI* asks Claude for 5 headline and supporting-line ideas in English and Khmer, from the page's own copy and the CMS offer line, under the Copy Rules (outcome first, short, no invented facts). Any idea with a number that is not in those facts is dropped before it is shown. A person copies the one they like; nothing is published. Needs the Anthropic key ([[AI Keys]]); at most 6 requests a minute.
+
 ## How visits are counted
 
 - **Visit record.** Each visit is saved once when the page opens, and updated when the visitor leaves, switches away, or after 15 seconds. The record holds:
@@ -107,7 +109,7 @@ Warnings: a page not made with the builder has no price or dates to use; a page 
 
 ## AI analyst
 
-- **Model:** Claude (`claude-opus-5`), with Anthropic's automatic fallback model if a request is declined. Key: `ANTHROPIC_API_KEY` in Vercel.
+- **Model:** Claude (`claude-opus-5`), with Anthropic's automatic fallback model if a request is declined. Key: the Anthropic key in Settings & Security → AI & API keys, else `ANTHROPIC_API_KEY` in Vercel ([[AI Keys]]).
 - **What it reads:** only aggregated numbers from the report, the rule findings, each page's sections and deadline, and the campaign audience notes. No personal data.
 - **Rules it follows:** quote the numbers; say when data is too thin; never invent figures, customers or testimonials; give at most 6 actions, ordered by impact.
 - **When it runs:** on demand ("Analyse now"), and once a day with the 20:00 Phnom Penh cron. The daily run is skipped when there were no visits or leads, so it costs nothing on empty days.

@@ -28,6 +28,13 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-28 — AI keys are managed in the portal; AI still never talks to customers
+
+- **Decision:** The Anthropic and Gemini keys are saved in Settings & Security → AI & API keys (checked with the service before saving, shown only as the last four characters, stored with the other server secrets) and used by every AI feature; the Vercel variables stay as a fallback. Added AI headline ideas to the Ad Poster Kit, with a check that drops any idea stating a number not in the page's facts. No customer-facing AI chat.
+- **Why:** The owner wants to add and change keys without Vercel or a redeploy. A customer-facing AI chat would contradict the 2026-09-27 answer that AI may help the team read chats faster but never answers customers.
+- **Who decided:** Owner ("Please build Master API setting…"), Claude on the details and on keeping the no-AI-to-customers rule.
+- **Affects:** [[AI Keys]], [[Campaigns and AI Analyst]], [[Customer Story and AI Coach]].
+
 ## 2026-09-28 — Ad posters: the portal writes the prompts and text from live facts; an image tool draws
 
 - **Decision:** An Ad Poster Kit in Campaigns & AI builds image prompts (four sizes: 4:5, 1:1, 9:16, 1.91:1) and poster text from the page's live CMS facts; image tools draw the background only and the text is typeset in Canva. The portal does not generate images itself.

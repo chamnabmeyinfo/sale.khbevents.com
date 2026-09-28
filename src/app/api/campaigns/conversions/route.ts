@@ -14,7 +14,7 @@ export async function GET() {
   const [pages, settings, log] = await Promise.all([getPages(), getConversionSettings(), getConversionLog()]);
   return NextResponse.json({
     success: true,
-    tokens: { ...conversionTokens(), anthropic: aiConfigured() },
+    tokens: { ...conversionTokens(), anthropic: await aiConfigured() },
     settings,
     log,
     pixels: pages.filter((p) => p.status !== 'archived').map((p) => ({

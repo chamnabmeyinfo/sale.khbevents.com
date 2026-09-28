@@ -105,7 +105,7 @@ export function aiBriefText(r: StoredAiReport, link: string): string {
  * set and there were visits or leads in the period. Sends the brief to Telegram if chosen.
  */
 export async function maybeRunDailyAi(send: (text: string) => Promise<boolean>, nowMs: number = Date.now()): Promise<{ ran: boolean; reason?: string }> {
-  if (!aiConfigured()) return { ran: false, reason: 'no key' };
+  if (!(await aiConfigured())) return { ran: false, reason: 'no key' };
   const settings = await getAiSettings();
   if (!settings.daily) return { ran: false, reason: 'off' };
   const day = phnomPenhDay(nowMs);

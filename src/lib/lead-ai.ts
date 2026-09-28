@@ -4,13 +4,14 @@
  * the suggested reply is a draft a person edits and sends.
  *
  * Runs on demand ("Analyze now") and, for open chat leads whose conversation
- * changed, a few at a time after site traffic. Needs ANTHROPIC_API_KEY in Vercel
- * (the same key as the campaign analyst). Results live in `lead_ai:<leadId>`.
+ * changed, a few at a time after site traffic. Needs the Anthropic key (Settings →
+ * AI & API keys, or ANTHROPIC_API_KEY in Vercel; the same key as the campaign analyst). Results live in `lead_ai:<leadId>`.
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { getLeadById, getMarker, getMarkersWithPrefix, getRealLeads, setMarker } from './storage';
 import { buildLeadStory } from './lead-story';
 import { AI_MODEL, AiAnalystError } from './ai-analyst';
+import { aiKey } from './ai-keys';
 
 export type Heat = 'hot' | 'warm' | 'cold';
 
@@ -78,8 +79,8 @@ You read one customer's story (profile, clicks, the whole Telegram conversation,
 
 const rowId = (leadId: string) => `lead_ai:${leadId}`;
 
-export function leadAiConfigured(): boolean {
-  return Boolean(process.env.ANTHROPIC_API_KEY);
+export async function leadAiConfigured(): Promise<boolean> {
+  return Boolean(await aiKey('anthropic'));
 }
 
 export async function getLeadInsight(leadId: string): Promise<StoredLeadInsight | null> {
@@ -128,7 +129,8 @@ export function normalizeInsight(raw: unknown): LeadInsight {
 
 /** Analyses one lead now and stores the result. Throws AiAnalystError on failure. */
 export async function analyzeLead(leadId: string, options: { lang?: 'en' | 'kh'; trigger?: 'manual' | 'auto' } = {}): Promise<StoredLeadInsight> {
-  if (!leadAiConfigured()) throw new AiAnalystError('ANTHROPIC_API_KEY is not set in Vercel.', 'no_key');
+  const apiKey = await aiKey('anthropic');
+  if (!apiKey) throw new AiAnalystError('No Anthropic API key: add it in Settings → AI & API keys.', 'no_key');
   const lead = await getLeadById(leadId);
   if (!lead) throw new AiAnalystError('Lead not found', 'bad_output');
   const story = await buildLeadStory(leadId);
@@ -136,7 +138,7 @@ export async function analyzeLead(leadId: string, options: { lang?: 'en' | 'kh';
   const language = options.lang === 'kh'
     ? 'Write summary, intent, heatReason, nextStep, nextStepWhen and coaching in Khmer (ខ្មែរ), plain and natural.'
     : 'Write summary, intent, heatReason, nextStep, nextStepWhen and coaching in clear, simple English.';
-  const client = new Anthropic({ timeout: 120_000, maxRetries: 1 });
+  const client = new Anthropic({ apiKey, timeout: 120_000, maxRetries: 1 });
   let message: Anthropic.Beta.BetaMessage;
   try {
     const stream = client.beta.messages.stream({
@@ -184,7 +186,7 @@ export const AUTO_ANALYZE_DAYS = 30;
  * time, newest activity first. Quiet when the key is missing. Never throws.
  */
 export async function analyzeChangedLeads(limit = AUTO_ANALYZE_MAX, nowMs = Date.now()): Promise<number> {
-  if (!leadAiConfigured()) return 0;
+  if (!(await leadAiConfigured())) return 0;
   try {
     const since = nowMs - AUTO_ANALYZE_DAYS * 86_400_000;
     const candidates = (await getRealLeads())

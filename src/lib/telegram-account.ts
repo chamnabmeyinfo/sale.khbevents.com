@@ -1206,7 +1206,7 @@ export const VOICE_PER_READ = 2;
  * were attempted. Flood or session errors propagate; anything else marks the message.
  */
 async function transcribePending(client: AccountClient, peer: PeerRef, chat: StoredChat, limit: number): Promise<number> {
-  const outside = externalTranscriber();
+  const outside = await externalTranscriber();
   const pending = pendingTranscripts(chat, limit);
   let attempted = 0;
   let changed = false;

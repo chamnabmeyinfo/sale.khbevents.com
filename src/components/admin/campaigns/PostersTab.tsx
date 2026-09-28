@@ -83,6 +83,71 @@ function CopyLines({ lang, copy }: { lang: string; copy: PosterCopy }) {
   );
 }
 
+interface PosterIdea { angle: string; headlineEn: string; headlineKh: string; supportEn: string; supportKh: string }
+
+/** Optional: headline ideas written by Claude from the same facts (a person picks; numbers are checked). */
+function AiIdeas({ slug, goal }: { slug: string; goal: PosterGoal }) {
+  const { t } = useLanguage();
+  const [ideas, setIdeas] = useState<PosterIdea[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<{ text: string; noKey: boolean } | null>(null);
+  const [forKey, setForKey] = useState('');
+  const key = `${slug}:${goal}`;
+  const shown = forKey === key ? ideas : null;
+
+  const ask = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/campaigns/posters/ideas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ page: slug, goal }) });
+      const json = await res.json().catch(() => ({}));
+      if (!json?.success) {
+        setError({ text: json?.error || t('cp.poster.ai.failed'), noKey: json?.code === 'no_key' });
+        return;
+      }
+      setIdeas(json.ideas || []);
+      setForKey(key);
+    } catch {
+      setError({ text: t('cp.poster.ai.failed'), noKey: false });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-dashed border-amber-300 dark:border-amber-800 p-3 space-y-2" data-poster-ai="">
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" disabled={busy} onClick={() => void ask()} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-amber-400 hover:bg-amber-300 text-black cursor-pointer disabled:opacity-50" data-poster-ai-ask="">
+          {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : '✨'} {t('cp.poster.ai.ask')}
+        </button>
+        <span className={SUB}>{t('cp.poster.ai.hint')}</span>
+      </div>
+      {error && (
+        <p className="text-xs text-red-700 dark:text-red-400" role="status" data-poster-ai-error="">
+          {error.text}{' '}
+          {error.noKey && <Link href="/admin/settings#ai" className="font-bold underline">{t('cp.poster.ai.setKey')}</Link>}
+        </p>
+      )}
+      {shown && shown.length === 0 && <p className={SUB}>{t('cp.poster.ai.none')}</p>}
+      {shown && shown.length > 0 && (
+        <ul className="grid lg:grid-cols-2 gap-2">
+          {shown.map((idea, i) => (
+            <li key={i} className="rounded-lg bg-slate-50 dark:bg-[#06100B] p-2.5 space-y-1.5" data-poster-idea="">
+              <div className="text-[10px] font-bold uppercase text-amber-700 dark:text-amber-400">{idea.angle}</div>
+              {[idea.headlineEn, idea.supportEn, idea.headlineKh, idea.supportKh].filter(Boolean).map((line, j) => (
+                <div key={j} className="flex items-start gap-2">
+                  <div className={`min-w-0 flex-1 text-xs ${j % 2 === 0 ? 'font-bold text-slate-900 dark:text-white' : 'text-slate-700 dark:text-gray-300'}`}>{line}</div>
+                  <CopyButton text={line} />
+                </div>
+              ))}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 /** Admin → Campaigns → Ad posters: prompts and ad text built from a trip page's live facts. */
 export default function PostersTab({ pages }: { pages: PageOption[] }) {
   const { t } = useLanguage();
@@ -214,6 +279,7 @@ export default function PostersTab({ pages }: { pages: PageOption[] }) {
               <CopyLines lang="en" copy={kit.en} />
               <CopyLines lang="kh" copy={kit.kh} />
             </div>
+            <AiIdeas slug={slug} goal={goal} />
           </div>
 
           <div className={`${CARD} p-4 space-y-3`}>

@@ -5,9 +5,10 @@
  * and once a day with the daily cron, so the owner opens a ready answer.
  *
  * Only aggregated numbers are sent: no names, phones, e-mails or ids.
- * Needs ANTHROPIC_API_KEY in the Vercel environment variables.
+ * Needs the Anthropic key (Settings → AI & API keys, or ANTHROPIC_API_KEY in Vercel).
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { aiKey } from './ai-keys';
 import type { CampaignReport, PageInfo } from './campaign-analytics';
 import type { Campaign } from './campaigns';
 
@@ -179,8 +180,8 @@ export function analystBrief(report: CampaignReport, campaigns: Campaign[], page
   };
 }
 
-export function aiConfigured(): boolean {
-  return Boolean(process.env.ANTHROPIC_API_KEY);
+export async function aiConfigured(): Promise<boolean> {
+  return Boolean(await aiKey('anthropic'));
 }
 
 export class AiAnalystError extends Error {
@@ -191,8 +192,9 @@ export class AiAnalystError extends Error {
 
 /** Runs the analysis. Throws AiAnalystError with a short reason on failure. */
 export async function runAiAnalysis(input: { report: CampaignReport; campaigns: Campaign[]; pages: PageInfo[]; lang: 'en' | 'kh'; pageSlug?: string }): Promise<AiReport> {
-  if (!aiConfigured()) throw new AiAnalystError('ANTHROPIC_API_KEY is not set in Vercel.', 'no_key');
-  const client = new Anthropic({ timeout: 280_000, maxRetries: 1 });
+  const apiKey = await aiKey('anthropic');
+  if (!apiKey) throw new AiAnalystError('No Anthropic API key: add it in Settings → AI & API keys.', 'no_key');
+  const client = new Anthropic({ apiKey, timeout: 280_000, maxRetries: 1 });
   const brief = analystBrief(input.report, input.campaigns, input.pages, input.pageSlug);
   const language = input.lang === 'kh'
     ? 'Write every text field in Khmer (ខ្មែរ), natural and plain; keep campaign keys, numbers, "Telegram", "Facebook" and section names as they are.'

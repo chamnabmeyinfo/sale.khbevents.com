@@ -33,6 +33,12 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [ ] If a row ever shows "Telegram ended the session", the salesperson connects again from the same tab (code from their Telegram app). Telegram may also show a new "khbportal" device after a reconnection; ending old ones there is fine. #owner
 - [ ] Later, if the team wants replies within a second instead of about eight: a live update connection per account (Telegram updates), which needs a server that stays up all day rather than Vercel functions. Decide only after the polling version has run a few weeks. #for-claude
 
+### AI & API keys (2026-09-28)
+
+- [x] Settings & Security → AI & API keys: Anthropic and Gemini keys saved in the portal (checked before saving, shown only as the last four characters), used by the AI analyst, the AI coach, voice to text and the new AI headline ideas in Ad posters. → [[AI Keys]]
+- [ ] Paste the Anthropic key and (optional) the Gemini key there, press **Check and save**, and set a monthly spend limit in each provider's console. #owner
+- [ ] Optional later: remove `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` from Vercel once the keys are saved in the portal, so there is one place to rotate them. #owner
+
 ### Ad posters (2026-09-28)
 
 - [x] Ad Poster Kit in Campaigns & AI → Ad posters: photo prompts for 4:5, 1:1, 9:16 and 1.91:1, poster text in English and Khmer from the live CMS facts, tracked links and QR codes, and an all-in-one prompt. → [[Campaigns and AI Analyst]]
@@ -75,8 +81,8 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 ### Customer story and AI coach (new, 2026-09-27)
 
 - [x] Stored chats, voice to text, story file per customer, AI coach with heat, next step and suggested reply, Hot first in the inbox (2026-09-27). → [[Customer Story and AI Coach]]
-- [ ] Check that `ANTHROPIC_API_KEY` is set in Vercel (it is the campaign analyst's key); then open a customer in the Telegram inbox and press **Analyze now**. → [[Customer Story and AI Coach]] #owner
-- [ ] Decide on voice transcription outside Telegram: add `GEMINI_API_KEY` in Vercel (Google AI Studio key) so voice messages Telegram cannot transcribe still get their text. Without it, only Telegram's own transcription is used. #owner
+- [ ] Add the Anthropic key in Settings & Security → **AI & API keys** (or keep `ANTHROPIC_API_KEY` in Vercel); then open a customer in the Telegram inbox and press **Analyze now**. → [[AI Keys]] #owner
+- [ ] Decide on voice transcription outside Telegram: add a Gemini key in Settings & Security → **AI & API keys** (Google AI Studio key) so voice messages Telegram cannot transcribe still get their text. Without it, only Telegram's own transcription is used. → [[AI Keys]] #owner
 - [ ] Tell the team: customer chats are now stored in the CRM and read by the AI coach; the coach suggests, people send. #owner
 - [ ] Delete a lead → also delete its stored chat and analysis rows. #for-claude
 - [ ] Phase 2 of the coach: bot check-ins with the next step and buttons (Done / Snooze / Lost), the morning list of hot customers to the manager, weekly coaching summary, objections per trip on Team performance. #for-claude
@@ -120,7 +126,7 @@ Suggested order: lock the database first, then change the token and the password
 ### Sales page
 
 - [ ] Campaigns & AI (new):
-  - Add `META_CAPI_ACCESS_TOKEN`, `TIKTOK_EVENTS_ACCESS_TOKEN` and `ANTHROPIC_API_KEY` in Vercel → Settings → Environment Variables, then redeploy.
+  - Add `META_CAPI_ACCESS_TOKEN` and `TIKTOK_EVENTS_ACCESS_TOKEN` in Vercel → Settings → Environment Variables, then redeploy. The Anthropic key now goes in Settings → AI & API keys ([[AI Keys]]).
   - Check each with a test code in Admin → Campaigns → Tracking setup.
   - Create a campaign for every running ad, use its link, and enter the spend weekly.
   - → [[Campaigns and AI Analyst]] #owner

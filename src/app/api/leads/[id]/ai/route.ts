@@ -14,7 +14,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   if (unauthorized) return unauthorized;
   try {
     const { id } = await params;
-    return NextResponse.json({ success: true, insight: await getLeadInsight(id), configured: leadAiConfigured() });
+    return NextResponse.json({ success: true, insight: await getLeadInsight(id), configured: await leadAiConfigured() });
   } catch (error) {
     return NextResponse.json({ success: false, error: errorMessage(error, 'Could not read the analysis') }, { status: 500 });
   }
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const insight = await analyzeLead(id, { lang, trigger: 'manual' });
     return NextResponse.json({ success: true, insight, configured: true });
   } catch (error) {
-    if (error instanceof AiAnalystError) return NextResponse.json({ success: false, error: error.message, code: error.code, configured: leadAiConfigured() }, { status: error.code === 'no_key' ? 503 : 502 });
+    if (error instanceof AiAnalystError) return NextResponse.json({ success: false, error: error.message, code: error.code, configured: await leadAiConfigured() }, { status: error.code === 'no_key' ? 503 : 502 });
     return NextResponse.json({ success: false, error: errorMessage(error, 'The analysis failed') }, { status: 500 });
   }
 }
