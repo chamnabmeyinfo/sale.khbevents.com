@@ -71,7 +71,8 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 - [x] Connect the owner's Telegram account in Settings → Telegram account check (2026-09-27).
 - [ ] After a few real customers write, check Team Performance → Who reached the team: the **Chat** column should say "Messaged us" for them, and the salesperson should have received the "អតិថិជនបានផ្ញើសារមកអ្នកហើយ" alert. Tell Claude if the wording of the three messages should change. → [[Round Robin]] #owner
 - [ ] Telegram → Settings → Devices → "Terminate old sessions if inactive for": set 6 months, so a quiet period does not log the portal out. #owner
-- [ ] Other salespeople: connect their own accounts the same way (each needs their own api_id/api_hash from my.telegram.org). → [[Round Robin]] #owner
+- [x] Other salespeople: two more sales accounts connected by the owner (2026-09-28), using one shared app (api_id/api_hash). → [[Connect a Telegram Account]]
+- [ ] For each newly connected salesperson: Check the connection (lock OK), Check now, set Terminate old sessions to 6 months in their Telegram, decide Track every new chat and Auto seen, tell them their customer chats are stored in the CRM. → [[Connect a Telegram Account]] #owner
 - [x] The account check runs after normal site traffic with the lead follow-up check (2026-09-27).
 
 ### Visitor details (new, 2026-09-27)
