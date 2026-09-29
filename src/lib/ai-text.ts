@@ -72,8 +72,8 @@ export function geminiRetryDelay(body: string): number | null {
 
 /** What a Gemini 429 means for the owner, with Google's own words. */
 export function geminiBusyMessage(reason: string): string {
-  const r = reason.replace(/\s+/g, ' ').trim().slice(0, 220);
-  const google = r ? ` Google says: "${r}".` : '';
+  const r = reason.replace(/\s+/g, ' ').trim();
+  const google = r ? ` Google says: "${r.slice(0, 220)}".` : '';
   if (/free[_ ]tier/i.test(r) && /limit:\s*0\b/.test(r)) {
     return `Gemini: this model has no free quota for your key.${google} Turn on billing for the key's project in Google AI Studio (pay as you go), or make Claude the primary AI in Settings → AI & API keys.`;
   }
@@ -116,7 +116,10 @@ interface GeminiResponse {
 }
 
 async function askGemini(key: string, req: JsonRequest): Promise<JsonAnswer> {
+  const startedAt = Date.now();
   let model = await geminiModel(key, 'text');
+  // One time budget for every attempt: a retry gets only what is left, never a fresh full timeout.
+  const left = () => Math.max(1000, req.timeoutMs - (Date.now() - startedAt));
   const call = (m: string) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:generateContent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
@@ -129,10 +132,9 @@ async function askGemini(key: string, req: JsonRequest): Promise<JsonAnswer> {
           maxOutputTokens: req.maxTokens,
         },
       }),
-      signal: AbortSignal.timeout(req.timeoutMs),
+      signal: AbortSignal.timeout(left()),
     });
   let res: Response;
-  const startedAt = Date.now();
   try {
     res = await call(model);
     if (!res.ok) {
@@ -147,8 +149,7 @@ async function askGemini(key: string, req: JsonRequest): Promise<JsonAnswer> {
       } else if (res.status === 429) {
         // A short per-minute limit: wait as long as Google asks (once, within the time budget) and retry.
         const wait = geminiRetryDelay(body);
-        const left = req.timeoutMs - (Date.now() - startedAt);
-        if (wait !== null && wait <= 45 && !/limit:\s*0\b/.test(body) && left > (wait + 30) * 1000) {
+        if (wait !== null && wait <= 45 && !/limit:\s*0\b/.test(body) && left() > (wait + 30) * 1000) {
           await new Promise((resolve) => setTimeout(resolve, wait * 1000));
           res = await call(model);
         }
