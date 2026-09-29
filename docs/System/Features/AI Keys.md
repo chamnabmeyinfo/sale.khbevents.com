@@ -50,10 +50,10 @@ One place for the API keys of the AI services the portal uses: **Settings & Secu
 
 ## When the AI says it is busy or out of quota
 
-- **"Gemini: this model has no free quota for your key"** — Google's free tier gives the newest models little or no quota (Google's message says `limit: 0`). The portal cannot change that: it is a setting of the Google project the key belongs to. Fix: in Google AI Studio, turn on billing for that project (pay as you go; a few cents per run), or make Claude the primary AI and put credits on the Anthropic account.
-- **"Gemini: today's quota is used up"** — the free tier's daily cap. Resets at midnight Pacific time; billing removes it.
-- **"Gemini is busy (rate limit or quota)"** — a per-minute limit. The portal already waits as long as Google asks and retries once; if it still fails, wait a minute. Billing raises the per-minute limits too.
-- **Claude "credit balance is too low"** — the Anthropic account has no credits: console.anthropic.com → Billing.
+- **"Gemini: this model has no free quota for your key"** — Google's message says `limit: 0`, which means the key's project has no free quota for that model. The portal cannot change that: it is a setting of the Google project the key belongs to. Fix: in Google AI Studio, turn on billing for that project (pay as you go; cost per run to confirm), or use Claude and put credits on the Anthropic account.
+- **"Gemini: today's quota is used up"** — the daily cap, recognised from Google's quota name (`…PerDay…`). The portal does not wait for it. Resets at midnight Pacific time; billing removes it.
+- **"Gemini is busy (rate limit or quota)"** — most likely a per-minute limit. If Google asks for a wait of 45 seconds or less and enough time is left, the portal waits and retries once, using only the time left; if it still fails, wait a minute. Billing raises the per-minute limits too.
+- **Anthropic "no credits or billing"** — the Anthropic account has no credits: console.anthropic.com → Billing. Anthropic's own reason is shown in brackets.
 - When both services fail, the message shows both reasons, separated by "·". The portal's own limits are only there to stop accidental double clicks (Gen Ads: 6 runs per ten minutes; poster ideas: 6 per minute).
 
 ## Not built, on purpose

@@ -36,7 +36,7 @@ Business focus right now: selling business trips. See [[KHB Events Company Profi
 ### Gen Ads (2026-09-28)
 
 - [x] **Gen Ads** button on every landing page card: one AI call turns the page into an ads package (analysis, three concepts with poster text and captions, video script, Google and LinkedIn text, objection posts, first Telegram reply, targeting, A/B tests, posting plan); every number comes from the CMS; flagged lines show why. → [[Gen Ads]]
-- [ ] The first real run answered "Gemini is busy (rate limit or quota)": that is Google's free-tier cap, not the portal's. Turn on billing for the key's project in Google AI Studio (pay as you go), or put credits on the Anthropic account and make Claude the primary AI. See [[AI Keys]] → When the AI says it is busy. #owner
+- [ ] The first real run answered "Gemini is busy (rate limit or quota)": this was Google's limit, not the portal's (the exact cause was not shown by the old message; the new messages tell them apart). Turn on billing for the key's project in Google AI Studio (pay as you go), or put credits on the Anthropic account and make Claude the primary AI. See [[AI Keys]] → When the AI says it is busy. #owner
 - [ ] Open **Gen Ads** on the Korea sourcing page once the deploy is READY (the first open runs the AI), read the three concepts and the Khmer, and tell Claude what reads wrong or is missing. #owner
 - [ ] Press **Create tracked links** there, then use the Facebook / Telegram / TikTok links of each concept in the ads, so Campaigns → Performance shows which concept sells. This replaces "one campaign per trip, one ad version per poster" for pages that use Gen Ads. #owner
 - [ ] Have a native Khmer speaker read the Khmer captions and the first Telegram reply before they are posted. #owner

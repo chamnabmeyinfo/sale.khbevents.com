@@ -28,6 +28,12 @@ What we decided, when, and why. Newest first. One entry per decision.
 
 ---
 
+## 2026-09-29 — Gemini 429: one time budget, no retry on hard limits
+
+- **Decided:** all Gemini attempts share one time budget; the retry after a wait gets only the time left. A 429 for "no free quota" (`limit: 0`) or the daily cap is not retried.
+- **Why:** a retry with a fresh full timeout could pass the route's time limit and kill the function. Waiting on a cap that resets at midnight only made the owner wait longer.
+- **Also:** both services' reasons are shown, including Anthropic's. → [[AI Keys]]
+
 ## 2026-09-28 — Gen Ads: the AI writes words, the code writes numbers
 
 - **Decision:** Every landing page card has a **Gen Ads** button that opens the page's ads package: one AI call writes the analysis, three concepts, captions, video script, Google and LinkedIn text, objection posts, the salesperson's first Telegram reply and targeting notes; the code computes every number (offer lines, photo prompts, Canva pack, carousel cards, Google fact headlines, posting plan) from the CMS when the screen opens. Poster and ad slots that state a number not on the page are emptied; long texts are flagged, not dropped. One package is stored per page with one previous version; the first open runs the generation, later runs are an explicit click. Tracked links are one campaign per channel per page with three ad versions, created by a button, never on regenerate.

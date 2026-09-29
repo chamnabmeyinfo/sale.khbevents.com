@@ -7,7 +7,7 @@
  * Server only.
  */
 import Anthropic from '@anthropic-ai/sdk';
-import { aiKey, aiTextProviders, type AiProvider } from './ai-keys';
+import { aiKey, aiTextProviders, anthropicErrorMessage, type AiProvider } from './ai-keys';
 import { geminiModel, isModelGone } from './gemini-models';
 
 export const AI_MODEL = 'claude-opus-5';
@@ -61,7 +61,7 @@ export async function generateJson(req: JsonRequest): Promise<JsonAnswer> {
     }
   }
   // Both services answered with an error: the owner sees both reasons, not only the last one.
-  throw new AiAnalystError(failed.length > 1 ? failed.join(' · ') : failed[0] || NO_AI_KEY, failed.length ? 'api' : 'no_key');
+  throw new AiAnalystError(failed.join(' · ') || NO_AI_KEY, failed.length ? 'api' : 'no_key');
 }
 
 /** Seconds Google asks us to wait, from a 429 body (google.rpc.RetryInfo), or null. */
@@ -70,14 +70,20 @@ export function geminiRetryDelay(body: string): number | null {
   return m ? Math.ceil(Number(m[1])) : null;
 }
 
+/** A 429 that waiting a few seconds cannot fix: no free quota at all, or the daily cap. */
+function geminiHardLimit(body: string): boolean {
+  return /limit:\s*0\b/.test(body) || /per[_ ]?day|daily/i.test(body);
+}
+
 /** What a Gemini 429 means for the owner, with Google's own words. */
-export function geminiBusyMessage(reason: string): string {
+export function geminiBusyMessage(reason: string, quotaId = ''): string {
   const r = reason.replace(/\s+/g, ' ').trim();
   const google = r ? ` Google says: "${r.slice(0, 220)}".` : '';
-  if (/free[_ ]tier/i.test(r) && /limit:\s*0\b/.test(r)) {
-    return `Gemini: this model has no free quota for your key.${google} Turn on billing for the key's project in Google AI Studio (pay as you go), or make Claude the primary AI in Settings → AI & API keys.`;
+  const all = `${r} ${quotaId}`;
+  if (/free[_ ]tier/i.test(all) && /limit:\s*0\b/.test(all)) {
+    return `Gemini: this model has no free quota for your key.${google} Turn on billing for the key's project in Google AI Studio (pay as you go), or use Claude instead (Settings → AI & API keys).`;
   }
-  if (/per[_ ]?day|daily|PerDay/i.test(r)) {
+  if (/per[_ ]?day|daily/i.test(all)) {
     return `Gemini: today's quota is used up.${google} It resets at midnight Pacific time; billing in Google AI Studio removes the daily cap, or use Claude.`;
   }
   return `Gemini is busy (rate limit or quota).${google} Try again in a minute; billing in Google AI Studio raises the limits.`;
@@ -101,7 +107,7 @@ async function askAnthropic(apiKey: string, req: JsonRequest): Promise<JsonAnswe
   } catch (err) {
     if (err instanceof Anthropic.AuthenticationError) throw new AiAnalystError('The Anthropic API key was rejected.', 'api');
     if (err instanceof Anthropic.RateLimitError) throw new AiAnalystError('The AI service is busy (rate limit). Try again in a minute.', 'api');
-    if (err instanceof Anthropic.APIError) throw new AiAnalystError(`Anthropic error ${err.status ?? ''}`.trim(), 'api');
+    if (err instanceof Anthropic.APIError) throw new AiAnalystError(anthropicErrorMessage(err.status, err.error), 'api');
     throw new AiAnalystError(err instanceof Error ? err.message : String(err), 'api');
   }
   if (message.stop_reason === 'refusal') throw new AiAnalystError('The AI declined this request.', 'refused');
@@ -149,9 +155,16 @@ async function askGemini(key: string, req: JsonRequest): Promise<JsonAnswer> {
       } else if (res.status === 429) {
         // A short per-minute limit: wait as long as Google asks (once, within the time budget) and retry.
         const wait = geminiRetryDelay(body);
-        if (wait !== null && wait <= 45 && !/limit:\s*0\b/.test(body) && left() > (wait + 30) * 1000) {
+        if (wait !== null && wait <= 45 && !geminiHardLimit(body) && left() > (wait + 30) * 1000) {
           await new Promise((resolve) => setTimeout(resolve, wait * 1000));
-          res = await call(model);
+          // If the retry itself fails on the network, keep the 429 so its reason is still shown.
+          const first = res;
+          try {
+            res = await call(model);
+            first.body?.cancel().catch(() => {});
+          } catch {
+            res = first;
+          }
         }
       }
     }
@@ -161,8 +174,13 @@ async function askGemini(key: string, req: JsonRequest): Promise<JsonAnswer> {
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     let reason = '';
-    try { reason = String((JSON.parse(body) as { error?: { message?: unknown } }).error?.message || ''); } catch {}
-    if (res.status === 429) throw new AiAnalystError(geminiBusyMessage(reason), 'api');
+    let quotaId = '';
+    try {
+      const err = (JSON.parse(body) as { error?: { message?: unknown; details?: Array<{ violations?: Array<{ quotaId?: unknown }> }> } }).error;
+      reason = String(err?.message || '');
+      quotaId = (err?.details || []).flatMap((d) => d.violations || []).map((v) => String(v.quotaId || '')).join(' ');
+    } catch {}
+    if (res.status === 429) throw new AiAnalystError(geminiBusyMessage(reason, quotaId), 'api');
     throw new AiAnalystError(`Gemini error ${res.status}${reason ? `: ${reason.slice(0, 200)}` : ''}`, 'api');
   }
   const data = (await res.json()) as GeminiResponse;
